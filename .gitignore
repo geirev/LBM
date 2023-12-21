@@ -1,0 +1,6 @@
+build
+F90-bgk
+latticeboltzmann-python
+run
+!run/a.gnu
+

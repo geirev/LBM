@@ -1,0 +1,16 @@
+F90SOURCE = \
+	main.F90\
+	m_collisions.F90\
+	m_cylinder.F90\
+	m_defbnd.F90\
+	m_density.F90\
+	m_drift.F90\
+	m_fequil.F90\
+	m_gnuplot.F90\
+	m_gnuplotuf.F90\
+	m_gnuplotuv.F90\
+	m_initialization.F90\
+	mod_dimensions.F90\
+	m_velocity.F90\
+	m_wtime.F90
+

@@ -13,9 +13,13 @@ subroutine cylinder(blanking,ipos,jpos,radii)
       if ( ((i-ipos)**2 + (j-jpos)**2 ) <  radii**2) blanking(i,j) = .true.
    enddo
    enddo
-!   do j=jpos-radii,jpos+radii,2
-!      print '(i3,tr2,101l1)',j,blanking(ipos-2*radii:ipos+2*radii,j)
-!   enddo
+
+   open(10,file='cylinder.dat')
+      do i = ipos-radii, ipos+radii
+         write(10,'(i3,2f10.4)')i, real(jpos) - sqrt(real(radii**2 - (i-ipos)**2)), real(jpos) + sqrt(real(radii**2 - (i-ipos)**2))
+      end do
+   close(10)
+
    open(10,file='blanking.dat')
       do j=1,ny
       do i=1,nx

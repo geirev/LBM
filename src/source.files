@@ -1,5 +1,6 @@
 F90SOURCE = \
 	main.F90\
+	m_airfoil.F90\
 	m_collisions.F90\
 	m_cylinder.F90\
 	m_defbnd.F90\

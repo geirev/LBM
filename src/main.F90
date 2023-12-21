@@ -2,6 +2,7 @@ program LatticeBoltzmann
    use mod_dimensions
    use m_initialization
    use m_cylinder
+   use m_airfoil
    use m_density
    use m_velocity
    use m_drift
@@ -40,13 +41,23 @@ program LatticeBoltzmann
 
    integer :: i,j,l,it,ia,ja,ib,jb
    character(len=4) cit
+   character(len=20) :: experiment='airfoil'
+!   character(len=20) :: experiment='cylinder'
 
 
-! Initialization
-   f=initialization(rho0)
 
-! Cylinder
-   call cylinder(blanking,nx/6,ny/2,25)
+   select case(trim(experiment))
+   case('cylinder')
+      f=initialization(rho0,1.5,0.5)
+      call cylinder(blanking,nx/6,ny/2,25)
+   case('airfoil')
+      f=initialization(rho0,2.5,0.0)
+      call airfoil(blanking)
+   case default
+      print *,'invalid experiment',trim(experiment)
+      stop
+   end select
+
 
 ! Calculate fluid variables and plotting of initial conditions
    rho=density(f)

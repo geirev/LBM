@@ -2,6 +2,9 @@ build
 F90-bgk
 latticeboltzmann-python
 run
+run2d
 NACA
+papers
+docs
 !run/air.gnu
 !run/cyl.gnu

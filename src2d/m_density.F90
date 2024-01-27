@@ -3,8 +3,8 @@ module m_density
 contains
 function density(f) result(dens)
    use mod_dimensions
-   real,    intent(in) :: f(nx,ny,nz,nl)
-   real dens(nx,ny,nz)
-   dens(:,:,:)=sum(f(:,:,:,:),dim=4)
+   real,    intent(in) :: f(nx,ny,nl)
+   real dens(nx,ny)
+   dens(:,:)=sum(f(:,:,:),dim=3)
 end function
 end module

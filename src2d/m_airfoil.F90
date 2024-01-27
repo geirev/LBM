@@ -4,7 +4,7 @@ contains
 subroutine airfoil(blanking)
    use mod_dimensions
    implicit none
-   logical, intent(inout)  :: blanking(nx,ny,nz)
+   logical, intent(inout)  :: blanking(nx,ny)
    integer, parameter :: num_points = 100
    real :: xcc(num_points)
    real :: ycu(num_points)
@@ -23,7 +23,7 @@ subroutine airfoil(blanking)
    real, parameter :: yref=50.0           ! y-center point of airfoil
    real, parameter :: tilt=-0.10          ! y-center point of airfoil
 
-   integer :: i,j,k
+   integer :: i,j
    real :: theta, yt, yc, dyc_dx, x
 
    do i = 1, num_points
@@ -62,7 +62,7 @@ subroutine airfoil(blanking)
    do j=1,ny
 !   do i=nint(xcc(1)),nint(xcc(num_points))
    do i=1,num_points
-      if ((nint(ycl(i)) < j) .and. (j <  nint(ycu(i)))) blanking(nint(xref)+i,j,:) = .true.
+      if ((nint(ycl(i)) < j) .and. (j <  nint(ycu(i)))) blanking(nint(xref)+i,j) = .true.
    enddo
    enddo
 
@@ -73,7 +73,7 @@ subroutine airfoil(blanking)
    open(10,file='blanking.dat')
       do j=1,ny
       do i=1,nx
-         if (blanking(i,j,1)) write(10,'(2i4,a)')i,j,' 1.0'
+         if (blanking(i,j)) write(10,'(2i4,a)')i,j,' 1.0'
       enddo
       enddo
    close(10)

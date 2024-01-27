@@ -10,19 +10,20 @@ LD = gfortran
 CF90 = gfortran
 CF77 = gfortran
 
-FFLAGS = -c -g -fdefault-real-8 -C -u -Xlist -O2 -std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Werror -O3 -fopenmp
-
+FFLAGS = -c -g -fdefault-real-8 -C -u -Xlist -O2 -std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused -Werror -O3 -fopenmp
 
 F77FLG =
 F90FLG =
-LINKFLAGS =
 LINKFLAGS = -fopenmp
 CPPARCH =
 CPPMODEL  =
 
 CPPFLAGS = -traditional -P $(CPPARCH) $(CPPMODEL)
 
-LIBS =    -lblas -lfftw3 -llapack
+# LIBS =    ./libenkfanalysis.a ./libsampling.a -lblas -lfftw3 -llapack
+
+LIBDIR = -L /apps/noarch/software/fftw3 -L /cm/shared/apps/blas/gcc/3.8.0 -L /cm/shared/apps/lapack/gcc/64/3.9.0
+LIBS = -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a /apps/noarch/software/fftw3/lib/libfftw3.a ./libenkfanalysis.a ./libsampling.a -Wl,--end-group -lpthread -lm -ldl
 
 BINDIR = $(HOME)/bin
 
@@ -87,8 +88,7 @@ depend:
 	../bin/mkdepend_linux.pl | sort -u > depends.file
 
 tags: $(F90FILES) $(F77FILES) $(INCFILES)
-	tags.sh
-	#ctags *.F90
+	ctags *.F90
 	#f90tags.sh
 
 include depends.file

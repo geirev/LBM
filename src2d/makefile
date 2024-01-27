@@ -87,8 +87,7 @@ depend:
 	../bin/mkdepend_linux.pl | sort -u > depends.file
 
 tags: $(F90FILES) $(F77FILES) $(INCFILES)
-	tags.sh
-	#ctags *.F90
+	ctags *.F90
 	#f90tags.sh
 
 include depends.file

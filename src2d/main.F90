@@ -1,9 +1,6 @@
 program LatticeBoltzmann
    use mod_dimensions
-   use mod_D3Q27setup
    use m_initialization
-   use m_cube
-   use m_sphere
    use m_cylinder
    use m_airfoil
    use m_disks
@@ -16,61 +13,50 @@ program LatticeBoltzmann
    use m_defbnd
    use m_fequil
    use m_collisions
-   use m_bndapply
-   use m_vorticity
-   use m_tecplot3D
    use m_wtime
    use, intrinsic :: omp_lib
    implicit none
 
 ! Simulation parameters
-   integer, parameter :: nt   = 8000          ! 8000       ! number of timesteps
-   real,    parameter :: rho0 = 100.0         ! average density
-   real,    parameter :: tau  = 0.62          ! collision timescale 0.6
-   logical, parameter :: dbg  =.false.        ! print diagnostics if tru
+   integer, parameter :: nt   = 8000        ! 8000       ! number of timesteps
+   real,    parameter :: rho0 = 100.0      ! average density
+   real,    parameter :: tau  = 0.62       ! collision timescale 0.6
+   logical, parameter :: dbg  =.false.     ! print diagnostics if tru
 
 ! Main variables
-   real    :: f(nx,ny,nz,nl)     = 0.0        ! density function
-   real    :: feq(nx,ny,nz,nl)   = 0.0        ! Maxwells equilibrium density function
-   real    :: fbnd(nx,ny,nz,nl)  = 0.0        ! Boundary conditions
-   logical :: blanking(nx,ny,nz) = .false.    ! blanking boundary
+   real    :: f(nx,ny,nl)     = 0.0        ! density function
+   real    :: feq(nx,ny,nl)   = 0.0        ! Maxwells equilibrium density function
+   real    :: fbnd(nx,ny,nl)  = 0.0        ! Boundary conditions
+   logical :: blanking(nx,ny) = .false.    ! blanking boundary
 
 ! Fluid variables
-   real    :: u(nx,ny,nz)        = 0.0        ! x component of fluid velocity
-   real    :: v(nx,ny,nz)        = 0.0        ! y component of fluid velocity
-   real    :: w(nx,ny,nz)        = 0.0        ! z component of fluid velocity
-   real    :: rho(nx,ny,nz)      = 0.0        ! fluid density
-   real    :: vel(nx,ny,nz)      = 0.0        ! absolute velocity
-   real    :: vortx(nx,ny,nz)    = 0.0        ! fluid vorticity x-component
-   real    :: vorty(nx,ny,nz)    = 0.0        ! fluid vorticity y-component
-   real    :: vortz(nx,ny,nz)    = 0.0        ! fluid vorticity z-component
-   real    :: vort(nx,ny,nz)     = 0.0        ! absolute value of vorticity
+   real    :: u(nx,ny)        = 0.0        ! x component of fluid velocity
+   real    :: v(nx,ny)        = 0.0        ! y component of fluid velocity
+   real    :: rho(nx,ny)      = 0.0        ! fluid density
+   real    :: vorticity(nx,ny)= 0.0        ! fluid vorticity
 
-   integer :: i,j,k,l,it,ia,ja,ib,jb
+! Lattice speeds D2Q9 and weights
+   integer :: cxs(1:nl) = [0, 0, 1, 1, 1, 0, -1, -1, -1]
+   integer :: cys(1:nl) = [0, 1, 1, 0, -1, -1, -1, 0, 1]
+   real    :: weights(1:nl) = [4.0/9.0, 1.0/9.0, 1.0/36.0, 1.0/9.0, 1.0/36.0, 1.0/9.0, 1.0/36.0, 1.0/9.0, 1.0/36.0]
+
+   integer :: i,j,l,it,ia,ja,ib,jb
    character(len=4) cit
 !   character(len=20) :: experiment='airfoil'
-   character(len=20) :: experiment='cylinder'
-!    character(len=20) :: experiment='sphere'
-!    character(len=20) :: experiment='cube'
-!   character(len=20) :: experiment='disks'
+!   character(len=20) :: experiment='cylinder'
+   character(len=20) :: experiment='disks'
 
 
 
    select case(trim(experiment))
-   case('cube')
-      f=initialization(rho0,3.0,0.5,0.0)
-      call cube(blanking,nx/6,ny/2,nz/2,7)
-   case('sphere')
-      f=initialization(rho0,12.0,1.5,0.0)
-      call sphere(blanking,nx/6,ny/2,nz/2,10)
    case('cylinder')
-      f=initialization(rho0,1.5,0.5,0.0)
+      f=initialization(rho0,1.5,0.5)
       call cylinder(blanking,nx/6,ny/2,25)
    case('airfoil')
-      f=initialization(rho0,2.5,0.0,0.0)
+      f=initialization(rho0,2.5,0.0)
       call airfoil(blanking)
    case('disks')
-      f=initialization(rho0,2.5,0.0,0.0)
+      f=initialization(rho0,2.5,0.0)
       call disks(blanking)
    case default
       print *,'invalid experiment',trim(experiment)
@@ -82,32 +68,26 @@ program LatticeBoltzmann
    rho=density(f)
    u= velocity(f,rho,cxs)
    v= velocity(f,rho,cys)
-   w= velocity(f,rho,czs)
-   vel = sqrt(u*u + v*v + w*w)
-   call  vorticity(u,v,w,vortx,vorty,vortz,vort)
-
+   vorticity = (cshift(v,1,1) - cshift(v,-1,1)) - (cshift(u,1,2) - cshift(u,-1,2))
    where (blanking)
       u=0.0
       v=0.0
-      w=0.0
-      vortx=0.0
-      vorty=0.0
-      vortz=0.0
+      vorticity=0.0
    endwhere
    it=0
    write(cit,'(i4.4)')it
-!   call gnuplotuf('vortz'//cit//'.uf',vortz(:,:,nz/2),nx,ny)
-!   call gnuplotuv('uv'//cit//'.dat',u(:,:,nz/2),v(:,:,nz/2),nx,ny)
-   call tecplot3D('tec'//cit//'.dat',rho,u,v,w,vel,vortx,vorty,vortz,vort,blanking)
+!   call gnuplot('vort0000.dat',u,nx,ny)
+   call gnuplotuf('vort0000.uf',vorticity,nx,ny)
+   call gnuplotuv('uv'//cit//'.dat',u,v,nx,ny)
 
 ! Simulation Main Loop
    fbnd=0.0
    do it = 1, nt
-      if ((mod(it, 10) == 0) .or. it == Nt) print '(a,i4)','iteration:', it
+      if ((mod(it, 1000) == 0) .or. it == Nt) print '(a,i4)','iteration:', it
 
 ! Drift
       cpu0=wtime(); call cpu_time(start)
-      call drift(f,feq)
+      call drift(f,feq,cxs,cys)
       cpu1=wtime(); call cpu_time(finish)
       cputime(1)=cputime(1)+finish-start
       waltime(1)=waltime(1)+cpu1-cpu0
@@ -129,13 +109,12 @@ program LatticeBoltzmann
       cpu0=wtime(); call cpu_time(start)
       u= velocity(f,rho,cxs)
       v= velocity(f,rho,cys)
-      w= velocity(f,rho,czs)
       cpu1=wtime(); call cpu_time(finish)
       cputime(4)=cputime(4)+finish-start
       waltime(4)=waltime(4)+cpu1-cpu0
 
       cpu0=wtime(); call cpu_time(start)
-      call fequil(feq,rho,u,v,w)
+      call fequil(feq,rho,u,v,weights,cxs,cys)
       cpu1=wtime(); call cpu_time(finish)
       cputime(5)=cputime(5)+finish-start
       waltime(5)=waltime(5)+cpu1-cpu0
@@ -149,30 +128,41 @@ program LatticeBoltzmann
 
 ! Apply boundary
       cpu0=wtime(); call cpu_time(start)
-      call bndapply(f,fbnd,blanking)
+      do j=1,ny
+      do i=1,nx
+         if (blanking(i,j)) f(i,j,1:nl)=fbnd(i,j,1:nl)
+      enddo
+      enddo
       cpu1=wtime(); call cpu_time(finish)
       cputime(7)=cputime(7)+finish-start
       waltime(7)=waltime(7)+cpu1-cpu0
 
 ! Plots dv/dx-du/dy
       cpu0=wtime(); call cpu_time(start)
-      if ((mod(it, 1000) == 0) .or. it == Nt) then
-         vel = sqrt(u*u + v*v + w*w)
-         call  vorticity(u,v,w,vortx,vorty,vortz,vort)
+      if ((mod(it, 10) == 0) .or. it == Nt) then
+        vorticity = sqrt(u*u + v*v)
+!!$OMP PARALLEL DO PRIVATE(i,j,ia,ib,ja,jb) SHARED(u,v)
+!          do j=1,ny
+!             ja=mod(j-2,ny)+1
+!             jb=mod(j,ny)+1
+!             do i=1,nx
+!                ia=mod(i-2,nx)+1
+!                ib=mod(i,nx)+1
+!                vorticity(i,j) = (v(ib,j) - v(ia,j))   -   (u(i,jb) - u(i,ja))
+!             enddo
+!          enddo
+!!$OMP END PARALLEL DO
+
+!         vorticity = (cshift(v,1,1) - cshift(v,-1,1)) - (cshift(u,1,2) - cshift(u,-1,2))
          where (blanking)
-            rho=0.0
             u=0.0
             v=0.0
-            w=0.0
-            vortx=0.0
-            vorty=0.0
-            vortz=0.0
+            vorticity=0.0
          endwhere
          write(cit,'(i4.4)')it
-!         call gnuplot('vort'//cit//'.dat',vorty,nx,ny)
-!         call gnuplotuf('vortz'//cit//'.uf',vortz,nx,ny)
-!         call gnuplotuv('uv'//cit//'.dat',u(:,:,nz/2),v(:,:,nz/2),nx,ny)
-         call tecplot3D('tec'//cit//'.dat',rho,u,v,w,vel,vortx,vorty,vortz,vort,blanking)
+!         call gnuplot('vort'//cit//'.dat',vorticity,nx,ny)
+         call gnuplotuf('vort'//cit//'.uf',vorticity,nx,ny)
+         call gnuplotuv('uv'//cit//'.dat',u,v,nx,ny)
       endif
       cpu1=wtime(); call cpu_time(finish)
       cputime(8)=cputime(8)+finish-start
@@ -184,5 +174,6 @@ program LatticeBoltzmann
       print '(tr10,a9,3f10.4)',cpuname(l),cputime(l),waltime(l),cputime(l)/waltime(l)
    enddo
    print '(tr10,a9,3f10.4)','summary  ',sum(cputime(1:8)),sum(waltime(1:8)),sum(cputime(1:8))/sum(waltime(1:8))
+
 
 end program LatticeBoltzmann

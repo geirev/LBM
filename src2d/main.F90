@@ -18,7 +18,7 @@ program LatticeBoltzmann
    implicit none
 
 ! Simulation parameters
-   integer, parameter :: nt   = 8000        ! 8000       ! number of timesteps
+   integer, parameter :: nt   = 16000        ! 8000       ! number of timesteps
    real,    parameter :: rho0 = 100.0      ! average density
    real,    parameter :: tau  = 0.62       ! collision timescale 0.6
    logical, parameter :: dbg  =.false.     ! print diagnostics if tru

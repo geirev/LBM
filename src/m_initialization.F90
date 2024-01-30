@@ -1,6 +1,6 @@
 module m_initialization
 contains
-function initialization(rho0,afac,ycos,zcos) result(f)
+function initialization(rho0,afac,ycos,zcos,blanking) result(f)
    use mod_dimensions
    use m_density
    real, intent(in)    :: rho0
@@ -9,6 +9,7 @@ function initialization(rho0,afac,ycos,zcos) result(f)
    real, intent(in)    :: zcos
    real f(nx,ny,nz,nl)
    real, allocatable :: rho(:,:,:)
+   logical, intent(inout) :: blanking(nx,ny,nz)
    integer i,j,k
    real,    parameter :: pi   = 3.1415927  ! pi
 
@@ -17,7 +18,7 @@ function initialization(rho0,afac,ycos,zcos) result(f)
 
    ! intitialize to one + small perturbation
    call random_number(f)
-   f=1.0 + 0.01*f
+   f=1.0 !+ 0.01*f
 
    ! Adding horizontal velocity component in x direction with some y-variation
    do k=1,nz
@@ -37,7 +38,7 @@ function initialization(rho0,afac,ycos,zcos) result(f)
 
 ! Rescale to get constant reference density rho0
    allocate(rho(nx,ny,nz))
-   rho=density(f)
+   rho=density(f,blanking)
    do k=1,nz
    do j=1,ny
    do i=1,nx

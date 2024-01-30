@@ -1,11 +1,12 @@
 module m_velocity
 ! Computes density as a sum over particles with different velocities
 contains
-function velocity(f,rho,cs) result(vel)
+function velocity(f,rho,cs,blanking) result(vel)
    use mod_dimensions
    real,    intent(in) :: f(nx,ny,nz,nl)
    real,    intent(in) :: rho(nx,ny,nz)
    integer, intent(in) :: cs(nl)
+   logical, intent(in) :: blanking(nx,ny,nz)
    real vel(nx,ny,nz)
    integer i,j,k,l
 
@@ -21,6 +22,18 @@ function velocity(f,rho,cs) result(vel)
    enddo
 !$OMP END PARALLEL DO
    enddo
+
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(vel,blanking)
+   do k=1,nz
+      do j=1,ny
+         do i=1,nx
+            if (blanking(i,j,k)) then
+               vel(i,j,k)=0.0
+            endif
+         enddo
+      enddo
+    enddo
+!$OMP END PARALLEL DO
 
 end function
 end module

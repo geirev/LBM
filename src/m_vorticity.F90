@@ -1,6 +1,6 @@
 module m_vorticity
 contains
-subroutine vorticity(u,v,w,vortx,vorty,vortz,vort)
+subroutine vorticity(u,v,w,vortx,vorty,vortz,vort,blanking)
    use mod_dimensions
    real,    intent(in)  :: u(nx,ny,nz)
    real,    intent(in)  :: v(nx,ny,nz)
@@ -9,6 +9,7 @@ subroutine vorticity(u,v,w,vortx,vorty,vortz,vort)
    real,    intent(out) :: vorty(nx,ny,nz)
    real,    intent(out) :: vortz(nx,ny,nz)
    real,    intent(out) :: vort(nx,ny,nz)
+   logical, intent(in)  :: blanking(nx,ny,nz)
    integer i,j,k,ia,ib,ja,jb,ka,kb
 
 !   vortx = (cshift(w,1,2) - cshift(w,-1,2)) - (cshift(v,1,3) - cshift(v,-1,3))
@@ -51,6 +52,20 @@ subroutine vorticity(u,v,w,vortx,vorty,vortz,vort)
                 vortz(i,j,k) = (v(ib,j,k) - v(ia,j,k))   -   (u(i,jb,k) - u(i,ja,k))
              enddo
           enddo
+       enddo
+!$OMP END PARALLEL DO
+
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(vortx,vorty,vortz)
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx
+               if (blanking(i,j,k)) then
+                  vortx(i,j,k)=0.0
+                  vorty(i,j,k)=0.0
+                  vortz(i,j,k)=0.0
+               endif
+            enddo
+         enddo
        enddo
 !$OMP END PARALLEL DO
 

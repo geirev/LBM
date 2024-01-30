@@ -1,6 +1,6 @@
-module m_cylinder
+module m_channel
 contains
-subroutine cylinder(blanking,ipos,jpos,radii)
+subroutine channel(blanking,ipos,jpos,radii)
    use mod_dimensions
    logical, intent(inout) :: blanking(nx,ny,nz)
    integer, intent(in)    :: ipos
@@ -14,5 +14,9 @@ subroutine cylinder(blanking,ipos,jpos,radii)
    enddo
    enddo
 
+   blanking(:,1,:)=.true.
+   blanking(:,ny,:)=.true.
+
 end subroutine
 end module
+

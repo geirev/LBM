@@ -10,7 +10,7 @@ LD = gfortran
 CF90 = gfortran
 CF77 = gfortran
 
-FFLAGS = -c -g -fdefault-real-8 -C -u -Xlist -O2 -std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Werror -O3 -fopenmp
+FFLAGS = -c -g -fdefault-real-8 -C -u -Xlist -O2 -std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Werror -Ofast -fopenmp
 
 
 F77FLG =
@@ -22,7 +22,7 @@ CPPMODEL  =
 
 CPPFLAGS = -traditional -P $(CPPARCH) $(CPPMODEL)
 
-LIBS =    -lblas -lfftw3 -llapack
+LIBS =   ./libpreplot.a  -lblas -lfftw3 -llapack
 
 BINDIR = $(HOME)/bin
 

@@ -1,7 +1,6 @@
 F90SOURCE = \
 	main.F90\
 	m_airfoil.F90\
-	m_blankvars.F90\
 	m_bndapply.F90\
 	m_channel.F90\
 	m_collisions.F90\
@@ -18,11 +17,15 @@ F90SOURCE = \
 	m_initialization.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
+	m_pdfout.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
 	m_saverestart.F90\
 	m_sphere.F90\
+	m_string.F90\
+	m_tecout.F90\
 	m_tecplot3D.F90\
+	m_tecplot.F90\
 	m_velocity.F90\
 	m_vorticity.F90\
 	m_wtime.F90

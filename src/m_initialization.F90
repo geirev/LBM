@@ -18,7 +18,7 @@ function initialization(rho0,afac,ycos,zcos,blanking) result(f)
 
    ! intitialize to one + small perturbation
    call random_number(f)
-   f=1.0 !+ 0.01*f
+   f=1.0 + 0.01*f
 
    ! Adding horizontal velocity component in x direction with some y-variation
    do k=1,nz

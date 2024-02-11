@@ -10,6 +10,7 @@ density	m_density.F90	/^module
 dimensions	mod_dimensions.F90	/^module
 disks	m_disks.F90	/^module
 drift	m_drift.F90	/^module
+feqscalar	m_feqscalar.F90	/^module
 fequil	m_fequil.F90	/^module
 gnuplot	m_gnuplot.F90	/^module
 gnuplotuf	m_gnuplotuf.F90	/^module
@@ -27,6 +28,7 @@ m_defbnd	m_defbnd.F90	/^module
 m_density	m_density.F90	/^module
 m_disks	m_disks.F90	/^module
 m_drift	m_drift.F90	/^module
+m_feqscalar	m_feqscalar.F90	/^module
 m_fequil	m_fequil.F90	/^module
 m_gnuplot	m_gnuplot.F90	/^module
 m_gnuplotuf	m_gnuplotuf.F90	/^module

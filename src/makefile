@@ -22,7 +22,7 @@ CPPMODEL  =
 
 CPPFLAGS = -traditional -P $(CPPARCH) $(CPPMODEL)
 
-LIBS =   ./libpreplot.a  -lblas -lfftw3 -llapack
+LIBS =  ./libsampling.a ./libpreplot.a  -lblas -lfftw3 -llapack
 
 BINDIR = $(HOME)/bin
 

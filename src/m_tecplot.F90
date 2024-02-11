@@ -60,6 +60,9 @@ contains
    !open scratch files
    call RANDOM_NUMBER(rand_num)
    this%sfid = int(rand_num*1000+10)
+   ! Added close to avoid occational:
+   ! "Fortran runtime error: Cannot change STATUS parameter in OPEN statement"
+   close(this%sfid)
    open(unit=this%sfid, status='scratch', form='unformatted', access='stream')
    call this%write_header(nnx,nny,nnz,title,variables)
    this%isInitialized = .true.
@@ -103,7 +106,7 @@ contains
    allocate(bytes(max_single_data_length))
 
    inquire(UNIT = this%sfid, SIZE=file_length)
-   WRITE(*,*) 'Tecplot: zone data length : ', file_length*1.0/(1024.0*1024.0), 'MB'
+   !WRITE(*,*) 'Tecplot: zone data length : ', file_length*1.0/(1024.0*1024.0), 'MB'
    ! add eohmarker
    write(this%fid) this%eohmarker
 

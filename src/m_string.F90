@@ -23,7 +23,7 @@ contains
    character(len=*),intent(in) :: source
    character,intent(in) :: delimeter
    integer :: buffer_size
-   
+
    buffer_size = len(source)
    allocate(character(len=buffer_size) :: this%buffer)
 
@@ -31,9 +31,9 @@ contains
    this%delimeter = delimeter
    this%current_pos = 0
    this%size = len(trim(source))
-   write(*,*) source
-   write(*,*) this%buffer
-   write(*,*) this%size
+!   write(*,*) source
+!   write(*,*) this%buffer
+!   write(*,*) this%size
    end subroutine string_splitt
 
    ! next out_str must be at least 50 chars long
@@ -51,7 +51,7 @@ contains
    this%current_pos = this%current_pos + 1
    do while(this%buffer(this%current_pos : this%current_pos) &
          .ne. this%delimeter)
-      
+
       out_str(sub_pos:sub_pos) = this%buffer(this%current_pos : this%current_pos)
       sub_pos = sub_pos + 1
       this%current_pos = this%current_pos + 1

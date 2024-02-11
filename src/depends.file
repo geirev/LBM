@@ -9,6 +9,7 @@ main.o:      m_defbnd.o
 main.o:      m_density.o
 main.o:      m_disks.o
 main.o:      m_drift.o
+main.o:      m_feqscalar.o
 main.o:      m_fequil.o
 main.o:      m_gnuplot.o
 main.o:      m_gnuplotuf.o
@@ -18,9 +19,11 @@ main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o
 main.o:      MODEL.CPP
 main.o:      m_pdfout.o
+main.o:      m_pseudo2D.o
 main.o:      m_readinfile.o
 main.o:      m_readrestart.o
 main.o:      m_saverestart.o
+main.o:      m_set_random_seed2.o
 main.o:      m_sphere.o
 main.o:      m_tecout.o
 main.o:      m_velocity.o
@@ -57,6 +60,10 @@ m_drift.o:      makefile
 m_drift.o:      mod_D3Q27setup.o
 m_drift.o:      mod_dimensions.o
 m_drift.o:      MODEL.CPP
+m_feqscalar.o:      makefile
+m_feqscalar.o:      mod_D3Q27setup.o
+m_feqscalar.o:      mod_dimensions.o
+m_feqscalar.o:      MODEL.CPP
 m_fequil.o:      makefile
 m_fequil.o:      mod_D3Q27setup.o
 m_fequil.o:      mod_dimensions.o
@@ -71,6 +78,7 @@ m_initialization.o:      makefile
 m_initialization.o:      m_density.o
 m_initialization.o:      mod_dimensions.o
 m_initialization.o:      MODEL.CPP
+m_initialization.o:      m_readinfile.o
 mod_D3Q27setup.o:      makefile
 mod_D3Q27setup.o:      mod_dimensions.o
 mod_D3Q27setup.o:      MODEL.CPP

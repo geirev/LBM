@@ -12,28 +12,32 @@ function velocity(f,rho,cs,blanking) result(vel)
 
    vel=0.0
    do l=1,nl
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(l, vel, f, cs, rho)
-   do k=1,nz
-   do j=1,ny
-   do i=1,nx
-      vel(i,j,k) =  vel(i,j,k) + f(i,j,k,l)*real(cs(l))/rho(i,j,k)
-   enddo
-   enddo
-   enddo
+      if (cs(l) /=0) then
+         do k=1,nz
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j) SHARED(k, l, vel, f, cs)
+         do j=1,ny
+         do i=1,nx
+            vel(i,j,k) =  vel(i,j,k) + f(i,j,k,l)*real(cs(l))
+         enddo
+         enddo
 !$OMP END PARALLEL DO
+         enddo
+      endif
    enddo
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(vel,blanking)
    do k=1,nz
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j) SHARED(k, vel, cs, rho, blanking)
       do j=1,ny
-         do i=1,nx
-            if (blanking(i,j,k)) then
-               vel(i,j,k)=0.0
-            endif
-         enddo
+      do i=1,nx
+         if (blanking(i,j,k)) then
+            vel(i,j,k)=0.0
+         else
+            vel(i,j,k) =  vel(i,j,k)/rho(i,j,k)
+         endif
       enddo
-    enddo
+      enddo
 !$OMP END PARALLEL DO
+   enddo
 
 end function
 end module

@@ -10,6 +10,7 @@ F90SOURCE = \
 	m_density.F90\
 	m_disks.F90\
 	m_drift.F90\
+	m_feqscalar.F90\
 	m_fequil.F90\
 	m_gnuplot.F90\
 	m_gnuplotuf.F90\

@@ -1,12 +1,12 @@
 F90SOURCE = \
 	main.F90\
 	m_airfoil.F90\
-	m_bndapply.F90\
+	m_bndbounceback.F90\
+	m_bndpressure.F90\
 	m_channel.F90\
 	m_collisions.F90\
 	m_cube.F90\
 	m_cylinder.F90\
-	m_defbnd.F90\
 	m_density.F90\
 	m_disks.F90\
 	m_drift.F90\

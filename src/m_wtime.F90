@@ -3,12 +3,12 @@ module m_wtime
    real :: cputime(10)=0.0
    real :: waltime(10)=0.0
    character(len=9) :: cpuname(1:8) = ['drift    ',&
-                                       'defbnd   ',&
+                                       'bndbb    ',&
                                        'rho      ',&
                                        'velocity ',&
                                        'feq      ',&
                                        'collision',&
-                                       'bndapply ',&
+                                       'bndopen  ',&
                                        'printing ']
 contains
 function wtime ( )

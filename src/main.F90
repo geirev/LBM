@@ -7,12 +7,12 @@ program LatticeBoltzmann
    use m_pdfout
    use m_initialization
    use m_airfoil
-   use m_bndapply
    use m_channel
    use m_collisions
    use m_cube
    use m_cylinder
-   use m_defbnd
+   use m_bndbounceback
+   use m_bndpressure
    use m_density
    use m_disks
    use m_drift
@@ -25,7 +25,6 @@ program LatticeBoltzmann
    use m_readrestart
    use m_saverestart
    use m_sphere
-!   use m_tecplot3D
    use m_velocity
    use m_vorticity
    use m_wtime
@@ -36,7 +35,7 @@ program LatticeBoltzmann
 ! Main variables
    real    :: f(nx,ny,nz,nl)     = 0.0        ! density function
    real    :: feq(nx,ny,nz,nl)   = 0.0        ! Maxwells equilibrium density function
-   real    :: fbnd(nx,ny,nz,nl)  = 0.0        ! Boundary conditions
+!   real    :: fbnd(nx,ny,nz,nl)  = 0.0        ! Boundary conditions
    logical :: lblanking(nx,ny,nz)= .false.    ! blanking boundary
    real    :: feqscal(nl)        = 0.0        ! A scalar f used for boundary conditions
 
@@ -112,7 +111,16 @@ program LatticeBoltzmann
    w=0.0
 !   call random_number(rho)
    rho=rho0 + 0.1*rho
+
+! Pressure gradient initialization for periodic boundaries with pressure drive.
+!   do i=1,nx
+!      rho(i,:,:)=rho(i,:,:)+ 1.0 - 2.0*(real(i-1)/real(nx-1))
+!   enddo
+
+! Inititialization with equilibrium distribution
    call fequil(f,rho,u,v,w)
+
+! Costant inflow boundary distribution.
    call feqscalar(feqscal,rho0,u(1,1,1),v(1,1,1),w(1,1,1))
 
 ! Restart from restart file
@@ -122,19 +130,10 @@ program LatticeBoltzmann
    endif
 
 ! Simulation Main Loop
-   fbnd=0.0
+   !fbnd=0.0
    do it = nt0, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6)','iteration:', it
 
-! Inflow boundary
-      do l=1,nl
-      do k=1,nz
-      do j=1,ny
-         f(1,j,k,l)=feqscal(l)
-         f(nx,j,k,l)=f(nx-1,j,k,l)
-      enddo
-      enddo
-      enddo
 
 ! macro variables
       cpu0=wtime(); call cpu_time(start)
@@ -187,6 +186,7 @@ program LatticeBoltzmann
       cputime(6)=cputime(6)+finish-start
       waltime(6)=waltime(6)+cpu1-cpu0
 
+
 ! Drift
       cpu0=wtime(); call cpu_time(start)
       call drift(f,feq)
@@ -194,20 +194,31 @@ program LatticeBoltzmann
       cputime(1)=cputime(1)+finish-start
       waltime(1)=waltime(1)+cpu1-cpu0
 
-! Set reflective boundaries
+! Apply Bounce back boundary on fixed walls etc
       cpu0=wtime(); call cpu_time(start)
-      call defbnd(fbnd,f,lblanking)
+      call bndbounceback(f,lblanking)
       cpu1=wtime(); call cpu_time(finish)
       cputime(2)=cputime(2)+finish-start
       waltime(2)=waltime(2)+cpu1-cpu0
 
-! Apply boundary
+! Inflow outflow boundary
+! equilibrium scheme with specified u,v,w,rho on inflow. Secv 5.3.4.2
+! Outflow sponge boundary copying from nx-1 to nx
       cpu0=wtime(); call cpu_time(start)
-      call bndapply(f,fbnd,lblanking)
+      do l=1,nl
+      do k=1,nz
+      do j=1,ny
+         f(1,j,k,l)=feqscal(l)
+         f(nx,j,k,l)=f(nx-1,j,k,l)
+      enddo
+      enddo
+      enddo
       cpu1=wtime(); call cpu_time(finish)
       cputime(7)=cputime(7)+finish-start
       waltime(7)=waltime(7)+cpu1-cpu0
 
+
+!!   call  bndpressure(f,rho,u,v,w)
 
    enddo
    print '(tr22,3a)','cputime  ','walltime  ','speedup   '

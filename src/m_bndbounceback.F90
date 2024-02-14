@@ -4,7 +4,7 @@ subroutine bndbounceback(f,blanking)
    use mod_dimensions
    implicit none
    logical, intent(in)    :: blanking(nx,ny,nz)
-   real,    intent(inout) :: f(nx,ny,nz,nl)
+   real,    intent(inout) :: f(0:nx+1,ny,nz,nl)
    real tmp
    integer i,j,k,l
 

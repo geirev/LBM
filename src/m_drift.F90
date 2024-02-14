@@ -6,8 +6,8 @@ subroutine drift(f,feq)
    use mod_dimensions
    use mod_D3Q27setup
    implicit none
-   real, intent(out) :: f(nx,ny,nz,nl)
-   real, intent(in)  :: feq(nx,ny,nz,nl)
+   real, intent(out) :: f(0:nx+1,ny,nz,nl)
+   real, intent(in)  :: feq(0:nx+1,ny,nz,nl)
    integer l,i,j,k,i1,j1,k1
 
 !$OMP PARALLEL DO PRIVATE(i,j,k,l,i1,j1,k1) SHARED(f, feq, cxs, cys, czs)
@@ -17,7 +17,8 @@ subroutine drift(f,feq)
             do j=1,ny
                j1=mod(ny+j-1-cys(l),ny)+1
                do i=1,nx
-                  i1=mod(nx+i-1-cxs(l),nx)+1
+ !                 i1=mod(nx+i-1-cxs(l),nx)+1
+                  i1=i-cxs(l)
                   f(i,j,k,l) = feq(i1,j1,k1,l)
                enddo
             enddo

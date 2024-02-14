@@ -3,7 +3,7 @@ contains
 subroutine readrestart(fname,f)
    use mod_dimensions
    character(len=*), intent(in) :: fname
-   real, intent(out) :: f(nx,ny,nz,nl)
+   real, intent(out) :: f(0:nx+1,ny,nz,nl)
 
    logical ex
    integer :: irec,i,j,k,n

@@ -4,7 +4,7 @@ subroutine initialization(f,blanking)
    use mod_dimensions
    use m_density
    use m_readinfile
-   real,    intent(inout)   :: f(nx,ny,nz,nl)
+   real,    intent(inout)   :: f(0:nx+1,ny,nz,nl)
    logical, intent(inout) :: blanking(nx,ny,nz)
    real,    allocatable   :: rho(:,:,:)
    real,    parameter     :: pi   = 3.1415927  ! pi

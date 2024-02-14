@@ -4,8 +4,8 @@ subroutine collisions(f,feq,tau)
 ! returns f in feq after collisions
    use mod_dimensions
    implicit none
-   real, intent(in)    :: f(nx,ny,nz,nl)
-   real, intent(inout) :: feq(nx,ny,nz,nl)
+   real, intent(in)    :: f(0:nx+1,ny,nz,nl)
+   real, intent(inout) :: feq(0:nx+1,ny,nz,nl)
    real, intent(in)    :: tau
    integer l
 

@@ -1,8 +1,8 @@
 build
 F90-bgk
 latticeboltzmann-python
-run
-run2d
+run*
+src/old
 NACA
 papers
 docs

@@ -3,7 +3,7 @@ module m_velocity
 contains
 function velocity(f,rho,cs,blanking) result(vel)
    use mod_dimensions
-   real,    intent(in) :: f(nx,ny,nz,nl)
+   real,    intent(in) :: f(0:nx+1,ny,nz,nl)
    real,    intent(in) :: rho(nx,ny,nz)
    integer, intent(in) :: cs(nl)
    logical, intent(in) :: blanking(nx,ny,nz)

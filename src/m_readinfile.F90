@@ -4,6 +4,7 @@ module m_readinfile
    integer  nt1      ! Last timestep
    integer  iout     ! number of steps between outputs 0, 0+iout, ...
    integer  ifout    ! number of steps between outputs 0, 0+iout, ...
+   integer  ibnd     ! Type of bondary condition in i direction
    real     rho0     ! Average density
    real     tau      ! Collision timescale 0.6
    logical  dbg      ! Print diagnostics if tru
@@ -42,6 +43,7 @@ implicit none
       read(10,*)nt1                ; print '(a,tr3,i5)',   'nt1=           ',nt1
       read(10,*)iout               ; print '(a,tr3,i5)',   'iout=          ',iout
       read(10,*)ifout              ; print '(a,tr3,i7)',   'ifout=         ',ifout
+      read(10,*)ibnd               ; print '(a,tr3,i7)',   'ibnd=          ',ibnd
       read(10,*)rho0               ; print '(a,tr2,f6.2)', 'rho0=          ',rho0
       read(10,*)tau                ; print '(a,tr2,f6.2)', 'tau=           ',tau
       read(10,'(1x,l1)')dbg        ; print '(a,tr7,l1)',   'dbg=           ',dbg

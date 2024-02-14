@@ -8,7 +8,7 @@ subroutine fequil(feq,rho,u,v,w)
    real,    intent(in) :: u(nx,ny,nz)
    real,    intent(in) :: v(nx,ny,nz)
    real,    intent(in) :: w(nx,ny,nz)
-   real,    intent(inout):: feq(nx,ny,nz,nl)
+   real,    intent(inout):: feq(0:nx+1,ny,nz,nl)
    integer i,j,k,l
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l) SHARED(feq, rho, u, v, w, weights, cxs, cys, czs)

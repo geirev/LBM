@@ -14,7 +14,6 @@ main.o:      m_fequil.o
 main.o:      m_gnuplot.o
 main.o:      m_gnuplotuf.o
 main.o:      m_gnuplotuv.o
-main.o:      m_initialization.o
 main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o
 main.o:      MODEL.CPP
@@ -39,6 +38,7 @@ m_bndpressure.o:      makefile
 m_bndpressure.o:      m_feqscalar.o
 m_bndpressure.o:      mod_dimensions.o
 m_bndpressure.o:      MODEL.CPP
+m_bndpressure.o:      m_readinfile.o
 m_channel.o:      makefile
 m_channel.o:      mod_dimensions.o
 m_channel.o:      MODEL.CPP
@@ -75,11 +75,6 @@ m_gnuplotuf.o:      makefile
 m_gnuplotuf.o:      MODEL.CPP
 m_gnuplotuv.o:      makefile
 m_gnuplotuv.o:      MODEL.CPP
-m_initialization.o:      makefile
-m_initialization.o:      m_density.o
-m_initialization.o:      mod_dimensions.o
-m_initialization.o:      MODEL.CPP
-m_initialization.o:      m_readinfile.o
 mod_D3Q27setup.o:      makefile
 mod_D3Q27setup.o:      mod_dimensions.o
 mod_D3Q27setup.o:      MODEL.CPP

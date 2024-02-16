@@ -5,7 +5,6 @@ program LatticeBoltzmann
    use m_set_random_seed2
    use m_tecout
    use m_pdfout
-   use m_initialization
    use m_airfoil
    use m_channel
    use m_collisions
@@ -35,7 +34,6 @@ program LatticeBoltzmann
 ! Main variables
    real    :: f(0:nx+1,ny,nz,nl)     = 0.0        ! density function
    real    :: feq(0:nx+1,ny,nz,nl)   = 0.0        ! Maxwells equilibrium density function
-!   real    :: fbnd(nx,ny,nz,nl)  = 0.0        ! Boundary conditions
    logical :: lblanking(nx,ny,nz)= .false.    ! blanking boundary
    real    :: feqscal(nl)        = 0.0        ! A scalar f used for boundary conditions
 
@@ -64,27 +62,26 @@ program LatticeBoltzmann
    real xlength,ylength
    integer n1,n2
 
+
+   real width,mu,grad,cs2,dw
+
    call readinfile
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Set a variable random seed
+! Sample 2D pseudo random fields
    call set_random_seed2
    cor1=20.0/sqrt(3.0)
    cor2=20.0/sqrt(3.0)
    dir=0.0
-
    xlength=real(nx-1)
    ylength=real(ny-1)
-
    dx=1.0
    dy=1.0
-
    n1=nx
    n2=ny
 
-! Sample 2D pseudo random fields
-   call pseudo2D(rho,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.true.)
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Define solid elements and walls
 
    select case(trim(experiment))
    case('cube')
@@ -105,58 +102,72 @@ program LatticeBoltzmann
    end select
 
 ! Initialization
-!   call initialization(f,lblanking) ! old initialization
-   u=0.0  !0.12
+   u=uini
    v=0.0
    w=0.0
-   rho=rho0 ! + 0.1*rho
+   rho=rho0
+   if (lpseudo) then
+     call pseudo2D(rho,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.true.)
+     rho=rho0 + 0.1*rho
+   endif
 
+   if (ibnd==2) then
 ! Pressure gradient initialization for periodic boundaries with pressure drive.
-   do i=1,nx
-      rho(i,:,:)=rho(i,:,:)+ 1.0 - 2.0*(real(i-1)/real(nx-1))
-   enddo
+      do i=1,nx
+         rho(i,:,:)=rho(i,:,:)+ rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
+      enddo
+   elseif (ibnd==1) then
+! Costant inflow boundary distribution.
+      call feqscalar(feqscal,rho0,u(1,1,1),v(1,1,1),w(1,1,1))
+   endif
 
 ! Inititialization with equilibrium distribution
    call fequil(f,rho,u,v,w)
-
-! Costant inflow boundary distribution.
-   call feqscalar(feqscal,rho0,u(1,1,1),v(1,1,1),w(1,1,1))
 
 ! Restart from restart file
    if (nt0 > 1) then
       write(cit,'(i6.6)')nt0
       call readrestart('restart'//cit//'.uf',f)
+
+!      cs2=1.0/3.0
+!      rho=density(f,lblanking)
+!      u= velocity(f,rho,cxs,lblanking)
+!      width=real(ny-4)
+!      mu=cs2*(tau-0.5)
+!      grad=cs2*2.0*rhoa/real(nx)
+!      dw=width/real(ny-3)
+!      open(10,file='uvel.dat')
+!      do j=2,ny-1
+!         write(10,'(i4,2f13.5)')j,u(nx/2,j,2),&
+!                    (1.0/(2.0*rho0*mu))*grad*((width/2.0)**2-(dw*(real(j)-2.0)-width/2.0)**2)
+!      enddo
+!      close(10)
+!      stop
    endif
 
 ! Simulation Main Loop
-   !fbnd=0.0
    do it = nt0, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6)','iteration:', it
 
 
 ! macro variables
       cpu0=wtime(); call cpu_time(start)
-      rho=density(f,lblanking)
+         rho=density(f,lblanking)
       cpu1=wtime(); call cpu_time(finish)
       cputime(3)=cputime(3)+finish-start
       waltime(3)=waltime(3)+cpu1-cpu0
 
       cpu0=wtime(); call cpu_time(start)
-      u= velocity(f,rho,cxs,lblanking)
-      v= velocity(f,rho,cys,lblanking)
-      w= velocity(f,rho,czs,lblanking)
-!      print '(a,3g13.5)','dens : ',rho(200,50,2)
-!      print '(a,3g13.5)','vel u: ',u(200,50,2)
-!      print '(a,3g13.5)','vel v: ',v(200,50,2)
-!      print '(a,3g13.5)','vel w: ',w(200,50,2)
+         u= velocity(f,rho,cxs,lblanking)
+         v= velocity(f,rho,cys,lblanking)
+         w= velocity(f,rho,czs,lblanking)
       cpu1=wtime(); call cpu_time(finish)
       cputime(4)=cputime(4)+finish-start
       waltime(4)=waltime(4)+cpu1-cpu0
 
 ! Calculate equlibrium distribution
       cpu0=wtime(); call cpu_time(start)
-      call fequil(feq,rho,u,v,w)
-!      print '(a,27g13.5)','feq  : ',feq(200,50,2,1:27)
+         call fequil(feq,rho,u,v,w)
       cpu1=wtime(); call cpu_time(finish)
       cputime(5)=cputime(5)+finish-start
       waltime(5)=waltime(5)+cpu1-cpu0
@@ -180,7 +191,7 @@ program LatticeBoltzmann
 
 ! Apply collisions
       cpu0=wtime(); call cpu_time(start)
-      call collisions(f,feq,tau) ! NB returns feq
+         call collisions(f,feq,tau) ! NB returns feq
       cpu1=wtime(); call cpu_time(finish)
       cputime(6)=cputime(6)+finish-start
       waltime(6)=waltime(6)+cpu1-cpu0
@@ -213,14 +224,14 @@ program LatticeBoltzmann
 
 ! Apply Bounce back boundary on fixed walls etc
       cpu0=wtime(); call cpu_time(start)
-      call bndbounceback(feq,lblanking)
+         call bndbounceback(feq,lblanking)
       cpu1=wtime(); call cpu_time(finish)
       cputime(2)=cputime(2)+finish-start
       waltime(2)=waltime(2)+cpu1-cpu0
 
 ! Drift
       cpu0=wtime(); call cpu_time(start)
-      call drift(f,feq)
+         call drift(f,feq)
       cpu1=wtime(); call cpu_time(finish)
       cputime(1)=cputime(1)+finish-start
       waltime(1)=waltime(1)+cpu1-cpu0

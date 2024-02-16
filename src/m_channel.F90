@@ -8,14 +8,8 @@ subroutine channel(blanking,ipos,jpos,radii)
    integer, intent(in)    :: radii
    integer i,j
 
-   do j=1,ny
-   do i=1,nx
-      if ( ((i-ipos)**2 + (j-jpos)**2 ) <  radii**2) blanking(i,j,:) = .true.
-   enddo
-   enddo
-
-   blanking(:,1,:)=.true.
-   blanking(:,ny,:)=.true.
+   blanking(:,1:2,:)=.true.
+   blanking(:,ny-1:ny,:)=.true.
 
 end subroutine
 end module

@@ -7,7 +7,7 @@ subroutine bndpressure(f,rho,u,v,w)
    use m_feqscalar
    use m_readinfile
    implicit none
-   real, intent(inout) :: f(0:nx+1,ny,nz,nl)
+   real, intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(in)    :: rho(nx,ny,nz)
    real, intent(in)    :: u(nx,ny,nz)
    real, intent(in)    :: v(nx,ny,nz)

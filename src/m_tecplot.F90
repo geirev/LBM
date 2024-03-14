@@ -36,15 +36,33 @@ end type tecplot_time_file
 private :: plt_init_sb, plt_write_mesh_sb
 
 contains
+   integer function findunit()
+   implicit none
+   integer  iunit
+   integer  incr
+   logical  busy
+
+   iunit=10
+   busy  = .true.
+   do while ( busy )
+      iunit = iunit + 1
+      if (iunit .gt. 99) then
+         iunit = 0
+         exit
+      endif
+      inquire(unit=iunit,opened=busy)
+   enddo
+   findunit=iunit
+   end function findunit
+
    subroutine plt_init_sb(this, fname, nnx, nny, nnz, title, variables)
    implicit none
-   class(tecplot_time_file) :: this
-   character(len=*),intent(in) :: fname
-   integer,intent(in) :: nnx,nny,nnz
-   character(len=*),intent(in) :: title
-   character(len=*),intent(in) :: variables
-   real(kind=4) :: rand_num
-   character(len=20) :: temp_str
+   class(tecplot_time_file)     :: this
+   character(len=*), intent(in) :: fname
+   integer,          intent(in) :: nnx,nny,nnz
+   character(len=*), intent(in) :: title
+   character(len=*), intent(in) :: variables
+   character(len=20)            :: temp_str
 
    if(this%isInitialized) then
       write(*,*) 'Tecplot, ERROR : plt file already initialized'
@@ -54,16 +72,13 @@ contains
    this%max_I = nnx
    this%max_J = nny
    this%max_K = nnz
-   call RANDOM_NUMBER(rand_num)
-   this%fid = int(rand_num*1000+10)
+
+   this%fid=findunit()
    open(unit=this%fid, file=fname, status='replace', form='unformatted', access='stream')
-   !open scratch files
-   call RANDOM_NUMBER(rand_num)
-   this%sfid = int(rand_num*1000+10)
-   ! Added close to avoid occational:
-   ! "Fortran runtime error: Cannot change STATUS parameter in OPEN statement"
-   close(this%sfid)
+
+   this%sfid=findunit()
    open(unit=this%sfid, status='scratch', form='unformatted', access='stream')
+
    call this%write_header(nnx,nny,nnz,title,variables)
    this%isInitialized = .true.
    this%n_zone_header = 0

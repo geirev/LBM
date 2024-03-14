@@ -8,8 +8,8 @@ subroutine channel(blanking,ipos,jpos,radii)
    integer, intent(in)    :: radii
    integer i,j
 
-   blanking(:,1:2,:)=.true.
-   blanking(:,ny-1:ny,:)=.true.
+   blanking(:,1,:)=.true.
+   blanking(:,ny,:)=.true.
 
 end subroutine
 end module

@@ -11,6 +11,30 @@ module m_wtime
                                        'bndopen  ',&
                                        'printing ']
 contains
+
+subroutine cpustart()
+   cpu0=wtime()
+   call cpu_time(start)
+end
+
+subroutine cpufinish(icpu)
+   integer, intent(in) :: icpu
+   cpu1=wtime()
+   call cpu_time(finish)
+   cputime(icpu)=cputime(icpu)+finish-start
+   waltime(icpu)=waltime(icpu)+cpu1-cpu0
+end
+
+subroutine cpuprint()
+   implicit none
+   integer l
+   print '(tr22,3a)','cputime  ','walltime  ','speedup   '
+   do l=1,8
+      print '(tr10,a9,3f10.4)',cpuname(l),cputime(l),waltime(l),cputime(l)/(waltime(l)+tiny(cpu1))
+   enddo
+   print '(tr10,a9,3f10.4)','summary  ',sum(cputime(1:8)),sum(waltime(1:8)),sum(cputime(1:8))/sum(waltime(1:8))
+end subroutine
+
 function wtime ( )
 
 !*****************************************************************************80

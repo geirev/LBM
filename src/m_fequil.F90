@@ -3,13 +3,17 @@ contains
 subroutine fequil(feq,rho,u,v,w)
    use mod_dimensions
    use mod_D3Q27setup
+   use m_wtime
    implicit none
    real,    intent(in) :: rho(nx,ny,nz)
    real,    intent(in) :: u(nx,ny,nz)
    real,    intent(in) :: v(nx,ny,nz)
    real,    intent(in) :: w(nx,ny,nz)
-   real,    intent(inout):: feq(0:nx+1,ny,nz,nl)
+   real,    intent(inout):: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    integer i,j,k,l
+   integer, parameter :: icpu=5
+   call cpustart()
+
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l) SHARED(feq, rho, u, v, w, weights, cxs, cys, czs)
    do l=1,nl
@@ -25,6 +29,7 @@ subroutine fequil(feq,rho,u,v,w)
    enddo
    enddo
 !$OMP END PARALLEL DO
+   call cpufinish(icpu)
 
 end subroutine
 end module

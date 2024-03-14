@@ -2,11 +2,14 @@ module m_bndbounceback
 contains
 subroutine bndbounceback(f,blanking)
    use mod_dimensions
+   use m_wtime
    implicit none
    logical, intent(in)    :: blanking(nx,ny,nz)
-   real,    intent(inout) :: f(0:nx+1,ny,nz,nl)
+   real,    intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real tmp
    integer i,j,k,l
+   integer, parameter :: icpu=2
+   call cpustart()
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, tmp) SHARED(f, blanking)
    do k=1,nz
@@ -24,5 +27,6 @@ subroutine bndbounceback(f,blanking)
    enddo
 !$OMP END PARALLEL DO
 
+   call cpufinish(icpu)
 end subroutine
 end module

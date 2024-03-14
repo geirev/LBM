@@ -48,13 +48,12 @@ subroutine tecout(filename,variables_string,num_of_variables,&
    ! shared_list(i)=-1 means the i-th data is not shared in this zone. If shared_list(i)=m,
    ! it means the i-th data is shared with zone m in this file
    shared_list = -1
-   ! type_list(i) = 0 means the i-th data is of type float. (Other data type not supported yet.)
+   ! type_list(i) = 1 means the i-th data is of type float. (Other data type not supported yet.)
    type_list = 1
 
    ! call init subroutine first
    ! nx, ny, nz means the dimension of the data
    ! 'x,y,z,u,v,w' is a string contains names of variables, must be divided by ','
-   !call plt_file%init(filename,nx,ny,nz,'Tecplot File Title','x,y,z,u,v,w')
    call plt_file%init(filename,nx,ny,nz,'LBM3D output',trim(variables_string))
 
    ! for each zone, call the two subroutines

@@ -3,7 +3,7 @@ contains
 subroutine saverestart(fname,f)
    use mod_dimensions
    character(len=*), intent(in) :: fname
-   real, intent(in) :: f(0:nx+1,ny,nz,nl)
+   real, intent(in) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
 
    integer :: irec
 

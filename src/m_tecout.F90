@@ -6,6 +6,8 @@ subroutine tecout(filename,variables_string,num_of_variables,&
                   lblanking,rho,u,v,w,speed,vortx,vorty,vortz,vort)
    use mod_dimensions
    use m_tecplot
+   use m_readinfile
+   implicit none
    character(len=*), intent(in) :: filename
    character(len=*), intent(in) :: variables_string
    integer, intent(in) :: num_of_variables
@@ -31,11 +33,12 @@ subroutine tecout(filename,variables_string,num_of_variables,&
    real(kind=4), allocatable :: your_datas(:,:,:,:)
    real(kind=4) :: physics_time
    real :: xyz(3), ijk(3)
+   integer dd
 
 
    real blanking(nx,ny,nz)
    blanking=0
-   where (lblanking) blanking=1
+   where (lblanking) blanking=1.0
 
 
    allocate(your_datas(nx,ny,nz,num_of_variables))
@@ -70,18 +73,23 @@ subroutine tecout(filename,variables_string,num_of_variables,&
       end do
    end do
 
+   your_datas(:,:,:,4) = your_datas(:,:,:,1)*p2l%length
+   your_datas(:,:,:,5) = your_datas(:,:,:,2)*p2l%length
+   your_datas(:,:,:,6) = your_datas(:,:,:,3)*p2l%length
+   dd=6
+
    ! set value
    do concurrent(i=1:nx, j=1:ny, k=1:nz)
-      your_datas(i,j,k,4)  = blanking(i,j,k)
-      your_datas(i,j,k,5)  = rho(i,j,k)
-      your_datas(i,j,k,6)  = u(i,j,k)
-      your_datas(i,j,k,7)  = v(i,j,k)
-      your_datas(i,j,k,8)  = w(i,j,k)
-      your_datas(i,j,k,9)  = speed(i,j,k)
-      your_datas(i,j,k,10) = vortx(i,j,k)
-      your_datas(i,j,k,11) = vorty(i,j,k)
-      your_datas(i,j,k,12) = vortz(i,j,k)
-      your_datas(i,j,k,13) = vort(i,j,k)
+      your_datas(i,j,k,dd+1)  = blanking(i,j,k)
+      your_datas(i,j,k,dd+2)  = rho(i,j,k)
+      your_datas(i,j,k,dd+3)  = u(i,j,k)
+      your_datas(i,j,k,dd+4)  = v(i,j,k)
+      your_datas(i,j,k,dd+5)  = w(i,j,k)
+      your_datas(i,j,k,dd+6)  = speed(i,j,k)
+      your_datas(i,j,k,dd+7)  = vortx(i,j,k)
+      your_datas(i,j,k,dd+8)  = vorty(i,j,k)
+      your_datas(i,j,k,dd+9)  = vortz(i,j,k)
+      your_datas(i,j,k,dd+10) = vort(i,j,k)
    enddo
 
    call plt_file%write_zone_data(type_list, shared_list, your_datas)

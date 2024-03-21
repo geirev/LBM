@@ -17,7 +17,6 @@ program LatticeBoltzmann
    use m_boundarycond
    use m_bndbounceback
    use m_bndpressure
-   use m_phys2lattice
 
    use m_density
    use m_velocity
@@ -57,7 +56,6 @@ program LatticeBoltzmann
 
    call readinfile
 
-   call phys2lattice
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Sample 2D pseudo random fields
    call set_random_seed2
@@ -82,7 +80,7 @@ program LatticeBoltzmann
    case('cylinder')
       call cylinder(lblanking,nx/6,ny/2,25)
    case('windfarm')
-      call windfarm(lblanking,ny/2,nz/2,5)
+      call windfarm(lblanking,ny/2,30,10)
    case('channel') ! Pouisille flow
       call channel(lblanking,nx/6,ny/2,25)
    case('airfoil')

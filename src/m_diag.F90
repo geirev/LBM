@@ -18,8 +18,8 @@ subroutine diag(it,rho,u,v,w,lblanking)
 
    character(len=200)::tecplot_fvars='i,j,k,blanking,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27'
    integer, parameter :: num_of_fvars=31
-   character(len=200) :: tecplot_variables='i,j,k,blanking,rho,u,v,w,vel,vortx,vorty,vortz,vort'
-   integer, parameter :: num_of_variables=13
+   character(len=200) :: tecplot_variables='i,j,k,x,y,z,blanking,rho,u,v,w,vel,vortx,vorty,vortz,vort'
+   integer, parameter :: num_of_variables=16
    real    :: speed(nx,ny,nz)    = 0.0        ! absolute velocity
    real    :: vortx(nx,ny,nz)    = 0.0        ! fluid vorticity x-component
    real    :: vorty(nx,ny,nz)    = 0.0        ! fluid vorticity y-component

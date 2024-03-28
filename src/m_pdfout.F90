@@ -23,7 +23,8 @@ subroutine pdfout(filename,variables_string,num_of_variables,lblanking,f)
    real :: xyz(3), ijk(3)
 
 
-   real blanking(nx,ny,nz)
+   real, allocatable :: blanking(:,:,:)
+   allocate(blanking(nx,ny,nz))
    blanking=0
    where (lblanking) blanking=1
 
@@ -71,6 +72,7 @@ subroutine pdfout(filename,variables_string,num_of_variables,lblanking,f)
 
    ! before exit, you must call complete subroutine
    call plt_file%complete
+   deallocate(blanking)
 
 end subroutine
 

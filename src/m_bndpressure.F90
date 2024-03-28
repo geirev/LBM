@@ -14,11 +14,16 @@ subroutine bndpressure(f,rho,u,v,w)
    real, intent(in)    :: w(nx,ny,nz)
    integer k,j,l
 
-   real fin(ny,nz,nl)
-   real fou(ny,nz,nl)
+   real, allocatable :: fin(:,:,:)
+   real, allocatable :: fou(:,:,:)
 
-   real fbin(ny,nz,nl)
-   real fbou(ny,nz,nl)
+   real, allocatable :: fbin(:,:,:)
+   real, allocatable :: fbou(:,:,:)
+
+   allocate(fin(ny,nz,nl))
+   allocate(fou(ny,nz,nl))
+   allocate(fbin(ny,nz,nl))
+   allocate(fbou(ny,nz,nl))
 
 ! Equilibrium distribution on boundaries
    do k=1,nz
@@ -45,6 +50,7 @@ subroutine bndpressure(f,rho,u,v,w)
    enddo
    enddo
    enddo
+   deallocate(fin,fou,fbin,fbou)
 
 end subroutine
 end module

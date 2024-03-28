@@ -35,7 +35,7 @@ program LatticeBoltzmann
 ! Main variables
    real    :: f(  0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! density function
    real    :: feq(0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! Maxwells equilibrium density function
-   real    :: feqscal(nl)                    = 0.0  ! A scalar f used for boundary conditions
+   real    :: feqscal(0:nz+1,nl)             = 0.0  ! A scalar f used for inflow boundary conditions
    logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
 
 ! Fluid variables
@@ -44,7 +44,10 @@ program LatticeBoltzmann
    real    :: w(nx,ny,nz)        = 0.0          ! z component of fluid velocity
    real    :: rho(nx,ny,nz)      = 0.0          ! fluid density
 
-   integer :: it,i,j
+   integer kk,k
+   real z(nz),uvel(nz)
+
+   integer :: it,i,j,l
    character(len=6) cit
 
    real cor1,cor2,dx,dy,dir
@@ -80,7 +83,7 @@ program LatticeBoltzmann
    case('cylinder')
       call cylinder(lblanking,nx/6,ny/2,25)
    case('windfarm')
-      call windfarm(lblanking,ny/2,30,10)
+      call windfarm(lblanking,20,ny/2,30,10)
    case('channel') ! Pouisille flow
       call channel(lblanking,nx/6,ny/2,25)
    case('airfoil')
@@ -104,14 +107,39 @@ program LatticeBoltzmann
 
    if (ibnd==1) then
 ! Constant inflow boundary distribution.
-      call feqscalar(feqscal,rho0,u(1,1,1),v(1,1,1),w(1,1,1))
+
+      open(10,file='uvel.dat')
+         do k=1,nz
+            read(10,*)kk,z(k),uvel(k)
+         enddo
+      close(10)
+      do k=1,nz
+         uvel(k)=uvel(k)/uvel(nz)
+      enddo
+      do k=1,nz
+         call feqscalar(feqscal(k,:),rho0,uini*uvel(k),0.0,0.0)
+      enddo
+      feqscal(0,:)=feqscal(1,:)
+      feqscal(nz+1,:)=feqscal(nz,:)
+      do j=1,ny
+      do i=1,nx
+         u(i,j,1:nz)=uini*uvel(1:nz)
+      enddo
+      enddo
+
+      do k=1,nz
+         uvel(k)=0.0
+         do l=1,nl
+            uvel(k)=uvel(k)+ feqscal(k,l)*real(cxs(l))
+         enddo
+         print '(a,2f12.4)','ini',sum(feqscal(k,:)),uvel(k)
+      enddo
 
    elseif (ibnd==2) then
 ! Pressure gradient initialization for periodic boundaries with pressure drive.
       do i=1,nx
          rho(i,:,:)=rho(i,:,:)+ rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
       enddo
-      call feqscalar(feqscal,rho0,u(1,1,1),v(1,1,1),w(1,1,1))
    endif
 
 ! Inititialization with equilibrium distribution
@@ -131,6 +159,7 @@ program LatticeBoltzmann
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
+
 
       call fequil(feq,rho,u,v,w)                  ! Calculate equlibrium distribution
 

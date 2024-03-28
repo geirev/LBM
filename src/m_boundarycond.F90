@@ -1,6 +1,6 @@
 module m_boundarycond
 contains
-subroutine boundarycond(f,rho,u,v,w,fscal)
+subroutine boundarycond(f,rho,u,v,w,feqscal)
    use mod_dimensions
    use m_readinfile
    use m_bndpressure
@@ -8,12 +8,13 @@ subroutine boundarycond(f,rho,u,v,w,fscal)
    implicit none
    integer, parameter :: icpu=3
    real, intent(inout):: f(0:nx+1,0:ny+1,0:nz+1,nl)
-   real, intent(in)   :: fscal(nl)
+   real, intent(in)   :: feqscal(0:nz+1,nl)
    real, intent(in)   :: rho(nx,ny,nz)
    real, intent(in)   :: u(nx,ny,nz)
    real, intent(in)   :: v(nx,ny,nz)
    real, intent(in)   :: w(nx,ny,nz)
    integer i,j,k,l
+
    call cpustart()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -22,23 +23,27 @@ subroutine boundarycond(f,rho,u,v,w,fscal)
 ! Periodic boundary conditions in i-direction
       f(0   ,:,:,:)=f(nx,:,:,:)
       f(nx+1,:,:,:)=f(1 ,:,:,:)
+
    elseif (ibnd==1) then
 ! Inflow outflow boundary conditions in i-direction
       do l=1,nl
-      do k=1,nz
-      do j=1,ny
-         f(0,j,k,l)=fscal(l)
+      do k=0,nz+1
+      do j=0,ny+1
+         f(0,j,k,l)=feqscal(k,l)
          f(nx+1,j,k,l)=f(nx,j,k,l)
       enddo
       enddo
       enddo
-!      call bndpressure(f,rho,u,v,w)
+
    elseif (ibnd==2) then
 ! Periodic boundary conditions with pressure gradient in i-direction
       f(0   ,:,:,:)=f(nx,:,:,:)
       f(nx+1,:,:,:)=f(1 ,:,:,:)
       call bndpressure(f,rho,u,v,w)
    endif
+
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Boundary conditions in j-direction (sideways) periodic through drift.
 
@@ -65,7 +70,6 @@ subroutine boundarycond(f,rho,u,v,w,fscal)
 ! Outflow boundary on top and bottom
       f(:,:,0,:)=f(:,:,1,:)
       f(:,:,nz+1,:)=f(: ,:,nz,:)
-
    endif
 
 

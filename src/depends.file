@@ -94,7 +94,6 @@ m_pdfout.o:      makefile
 m_pdfout.o:      mod_dimensions.o
 m_pdfout.o:      MODEL.CPP
 m_pdfout.o:      m_tecplot.o
-m_phys2lattice.o:      makefile
 m_readinfile.o:      makefile
 m_readinfile.o:      MODEL.CPP
 m_readrestart.o:      makefile

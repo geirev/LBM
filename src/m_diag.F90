@@ -27,12 +27,13 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real    :: vort(nx,ny,nz)     = 0.0        ! absolute value of vorticity
    integer, parameter :: icpu=8
 
+   integer k
 
 
 
 
    call cpustart()
-   if ((mod(it, iout) == 0) .or. it == nt1) then
+   if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= 50) then
       if (minval(rho) < 0.0) then
          print *,'iter=',it,'  minmaxrho=',minval(rho),' -- ',maxval(rho)
          stop 'Unstable simulation'
@@ -42,6 +43,11 @@ subroutine diag(it,rho,u,v,w,lblanking)
       speed = sqrt(u*u + v*v + w*w)
       call vorticity(u,v,w,vortx,vorty,vortz,vort,lblanking)
       write(cit,'(i6.6)')it
+!      open(10,file='uvel'//cit//'.dat')
+!         do k=1,nz
+!            write(10,'(i5,2f10.2)')k,real(k)*p2l%length,u(nx/2,ny/2,k)
+!         enddo
+!      close(10)
       call tecout('tec'//cit//'.plt',trim(tecplot_variables),num_of_variables,lblanking,rho,u,v,w,speed,vortx,vorty,vortz,vort)
    endif
 !      if ((mod(it, ifout) == 0)) then

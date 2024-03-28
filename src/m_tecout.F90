@@ -36,7 +36,8 @@ subroutine tecout(filename,variables_string,num_of_variables,&
    integer dd
 
 
-   real blanking(nx,ny,nz)
+   real, allocatable :: blanking(:,:,:)
+   allocate(blanking(nx,ny,nz))
    blanking=0
    where (lblanking) blanking=1.0
 
@@ -78,24 +79,22 @@ subroutine tecout(filename,variables_string,num_of_variables,&
    your_datas(:,:,:,6) = your_datas(:,:,:,3)*p2l%length
    dd=6
 
-   ! set value
-   do concurrent(i=1:nx, j=1:ny, k=1:nz)
-      your_datas(i,j,k,dd+1)  = blanking(i,j,k)
-      your_datas(i,j,k,dd+2)  = rho(i,j,k)
-      your_datas(i,j,k,dd+3)  = u(i,j,k)
-      your_datas(i,j,k,dd+4)  = v(i,j,k)
-      your_datas(i,j,k,dd+5)  = w(i,j,k)
-      your_datas(i,j,k,dd+6)  = speed(i,j,k)
-      your_datas(i,j,k,dd+7)  = vortx(i,j,k)
-      your_datas(i,j,k,dd+8)  = vorty(i,j,k)
-      your_datas(i,j,k,dd+9)  = vortz(i,j,k)
-      your_datas(i,j,k,dd+10) = vort(i,j,k)
-   enddo
+   your_datas(:,:,:,dd+1)  = blanking(:,:,:)
+   your_datas(:,:,:,dd+2)  = rho(:,:,:)
+   your_datas(:,:,:,dd+3)  = u(:,:,:)
+   your_datas(:,:,:,dd+4)  = v(:,:,:)
+   your_datas(:,:,:,dd+5)  = w(:,:,:)
+   your_datas(:,:,:,dd+6)  = speed(:,:,:)
+   your_datas(:,:,:,dd+7)  = vortx(:,:,:)
+   your_datas(:,:,:,dd+8)  = vorty(:,:,:)
+   your_datas(:,:,:,dd+9)  = vortz(:,:,:)
+   your_datas(:,:,:,dd+10) = vort(:,:,:)
 
    call plt_file%write_zone_data(type_list, shared_list, your_datas)
 
    ! before exit, you must call complete subroutine
    call plt_file%complete
+   deallocate(blanking)
 
 end subroutine
 

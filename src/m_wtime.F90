@@ -28,11 +28,11 @@ end
 subroutine cpuprint()
    implicit none
    integer l
-   print '(tr22,3a)','cputime  ','walltime  ','speedup   '
+   print '(tr22,3a)','cputime    ','walltime    ','speedup     '
    do l=1,8
-      print '(tr10,a9,3f10.4)',cpuname(l),cputime(l),waltime(l),cputime(l)/(waltime(l)+tiny(cpu1))
+      print '(tr10,a9,3f12.4)',cpuname(l),cputime(l),waltime(l),cputime(l)/(waltime(l)+tiny(cpu1))
    enddo
-   print '(tr10,a9,3f10.4)','summary  ',sum(cputime(1:8)),sum(waltime(1:8)),sum(cputime(1:8))/sum(waltime(1:8))
+   print '(tr10,a9,3f12.4)','summary  ',sum(cputime(1:8)),sum(waltime(1:8)),sum(cputime(1:8))/sum(waltime(1:8))
 end subroutine
 
 function wtime ( )

@@ -33,7 +33,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
 
 
    call cpustart()
-   if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= 50) then
+   if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt) then
       if (minval(rho) < 0.0) then
          print *,'iter=',it,'  minmaxrho=',minval(rho),' -- ',maxval(rho)
          stop 'Unstable simulation'

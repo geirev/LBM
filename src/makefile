@@ -1,5 +1,6 @@
 BUILD = ../build
 VPATH = .:$(BUILD)
+HOME = /home/AD.NORCERESEARCH.NO/geev/
 
 .SUFFIXES:
 .SUFFIXES: .o .F90 .f90 .F .f .H .h
@@ -64,13 +65,16 @@ OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
 all: new $(TARGET) install
 
-libs: libsampling.a libenkfanalysis.a
+libs: libsampling.a libenkfanalysis.a libpreplot.a
 
 libsampling.a:
-	cd ../../EnKF_sampling/lib; make BUILD=../../EnKF_MS/build
+	cd ../../EnKF_sampling/lib; make BUILD=../../LBM/build
 
 libenkfanalysis.a:
-	cd ../../EnKF_analysis/lib; make BUILD=../../EnKF_MS/build
+	cd ../../EnKF_analysis/lib; make BUILD=../../LBM/build
+
+libpreplot.a:
+	cp $(HOME)/Dropbox/Programs/tecplot-binary-files/libpreplot.a $(HOME)/Dropbox/Programs/LBM/build
 
 $(TARGET): $(INCFILES) $(OBJECTS)
 	@mkdir -p $(BUILD)
@@ -79,7 +83,7 @@ $(TARGET): $(INCFILES) $(OBJECTS)
 install:
 	cp $(BUILD)/$(TARGET) $(BINDIR)
 
-clean:
+veryclean:
 	cd $(BUILD) ; rm -rf *.o *.mod *.f90 rii_files lib*.a
 
 new: source depend

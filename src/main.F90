@@ -14,15 +14,20 @@ program LatticeBoltzmann
    use m_sphere
    use m_windfarm
 
+   use m_ibndinflow
    use m_boundarycond
    use m_bndbounceback
    use m_bndpressure
 
    use m_density
    use m_velocity
+   use m_stress
+   use m_turbineforcing
+   use m_applyturbines
    use m_collisions
    use m_drift
-   use m_fequil
+   use m_BGKequil
+   use m_HRRequil
    use m_feqscalar
    use m_readrestart
    use m_saverestart
@@ -43,11 +48,15 @@ program LatticeBoltzmann
    real    :: v(nx,ny,nz)        = 0.0          ! y component of fluid velocity
    real    :: w(nx,ny,nz)        = 0.0          ! z component of fluid velocity
    real    :: rho(nx,ny,nz)      = 0.0          ! fluid density
+   real    :: sigma(3,3,nx,ny,nz)
 
-   integer kk,k
-   real z(nz),uvel(nz)
+! Turbine forcing
+   real, allocatable  :: df(:,:,:,:)            ! Turbine forcing
 
-   integer :: it,i,j,l
+
+
+
+   integer :: it,i,j,l,k
    character(len=6) cit
 
    real cor1,cor2,dx,dy,dir
@@ -57,7 +66,12 @@ program LatticeBoltzmann
 
    real width,mu,grad,cs2,dw
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Reading all input parameters
    call readinfile
+   if (nturbines > 0) allocate(df(1:ny,1:nz,1:nl,nturbines))
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Sample 2D pseudo random fields
@@ -83,7 +97,7 @@ program LatticeBoltzmann
    case('cylinder')
       call cylinder(lblanking,nx/6,ny/2,25)
    case('windfarm')
-      call windfarm(lblanking,20,ny/2,30,10)
+      call windfarm(lblanking)
    case('channel') ! Pouisille flow
       call channel(lblanking,nx/6,ny/2,25)
    case('airfoil')
@@ -95,45 +109,35 @@ program LatticeBoltzmann
       stop
    end select
 
-! Initialization
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Initialization requires specification of u,v,w, and rho to compute feq
    u=uini
    v=0.0
    w=0.0
    rho=rho0
+
+! Adding smooth density perturbations
    if (lpseudo) then
      call pseudo2D(rho,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.true.)
-     rho=rho0 + 0.1*rho
+     call pseudo2D(u,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.true.)
+     call pseudo2D(v,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.true.)
+     call pseudo2D(w,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.true.)
+     do k=2,nz
+        rho(:,:,k)=0.1*rho(:,:,k-1)+sqrt(1.0-0.1**2)*rho(:,:,k)
+        u(:,:,k)=0.1*u(:,:,k-1)+sqrt(1.0-0.1**2)*u(:,:,k)
+        v(:,:,k)=0.1*v(:,:,k-1)+sqrt(1.0-0.1**2)*v(:,:,k)
+        w(:,:,k)=0.1*w(:,:,k-1)+sqrt(1.0-0.1**2)*w(:,:,k)
+     enddo
+     rho=rho0 + 0.01*rho
+     u=uini+0.01*u
+     v=0.0+0.01*u
+     w=0.0+0.01*u
    endif
 
    if (ibnd==1) then
-! Constant inflow boundary distribution.
-
-      open(10,file='uvel.dat')
-         do k=1,nz
-            read(10,*)kk,z(k),uvel(k)
-         enddo
-      close(10)
-      do k=1,nz
-         uvel(k)=uvel(k)/uvel(nz)
-      enddo
-      do k=1,nz
-         call feqscalar(feqscal(k,:),rho0,uini*uvel(k),0.0,0.0)
-      enddo
-      feqscal(0,:)=feqscal(1,:)
-      feqscal(nz+1,:)=feqscal(nz,:)
-      do j=1,ny
-      do i=1,nx
-         u(i,j,1:nz)=uini*uvel(1:nz)
-      enddo
-      enddo
-
-      do k=1,nz
-         uvel(k)=0.0
-         do l=1,nl
-            uvel(k)=uvel(k)+ feqscal(k,l)*real(cxs(l))
-         enddo
-         print '(a,2f12.4)','ini',sum(feqscal(k,:)),uvel(k)
-      enddo
+! Constant inflow boundary velocity read from file and reinitialization of u(nx,ny,nz)
+! Specification of constant-in-time inflow boundary distribution
+      call ibndinflow(feqscal,u)
 
    elseif (ibnd==2) then
 ! Pressure gradient initialization for periodic boundaries with pressure drive.
@@ -142,8 +146,12 @@ program LatticeBoltzmann
       enddo
    endif
 
-! Inititialization with equilibrium distribution
-   call fequil(f,rho,u,v,w)
+! Final inititialization with equilibrium distribution from u,v,w, and rho
+   if (coll=='HRR') then
+      call HRRequil(f,feq,rho,u,v,w,tau,0)           ! returns f for initialization
+   elseif (coll=='BGK') then
+      call BGKequil(f,feq,rho,u,v,w)
+   endif
 
 ! Restart from restart file
    if (nt0 > 1) then
@@ -151,6 +159,7 @@ program LatticeBoltzmann
       call readrestart('restart'//cit//'.uf',f)
    endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6)','iteration:', it
@@ -159,20 +168,20 @@ program LatticeBoltzmann
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
-
-
-      call fequil(feq,rho,u,v,w)                  ! Calculate equlibrium distribution
-
       call diag(it,rho,u,v,w,lblanking)           ! Diagnostics
-
+      if (coll=='HRR') then
+         call HRRequil(feq,f,rho,u,v,w,tau,ihrr)  ! f is input, returns feq and R(fneq) in f
+      elseif (coll=='BGK') then
+         call BGKequil(feq,f,rho,u,v,w)           ! Calculate equlibrium distribution
+      endif
+      call turbineforcing(df,feq,rho,u,v,w)       ! define forcing df from each turbine
       call collisions(f,feq,tau)                  ! Apply collisions, returns feq
-
+      call applyturbines(feq,df)                  ! operates on f stored in feq
       call boundarycond(feq,rho,u,v,w,feqscal)    ! General boundary conditions
-
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
+      call drift(f,feq)                           ! Drift of feq returned in f
 
-      call drift(f,feq)                           ! Drift
-
+!      call stress(f,feq,cxs,cys,czs,sigma,tau,p2l%length)
    enddo
 
    call cpuprint()
@@ -199,5 +208,7 @@ program LatticeBoltzmann
       enddo
       close(10)
    end select
+
+   if (allocated(df)) deallocate(df)
 
 end program LatticeBoltzmann

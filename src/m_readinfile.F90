@@ -4,6 +4,7 @@ module m_readinfile
    integer  nt1            ! Last timestep
    integer  iout           ! number of steps between outputs 0, 0+iout, ...
    integer  iprt           ! Output every time steps of it <= iprt
+   logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
    integer  ifout          ! number of steps between outputs 0, 0+iout, ...
    integer  ibnd           ! Type of bondary condition in i direction
    integer  jbnd           ! Type of bondary condition in i direction
@@ -71,6 +72,7 @@ subroutine readinfile
       read(10,*)nt1                ; print '(a,i8)',      'nt1               = ',nt1
       read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout
       read(10,*)iprt               ; print '(a,i8)',      'iprt              = ',iprt
+      read(10,*)lprtmin            ; print '(a,tr7,l1)',  'lprtmin           = ',lprtmin
       read(10,*)ifout              ; print '(a,i8)',      'ifout             = ',ifout
       read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
       read(10,*)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd

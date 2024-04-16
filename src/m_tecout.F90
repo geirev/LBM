@@ -10,18 +10,18 @@ subroutine tecout(filename,variables_string,num_of_variables,&
    implicit none
    character(len=*), intent(in) :: filename
    character(len=*), intent(in) :: variables_string
-   integer, intent(in) :: num_of_variables
+   integer,          intent(in) :: num_of_variables
 
    logical, intent(in) :: lblanking(nx,ny,nz) ! blanking boundary
    real, intent(in)    :: rho(nx,ny,nz)       ! fluid density
    real, intent(in)    :: u(nx,ny,nz)         ! x component of fluid velocity
    real, intent(in)    :: v(nx,ny,nz)         ! y component of fluid velocity
    real, intent(in)    :: w(nx,ny,nz)         ! z component of fluid velocity
-   real, intent(in)    :: speed(nx,ny,nz)     ! absolute velocity
-   real, intent(in)    :: vortx(nx,ny,nz)     ! fluid vorticity x-component
-   real, intent(in)    :: vorty(nx,ny,nz)     ! fluid vorticity y-component
-   real, intent(in)    :: vortz(nx,ny,nz)     ! fluid vorticity z-component
-   real, intent(in)    :: vort(nx,ny,nz)      ! absolute value of vorticity
+   real, intent(in), optional    :: speed(nx,ny,nz)     ! absolute velocity
+   real, intent(in), optional    :: vortx(nx,ny,nz)     ! fluid vorticity x-component
+   real, intent(in), optional    :: vorty(nx,ny,nz)     ! fluid vorticity y-component
+   real, intent(in), optional    :: vortz(nx,ny,nz)     ! fluid vorticity z-component
+   real, intent(in), optional    :: vort(nx,ny,nz)      ! absolute value of vorticity
 
 
    ! define a tecplot object
@@ -37,10 +37,12 @@ subroutine tecout(filename,variables_string,num_of_variables,&
 
 
    real, allocatable :: blanking(:,:,:)
+
+   print *,'tecout:',trim(filename),trim(variables_string)
+
    allocate(blanking(nx,ny,nz))
    blanking=0
    where (lblanking) blanking=1.0
-
 
    allocate(your_datas(nx,ny,nz,num_of_variables))
    allocate(locations(num_of_variables))
@@ -73,22 +75,27 @@ subroutine tecout(filename,variables_string,num_of_variables,&
          your_datas(i,j,k,d) = xyz(d)
       end do
    end do
+   dd=3
 
-   your_datas(:,:,:,4) = your_datas(:,:,:,1)*p2l%length
-   your_datas(:,:,:,5) = your_datas(:,:,:,2)*p2l%length
-   your_datas(:,:,:,6) = your_datas(:,:,:,3)*p2l%length
-   dd=6
+   if (num_of_variables == 16) then
+      your_datas(:,:,:,4) = your_datas(:,:,:,1)*p2l%length
+      your_datas(:,:,:,5) = your_datas(:,:,:,2)*p2l%length
+      your_datas(:,:,:,6) = your_datas(:,:,:,3)*p2l%length
+      dd=6
+   endif
 
    your_datas(:,:,:,dd+1)  = blanking(:,:,:)
    your_datas(:,:,:,dd+2)  = rho(:,:,:)
    your_datas(:,:,:,dd+3)  = u(:,:,:)
    your_datas(:,:,:,dd+4)  = v(:,:,:)
    your_datas(:,:,:,dd+5)  = w(:,:,:)
-   your_datas(:,:,:,dd+6)  = speed(:,:,:)
-   your_datas(:,:,:,dd+7)  = vortx(:,:,:)
-   your_datas(:,:,:,dd+8)  = vorty(:,:,:)
-   your_datas(:,:,:,dd+9)  = vortz(:,:,:)
-   your_datas(:,:,:,dd+10) = vort(:,:,:)
+   if (num_of_variables == 16) then
+      your_datas(:,:,:,dd+6)  = speed(:,:,:)
+      your_datas(:,:,:,dd+7)  = vortx(:,:,:)
+      your_datas(:,:,:,dd+8)  = vorty(:,:,:)
+      your_datas(:,:,:,dd+9)  = vortz(:,:,:)
+      your_datas(:,:,:,dd+10) = vort(:,:,:)
+   endif
 
    call plt_file%write_zone_data(type_list, shared_list, your_datas)
 

@@ -25,7 +25,6 @@ F90SOURCE = \
 	m_readrestart.F90\
 	m_saverestart.F90\
 	m_sphere.F90\
-	m_stress.F90\
 	m_string.F90\
 	m_tecout.F90\
 	m_tecplot.F90\

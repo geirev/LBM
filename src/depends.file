@@ -101,6 +101,7 @@ m_HRRequil.o:      makefile
 m_HRRequil.o:      mod_D3Q27setup.o
 m_HRRequil.o:      mod_dimensions.o
 m_HRRequil.o:      MODEL.CPP
+m_HRRequil.o:      m_readinfile.o
 m_HRRequil.o:      m_wtime.o
 m_ibndinflow.o:      makefile
 m_ibndinflow.o:      m_feqscalar.o
@@ -127,9 +128,6 @@ m_saverestart.o:      MODEL.CPP
 m_sphere.o:      makefile
 m_sphere.o:      mod_dimensions.o
 m_sphere.o:      MODEL.CPP
-m_stress.o:      makefile
-m_stress.o:      mod_dimensions.o
-m_stress.o:      MODEL.CPP
 m_string.o:      makefile
 m_string.o:      MODEL.CPP
 m_tecout.o:      makefile

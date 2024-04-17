@@ -43,6 +43,8 @@ program LatticeBoltzmann
    real    :: feqscal(0:nz+1,nl)             = 0.0  ! A scalar f used for inflow boundary conditions
    logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
 
+! Spatially dependent relaxation time
+   real    :: tau(nx,ny,nz)      = 0.0          ! x component of fluid velocity
 ! Fluid variables
    real    :: u(nx,ny,nz)        = 0.0          ! x component of fluid velocity
    real    :: v(nx,ny,nz)        = 0.0          ! y component of fluid velocity
@@ -62,6 +64,7 @@ program LatticeBoltzmann
    real cor1,cor2,dx,dy,dir
    real xlength,ylength
    integer n1,n2
+   integer ihrr
 
 
    real width,mu,grad,cs2,dw
@@ -69,9 +72,10 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
-   call readinfile
+   call readinfile(ihrr)
    if (nturbines > 0) allocate(df(1:ny,1:nz,1:nl,nturbines))
 
+   tau(:,:,:)=tauin
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Sample 2D pseudo random fields
@@ -88,7 +92,6 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Define solid elements and walls
-
    select case(trim(experiment))
    case('cube')
       call cube(lblanking,nx/6,ny/2,nz/2,7)
@@ -148,7 +151,7 @@ program LatticeBoltzmann
 
 ! Final inititialization with equilibrium distribution from u,v,w, and rho
    if (coll=='HRR') then
-      call HRRequil(f,feq,rho,u,v,w,tau,0)           ! returns f for initialization
+      call HRRequil(f,feq,rho,u,v,w,tau,0)  ! returns f for initialization
    elseif (coll=='BGK') then
       call BGKequil(f,feq,rho,u,v,w)
    endif
@@ -170,7 +173,8 @@ program LatticeBoltzmann
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
       call diag(it,rho,u,v,w,lblanking)           ! Diagnostics
       if (coll=='HRR') then
-         call HRRequil(feq,f,rho,u,v,w,tau,ihrr)  ! f is input, returns feq and R(fneq) in f
+         !call HRRequil(feq,f,rho,u,v,w,tau,p2l%vel,p2l%length,ihrr)  ! f is input, returns feq and R(fneq) in f
+         call HRRequil(feq,f,rho,u,v,w,tau,ihrr)  ! f is input, returns feq, R(fneq) in f, and tau
       elseif (coll=='BGK') then
          call BGKequil(feq,f,rho,u,v,w)           ! Calculate equlibrium distribution
       endif
@@ -181,7 +185,6 @@ program LatticeBoltzmann
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f
 
-!      call stress(f,feq,cxs,cys,czs,sigma,tau,p2l%length)
    enddo
 
    call cpuprint()
@@ -198,7 +201,7 @@ program LatticeBoltzmann
       rho=density(f,lblanking)
       u= velocity(f,rho,cxs,lblanking)
       width=real(ny-2)
-      mu=cs2*(tau-0.5)
+      mu=cs2*(tauin-0.5)
       grad=cs2*2.0*rhoa/real(nx)
       dw=width/real(ny-1)
       open(10,file='uvel.dat')

@@ -8,6 +8,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
+   use m_readinfile
    use m_wtime
    implicit none
    real, intent(in)      :: rho(nx,ny,nz)
@@ -16,10 +17,11 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
    real, intent(in)      :: w(nx,ny,nz)
    real, intent(out)     :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(inout)   :: f(0:nx+1,0:ny+1,0:nz+1,nl)
-   real, intent(in)      :: tau
+   real, intent(out)     :: tau(nx,ny,nz)
    integer, intent(in)   :: ihrr      ! (1) full third order HRR scheme returing feq and Rfneq
                                       ! (2) second order standard BGK returing feq and fneq
                                       ! (3) third order BGK that returns fneq instead of Rfneq,
+                                      ! (0) Initialization by feq
 
    real, parameter       :: cs2=1/3.0
    real, parameter       :: cs4=1/9.0
@@ -30,7 +32,11 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
    real, save            :: H2(3,3,27)      ! Second order Hermite polynomial
    real, save            :: H3(3,3,3,27)    ! Third order Hermite polynomial
    real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs
-   real, save            :: dt,dx           ! Physical space dx and dt
+
+   real, save            :: uscale          ! velocity scale lattice to physical
+   real, save            :: dx              ! length scale lattice to physical
+   real, save            :: dt              ! time scale lattice to physical
+   real, save            :: const           ! c in Vreman 2004 Eq (5)
 
    real                  :: A0_2(3,3)
    real                  :: A0_3(3,3,3)
@@ -53,24 +59,37 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
    real dxfac, dyfac, dzfac
    real                  :: vel(1:3),dens
 
-   integer :: i, j, k, l, p, q, r, ia, ib, ja, jb, ka , kb
+   integer :: i, j, k, l, m, p, q, r, ia, ib, ja, jb, ka , kb
 
 
    real, parameter :: sigma=1.00
+   real, parameter :: smagorinsky=0.18
+
+   real eddyvisc  ! nu in Vreman 2004 Eq (5)
+   real Bbeta     ! B_beta in Vreman 2004 Eq (5)
+   real alpha(3,3)
+   real beta(3,3)
+   real alphamag
+
+
+
+
+
 
    integer, parameter :: icpu=5
    call cpustart()
 
 
    if (lfirst) then
+      const=2.5*smagorinsky**2
+      uscale=p2l%vel
+      dx=p2l%length
+      dt=p2l%time
+
+
       c(1,:)=real(cxs(:))
       c(2,:)=real(cys(:))
       c(3,:)=real(czs(:))
-
-!      dt=p2l%time
-!      dx=p2l%length
-      dt=1.0
-      dx=1.0
 
 ! Hermitian polynomials of 2nd order H2
       do l=1,nl
@@ -81,7 +100,8 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
          enddo
       enddo
 
-! Hermitian polynomials of 3nd order H3 with [c_\alpha \delta]_{ijk} = c_{\alpha,i} \delta_{jk} + c_{\alpha,j} \delta_{ik} +c_{\alpha,k} \delta_{ij}
+! Hermitian polynomials of 3nd order H3 with
+! [c_\alpha \delta]_{ijk} = c_{\alpha,i} \delta_{jk} + c_{\alpha,j} \delta_{ik} +c_{\alpha,k} \delta_{ij}
       do l=1,nl
          do r=1,3
          do q=1,3
@@ -95,14 +115,15 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
       lfirst=.false.
    endif
 
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Loop over grid
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, ia, ib, j, ja, jb, k, ka, kb, l, p, q, r,            &
-!$OMP                                   dxfac, dyfac, dzfac, vel, dens, lf, lfeq, lfneq, Rfneq, &
+!$OMP&                                  dxfac, dyfac, dzfac, vel, dens, lf, lfeq, lfneq, Rfneq, &
 !$OMP&                                  A0_2, A0_3, A1_2, A1_2FD, A1_2HRR, A1_3HRR,             &
-!$OMP                                   dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz  ) &
-!$OMP&                          SHARED(feq, f, rho, u, v, w, weights, c, H2, H3, tau, dx, ihrr)
+!$OMP&                                  dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz,   &
+!$OMP&                                  kinevisc, eddyvisc, Bbeta, alpha, beta, alphamag) &
+!$OMP&                           SHARED(feq, f, rho, u, v, w, tau, weights, c, H2, H3, tauin,   &
+!$OMP&                                  uscale, dx, dt, const, ihrr)
    do k=1,nz
       call ablim(k,nz,dzfac,ka,kb)
       do j=1,ny
@@ -163,23 +184,23 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 
             if (ihrr == 1) then
 ! A1_2 from \citet{fen21a} Eq. (33a)
-               A1_2=0.0
-               do l=1,nl
-                  do q=1,3
-                  do p=1,3
-                     A1_2(p,q) = A1_2(p,q) + c(p,l)*c(q,l)*lfneq(l)
-                  enddo
-                  enddo
-               enddo
-! Eq (11) from  Jacob 2018 is idetical to the 33a from Feng (2021)
 !              A1_2=0.0
 !              do l=1,nl
 !                 do q=1,3
 !                 do p=1,3
-!                    A1_2(p,q) = A1_2(p,q) + H2(p,q,l)*lfneq(l)
+!                    A1_2(p,q) = A1_2(p,q) + c(p,l)*c(q,l)*lfneq(l)
 !                 enddo
 !                 enddo
 !              enddo
+! Eq (11) from  Jacob 2018 is idetical to the 33a from Feng (2021)
+               A1_2=0.0
+               do l=1,nl
+                  do q=1,3
+                  do p=1,3
+                     A1_2(p,q) = A1_2(p,q) + H2(p,q,l)*lfneq(l)
+                  enddo
+                  enddo
+               enddo
 
                if (sigma /= 1.0) then
 ! A1_2FD from \citet{fen21a} Eq. (33b)
@@ -205,7 +226,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
                   A1_2FD(2,3) = A1_2FD(3,2)
                   A1_2FD(3,3) = dwdz + dwdz - (2.0/3.0)* (dudx + dvdy + dwdz)
 
-                  A1_2FD = -2.0 * tau * dens * cs2 * A1_2FD
+                  A1_2FD = -2.0 * uscale * tauin * dens * cs2 * A1_2FD
 
 ! A1_2HRR from \citet{fen21a}, as defined after Eq. (34)
                   A1_2HRR = sigma*A1_2 + (1.0-sigma)*A1_2FD
@@ -265,9 +286,50 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 !               print '(10e13.5)',Rfneq(:)-lfneq(:)
 !               print *
 !            endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  Vreman (2004) subgridscale turbulence model
+            eddyvisc=0.0
+            if (ihrr == 1) then
+! S_ij
+               alpha=A1_2
+
+! alphamag
+               alphamag=0.0
+               do q=1,3
+               do p=1,3
+                  alphamag=alphamag+alpha(p,q)*alpha(p,q)
+               enddo
+               enddo
+
+! beta = del^2 * alpha' * alpha
+               beta=0.0
+               do q=1,3
+               do p=1,3
+                  do m=1,3
+                     beta(p,q)=beta(p,q)+alpha(m,p)*alpha(m,q)
+                  enddo
+               enddo
+               enddo
+               beta=dx**2*beta
+
+! Vreman 2004 Eq (8)
+               Bbeta=beta(1,1)*beta(2,2) - beta(1,2)**2  &
+                    +beta(1,1)*beta(3,3) - beta(1,3)**2  &
+                    +beta(2,2)*beta(3,3) - beta(2,3)**2
+
+! Vreman 2004 Eq (5)
+               eddyvisc=const*sqrt(Bbeta/alphamag)
+
+            endif
+
+            tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             f(i,j,k,:) = Rfneq(:)
             feq(i,j,k,:)= lfeq(:)
+            if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) then
+               print '(a,3e13.5)','tau=',tau(i,j,k),kinevisc,eddyvisc
+            endif
 
          enddo
       enddo
@@ -279,7 +341,4 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 
 end subroutine
 
-
 end module
-
-

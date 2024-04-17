@@ -2,26 +2,27 @@ module m_tecout
 implicit none
 
 contains
-subroutine tecout(filename,variables_string,num_of_variables,&
+subroutine tecout(filename,it,variables_string,num_of_variables,&
                   lblanking,rho,u,v,w,speed,vortx,vorty,vortz,vort)
    use mod_dimensions
    use m_tecplot
    use m_readinfile
    implicit none
-   character(len=*), intent(in) :: filename
-   character(len=*), intent(in) :: variables_string
-   integer,          intent(in) :: num_of_variables
+   character(len=*), intent(in) :: filename         ! Output filename
+   integer,          intent(in) :: it               ! Timestep index
+   character(len=*), intent(in) :: variables_string ! Variables to print separated by ,
+   integer,          intent(in) :: num_of_variables ! Number of vaiables to print
 
-   logical, intent(in) :: lblanking(nx,ny,nz) ! blanking boundary
-   real, intent(in)    :: rho(nx,ny,nz)       ! fluid density
-   real, intent(in)    :: u(nx,ny,nz)         ! x component of fluid velocity
-   real, intent(in)    :: v(nx,ny,nz)         ! y component of fluid velocity
-   real, intent(in)    :: w(nx,ny,nz)         ! z component of fluid velocity
-   real, intent(in), optional    :: speed(nx,ny,nz)     ! absolute velocity
-   real, intent(in), optional    :: vortx(nx,ny,nz)     ! fluid vorticity x-component
-   real, intent(in), optional    :: vorty(nx,ny,nz)     ! fluid vorticity y-component
-   real, intent(in), optional    :: vortz(nx,ny,nz)     ! fluid vorticity z-component
-   real, intent(in), optional    :: vort(nx,ny,nz)      ! absolute value of vorticity
+   logical,  intent(in)             :: lblanking(nx,ny,nz) ! blanking boundary
+   real,     intent(in)             :: rho(nx,ny,nz)       ! fluid density
+   real,     intent(in)             :: u(nx,ny,nz)         ! x component of fluid velocity
+   real,     intent(in)             :: v(nx,ny,nz)         ! y component of fluid velocity
+   real,     intent(in)             :: w(nx,ny,nz)         ! z component of fluid velocity
+   real,     intent(in), optional   :: speed(nx,ny,nz)     ! absolute velocity
+   real,     intent(in), optional   :: vortx(nx,ny,nz)     ! fluid vorticity x-component
+   real,     intent(in), optional   :: vorty(nx,ny,nz)     ! fluid vorticity y-component
+   real,     intent(in), optional   :: vortz(nx,ny,nz)     ! fluid vorticity z-component
+   real,     intent(in), optional   :: vort(nx,ny,nz)      ! absolute value of vorticity
 
 
    ! define a tecplot object
@@ -38,7 +39,9 @@ subroutine tecout(filename,variables_string,num_of_variables,&
 
    real, allocatable :: blanking(:,:,:)
 
-   print *,'tecout:',trim(filename),trim(variables_string)
+   print *,'tecout: ',trim(filename),' ',trim(variables_string)
+
+   physics_time=real(it)
 
    allocate(blanking(nx,ny,nz))
    blanking=0

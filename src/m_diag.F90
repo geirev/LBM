@@ -52,10 +52,11 @@ subroutine diag(it,rho,u,v,w,lblanking)
 !      close(10)
       if (.not.lprtmin) then
          num_of_vars=16
-         call tecout('tec'//cit//'.plt',trim(tecplot_maxvar),num_of_vars,lblanking,rho,u,v,w,speed,vortx,vorty,vortz,vort)
+         call tecout('tec'//cit//'.plt',it,trim(tecplot_maxvar),num_of_vars,lblanking,rho,u,v,w,&
+                     speed,vortx,vorty,vortz,vort)
       else
          num_of_vars=8
-         call tecout('tec'//cit//'.plt',trim(tecplot_minvar),num_of_vars,lblanking,rho,u,v,w)
+         call tecout('tec'//cit//'.plt',it,trim(tecplot_minvar),num_of_vars,lblanking,rho,u,v,w)
       endif
    endif
 

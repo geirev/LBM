@@ -12,11 +12,11 @@ module m_readinfile
    logical  lpseudo        ! Add smooth pseudorandom peturbations to initial rho
    logical  runexp         ! Add smooth pseudorandom peturbations to initial rho
    character(len=3) coll   ! Collision operator
-   integer  ihrr           ! Option for collisions using HRR scheme
    real     uini           ! Initial u-velocity
    real     rho0           ! Average density
    real     rhoa           ! Imposed density gradient for ibnd=2 case
-   real     tau            ! Collision timescale 0.6
+   real     tauin          ! Collision timescale
+   real     kinevisc       ! Kinematic viscosity (nondimensional used in HRRequil)
    character(len=20) experiment ! experiment name
 
    type physconv
@@ -26,7 +26,6 @@ module m_readinfile
       real vel
       real dynvisc
       real kinvisc
-      real eddvisc
    end type
    real machnr
    type(physconv) p2l
@@ -38,7 +37,7 @@ module m_readinfile
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
 
 contains
-subroutine readinfile
+subroutine readinfile(ihrr)
    implicit none
 
    character(len=3) ca
@@ -48,8 +47,10 @@ subroutine readinfile
    real reynoldsnr
    real nu
    real newtau
+   real tmpvisc
    real gridrn
    integer n
+   integer, intent(out) :: ihrr           ! Option for collisions using HRR scheme
 
 ! reading input data
    inquire(file='infile.in',exist=ex)
@@ -81,7 +82,8 @@ subroutine readinfile
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
       read(10,'(1x,l1)')lpseudo    ; print '(a,tr7,l1)',  'lpseudo           = ',lpseudo
-      read(10,*)tau                ; print '(2(a,f8.3))', 'tau               = ',tau,        ' []  constraint: > ',0.5+0.3/8.0
+      read(10,*)tauin              ; print '(a,f8.3,a)',  'tauin             = ',tauin,      ' [] '
+      read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [] '
       read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density at 15C and  101.325 kPa  (kg/m^3)
       read(10,*)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
       read(10,*)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
@@ -120,27 +122,37 @@ subroutine readinfile
    print '(a,f12.4,a)','C_rho=',p2l%rho,      ' [kg/m^3]'
    print *
 
-!  Compute dimensional eddy viscosity from input non-dimensional tau
-   p2l%eddvisc=(1.0/3.0)*(tau - 0.5) * (p2l%length**2/p2l%time)     !(7.14)
-   print '(a,g13.6,a)',  'eddy visc from tau = ',p2l%eddvisc  ,' [m^2/s]'
+
+!  Compute non dimensional tau from input dmensional kinematic viscosity
+   print '(a,g13.6,a)',  'Kinematic visc       = ',kinevisc      ,' [m^2/s]'
+   tauin = (0.5 + 3.0*kinevisc*p2l%time/p2l%length**2)
+   print '(a,g13.6,a)',  'tau from kinevisc     = ',tauin        ,' [m^2/s]'
+
+!  Compute nondimensional kinematic viscosity used to calculate tau in HRRequil
+   kinevisc=kinevisc*p2l%time/p2l%length**2
+   print '(a,g13.6,a)',  'Non-dim kinevisc     = ',kinevisc      ,' [ ]'
+
+!  Compute dimensional kinematic viscosity from input non-dimensional tauin
+   tmpvisc=(1.0/3.0)*(tauin - 0.5) * (p2l%length**2/p2l%time)     !(7.14)
+   print '(a,g13.6,a)',  'Kine visc from tauin = ',tmpvisc  ,' [m^2/s]'
 
 !  Compupte Reynolds number from rotor of radii lattice cells
-   reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/p2l%eddvisc
-   print '(a,i12,a)',    'Reynolds num       = ',nint(reynoldsnr)   ,' [ ]'
+   reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/tmpvisc
+   print '(a,i12,a)',    'Reynolds num         = ',nint(reynoldsnr)   ,' [ ]'
 
 !  Compupte grid cell Reynolds number
-   gridrn= p2l%length*uini*p2l%vel/p2l%eddvisc
-   print '(a,i12,a)',    'cell-Reynolds num  = ',nint(gridrn)       ,' [ ]'
+   gridrn= p2l%length*uini*p2l%vel/tmpvisc
+   print '(a,i12,a)',    'cell-Reynolds num    = ',nint(gridrn)       ,' [ ]'
 
 ! Mach number
-   print '(a,f8.3,a)',  'Mach number (u/c)  = ',uini*p2l%vel/330.0 ,' [ ]'
+   print '(a,f8.3,a)',   'Mach number (u/c)    = ',uini*p2l%vel/330.0 ,' [ ]'
 
    print *
    print '(a,g12.4)','Error terms:'
    print '(a,g12.4)','Spatial discretization errors proportional to dx^2       :', p2l%length**2
    print '(a,g12.4)','Time    discretization errors proportional to dt^2       :', p2l%time**2
    print '(a,g12.4)','Compressibility        errors proportional to dt^2/dx**2 :', p2l%time**2/p2l%length**2
-   print '(a,g12.4)','BGK truncation         errors proportional to (tau-0.5)*2:', (newtau-0.5)**2
+   print '(a,g12.4)','BGK truncation       errors proportional to (tauin-0.5)*2:', (tauin-0.5)**2
 
    if (.not.runexp) stop 'runexp is false'
 

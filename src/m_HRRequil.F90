@@ -121,9 +121,9 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 !$OMP&                                  dxfac, dyfac, dzfac, vel, dens, lf, lfeq, lfneq, Rfneq, &
 !$OMP&                                  A0_2, A0_3, A1_2, A1_2FD, A1_2HRR, A1_3HRR,             &
 !$OMP&                                  dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz,   &
-!$OMP&                                  kinevisc, eddyvisc, Bbeta, alpha, beta, alphamag) &
+!$OMP&                                  eddyvisc, Bbeta, alpha, beta, alphamag) &
 !$OMP&                           SHARED(feq, f, rho, u, v, w, tau, weights, c, H2, H3, tauin,   &
-!$OMP&                                  uscale, dx, dt, const, ihrr)
+!$OMP&                                  kinevisc, uscale, dx, dt, const, ihrr)
    do k=1,nz
       call ablim(k,nz,dzfac,ka,kb)
       do j=1,ny

@@ -173,7 +173,6 @@ program LatticeBoltzmann
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
       call diag(it,rho,u,v,w,lblanking)           ! Diagnostics
       if (coll=='HRR') then
-         !call HRRequil(feq,f,rho,u,v,w,tau,p2l%vel,p2l%length,ihrr)  ! f is input, returns feq and R(fneq) in f
          call HRRequil(feq,f,rho,u,v,w,tau,ihrr)  ! f is input, returns feq, R(fneq) in f, and tau
       elseif (coll=='BGK') then
          call BGKequil(feq,f,rho,u,v,w)           ! Calculate equlibrium distribution

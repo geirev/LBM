@@ -39,9 +39,9 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
 
    real, allocatable :: blanking(:,:,:)
 
-   print *,'tecout: ',trim(filename),' ',trim(variables_string)
 
    physics_time=real(it)
+   print *,'tecout: ',trim(filename),' ',trim(variables_string),' time=',physics_time
 
    allocate(blanking(nx,ny,nz))
    blanking=0

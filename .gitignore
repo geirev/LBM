@@ -3,6 +3,8 @@ F90-bgk
 latticeboltzmann-python
 run*
 src/old
+src/actuator
+src/actuatorline
 NACA
 papers
 docs

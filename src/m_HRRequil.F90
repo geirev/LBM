@@ -115,6 +115,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
       lfirst=.false.
    endif
 
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Loop over grid
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, ia, ib, j, ja, jb, k, ka, kb, l, p, q, r,            &
@@ -294,15 +295,16 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
                alpha=A1_2
 
 ! alphamag
-               alphamag=0.0
+               alphamag=0.00001
                do q=1,3
                do p=1,3
                   alphamag=alphamag+alpha(p,q)*alpha(p,q)
                enddo
                enddo
+               !print *,'HRR alphamag:',alphamag
 
 ! beta = del^2 * alpha' * alpha
-               beta=0.0
+               beta=0.00001
                do q=1,3
                do p=1,3
                   do m=1,3
@@ -316,9 +318,11 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
                Bbeta=beta(1,1)*beta(2,2) - beta(1,2)**2  &
                     +beta(1,1)*beta(3,3) - beta(1,3)**2  &
                     +beta(2,2)*beta(3,3) - beta(2,3)**2
+               !print *,'HRR Bbeta:',Bbeta,Bbeta/alphamag
 
 ! Vreman 2004 Eq (5)
                eddyvisc=const*sqrt(Bbeta/alphamag)
+               !print *,'HRR eddyvisc:',eddyvisc
 
             endif
 

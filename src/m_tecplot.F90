@@ -222,7 +222,7 @@ contains
    write(this%fid) ZONEMARKER
    call this%write_str(zone_name)
    write(this%fid) -1   ! parent zone of this zone
-   write(this%fid) 1    !-2   ! StrandID
+   write(this%fid)  1   ! StrandID
    write(this%fid) real(sol_time,kind=8)   ! solution time, double
    write(this%fid) -1  ! reserved data position, useless
    write(this%fid) zone_type

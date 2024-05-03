@@ -1,5 +1,6 @@
 F90SOURCE = \
 	m_ablim.F90\
+	m_actuatorline.F90\
 	main.F90\
 	m_airfoil.F90\
 	m_applyturbines.F90\
@@ -18,6 +19,7 @@ F90SOURCE = \
 	m_feqscalar.F90\
 	m_HRRequil.F90\
 	m_ibndinflow.F90\
+	m_NRL5MW.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
 	m_pdfout.F90\

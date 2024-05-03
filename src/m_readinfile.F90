@@ -24,8 +24,7 @@ module m_readinfile
       real length
       real time
       real vel
-      real dynvisc
-      real kinvisc
+      real visc
    end type
    real machnr
    type(physconv) p2l
@@ -33,7 +32,8 @@ module m_readinfile
    integer nturbines  ! Number of turbines in model
    real turbrad       ! Turbine radius in meters
    integer radii      ! Turbine radius in grid cells
-   real turbblock     ! The wind velocity reduction induced by a turbine
+   real turbblock     ! Acuator disc: The wind velocity reduction induced by a turbine
+   real turbrpm       ! Actuator line: Turbine RPM
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
 
 contains
@@ -100,7 +100,8 @@ subroutine readinfile(ihrr)
          allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines))
          read(10,*)turbrad             ; print '(a,f8.3,a)',      'turbine radius    = ',turbrad,  ' [m]'
          radii=nint(turbrad/p2l%length); print '(a,i8,a)',        'turbine radii     = ',radii,    ' [grid cells]'
-         read(10,*)turbblock           ; print '(a,f8.3)',        'turb blockage     = ',turbblock
+         read(10,*)turbblock           ; print '(a,f8.3)',        'bloc for act.dis  = ',turbblock
+         read(10,*)turbrpm             ; print '(a,f8.3)',        'RPM for act.line  = ',turbrpm
          do n=1,nturbines
             read(10,*)ipos(n)
             read(10,*)jpos(n)
@@ -115,33 +116,35 @@ subroutine readinfile(ihrr)
 
    print *
    print '(a)','Conversion factors:'
-   print '(a,f12.4,a)','C_l=  ',p2l%length,   ' [m]'
+   print '(a,f12.4,a)','C_len = ',p2l%length,   ' [m]'
    p2l%time=p2l%length/p2l%vel
-   print '(a,f12.4,a)','C_t=  ',p2l%time,     ' [s]'
-   print '(a,f12.4,a)','C_u=  ',p2l%vel,      ' [m/s]'
-   print '(a,f12.4,a)','C_rho=',p2l%rho,      ' [kg/m^3]'
+   print '(a,f12.4,a)','C_time= ',p2l%time,     ' [s]'
+   print '(a,f12.4,a)','C_vel = ',p2l%vel,      ' [m/s]'
+   print '(a,f12.4,a)','C_rho = ',p2l%rho,      ' [kg/m^3]'
+   p2l%visc=p2l%length**2/p2l%time
+   print '(a,f12.4,a)','C_visc= ',p2l%visc,     ' [m^2/s]'
    print *
 
 
 !  Compute non dimensional tau from input dmensional kinematic viscosity
-   print '(a,g13.6,a)',  'Kinematic visc       = ',kinevisc      ,' [m^2/s]'
-   tauin = (0.5 + 3.0*kinevisc*p2l%time/p2l%length**2)
-   print '(a,g13.6,a)',  'tau from kinevisc     = ',tauin        ,' [m^2/s]'
+   print '(a,g13.6,a)',  'Kinematic visc       = ',kinevisc     ,' [m^2/s]'
+   tauin = 0.5 + 3.0*kinevisc/p2l%visc
+   print '(a,g13.6,a)',  'tau from kinevisc    = ',tauin        ,' [ ]'
 
 !  Compute nondimensional kinematic viscosity used to calculate tau in HRRequil
-   kinevisc=kinevisc*p2l%time/p2l%length**2
+   kinevisc=kinevisc/p2l%visc
    print '(a,g13.6,a)',  'Non-dim kinevisc     = ',kinevisc      ,' [ ]'
 
 !  Compute dimensional kinematic viscosity from input non-dimensional tauin
-   tmpvisc=(1.0/3.0)*(tauin - 0.5) * (p2l%length**2/p2l%time)     !(7.14)
-   print '(a,g13.6,a)',  'Kine visc from tauin = ',tmpvisc  ,' [m^2/s]'
+!  tmpvisc=(1.0/3.0)*(tauin - 0.5) * p2l%visc     !(7.14)
+!  print '(a,g13.6,a)',  'Kine visc from tauin = ',tmpvisc  ,' [m^2/s]'
 
 !  Compupte Reynolds number from rotor of radii lattice cells
-   reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/tmpvisc
+   reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/(kinevisc*p2l%visc)
    print '(a,i12,a)',    'Reynolds num         = ',nint(reynoldsnr)   ,' [ ]'
 
 !  Compupte grid cell Reynolds number
-   gridrn= p2l%length*uini*p2l%vel/tmpvisc
+   gridrn= p2l%length*uini*p2l%vel/(kinevisc*p2l%visc)
    print '(a,i12,a)',    'cell-Reynolds num    = ',nint(gridrn)       ,' [ ]'
 
 ! Mach number

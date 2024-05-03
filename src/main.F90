@@ -203,7 +203,7 @@ program LatticeBoltzmann
       mu=cs2*(tauin-0.5)
       grad=cs2*2.0*rhoa/real(nx)
       dw=width/real(ny-1)
-      open(10,file='uvel.dat')
+      open(10,file='channeluvel.dat')
       do j=1,ny
          write(10,'(i4,2f13.5)')j,u(nx/2,j,2),&
                     (1.0/(2.0*rho0*mu))*grad*((width/2.0)**2-(dw*(real(j)-1.0)-width/2.0)**2)

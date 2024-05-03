@@ -11,10 +11,16 @@ subroutine ibndinflow(feqscal,u)
    real z(nz)
    real uvel(nz)
    integer i,j,k,kk
+   logical ex
 
+   inquire(file='uvel.dat',exist=ex)
+   if (.not.ex) then
+      print '(a)','ibndinflow: Did not find inputfile uvel.dat...'
+      stop
+   endif
    open(10,file='uvel.dat')
       do k=1,nz
-         read(10,*)kk,z(k),uvel(k)
+         read(10,*,err=999,end=999)kk,z(k),uvel(k)
       enddo
    close(10)
 
@@ -34,6 +40,8 @@ subroutine ibndinflow(feqscal,u)
       u(i,j,1:nz)=uvel(1:nz)
    enddo
    enddo
+   return
+   999 stop 'ibndinflow: Error reading uvel.dat'
 
 end subroutine
 end module

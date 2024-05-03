@@ -104,7 +104,7 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
 
    ! before exit, you must call complete subroutine
    call plt_file%complete
-   deallocate(blanking)
+   if (allocated(blanking)) deallocate(blanking)
 
 end subroutine
 

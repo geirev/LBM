@@ -1,5 +1,7 @@
 m_ablim.o:      makefile
 m_ablim.o:      MODEL.CPP
+m_actuatorline.o:      makefile
+m_actuatorline.o:      MODEL.CPP
 main.o:      m_airfoil.o
 main.o:      makefile
 main.o:      m_applyturbines.o
@@ -108,6 +110,8 @@ m_ibndinflow.o:      m_feqscalar.o
 m_ibndinflow.o:      mod_dimensions.o
 m_ibndinflow.o:      MODEL.CPP
 m_ibndinflow.o:      m_readinfile.o
+m_NRL5MW.o:      makefile
+m_NRL5MW.o:      MODEL.CPP
 mod_D3Q27setup.o:      makefile
 mod_D3Q27setup.o:      mod_dimensions.o
 mod_D3Q27setup.o:      MODEL.CPP
@@ -138,6 +142,7 @@ m_tecout.o:      m_tecplot.o
 m_tecplot.o:      makefile
 m_tecplot.o:      MODEL.CPP
 m_tecplot.o:      m_string.o
+m_turbineforcing.o:      m_actuatorline.o
 m_turbineforcing.o:      makefile
 m_turbineforcing.o:      m_feqscalar.o
 m_turbineforcing.o:      mod_dimensions.o

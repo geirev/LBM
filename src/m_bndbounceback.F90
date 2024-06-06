@@ -8,7 +8,7 @@ subroutine bndbounceback(f,blanking)
    real,    intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real tmp
    integer i,j,k,l
-   integer, parameter :: icpu=2
+   integer, parameter :: icpu=9
    call cpustart()
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, tmp) SHARED(f, blanking)

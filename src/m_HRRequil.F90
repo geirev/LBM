@@ -76,7 +76,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 
 
 
-   integer, parameter :: icpu=5
+   integer, parameter :: icpu=4
    call cpustart()
 
 
@@ -331,9 +331,9 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 
             f(i,j,k,:) = Rfneq(:)
             feq(i,j,k,:)= lfeq(:)
-            if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) then
-               print '(a,3e13.5)','tau=',tau(i,j,k),kinevisc,eddyvisc
-            endif
+           !if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) then
+           !   print '(a,3e13.5)','tau=',tau(i,j,k),kinevisc,eddyvisc
+           !endif
 
          enddo
       enddo

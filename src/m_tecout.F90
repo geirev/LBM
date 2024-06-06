@@ -41,7 +41,7 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
 
 
    physics_time=real(it)
-   print *,'tecout: ',trim(filename),' ',trim(variables_string),' time=',physics_time
+   print *,'tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
 
    allocate(blanking(nx,ny,nz))
    blanking=0

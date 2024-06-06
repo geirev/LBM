@@ -10,7 +10,7 @@ function velocity(f,rho,cs,blanking) result(vel)
    logical, intent(in) :: blanking(nx,ny,nz)
    real vel(nx,ny,nz)
    integer i,j,k,l
-   integer, parameter :: icpu=4
+   integer, parameter :: icpu=2
    call cpustart()
 
 

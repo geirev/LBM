@@ -5,6 +5,7 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
    use m_readinfile
    use m_feqscalar
    use m_actuatorline
+   use m_wtime
    real, intent(out)      :: df(ny,nz,nl,nturbines) ! forcing distributions
    real, intent(in)       :: feq(0:nx+1,0:ny+1,0:nz+1,nl) ! equilibrium distribution
    real, intent(in)       :: rho(nx,ny,nz)          ! density
@@ -12,7 +13,7 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
    real, intent(in)       :: v(nx,ny,nz)            ! velocity
    real, intent(in)       :: w(nx,ny,nz)            ! velocity
 
-   real                   :: force(ny,nz)           ! work array for computing the turbine force
+   real                   :: force(ny,nz,3)         ! work array for computing the turbine force
    integer n,j,k,ip,jp,kp
 
    real, save :: theta=0.0
@@ -22,53 +23,52 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
    real, parameter :: pi=3.1415926535
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
+   integer, parameter :: icpu=5
+   call cpustart()
 
 
 ! Rotations per timestep
-   rps=turbrpm/60.0
-   rpts=rps*p2l%time
+! Starting with turbrpm (rotations per minute)
+   rps=turbrpm/60.0    ! rotations per second
+   rpts=rps*p2l%time   ! rotations per time step of p2l%time
    dtheta=rpts*pi2
 
 
    theta=theta+dtheta
-
       do n=1,nturbines
          ip=ipos(n)
          jp=jpos(n)
          kp=kpos(n)
          force=0.0
-         call actuatorline(force(1:ny,1:nz),ny,nz,jp,kp,real(radii),theta)
-         force=1.0-force
+
+         if (iactuator == 0) then
+! Blocking the turbine area with a penetable disk (by reducing fluid velocity from 1 to 1-turbbloc)
+            force(:,:,:)=turbblock
+         elseif (iactuator == 1) then
+! My implementation of the actuator line method by Sørensen 2002
+            call actuatorline(force(1:ny,1:nz,1:3),ny,nz,jp,kp,theta,turbrpm,u(ip,:,:),v(ip,:,:),w(ip,:,:))
+         endif
+
+         !force=1.0-force
+         ! Convert force to velocity change?
 
          df(:,:,:,n)=0.0
          do k=1,nz
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  radii**2) then
-               call feqscalar(df(j,k,:,n),rho(ip,j,k),force(j,k)*u(ip,j,k),force(j,k)*v(ip,j,k),force(j,k)*w(ip,j,k))
+               !call feqscalar(df(j,k,:,n),rho(ip,j,k),force(j,k,1),force(j,k,2),force(j,k,3))
+               !call feqscalar(df(j,k,:,n),rho(ip,j,k),u(ip,j,k)-force(j,k,1),v(ip,j,k)-force(j,k,2),w(ip,j,k)-force(j,k,3))
+               call feqscalar(df(j,k,:,n),rho(ip,j,k),u(ip,j,k)-force(j,k,1),v(ip,j,k),w(ip,j,k))
+               !call feqscalar(df(j,k,:,n),rho(ip,j,k),force(j,k,1)*u(ip,j,k),force(j,k,2)*v(ip,j,k),force(j,k,3)*w(ip,j,k))
             else
                df(j,k,:,n)=feq(ip,j,k,:)
             endif
          enddo
          enddo
+
          df(1:ny,1:nz,1:nl,n)=df(1:ny,1:nz,1:nl,n)-feq(ip,1:ny,1:nz,1:nl)
       enddo
-
-!      do n=1,nturbines
-!         ip=ipos(n)
-!         jp=jpos(n)
-!         kp=kpos(n)
-!         df(:,:,:,n)=0.0
-!         do k=1,nz
-!         do j=1,ny
-!            if ( ((j-jp)**2 + (k-kp)**2 ) <  radii**2) then
-!               call feqscalar(df(j,k,:,n),rho(ip,j,k),turbblock*u(ip,j,k),turbblock*v(ip,j,k),turbblock*w(ip,j,k))
-!            else
-!               df(j,k,:,n)=feq(ip,j,k,:)
-!            endif
-!         enddo
-!         enddo
-!         df(1:ny,1:nz,1:nl,n)=df(1:ny,1:nz,1:nl,n)-feq(ip,1:ny,1:nz,1:nl)
-!      enddo
+      call cpufinish(icpu)
 
 end subroutine
 end module

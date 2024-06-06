@@ -19,9 +19,9 @@ F90SOURCE = \
 	m_feqscalar.F90\
 	m_HRRequil.F90\
 	m_ibndinflow.F90\
-	m_NRL5MW.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
+	mod_nrl5mw.F90\
 	m_pdfout.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\

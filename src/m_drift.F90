@@ -10,7 +10,7 @@ subroutine drift(f,feq)
    real, intent(out) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(in)  :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    integer l,i,j,k,i1,j1,k1
-   integer, parameter :: icpu=1
+   integer, parameter :: icpu=10
    call cpustart()
 
 

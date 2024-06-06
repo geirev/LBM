@@ -6,7 +6,6 @@ subroutine boundarycond(f,rho,u,v,w,feqscal)
    use m_bndpressure
    use m_wtime
    implicit none
-   integer, parameter :: icpu=3
    real, intent(inout):: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(in)   :: feqscal(0:nz+1,nl)
    real, intent(in)   :: rho(nx,ny,nz)
@@ -14,6 +13,7 @@ subroutine boundarycond(f,rho,u,v,w,feqscal)
    real, intent(in)   :: v(nx,ny,nz)
    real, intent(in)   :: w(nx,ny,nz)
    integer i,j,k,l
+   integer, parameter :: icpu=8
 
    call cpustart()
 

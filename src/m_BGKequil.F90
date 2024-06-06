@@ -12,7 +12,7 @@ subroutine BGKequil(feq,f,rho,u,v,w)
    real,    intent(out)   :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    real,    intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    integer i,j,k,l
-   integer, parameter :: icpu=5
+   integer, parameter :: icpu=4
    call cpustart()
 
 

@@ -25,7 +25,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real    :: vorty(nx,ny,nz)    = 0.0        ! fluid vorticity y-component
    real    :: vortz(nx,ny,nz)    = 0.0        ! fluid vorticity z-component
    real    :: vort(nx,ny,nz)     = 0.0        ! absolute value of vorticity
-   integer, parameter :: icpu=8
+   integer, parameter :: icpu=3
 
    integer k,num_of_vars
 

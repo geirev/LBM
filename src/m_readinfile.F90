@@ -32,6 +32,7 @@ module m_readinfile
    integer nturbines  ! Number of turbines in model
    real turbrad       ! Turbine radius in meters
    integer radii      ! Turbine radius in grid cells
+   integer iactuator  ! 0-actuator disc, 1 actuator line, 2 simple actuator line
    real turbblock     ! Acuator disc: The wind velocity reduction induced by a turbine
    real turbrpm       ! Actuator line: Turbine RPM
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
@@ -100,7 +101,9 @@ subroutine readinfile(ihrr)
          allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines))
          read(10,*)turbrad             ; print '(a,f8.3,a)',      'turbine radius    = ',turbrad,  ' [m]'
          radii=nint(turbrad/p2l%length); print '(a,i8,a)',        'turbine radii     = ',radii,    ' [grid cells]'
+                                         print '(a,i8,a)',        'Rotor size        = ',2*radii,  ' [grid cells]'
          read(10,*)turbblock           ; print '(a,f8.3)',        'bloc for act.dis  = ',turbblock
+         read(10,*)iactuator           ; print '(a,i8)',          'iActuator         = ',iactuator
          read(10,*)turbrpm             ; print '(a,f8.3)',        'RPM for act.line  = ',turbrpm
          do n=1,nturbines
             read(10,*)ipos(n)

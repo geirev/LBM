@@ -8,7 +8,7 @@ function density(f,blanking) result(dens)
    logical, intent(in) :: blanking(nx,ny,nz)
    real dens(nx,ny,nz)
    integer i,j,k,l
-   integer, parameter :: icpu=3
+   integer, parameter :: icpu=1
    call cpustart()
 
 !   dens(1:nx,1:ny,1:nz)=sum(f(1:nx,1:ny,1:nz,:),dim=4)
@@ -26,6 +26,6 @@ function density(f,blanking) result(dens)
 !$OMP END PARALLEL DO
    enddo
 
-   call cpufinish(3)
+   call cpufinish(icpu)
 end function
 end module

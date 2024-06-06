@@ -165,7 +165,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0, nt1
-      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6)','iteration:', it
+      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a)','Iteration:', it,' Time:',real(it)*p2l%time,' s'
 
       rho=density(f,lblanking)                    ! macro density
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel

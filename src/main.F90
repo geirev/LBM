@@ -100,7 +100,7 @@ program LatticeBoltzmann
    case('cylinder')
       call cylinder(lblanking,nx/6,ny/2,25)
    case('windfarm')
-      call windfarm(lblanking)
+      call windfarm(lblanking,kbnd)
    case('channel') ! Pouisille flow
       call channel(lblanking,nx/6,ny/2,25)
    case('airfoil')
@@ -131,10 +131,10 @@ program LatticeBoltzmann
         v(:,:,k)=0.1*v(:,:,k-1)+sqrt(1.0-0.1**2)*v(:,:,k)
         w(:,:,k)=0.1*w(:,:,k-1)+sqrt(1.0-0.1**2)*w(:,:,k)
      enddo
-     rho=rho0 + 0.01*rho
-     u=uini+0.01*u
-     v=0.0+0.01*u
-     w=0.0+0.01*u
+     rho=rho0 + 0.0001*rho
+     u=uini+0.0001*u
+     v=0.0+0.0001*u
+     w=0.0+0.0001*u
    endif
 
    if (ibnd==1) then

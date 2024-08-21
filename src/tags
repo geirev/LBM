@@ -42,6 +42,7 @@ m_feqscalar	m_feqscalar.F90	/^module
 m_HRRequil	m_HRRequil.F90	/^module
 m_ibndinflow	m_ibndinflow.F90	/^module
 m_pdfout	m_pdfout.F90	/^module
+m_readfoildata	m_readfoildata.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
 m_saverestart	m_saverestart.F90	/^module
@@ -56,6 +57,7 @@ m_windfarm	m_windfarm.F90	/^module
 m_wtime	m_wtime.F90	/^module
 nrl5mw	mod_nrl5mw.F90	/^module
 pdfout	m_pdfout.F90	/^module
+readfoildata	m_readfoildata.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module
 saverestart	m_saverestart.F90	/^module

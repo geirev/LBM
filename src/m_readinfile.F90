@@ -32,8 +32,6 @@ module m_readinfile
    integer nturbines  ! Number of turbines in model
    real turbrad       ! Turbine radius in meters
    integer radii      ! Turbine radius in grid cells
-   integer iactuator  ! 0-actuator disc, 1 actuator line, 2 simple actuator line
-   real turbblock     ! Acuator disc: The wind velocity reduction induced by a turbine
    real turbrpm       ! Actuator line: Turbine RPM
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
 
@@ -102,8 +100,6 @@ subroutine readinfile(ihrr)
          read(10,*)turbrad             ; print '(a,f8.3,a)',      'turbine radius    = ',turbrad,  ' [m]'
          radii=nint(turbrad/p2l%length); print '(a,i8,a)',        'turbine radii     = ',radii,    ' [grid cells]'
                                          print '(a,i8,a)',        'Rotor size        = ',2*radii,  ' [grid cells]'
-         read(10,*)turbblock           ; print '(a,f8.3)',        'bloc for act.dis  = ',turbblock
-         read(10,*)iactuator           ; print '(a,i8)',          'iActuator         = ',iactuator
          read(10,*)turbrpm             ; print '(a,f8.3)',        'RPM for act.line  = ',turbrpm
          do n=1,nturbines
             read(10,*)ipos(n)
@@ -142,7 +138,7 @@ subroutine readinfile(ihrr)
 !  tmpvisc=(1.0/3.0)*(tauin - 0.5) * p2l%visc     !(7.14)
 !  print '(a,g13.6,a)',  'Kine visc from tauin = ',tmpvisc  ,' [m^2/s]'
 
-!  Compupte Reynolds number from rotor of radii lattice cells
+!  Compute Reynolds number from rotor of radii lattice cells
    reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/(kinevisc*p2l%visc)
    print '(a,i12,a)',    'Reynolds num         = ',nint(reynoldsnr)   ,' [ ]'
 

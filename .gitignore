@@ -6,6 +6,7 @@ src/old
 src/actuator
 src/actuatorline
 NACA
+FAST
 papers
 docs
 !run/air.gnu

@@ -3,6 +3,7 @@ m_ablim.o:      MODEL.CPP
 m_actuatorline.o:      makefile
 m_actuatorline.o:      MODEL.CPP
 m_actuatorline.o:      mod_nrl5mw.o
+m_actuatorline.o:      m_readfoildata.o
 m_actuatorline.o:      m_readinfile.o
 main.o:      m_airfoil.o
 main.o:      makefile
@@ -124,6 +125,9 @@ m_pdfout.o:      makefile
 m_pdfout.o:      mod_dimensions.o
 m_pdfout.o:      MODEL.CPP
 m_pdfout.o:      m_tecplot.o
+m_readfoildata.o:      makefile
+m_readfoildata.o:      MODEL.CPP
+m_readfoildata.o:      mod_nrl5mw.o
 m_readinfile.o:      makefile
 m_readinfile.o:      MODEL.CPP
 m_readrestart.o:      makefile

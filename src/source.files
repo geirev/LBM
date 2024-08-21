@@ -23,6 +23,7 @@ F90SOURCE = \
 	mod_dimensions.F90\
 	mod_nrl5mw.F90\
 	m_pdfout.F90\
+	m_readfoildata.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
 	m_saverestart.F90\

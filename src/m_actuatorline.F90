@@ -1,7 +1,7 @@
 module m_actuatorline
 contains
-subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
-   use m_readinfile, only : p2l
+subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w)
+   use m_readinfile, only : p2l,uini,turbrpm
    use mod_nrl5mw
    use m_readfoildata
    implicit none
@@ -15,7 +15,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
    real,    intent(in)    :: v(nx,ny)     ! v velocity at the turbine section
    real,    intent(in)    :: w(nx,ny)     ! w velocity at the turbine section
    real,    intent(in)    :: thetain      ! input rotation angle of blade one
-   real,    intent(in)    :: omegain      ! rotation speed in RPM
    integer, intent(inout) :: iradius      ! number of gridpoints for blade length computed at first call
    real,    intent(inout) :: force(nx,ny,3) ! actuator line force added to force
 
@@ -34,7 +33,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
    real xp,yp                             ! x-y locatiopn of point on blade closest to x-y
    real xy                                ! length along the blade from x0,y0 to xp,yp
    real a,b,t                             ! work variables
-   real theta                             ! work rotation angle
+   real theta                             ! work blade rotation angle
    real omega                             ! Rotation speed in radians per second
    real phi                               ! Vrel angle
    real q                                 ! Dynamic pressure
@@ -47,7 +46,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
    integer ic,jc,nc                       ! gridpoint along a blade
    integer iblade                         ! blade counter
 
-   real :: rho=1.0                        ! nondimentional density
+   real :: rho=1.0                        ! nondimensional density
 
    real, save :: CL(nrchords)             ! Lift coefficient for each chord along the blade
    real, save :: CD(nrchords)             ! Drag coefficient for each chord along the blade
@@ -60,6 +59,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
    real omeg
 
    real, save :: relma(nrchords),relmb(nrchords)
+real vx,wx
 
    ifirst=ifirst+1
    force=0.0
@@ -88,15 +88,14 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
       print *,'iD=',2*iradius
       print *,'3*iD  =',3*2*iradius
       print *,'29*iD =',29*2*iradius
-      print *,'omega(12.1 RPM/60 s)=',12.1/60.0
-      print *,'tipspeed R*Omega    =',63.0*12.1/60.0
-      print *,'tipspeed ratio      =',(63.0*12.1/60.0)/8.0
       print *
+      print '(a,17f8.2)','cl  :',cl(1:17)
+      print '(a,17f8.2)','cd  :',cd(1:17)
+      print '(a,17f8.2)','dc  :',dc(1:17)
+      print '(a,17f8.2)','relm:',relm(1:17)
+      print '(a,17f8.2)','ra  :',relma(1:17)
+      print '(a,17f8.2)','chor:',chord(1:17)
    endif
-!   print '(a,10f8.2)','dc  :',dc(1:10)
-!   print '(a,10f8.2)','relm:',relm(1:10)
-!   print '(a,10f8.2)','ra  :',relma(1:10)
-!   print '(a,10f8.2)','chor:',chord(1:10)
 
 ! Set rotation angle
    theta=thetain
@@ -119,8 +118,20 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
    endif
 
 
-! rotation speed in radians/s
-   omega=pi2*omegain/60.0
+! Rotation speed in radians/s
+   omega=pi2*turbrpm/60.0
+
+   if (ifirst==1) then
+      print *,'Omega  (RPM)                 =',turbrpm
+      print *,'Omega  (radians/s)           =',omega
+! Tipspeed(Tip speed can be determined from the rotational speed, which is ωR where ω is the rotational
+! speed in radians per second and R is the radius of the turbine in meters.)
+      print *,'tipspeed R*Omega m/s         =',real(iradius)*p2l%length*omega
+! Tipspeed ratio 8 m/s winds (For three blades, a TSR of 6 to 7 is optimal. If it is less, not all
+! the available energy is captured; if it is more, the blades move into an area of turbulence from the last
+! blade and are not as efficient.
+      print *,'tipspeed ratio R*Omega/uini  =',real(iradius)*p2l%length*omega/(uini*p2l%vel)
+   endif
 
 ! nondimesonal omega
    omega=omega*p2l%time
@@ -143,36 +154,60 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
          ic=nint(xb)
          jc=nint(yb)
 
-         ux     = u(ic,jc)
-         utheta = sqrt( omega*sqrt((xb-x0)**2+(yb-y0)**2+0.001) + v(ic,jc)*cos(theta) + w(ic,jc)*sin(theta) )
-         phi    = 0.5*pi-atan2(ux,utheta)
+! Here we could replace this with bilinear or cubic interpolation, to find u(xb,yb), v(xb,yb), w(xb,yb)
+! in the square  ic=int(xb), ic+1,  jc=int(yb), jc+1
+! Non-dimensional velocity components from model
+         ux = u(ic,jc)
+         vx = v(ic,jc)
+         wx = w(ic,jc)
+
+! Non-dimensional utheta
+         utheta =  omega*sqrt((xb-x0)**2+(yb-y0)**2+0.000001) - wx*cos(theta) - vx*sin(theta)
+
+! Non-dimensional urel**2
          urel2  = ux**2 + utheta**2
 
-! Dynamic pressure
+! Non-dimensional dynamic pressure
          q= 0.5 * rho * urel2
 
-! Lift and drag forces per element
+! Non-dimensional lift and drag forces per blade element
          forceL(ichord) = q * chord(ichord) * dc(ichord) * CL(ichord)
          forceD(ichord) = q * chord(ichord) * dc(ichord) * CD(ichord)
 
+! Non-dimensional lift and drag forces per blade element unit length
          forceL(ichord) = forceL(ichord)/dc(ichord)
          forceD(ichord) = forceD(ichord)/dc(ichord)
+
+! Flowangle between relative windspeed and rotor plane
+         phi    = atan2(ux,utheta)    ! pi/2.0 - atan2(ux,utheta)
+
+         if (ifirst==1) then
+            if (ichord == 1) then
+               print *,'Blade :',iblade
+               print '(2a8,2a3,9a8)','  ichord','    dist',' ic',' jc','      ux','      vx','      wx','  utheta',&
+                                     '     phi','    urel','      dc','  forceL','  forceD'
+            endif
+            print '(i8.8,f8.4,2I3,9f8.4)',ichord,sqrt((xb-x0)**2+(yb-y0)**2+0.0001),ic,jc,ux,vx,wx,utheta,&
+                                          phi*360.0/pi2,sqrt(urel2),dc(ichord),forceL(ichord),forceD(ichord)
+
+         endif
       enddo
 
 
-! Computing the forces for gripoints located at (x,y)
+
+! Computing the forces for gridpoints located at (x,y)
       do j=ja,jb
          y=real(j)
          do i=ia,ib
             x=real(i)
 
             t=min(1.0, ((x-x0)*a + (y-y0)*b)/radius**2)
+            t=((x-x0)*a + (y-y0)*b)/radius**2
 
             ! location on blade
             xp=x0+t*a
             yp=y0+t*b
 
-            !nc=nint(t*nrchords)
             xy=sqrt((xp-x0)**2 + (yp-y0)**2)    ! length from (x0,y0) to location (xp,yp) on blade
             nc=0
             do ichord=1,nrchords
@@ -185,11 +220,12 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,omegain,iradius,u,v,w)
                   nc=nrchords
             endif
 
+! Note the negative v, is because of coordinate system orientation v to left and w up in rotor plan
             if ((0.01 < t).and.(t <= 1.0) .and. (nc > 0)) then
-               gauss=(1.0/(sqrt(pi)*eps)) * exp(-((xp-x)**2 + (yp-y)**2)/eps**2)
+               gauss=(1.0/(sqrt(pi)*eps)) * exp(-((x-xp)**2 + (y-yp)**2)/eps**2)
                force(i,j,1)=force(i,j,1)+(forceL(nc)*cos(phi) + forceD(nc)*sin(phi))*gauss
-               force(i,j,3)=force(i,j,3)+(forceL(nc)*sin(phi) - forceD(nc)*cos(phi))*cos(theta)*gauss
                force(i,j,2)=force(i,j,2)-(forceL(nc)*sin(phi) - forceD(nc)*cos(phi))*sin(theta)*gauss
+               force(i,j,3)=force(i,j,3)+(forceL(nc)*sin(phi) - forceD(nc)*cos(phi))*cos(theta)*gauss
             endif
 
          enddo

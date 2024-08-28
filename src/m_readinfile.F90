@@ -115,13 +115,13 @@ subroutine readinfile(ihrr)
 
    print *
    print '(a)','Conversion factors:'
-   print '(a,f12.4,a)','C_len = ',p2l%length,   ' [m]'
+   print '(a,f12.4,a)','p2l%length = ',p2l%length,   ' [m]'
    p2l%time=p2l%length/p2l%vel
-   print '(a,f12.4,a)','C_time= ',p2l%time,     ' [s]'
-   print '(a,f12.4,a)','C_vel = ',p2l%vel,      ' [m/s]'
-   print '(a,f12.4,a)','C_rho = ',p2l%rho,      ' [kg/m^3]'
+   print '(a,f12.4,a)','p2l%time   = ',p2l%time,     ' [s]'
+   print '(a,f12.4,a)','p2l%vel    = ',p2l%vel,      ' [m/s]'
+   print '(a,f12.4,a)','p2l%rho    = ',p2l%rho,      ' [kg/m^3]'
    p2l%visc=p2l%length**2/p2l%time
-   print '(a,f12.4,a)','C_visc= ',p2l%visc,     ' [m^2/s]'
+   print '(a,f12.4,a)','p2l%visc   = ',p2l%visc,     ' [m^2/s]'
    print *
 
 

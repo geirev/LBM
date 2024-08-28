@@ -39,12 +39,18 @@ module mod_nrl5mw
 
 !                                     cyl1      cyl2    DU40    DU35    DU35    DU30   DU25          DU21     NACA64
    integer, save :: nfoil(nrchords)= [  1,   1,    2,      3,      4,      4,      5,     6,     6,     7, 7, 8, 8, 8, 8, 8, 8 ]
+
+! A twist is added along the length of the blade to optimize the amount of energy harvested. Typically, 10° to 20° of twist is
+! included, with the twist at the tip being the highest. This produces a change in the apparent wind direction across the blade.
    real, save :: twist(nrchords)   = [13.3080,13.3080,13.3080,13.3080,11.4800,10.1620, 9.0110, 7.7950,&
                                        6.5440, 5.3610, 4.1880, 3.1250, 2.3190, 1.5260, 0.8630, 0.3700, 0.1060]
-   real, save :: lift(nrchords)    = [ 0.0000, 0.0000, 0.0000, 1.5380, 1.6090, 1.4750, 1.3900, 1.3360,&
-                                       1.2080, 1.1450, 0.9960, 0.7840, 0.6700, 0.6000, 0.5560, 0.5000, 0.4420]
-   real, save :: drag(nrchords)    = [ 0.5000, 0.5000, 0.3500, 0.1288, 0.0227, 0.0156, 0.0155, 0.0153,&
-                                       0.0117, 0.0103, 0.0071, 0.0053, 0.0053, 0.0052, 0.0052, 0.0052, 0.0052]
+
+! The lift and drags below are not used as we read them from the tables
+!   real, save :: lift(nrchords)    = [ 0.0000, 0.0000, 0.0000, 1.5380, 1.6090, 1.4750, 1.3900, 1.3360,&
+!                                       1.2080, 1.1450, 0.9960, 0.7840, 0.6700, 0.6000, 0.5560, 0.5000, 0.4420]
+!
+!   real, save :: drag(nrchords)    = [ 0.5000, 0.5000, 0.3500, 0.1288, 0.0227, 0.0156, 0.0155, 0.0153,&
+!                                       0.0117, 0.0103, 0.0071, 0.0053, 0.0053, 0.0052, 0.0052, 0.0052, 0.0052]
 
 end module
 

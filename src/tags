@@ -2,6 +2,7 @@ ablim	m_ablim.F90	/^module
 actuatorline	m_actuatorline.F90	/^module
 airfoil	m_airfoil.F90	/^module
 applyturbines	m_applyturbines.F90	/^module
+averaging	m_averaging.F90	/^module
 BGKequil	m_BGKequil.F90	/^module
 bndbounceback	m_bndbounceback.F90	/^module
 bndpressure	m_bndpressure.F90	/^module
@@ -26,6 +27,7 @@ m_ablim	m_ablim.F90	/^module
 m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_applyturbines	m_applyturbines.F90	/^module
+m_averaging	m_averaging.F90	/^module
 m_BGKequil	m_BGKequil.F90	/^module
 m_bndbounceback	m_bndbounceback.F90	/^module
 m_bndpressure	m_bndpressure.F90	/^module
@@ -48,6 +50,7 @@ m_readrestart	m_readrestart.F90	/^module
 m_saverestart	m_saverestart.F90	/^module
 m_sphere	m_sphere.F90	/^module
 m_string	m_string.F90	/^module
+m_tecfld	m_tecfld.F90	/^module
 m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
 m_turbineforcing	m_turbineforcing.F90	/^module
@@ -63,6 +66,7 @@ readrestart	m_readrestart.F90	/^module
 saverestart	m_saverestart.F90	/^module
 sphere	m_sphere.F90	/^module
 string	m_string.F90	/^module
+tecfld	m_tecfld.F90	/^module
 tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module
 turbineforcing	m_turbineforcing.F90	/^module

@@ -5,6 +5,7 @@ program LatticeBoltzmann
    use m_pseudo2D
    use m_readinfile
    use m_diag
+   use m_averaging
 
    use m_airfoil
    use m_channel
@@ -183,8 +184,10 @@ program LatticeBoltzmann
       call boundarycond(feq,rho,u,v,w,feqscal)    ! General boundary conditions
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f
+      if (it > 4000 ) call averaging(u,v,w,.false.,iradius)
 
    enddo
+   call averaging(u,v,w,.true.,iradius)
 
    call cpuprint()
 

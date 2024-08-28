@@ -25,11 +25,11 @@ subroutine readfoildata(cl,cd)
 
    character(len=14) :: filenames(1:nrc)= [ 'Cylinder1.dat ', &
                                             'Cylinder2.dat ', &
-                                            'DU21_A17.dat  ', &
-                                            'DU25_A17.dat  ', &
-                                            'DU30_A17.dat  ', &
-                                            'DU35_A17.dat  ', &
                                             'DU40_A17.dat  ', &
+                                            'DU35_A17.dat  ', &
+                                            'DU30_A17.dat  ', &
+                                            'DU25_A17.dat  ', &
+                                            'DU21_A17.dat  ', &
                                             'NACA64_A17.dat' ]
 
    allocate(foil(150,8))
@@ -61,8 +61,6 @@ subroutine readfoildata(cl,cd)
 !      print *
 !   enddo
 
-
-
    do j=1,nrchords
       angle=twist(j) + pitch
       k=nfoil(j)
@@ -74,7 +72,7 @@ subroutine readfoildata(cl,cd)
             slope=(foil(i+1,k)%cd-foil(i,k)%cd)/(foil(i+1,k)%deg-foil(i,k)%deg)
             cd(j)=foil(i,k)%cd + slope*(angle - foil(i,k)%deg)
 
-!            print '(3(a,3f10.4))','angle: ', foil(i,k)%deg , angle, foil(i+1,k)%deg, &
+!            print '(2i3,3(a,3f10.4))',j,i , 'angle: ', foil(i,k)%deg , angle, foil(i+1,k)%deg, &
 !                          ' -- ',  foil(i,k)%cl, cl(j), foil(i+1,k)%cl,&
 !                          ' -- ',  foil(i,k)%cd, cd(j), foil(i+1,k)%cd
             exit
@@ -82,9 +80,6 @@ subroutine readfoildata(cl,cd)
       enddo
 
    enddo
-
-
-
 
    deallocate(foil)
 

@@ -8,6 +8,7 @@ m_actuatorline.o:      m_readinfile.o
 main.o:      m_airfoil.o
 main.o:      makefile
 main.o:      m_applyturbines.o
+main.o:      m_averaging.o
 main.o:      m_BGKequil.o
 main.o:      m_bndbounceback.o
 main.o:      m_bndpressure.o
@@ -45,6 +46,11 @@ m_applyturbines.o:      mod_dimensions.o
 m_applyturbines.o:      MODEL.CPP
 m_applyturbines.o:      m_readinfile.o
 m_applyturbines.o:      m_wtime.o
+m_averaging.o:      makefile
+m_averaging.o:      mod_dimensions.o
+m_averaging.o:      MODEL.CPP
+m_averaging.o:      m_readinfile.o
+m_averaging.o:      m_tecfld.o
 m_BGKequil.o:      makefile
 m_BGKequil.o:      mod_D3Q27setup.o
 m_BGKequil.o:      mod_dimensions.o
@@ -141,6 +147,8 @@ m_sphere.o:      mod_dimensions.o
 m_sphere.o:      MODEL.CPP
 m_string.o:      makefile
 m_string.o:      MODEL.CPP
+m_tecfld.o:      makefile
+m_tecfld.o:      MODEL.CPP
 m_tecout.o:      makefile
 m_tecout.o:      mod_dimensions.o
 m_tecout.o:      MODEL.CPP

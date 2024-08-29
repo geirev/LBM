@@ -24,7 +24,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w)
    real, parameter :: pi=3.1415926535
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
-   real, parameter :: eps=1.6             ! smoothing distance in Gaussian kernel
+   real, parameter :: eps=1.25             ! smoothing distance in Gaussian kernel 1.6
 
    real x0,y0                             ! x-y location of turbine center
    real xb,yb                             ! x-y locatiuon along a blade
@@ -59,7 +59,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w)
    real omeg
 
    real, save :: relma(nrchords),relmb(nrchords)
-real vx,wx
+   real vx,wx
 
    ifirst=ifirst+1
    force=0.0
@@ -131,6 +131,7 @@ real vx,wx
 ! the available energy is captured; if it is more, the blades move into an area of turbulence from the last
 ! blade and are not as efficient.
       print *,'tipspeed ratio R*Omega/uini  =',real(iradius)*p2l%length*omega/(uini*p2l%vel)
+      print *,'tipspeed ratio R*Omega/uini  =',radius*p2l%length*omega/(uini*p2l%vel)
    endif
 
 ! nondimesonal omega
@@ -174,12 +175,8 @@ real vx,wx
          forceL(ichord) = q * chord(ichord) * dc(ichord) * CL(ichord)
          forceD(ichord) = q * chord(ichord) * dc(ichord) * CD(ichord)
 
-! Non-dimensional lift and drag forces per blade element unit length
-         forceL(ichord) = forceL(ichord)/dc(ichord)
-         forceD(ichord) = forceD(ichord)/dc(ichord)
-
 ! Flowangle between relative windspeed and rotor plane
-         phi    = atan2(ux,utheta)    ! pi/2.0 - atan2(ux,utheta)
+         phi    = atan2(ux,utheta)
 
          if (ifirst==1) then
             if (ichord == 1) then
@@ -201,32 +198,17 @@ real vx,wx
          do i=ia,ib
             x=real(i)
 
-            t=min(1.0, ((x-x0)*a + (y-y0)*b)/radius**2)
-            t=((x-x0)*a + (y-y0)*b)/radius**2
-
-            ! location on blade
-            xp=x0+t*a
-            yp=y0+t*b
-
-            xy=sqrt((xp-x0)**2 + (yp-y0)**2)    ! length from (x0,y0) to location (xp,yp) on blade
-            nc=0
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! New version
             do ichord=1,nrchords
-               if (relma(ichord) <= xy .and. xy < relmb(ichord)) then
-                  nc=ichord
-                  exit
-               endif
-            enddo
-            if (xy >= hubradius .and. nc==0) then
-                  nc=nrchords
-            endif
+               xp=x0+relm(ichord)*cos(theta)
+               yp=y0+relm(ichord)*sin(theta)
+               gauss=(1.0/(pi*eps**2)) * exp(-((x-xp)**2 + (y-yp)**2)/eps**2)
 
-! Note the negative v, is because of coordinate system orientation v to left and w up in rotor plan
-            if ((0.01 < t).and.(t <= 1.0) .and. (nc > 0)) then
-               gauss=(1.0/(sqrt(pi)*eps)) * exp(-((x-xp)**2 + (y-yp)**2)/eps**2)
-               force(i,j,1)=force(i,j,1)+(forceL(nc)*cos(phi) + forceD(nc)*sin(phi))*gauss
-               force(i,j,2)=force(i,j,2)-(forceL(nc)*sin(phi) - forceD(nc)*cos(phi))*sin(theta)*gauss
-               force(i,j,3)=force(i,j,3)+(forceL(nc)*sin(phi) - forceD(nc)*cos(phi))*cos(theta)*gauss
-            endif
+               force(i,j,1)=force(i,j,1)+(forceL(ichord)*cos(phi) + forceD(ichord)*sin(phi))*gauss
+               force(i,j,2)=force(i,j,2)-(forceL(ichord)*sin(phi) - forceD(ichord)*cos(phi))*sin(theta)*gauss
+               force(i,j,3)=force(i,j,3)+(forceL(ichord)*sin(phi) - forceD(ichord)*cos(phi))*cos(theta)*gauss
+            enddo
 
          enddo
       enddo

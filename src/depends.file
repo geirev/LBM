@@ -49,6 +49,7 @@ m_applyturbines.o:      m_wtime.o
 m_averaging.o:      makefile
 m_averaging.o:      mod_dimensions.o
 m_averaging.o:      MODEL.CPP
+m_averaging.o:      mod_nrl5mw.o
 m_averaging.o:      m_readinfile.o
 m_averaging.o:      m_tecfld.o
 m_BGKequil.o:      makefile

@@ -2,7 +2,8 @@ module m_averaging
 contains
 subroutine averaging(u,v,w,lfinal,iradius)
    use mod_dimensions
-   use m_readinfile, only : ipos,jpos,kpos,uini
+   use m_readinfile, only : ipos,jpos,kpos,uini,turbrad,p2l
+   use mod_nrl5mw, only : rotorradius,hubradius
    use m_tecfld
    real, intent(in)    :: u(nx,ny,nz)        ! x component of fluid velocity
    real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
@@ -12,7 +13,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
 
    integer, save :: ifirst=1
    integer, save :: iave=0
-   integer, save :: R=0
+   real, save :: D=0.0
 
    real, save, allocatable :: uave(:,:,:)
    real, save, allocatable :: vave(:,:,:)
@@ -23,9 +24,11 @@ subroutine averaging(u,v,w,lfinal,iradius)
    integer j,k,i,isec
    integer, save :: ja,jb,ka,kb
    character(len=2) csec
+   real x
 
    if (ifirst == 1) then
-      R=real(2*iradius+1)
+      D=2.0*(rotorradius+hubradius)
+      print *,'rotor diameter',D*p2l%length
       nrsec=int((nx-ipos(1))/(2*iradius))+1
       print *,'Number of diagnostic cross sections=',nrsec
       ja=max(1,jpos(1)-2*iradius)
@@ -65,15 +68,17 @@ subroutine averaging(u,v,w,lfinal,iradius)
       vave=vave/uini
       wave=wave/uini
 
-      open(10,file='ave.dat')
+      open(10,file='aveJ.dat')
          do j=ja,jb
-            write(10,'(i3,60f10.3)')j,uave(:,j,kpos(1)),wave(:,j,kpos(1))
+            x=real(j-jpos(1))/D
+            write(10,'(i3,60f10.3)')j,x,uave(:,j,kpos(1)),wave(:,j,kpos(1))
          enddo
       close(10)
 
       open(10,file='aveK.dat')
          do k=ka,kb
-            write(10,'(i3,60f10.3)')k,uave(:,jpos(1),k),vave(:,jpos(1),k)
+            x=real(k-kpos(1))/D
+            write(10,'(i3,60f10.3)')k,x,uave(:,jpos(1),k),vave(:,jpos(1),k)
          enddo
       close(10)
 

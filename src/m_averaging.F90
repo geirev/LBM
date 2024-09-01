@@ -3,7 +3,7 @@ contains
 subroutine averaging(u,v,w,lfinal,iradius)
    use mod_dimensions
    use m_readinfile, only : ipos,jpos,kpos,uini,turbrad,p2l
-   use mod_nrl5mw, only : rotorradius,hubradius
+   use mod_nrel5mw, only : rotorradius,hubradius
    use m_tecfld
    real, intent(in)    :: u(nx,ny,nz)        ! x component of fluid velocity
    real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
@@ -52,12 +52,16 @@ subroutine averaging(u,v,w,lfinal,iradius)
       enddo
    endif
 
+
+!   call random_number(x)
+!   if (x > 0.5) then
    iave=iave+1
    do isec=0,nrsec-1
       uave(isec,ja:jb,ka:kb)=uave(isec,ja:jb,ka:kb)+u(iseci(isec),ja:jb,ka:kb)
       vave(isec,ja:jb,ka:kb)=vave(isec,ja:jb,ka:kb)+v(iseci(isec),ja:jb,ka:kb)
       wave(isec,ja:jb,ka:kb)=wave(isec,ja:jb,ka:kb)+w(iseci(isec),ja:jb,ka:kb)
    enddo
+!   endif
 
    if (lfinal) then
       uave=uave/real(iave)

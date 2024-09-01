@@ -54,7 +54,7 @@ program LatticeBoltzmann
    real    :: sigma(3,3,nx,ny,nz)
 
 ! Turbine forcing
-   real, allocatable  :: df(:,:,:,:)            ! Turbine forcing
+   real, allocatable  :: df(:,:,:,:,:)            ! Turbine forcing
 
 
 
@@ -74,7 +74,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile(ihrr)
-   if (nturbines > 0) allocate(df(1:ny,1:nz,1:nl,nturbines))
+   if (nturbines > 0) allocate(df(-ieps:ieps,1:ny,1:nz,1:nl,nturbines))
 
    tau(:,:,:)=tauin
 
@@ -184,10 +184,10 @@ program LatticeBoltzmann
       call boundarycond(feq,rho,u,v,w,feqscal)    ! General boundary conditions
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f
-      if (it > 2000 ) call averaging(u,v,w,.false.,iradius)
+      if (it > 10000 ) call averaging(u,v,w,.false.,iradius)
+      if (it == 3909 ) call averaging(u,v,w,.true.,iradius)
 
    enddo
-   if (it > 3999 ) call averaging(u,v,w,.true.,iradius)
 
    call cpuprint()
 

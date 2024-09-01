@@ -4,6 +4,7 @@ airfoil	m_airfoil.F90	/^module
 applyturbines	m_applyturbines.F90	/^module
 averaging	m_averaging.F90	/^module
 BGKequil	m_BGKequil.F90	/^module
+bilin	m_bilin.F90	/^module
 bndbounceback	m_bndbounceback.F90	/^module
 bndpressure	m_bndpressure.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
@@ -22,13 +23,14 @@ HRRequil	m_HRRequil.F90	/^module
 ibndinflow	m_ibndinflow.F90	/^module
 mod_D3Q27setup	mod_D3Q27setup.F90	/^module
 mod_dimensions	mod_dimensions.F90	/^module
-mod_nrl5mw	mod_nrl5mw.F90	/^module
+mod_nrel5mw	mod_nrel5mw.F90	/^module
 m_ablim	m_ablim.F90	/^module
 m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_applyturbines	m_applyturbines.F90	/^module
 m_averaging	m_averaging.F90	/^module
 m_BGKequil	m_BGKequil.F90	/^module
+m_bilin	m_bilin.F90	/^module
 m_bndbounceback	m_bndbounceback.F90	/^module
 m_bndpressure	m_bndpressure.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
@@ -43,8 +45,9 @@ m_drift	m_drift.F90	/^module
 m_feqscalar	m_feqscalar.F90	/^module
 m_HRRequil	m_HRRequil.F90	/^module
 m_ibndinflow	m_ibndinflow.F90	/^module
+m_nrelliftdrag	m_nrelliftdrag.F90	/^module
+m_nrelreadfoil	m_nrelreadfoil.F90	/^module
 m_pdfout	m_pdfout.F90	/^module
-m_readfoildata	m_readfoildata.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
 m_saverestart	m_saverestart.F90	/^module
@@ -58,9 +61,10 @@ m_velocity	m_velocity.F90	/^module
 m_vorticity	m_vorticity.F90	/^module
 m_windfarm	m_windfarm.F90	/^module
 m_wtime	m_wtime.F90	/^module
-nrl5mw	mod_nrl5mw.F90	/^module
+nrel5mw	mod_nrel5mw.F90	/^module
+nrelliftdrag	m_nrelliftdrag.F90	/^module
+nrelreadfoil	m_nrelreadfoil.F90	/^module
 pdfout	m_pdfout.F90	/^module
-readfoildata	m_readfoildata.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module
 saverestart	m_saverestart.F90	/^module

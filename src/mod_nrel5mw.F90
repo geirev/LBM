@@ -1,4 +1,4 @@
-module mod_nrl5mw
+module mod_nrel5mw
 ! https://forums.nrel.gov/t/aerodyn-output-file/352
 !  Element       RELM      Twist        DR       Chord      NFoil     Print?   Tip-loss   Hub-loss
 !      (-)        (m)      (deg)        (m)        (m)        (-)   (Yes/No)   constant   constant
@@ -42,8 +42,18 @@ module mod_nrl5mw
 
 ! A twist is added along the length of the blade to optimize the amount of energy harvested. Typically, 10° to 20° of twist is
 ! included, with the twist at the tip being the highest. This produces a change in the apparent wind direction across the blade.
-   real, save :: twist(nrchords)   = [13.3080,13.3080,13.3080,13.3080,11.4800,10.1620, 9.0110, 7.7950,&
+   real, save :: twist(nrchords)   = [ 0.0000, 0.0000, 0.0000,13.3080,11.4800,10.1620, 9.0110, 7.7950,&
                                        6.5440, 5.3610, 4.1880, 3.1250, 2.3190, 1.5260, 0.8630, 0.3700, 0.1060]
+
+   integer, parameter :: nrc=8
+   integer nrang(nrc)
+   type foildata
+      real deg
+      real cl
+      real cd
+      real cm
+   end type
+   type(foildata) foil(150,nrc)
 
 ! The lift and drags below are not used as we read them from the tables
 !   real, save :: lift(nrchords)    = [ 0.0000, 0.0000, 0.0000, 1.5380, 1.6090, 1.4750, 1.3900, 1.3360,&

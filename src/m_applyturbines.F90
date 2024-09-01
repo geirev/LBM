@@ -7,12 +7,13 @@ subroutine applyturbines(f,df)
    use m_wtime
    implicit none
    real, intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl) ! distribution
-   real, intent(in)    :: df(ny,nz,nl,nturbines)     ! forcing distributions
-   integer n
+   real, intent(in)    :: df(-ieps:ieps,ny,nz,nl,nturbines)     ! forcing distributions
+   integer n,ip
    integer, parameter :: icpu=7
    call cpustart()
    do n=1,nturbines
-      f(ipos(n),1:ny,1:nz,1:nl) = f(ipos(n),1:ny,1:nz,1:nl) + df(1:ny,1:nz,1:nl,n)
+      ip=ipos(n)
+      f(ip-ieps:ip+ieps,1:ny,1:nz,1:nl) = f(ip-ieps:ip+ieps,1:ny,1:nz,1:nl) + df(-ieps:ieps,1:ny,1:nz,1:nl,n)
    enddo
    call cpufinish(icpu)
 end subroutine

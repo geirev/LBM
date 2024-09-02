@@ -23,7 +23,6 @@ subroutine nrelreadfoil()
    foil(:,:)%cm=0.0
 
    do k=1,nrc
-      print *,'filename: ',filenames(k)
       open(10,file='./Airfoils/'//trim(filenames(k)))
       do i=1,50
          read(10,*)
@@ -37,12 +36,15 @@ subroutine nrelreadfoil()
       close(10)
    enddo
 
-   do k=1,nrc
-      print *,'filename: ',filenames(k),nrang(k)
-      do i=1,nrang(k)
-         write(*,'(i4,f12.3,3f8.4)')i,foil(i,k)
+   open(11,file='tables.dat')
+      write(11,'(a)')'VARIABLES = "i" "angle" "CL" "CD" "CM"'
+      do k=1,nrc
+         write(11,'(3a,i4,a)')'ZONE  T="',trim(filenames(k)),'" F=Point, I=  ',nrang(k),' J=   1, K=1'
+         do i=1,nrang(k)
+            write(11,'(i4,50f10.4)')i,foil(i,k)
+         enddo
+         write(11,*)
       enddo
-      print *
-   enddo
+   close(11)
 end subroutine
 end module

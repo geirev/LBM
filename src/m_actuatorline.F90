@@ -1,7 +1,7 @@
 module m_actuatorline
 contains
-subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
-   use m_readinfile, only : p2l,uini,turbrpm,nturbines
+subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
+   use m_readinfile, only : p2l,uini,turbrpm,nturbines,pitchangle,itiploss,tipspeedratio
    use mod_nrel5mw
    use m_nrelreadfoil
    use m_nrelliftdrag
@@ -17,6 +17,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
    real,    intent(in)    :: u(nx,ny)     ! u velocity through the turbine section
    real,    intent(in)    :: v(nx,ny)     ! v velocity at the turbine section
    real,    intent(in)    :: w(nx,ny)     ! w velocity at the turbine section
+   real,    intent(in)    :: rho(nx,ny)   ! density at the turbine section
    real,    intent(in)    :: thetain      ! input rotation angle of blade one
    integer, intent(inout) :: iradius      ! number of gridpoints for blade length computed at first call
    real,    intent(inout) :: force(0:ieps,nx,ny,3) ! actuator line force added to force
@@ -27,7 +28,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
    real, parameter :: pi=3.1415926535
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
-   real, parameter :: eps=1.25             ! smoothing distance in Gaussian kernel 1.6
+   real, parameter :: eps=2.5              ! smoothing distance in Gaussian kernel 1.6
 
    real costheta
    real sintheta
@@ -40,9 +41,8 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
    real theta                             ! work blade rotation angle
    real omega                             ! Rotation speed in radians per second
    real, save :: omegand                  ! Nondimensional rotation speed
-   real phi                               ! Vrel angle
    real q                                 ! Dynamic pressure
-   real ux                                ! inflow velocity
+   real ux,vx,wx,dens                     ! local velocity and density variables
    real utheta                            ! tangential velocity from v and w
    real urel2                             ! relative velocity squared
    real, save :: radius                   ! turbine radius in grid cells
@@ -51,29 +51,32 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
    integer k                              ! counter normal to the rotor plane
    integer ic,jc,nc                       ! gridpoint along a blade
    integer iblade                         ! blade counter
+   real u0
 
-   real :: rho=1.0                        ! nondimensional density
-
-   real cl(nrchords)                      ! Lift coefficient for each chord along the blade
-   real cd(nrchords)                      ! Drag coefficient for each chord along the blade
+   real phi                               ! Angle between rotorplane and relative velocity direction
+   real cosphi(nrchords)
+   real sinphi(nrchords)
+   real clift(nrchords)                   ! Lift coefficient for each chord along the blade
+   real cdrag(nrchords)                   ! Drag coefficient for each chord along the blade
    real forceL(nrchords)                  ! Lift force along the blade
    real forceD(nrchords)                  ! Drag force along the blade
+   real forceT(nrchords)                  ! Tangential (driving force) along the blade
+   real forceN(nrchords)                  ! Nornal (drag force) along the blade
 
    real :: gauss                          ! weigthing function for smeering force
    integer ichord                         ! chord counter
    integer, save :: ifirst=0
-   real omeg
+   real fL,fD,fN,fT,fTa,fNa
 
    real, save :: relma(nrchords),relmb(nrchords)
-   real vx,wx
    character(len=3) tag3
-   real newton,dist,R
+   real newton,R
    real c1,c2,blades,frac,tiploss
    real, save :: g,lambda
-   real pitchangle
+   real angattack                         ! computed angle of attack
    real, save :: refang                   ! relative velocity angle at blade tip
-   real, save :: angles(nrchords)
-   real angle
+   real angle                             ! work angle
+   integer iave
 
    ifirst=ifirst+1
 
@@ -114,6 +117,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
 
       print *,'Omega  (RPM)                 =',turbrpm
       print *,'Omega  (radians/s)           =',omega
+      print *,'Omega  (radians/)            =',omegand
       print *,'Time per revolution          =',pi2/omega
 ! Tipspeed(Tip speed can be determined from the rotational speed, which is ωR where ω is the rotational
 ! speed in radians per second and R is the radius of the turbine in meters.)
@@ -121,33 +125,66 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
 ! Tipspeed ratio 8 m/s winds (For three blades, a TSR of 6 to 7 is optimal. If it is less, not all
 ! the available energy is captured; if it is more, the blades move into an area of turbulence from the last
 ! blade and are not as efficient.
+
+      newton=(p2l%length**2)*p2l%rho*(p2l%vel**2)
       lambda=radius*p2l%length*omega/(uini*p2l%vel)
-      print *,'tipspeed ratio R*Omega/uini  =',lambda
-      print *,'new omega',60.0*7.00*(uini*p2l%vel)/(pi2*radius*p2l%length)
 
 ! Prandtl-Glauert and Shen tip speed model
-      c1=0.125    ! coefficient 1
-      c2=21.0     ! coefficient 2
-      blades=3.0  ! Number of blades
-      g=exp(-c1*(blades*lambda-c2))+0.1
-      print *,'g function',g
+      if (itiploss == 2) then
+         c1=0.125    ! coefficient 1
+         c2=21.0     ! coefficient 2
+         blades=3.0  ! Number of blades
+         g=exp(-c1*(blades*lambda-c2))+0.1
+      else
+         g=1.0
+      endif
+   endif
 
-! This is tricky: I think that the given twist angles (in degrees) refers to zero angle a the tip,
-! and then twists the blade towards the hub from chord to chord. Below we will calculate the angle phi
-! which is the angle between the relative velocity and the rotor plane. The local angle of attach is
-! then the difference between phi and the accumulated twist angle computed below. We start from the
-! reference angle at the tip and add the twist from chord to chord towards the hub, and store these angles
-! in angles(1:chord). The local relative velocity angle is atan2(ux,utheta), and the angle of attach is
-! then angles(ichord)-phi, (both in degrees). The variable pitchangle adds an additional constant blade pitch.
+! If given tipspeed ratio is larger than 0.0 we recompute the rotation speed to match the imposed tipspeed ratio
+   if (tipspeedratio > 0.0) then
+      if (ifirst==1) print '(a)','Recomputing omega based on average  u velocity in rotor plane'
+      u0=0
+      iave=0
+      do k=0,360,10
+         angle=real(k)*pi2/360.0
+         i=ipos+nint(real(iradius)*cos(angle)/2.0)
+         j=jpos+nint(real(iradius)*sin(angle)/2.0)
+         u0=u0+u(i,j)
+         iave=iave+1
+         !print *,iave,k,i,j,u(i,j)
+      enddo
+      u0=u0/real(iave)
+      omega=tipspeedratio*u0*p2l%vel/(radius*p2l%length)
+      omegand=omega*p2l%time
+      lambda=radius*p2l%length*omega/(u0*p2l%vel)
+   else
+     tipspeedratio=lambda
+     u0=uini
+   endif
+
+   if (ifirst==1) then
+      print *
+      print '(a)','**************************************'
+      print '(a,2f8.2)','TIPSPEED RATIO R*Omega/uini  =',lambda,tipspeedratio
+      print '(a,f8.2)','UINI                  (m/s)  =',u0*p2l%vel
+      print '(a,f8.2)','omega                 (RPM)  =',omega*60.0/pi2
+      print '(a)','**************************************'
+      print *
+   endif
+
+
+! Prandtl-Glauert and Shen tip speed model
+      if (itiploss == 2) g=exp(-c1*(blades*lambda-c2))+0.1
+
+! The given twist angles (in degrees) refers to zero angle a the tip, and then twists the blade as we
+! move towards the hub from chord to chord. We store the twist angle for each chord in twist(:).
+! Below we will calculate the angle between the relative velocity and the rotor plane as phi=atan2(ux,utheta).
+! In addition there can be a user specified pitchangle.
+! The local angle of attach, angattack, is then the difference between phi and the accumulated twist+pitch angles.
 
 ! Twist angle at tip
-      angle=atan(1.0/lambda)*360.0/pi2
-      print *,'Twist angle',angle
-      do ichord=nrchords,1,-1
-         angle=angle+twist(ichord)
-         angles(ichord)=angle
-      enddo
-   endif
+!      angle=atan(1.0/lambda)*360.0/pi2
+!      print *,'tip relative angle',angle
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! C O M P U T I N G   T H E   B L A D E   F O R C E S
@@ -181,61 +218,74 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
 
 ! Bilinear interpolation, to find u(xb,yb), v(xb,yb), w(xb,yb) in the square  ic=int(xb), ic+1,  jc=int(yb), jc+1
 ! Non-dimensional velocity components from model
-         call bilinear_interpolation(xb,yb,u,v,w,ic,jc,nx,ny,ux,vx,wx)
+         call bilin(xb,yb,u,v,w,rho,ic,jc,nx,ny,ux,vx,wx,dens)
 
-! Non-dimensional utheta
-         dist=sqrt((xb-x0)**2+(yb-y0)**2+0.000001)
-         utheta =  omegand*dist - wx*cos(theta) - vx*sin(theta)
+! Non-dimensional utheta (non-dim omegand and distance relm(ichord)
+         utheta =  omegand*relm(ichord) - wx*costheta - vx*sintheta
 
 ! Non-dimensional urel**2
          urel2  = ux**2 + utheta**2
 
 ! Non-dimensional dynamic pressure
-         q= 0.5 * rho * urel2
+         q= 0.5 * dens * urel2
 
 ! Flowangle between relative windspeed and rotor plane
          phi = atan2(ux,utheta)
+         sinphi(ichord)=sin(phi)
+         cosphi(ichord)=cos(phi)
 
-         pitchangle=15.0
-         angle=angles(ichord)-phi*360.0/pi2+pitchangle
-         call nrelliftdrag(cl,cd,angle,ichord)
+         angattack=(phi*360.0/pi2-twist(ichord)-pitchangle)
+         call nrelliftdrag(clift,cdrag,angattack,ichord)
 
 ! Tip loss
-         frac=blades*(radius-dist)/(2.0*dist*sin(phi)+0.00001)
-         tiploss=(2.0/pi)*acos(g*exp(-frac))
+         if (itiploss == 0) then
+            tiploss=1.0
+         else
+            blades=3.0
+            frac=blades*(radius-relm(ichord))/(2.0*relm(ichord)*sinphi(ichord)+0.00001)
+            tiploss=(2.0/pi)*acos(g*exp(-frac))
+         endif
 
 ! Non-dimensional lift and drag forces per blade element
-         forceL(ichord) = q * chord(ichord) * dc(ichord) * cl(ichord) * tiploss
-         forceD(ichord) = q * chord(ichord) * dc(ichord) * cd(ichord) * tiploss
+         forceL(ichord) = q * chord(ichord) * dc(ichord) * clift(ichord) * tiploss
+         forceD(ichord) = q * chord(ichord) * dc(ichord) * cdrag(ichord) * tiploss
 
+         forceT(ichord) =forceL(ichord)*sinphi(ichord) - forceD(ichord)*cosphi(ichord)
+         forceN(ichord) =forceL(ichord)*cosphi(ichord) + forceD(ichord)*sinphi(ichord)
 
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! D I A G N O S T I C S   F O R   A   B L A D E
-
          if (ifirst==1) then
-            newton=(p2l%length**2)*p2l%rho*(p2l%vel**2)
             if (iblade==1) then
                if (ichord == 1) then
                   open(10,file='ALMdata.dat')
-                  write(10,'(2a8,2a4,12a8,5a10)')'ichord','dist','ic','jc',&
-                                    'ux','vx','wx','utheta','angles','phi','angle','urel','chord','dc','CL','CD',&
-                                    'forceL','forceD','tiploss','forceL','forceD'
+                  write(10,'(a)')'VARIABLES = "ichord" "dist" "ic" "jc" "ux" "vx" "wx" "utheta" "twist" "phi" "aattack" "urel" &
+                                &"chord" "dc" "clift" "cdrag" "tiploss" "forceL(N/m)" "forceD(N/m)" &
+                                &"forceT(N/m)" "forceN(N/m)" "forceT()" "forceN()"'
+                  write(10,'(a,i4,a)')'ZONE  T="ALMdata" F=Point, I=  ',nrchords,', J=   1, K=1'
                endif
 
-               dist=sqrt((xb-x0)**2+(yb-y0)**2+0.0001)/radius
-               write(10,'(i8,f8.4,2i4,12f8.4,5f10.4)')ichord,dist,ic,jc,ux,vx,wx,utheta,&
-                                                     angles(ichord),phi*360.0/pi2,angle,sqrt(urel2),&
-                                                     chord(ichord),dc(ichord),&
-                                                     CL(ichord),CD(ichord),&
-                                                     forceL(ichord),&
-                                                     forceD(ichord),&
-                                                     tiploss,       &
-                                                     forceL(ichord)*newton/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length),&
-                                                     forceD(ichord)*newton/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
+! Lift and drag forces force(LD) per chord in Newton scaled by chord length (DC) to get Newton/meter.
+               fL=forceL(ichord)*newton/(dc(ichord)*p2l%length)
+               fD=forceD(ichord)*newton/(dc(ichord)*p2l%length)
+
+! Tangential (rotational force) and normal (drag forces) f(TN) in N/m as in zho19a
+               fT=fL*sinphi(ichord)  - fD*cosphi(ichord)
+               fN=fL*cosphi(ichord)  + fD*sinphi(ichord)
+
+! Non-dimensional tangent and normal  forces using asm20a scaling
+               fTa=fT/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
+               fNa=fN/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
+
+               write(10,'(i8,f8.4,2i4,50f12.4)')ichord,relm(ichord)/radius,ic,jc,ux,vx,wx,utheta,&
+                                                twist(ichord),phi*360.0/pi2,angattack,sqrt(urel2),&
+                                                chord(ichord),dc(ichord),&
+                                                clift(ichord),cdrag(ichord),&
+                                                tiploss, fL, fD, fT, fN, fTa, fNa
                if (ichord == nrchords) close(10)
-               if (ichord == nrchords) stop
+               !if (ichord == nrchords) stop
             endif
          endif
       enddo
@@ -249,18 +299,19 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
          do i=ia,ib
             x=real(i)
             do ichord=1,nrchords
-               xp=x0+relm(ichord)*cos(theta)
-               yp=y0+relm(ichord)*sin(theta)
+               xp=x0+relm(ichord)*costheta
+               yp=y0+relm(ichord)*sintheta
                do k=0,ieps
                   if (ieps==0) then
                      gauss=(1.0/(pi*eps**2)) * exp(-((x-xp)**2 + (y-yp)**2)/eps**2)
                   else
-                     gauss=(1.0/(sqrt(pi**3)*eps**3)) * exp(-((x-xp)**2 + (y-yp)**2 + k**2)/eps**2)
+                     gauss=(1.0/(sqrt(pi**3)*eps**3)) * exp(-((x-xp)**2 + (y-yp)**2 + real(k)**2)/eps**2)
                   endif
 
-                  force(k,i,j,1)=force(k,i,j,1)+(forceL(ichord)*cos(phi) + forceD(ichord)*sin(phi))*gauss
-                  force(k,i,j,2)=force(k,i,j,2)-(forceL(ichord)*sin(phi) - forceD(ichord)*cos(phi))*sin(theta)*gauss
-                  force(k,i,j,3)=force(k,i,j,3)+(forceL(ichord)*sin(phi) - forceD(ichord)*cos(phi))*cos(theta)*gauss
+                  force(k,i,j,1) = force(k,i,j,1) + forceN(ichord)  * gauss
+                  force(k,i,j,2) = force(k,i,j,2) - forceT(ichord)  * sintheta * gauss
+                  force(k,i,j,3) = force(k,i,j,3) + forceT(ichord)  * costheta * gauss
+
                enddo
 
             enddo
@@ -273,7 +324,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Dumping detailed diagnostics for one turbine case
-   if ((ifirst <= 200).and.(nturbines==1)) then
+   if ((ifirst <= 20).and.(nturbines==1)) then
       do k=0,ieps
          write(tag3,'(i3.3)')k
          if (ifirst==1) then
@@ -290,7 +341,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,ieps)
             write(21,'(10(1x,e12.5))')((force(k,i,j,1),i=1,nx),j=1,ny)
             write(21,'(10(1x,e12.5))')((force(k,i,j,2),i=1,nx),j=1,ny)
             write(21,'(10(1x,e12.5))')((force(k,i,j,3),i=1,nx),j=1,ny)
-            write(21,'(10(1x,e12.5))')((sqrt(force(k,i,j,1)**2+force(k,i,j,2)**2+force(k,i,j,3)**2),i=1,nx),j=1,ny)
+            write(21,'(10(1x,e12.5))')((sqrt(force(k,i,j,2)**2+force(k,i,j,3)**2),i=1,nx),j=1,ny)
          close(21)
       enddo
    endif

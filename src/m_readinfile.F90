@@ -18,6 +18,9 @@ module m_readinfile
    real     tauin          ! Collision timescale
    real     kinevisc       ! Kinematic viscosity (nondimensional used in HRRequil)
    character(len=20) experiment ! experiment name
+   integer avestart        ! Iteration number for starting to compute section averages
+   integer avesave         ! Iteration number for saving section averages
+   integer itiploss        ! Tiploss(0-none, 1-Prandl, 2-Shen)
 
    type physconv
       real rho
@@ -29,10 +32,10 @@ module m_readinfile
    real machnr
    type(physconv) p2l
 
-   integer nturbines  ! Number of turbines in model
-   real turbrad       ! Turbine radius in meters
-   integer radii      ! Turbine radius in grid cells
-   real turbrpm       ! Actuator line: Turbine RPM
+   integer nturbines       ! Number of turbines in model
+   real pitchangle         ! Imposed pitch angle
+   real turbrpm            ! Imposed turbine RPM
+   real tipspeedratio      ! Imposed tipspeed ratio
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
 
 contains
@@ -83,10 +86,13 @@ subroutine readinfile(ihrr)
       read(10,'(1x,l1)')lpseudo    ; print '(a,tr7,l1)',  'lpseudo           = ',lpseudo
 !      read(10,*)tauin              ; print '(a,f8.3,a)',  'tauin             = ',tauin,      ' [] '
       read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
-      read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density 
+      read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
       read(10,*)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
       read(10,*)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
       uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
+      read(10,*)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
+      read(10,*)avesave; if (avesave > nt1) avesave=nt1; print '(a,i8)',      'avesave iteration = ',avesave
+     
 
       read(10,'(a)')ca
       if (ca /= '#-T') then
@@ -97,17 +103,17 @@ subroutine readinfile(ihrr)
       read(10,*)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
          allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines))
-         read(10,*)turbrad             ; print '(a,f8.3,a)',      'turbine radius    = ',turbrad,  ' [m]'
-         radii=nint(turbrad/p2l%length); print '(a,i8,a)',        'turbine radii     = ',radii,    ' [grid cells]'
-                                         print '(a,i8,a)',        'Rotor size        = ',2*radii,  ' [grid cells]'
-         read(10,*)turbrpm             ; print '(a,f8.3)',        'RPM for act.line  = ',turbrpm
+         read(10,*)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
+         read(10,*)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
+         read(10,*)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
+         read(10,*)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
          do n=1,nturbines
             read(10,*)ipos(n)
             read(10,*)jpos(n)
             read(10,*)kpos(n)
             print '(a,i4,a,3i4)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n)
          enddo
-      else 
+      else
          print '(a)','Running without wind turbines'
       endif
 
@@ -139,8 +145,8 @@ subroutine readinfile(ihrr)
 !  print '(a,g13.6,a)',  'Kine visc from tauin = ',tmpvisc  ,' [m^2/s]'
 
 !  Compute Reynolds number from rotor of radii lattice cells
-   reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/(kinevisc*p2l%visc)
-   print '(a,i12,a)',    'Reynolds num         = ',nint(reynoldsnr)   ,' [ ]'
+!   reynoldsnr=(2.0*real(radii)*p2l%length)*uini*p2l%vel/(kinevisc*p2l%visc)
+!   print '(a,i12,a)',    'Reynolds num         = ',nint(reynoldsnr)   ,' [ ]'
 
 !  Compupte grid cell Reynolds number
    gridrn= p2l%length*uini*p2l%vel/(kinevisc*p2l%visc)

@@ -37,12 +37,12 @@ module mod_nrel5mw
    real, save :: chord(nrchords)   = [ 3.54200, 3.85400, 4.16700, 4.55700, 4.65200, 4.45800, 4.24900, 4.00700, 3.74800,&
                                        3.50200, 3.25600, 3.01000, 2.76400, 2.51800, 2.31300, 2.08600, 1.41900]
 
-!                                     cyl1      cyl2    DU40    DU35    DU35    DU30   DU25          DU21     NACA64
-   integer, save :: nfoil(nrchords)= [  1,   1,    2,      3,      4,      4,      5,     6,     6,     7, 7, 8, 8, 8, 8, 8, 8 ]
+!                                     cyl1 cyl1  cyl2  DU40  DU35  DU35  DU30 DU25  DU25  DU21 DU21  NACA64
+   integer, save :: nfoil(nrchords)= [   1,   1,    2,    3,    4,    4,    5,   6,    6,    7,   7, 8, 8, 8, 8, 8, 8 ]
 
 ! A twist is added along the length of the blade to optimize the amount of energy harvested. Typically, 10° to 20° of twist is
 ! included, with the twist at the tip being the highest. This produces a change in the apparent wind direction across the blade.
-   real, save :: twist(nrchords)   = [ 0.0000, 0.0000, 0.0000,13.3080,11.4800,10.1620, 9.0110, 7.7950,&
+   real, save :: twist(nrchords)   = [13.3080,13.3080,13.3080,13.3080,11.4800,10.1620, 9.0110, 7.7950,&
                                        6.5440, 5.3610, 4.1880, 3.1250, 2.3190, 1.5260, 0.8630, 0.3700, 0.1060]
 
    integer, parameter :: nrc=8

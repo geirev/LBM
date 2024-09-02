@@ -56,19 +56,14 @@ program LatticeBoltzmann
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)            ! Turbine forcing
 
-
-
-
    integer :: it,i,j,l,k
    character(len=6) cit
-
    real cor1,cor2,dx,dy,dir
    real xlength,ylength
    integer n1,n2
    integer ihrr
-
-
    real width,mu,grad,cs2,dw
+   logical ex
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -132,10 +127,10 @@ program LatticeBoltzmann
         v(:,:,k)=0.1*v(:,:,k-1)+sqrt(1.0-0.1**2)*v(:,:,k)
         w(:,:,k)=0.1*w(:,:,k-1)+sqrt(1.0-0.1**2)*w(:,:,k)
      enddo
-     rho=rho0 + 0.0001*rho
-     u=uini+0.0001*u
-     v=0.0+0.0001*u
-     w=0.0+0.0001*u
+     rho=rho0 + 0.001*rho
+     u=uini+0.001*u
+     v=0.0+0.001*v
+     w=0.0+0.001*w
    endif
 
    if (ibnd==1) then
@@ -161,6 +156,13 @@ program LatticeBoltzmann
    if (nt0 > 1) then
       write(cit,'(i6.6)')nt0
       call readrestart('restart'//cit//'.uf',f)
+      inquire(file='theta'//cit//'.dat',exist=ex)
+      if (ex) then
+         open(10,file='theta'//cit//'.dat')
+            read(10,*)theta
+            print *,'read theta: ',theta
+         close(10)
+      endif
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -184,8 +186,8 @@ program LatticeBoltzmann
       call boundarycond(feq,rho,u,v,w,feqscal)    ! General boundary conditions
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f
-      if (it > 10000 ) call averaging(u,v,w,.false.,iradius)
-      if (it == 3909 ) call averaging(u,v,w,.true.,iradius)
+      if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
+      if (it == avesave) call averaging(u,v,w,.true.,iradius)
 
    enddo
 
@@ -195,6 +197,9 @@ program LatticeBoltzmann
 ! Dump restart file
    write(cit,'(i6.6)')it-1
    call saverestart('restart'//cit//'.uf',f)
+   open(10,file='theta'//cit//'.dat')
+      write(10,*)theta
+   close(10)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    select case(trim(experiment))

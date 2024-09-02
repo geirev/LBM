@@ -63,7 +63,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 
 
    real, parameter :: sigma=1.00
-   real, parameter :: smagorinsky=0.18
+   real, parameter :: smagorinsky=0.10      !0.18   Smagorinsky 0.065 from abk18a
 
    real eddyvisc  ! nu in Vreman 2004 Eq (5)
    real Bbeta     ! B_beta in Vreman 2004 Eq (5)

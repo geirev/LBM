@@ -1,13 +1,13 @@
 module m_bilin
 contains
-subroutine bilinear_interpolation(xb, yb, u, v, w, ic, jc, nx, ny, u_interp, v_interp, w_interp)
+subroutine bilin(xb, yb, u, v, w, r, ic, jc, nx, ny, u_interp, v_interp, w_interp, r_interp)
     implicit none
     integer, intent(in) :: ic, jc, nx, ny
     real, intent(in) :: xb, yb
-    real, intent(in) :: u(nx, ny), v(nx, ny), w(nx, ny)
-    real, intent(out) :: u_interp, v_interp, w_interp
+    real, intent(in) :: u(nx, ny), v(nx, ny), w(nx, ny), r(nx, ny)
+    real, intent(out) :: u_interp, v_interp, w_interp, r_interp
 
-    real :: t, u1, u2, v1, v2, w1, w2
+    real :: t, u1, u2, v1, v2, w1, w2, r1 ,r2
     integer :: i1, i2, j1, j2
 
     ! Ensure indices are within bounds
@@ -34,5 +34,10 @@ subroutine bilinear_interpolation(xb, yb, u, v, w, ic, jc, nx, ny, u_interp, v_i
     w2 = w(i1, j2) + t * (w(i2, j2) - w(i1, j2))
     w_interp = w1 + (yb - real(j1)) / (real(j2) - real(j1)) * (w2 - w1)
 
-end subroutine bilinear_interpolation
+    ! Bilinear interpolation for r
+    r1 = r(i1, j1) + t * (r(i2, j1) - r(i1, j1))
+    r2 = r(i1, j2) + t * (r(i2, j2) - r(i1, j2))
+    r_interp = r1 + (yb - real(j1)) / (real(j2) - real(j1)) * (r2 - r1)
+
+end subroutine
 end module

@@ -30,6 +30,7 @@ program LatticeBoltzmann
    use m_BGKequil
    use m_HRRequil
    use m_feqscalar
+   use m_fhrrscalar
    use m_readrestart
    use m_saverestart
    use m_wtime
@@ -57,18 +58,16 @@ program LatticeBoltzmann
    real, allocatable  :: df(:,:,:,:,:)            ! Turbine forcing
 
    integer :: it,i,j,l,k
-   character(len=6) cit
    real cor1,cor2,dx,dy,dir
    real xlength,ylength
    integer n1,n2
-   integer ihrr
    real width,mu,grad,cs2,dw
    logical ex
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
-   call readinfile(ihrr)
+   call readinfile()
    if (nturbines > 0) allocate(df(-ieps:ieps,1:ny,1:nz,1:nl,nturbines))
 
    tau(:,:,:)=tauin
@@ -127,10 +126,10 @@ program LatticeBoltzmann
         v(:,:,k)=0.1*v(:,:,k-1)+sqrt(1.0-0.1**2)*v(:,:,k)
         w(:,:,k)=0.1*w(:,:,k-1)+sqrt(1.0-0.1**2)*w(:,:,k)
      enddo
-     rho=rho0 + 0.001*rho
-     u=uini+0.001*u
-     v=0.0+0.001*v
-     w=0.0+0.001*w
+     rho=rho0 + 0.0001*rho
+     u=uini+0.0001*u
+     v=0.0+0.0001*v
+     w=0.0+0.0001*w
    endif
 
    if (ibnd==1) then
@@ -147,23 +146,13 @@ program LatticeBoltzmann
 
 ! Final inititialization with equilibrium distribution from u,v,w, and rho
    if (coll=='HRR') then
-      call HRRequil(f,feq,rho,u,v,w,tau,0)  ! returns f for initialization
+      call HRRequil(f,feq,rho,u,v,w,tau)  ! returns f for initialization
    elseif (coll=='BGK') then
       call BGKequil(f,feq,rho,u,v,w)
    endif
 
 ! Restart from restart file
-   if (nt0 > 1) then
-      write(cit,'(i6.6)')nt0
-      call readrestart('restart'//cit//'.uf',f)
-      inquire(file='theta'//cit//'.dat',exist=ex)
-      if (ex) then
-         open(10,file='theta'//cit//'.dat')
-            read(10,*)theta
-            print *,'read theta: ',theta
-         close(10)
-      endif
-   endif
+   if (nt0 > 1) call readrestart(f,nt0,theta)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
@@ -176,7 +165,7 @@ program LatticeBoltzmann
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
       call diag(it,rho,u,v,w,lblanking)           ! Diagnostics
       if (coll=='HRR') then
-         call HRRequil(feq,f,rho,u,v,w,tau,ihrr)  ! f is input, returns feq, R(fneq) in f, and tau
+         call HRRequil(feq,f,rho,u,v,w,tau)       ! f is input, returns feq, R(fneq) in f, and tau
       elseif (coll=='BGK') then
          call BGKequil(feq,f,rho,u,v,w)           ! Calculate equlibrium distribution
       endif
@@ -187,19 +176,15 @@ program LatticeBoltzmann
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f
       if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
-      if (it == avesave) call averaging(u,v,w,.true.,iradius)
+      if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
+      if (mod(it,irestart) == 0)            call saverestart(f,it,theta)
 
    enddo
 
    call cpuprint()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Dump restart file
-   write(cit,'(i6.6)')it-1
-   call saverestart('restart'//cit//'.uf',f)
-   open(10,file='theta'//cit//'.dat')
-      write(10,*)theta
-   close(10)
+   call saverestart(f,it-1,theta)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    select case(trim(experiment))

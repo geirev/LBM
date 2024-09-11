@@ -1,21 +1,32 @@
 module m_readrestart
 contains
-subroutine readrestart(fname,f)
+subroutine readrestart(f,it,theta)
    use mod_dimensions
-   character(len=*), intent(in) :: fname
-   real, intent(out) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real,    intent(out) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   integer, intent(in)  :: it
+   real,    intent(out) :: theta
 
    logical ex
    integer :: irec,i,j,k,n
+   character(len=6) cit
 
-   inquire(file=trim(fname),exist=ex)
+   write(cit,'(i6.6)')it
+
+   inquire(file='theta'//cit//'.dat',exist=ex)
+   if (ex) then
+      open(10,file='theta'//cit//'.dat')
+         read(10,*)theta
+      close(10)
+   endif
+
+   inquire(file='restart'//cit//'.uf',exist=ex)
    if (.not.ex) then
-      print '(a)','readrestart: restart file does not exist ',trim(fname)
+      print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
       stop
    endif
 
    inquire(iolength=irec)i,j,k,n,f
-   open(10,file=trim(fname),form="unformatted", access="direct", recl=irec)
+   open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
       read(10,rec=1,err=999)i,j,k,n
       if ((i==nx).and.(j==ny).and.(k==nz).and.(n==nl)) then
          read(10,rec=1,err=999)i,j,k,n,f

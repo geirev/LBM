@@ -5,6 +5,7 @@ contains
 subroutine bndpressure(f,rho,u,v,w)
    use mod_dimensions
    use m_feqscalar
+   use m_fhrrscalar
    use m_readinfile
    implicit none
    real, intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
@@ -28,16 +29,16 @@ subroutine bndpressure(f,rho,u,v,w)
 ! Equilibrium distribution on boundaries
    do k=1,nz
    do j=1,ny
-      call feqscalar(fin(j,k,:),rho(nx,j,k),u(nx,j,k),v(nx,j,k),w(nx,j,k))
-      call feqscalar(fou(j,k,:),rho(1 ,j,k),u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
+      call fhrrscalar(fin(j,k,:),rho(nx,j,k),u(nx,j,k),v(nx,j,k),w(nx,j,k))
+      call fhrrscalar(fou(j,k,:),rho(1 ,j,k),u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
    enddo
    enddo
 
 ! New equilibrium distribution on boundaries
    do k=1,nz
    do j=1,ny
-      call feqscalar(fbin(j,k,:),rho0+rhoa,u(nx,j,k),v(nx,j,k),w(nx,j,k))
-      call feqscalar(fbou(j,k,:),rho0-rhoa,u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
+      call fhrrscalar(fbin(j,k,:),rho0+rhoa,u(nx,j,k),v(nx,j,k),w(nx,j,k))
+      call fhrrscalar(fbou(j,k,:),rho0-rhoa,u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
    enddo
    enddo
 

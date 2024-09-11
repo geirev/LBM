@@ -324,7 +324,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Dumping detailed diagnostics for one turbine case
-   if ((ifirst <= 20).and.(nturbines==1)) then
+   if ((ifirst <= 40).and.(nturbines==1)) then
       do k=0,ieps
          write(tag3,'(i3.3)')k
          if (ifirst==1) then

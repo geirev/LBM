@@ -5,6 +5,7 @@ module m_readinfile
    integer  iout           ! number of steps between outputs 0, 0+iout, ...
    integer  iprt           ! Output every time steps of it <= iprt
    logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
+   integer  irestart       ! number of steps between restart files
    integer  ifout          ! number of steps between outputs 0, 0+iout, ...
    integer  ibnd           ! Type of bondary condition in i direction
    integer  jbnd           ! Type of bondary condition in i direction
@@ -37,9 +38,10 @@ module m_readinfile
    real turbrpm            ! Imposed turbine RPM
    real tipspeedratio      ! Imposed tipspeed ratio
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
+   integer  ihrr           ! Option for collisions using HRR scheme
 
 contains
-subroutine readinfile(ihrr)
+subroutine readinfile()
    implicit none
 
    character(len=3) ca
@@ -52,7 +54,6 @@ subroutine readinfile(ihrr)
    real tmpvisc
    real gridrn
    integer n
-   integer, intent(out) :: ihrr           ! Option for collisions using HRR scheme
 
 ! reading input data
    inquire(file='infile.in',exist=ex)
@@ -74,6 +75,7 @@ subroutine readinfile(ihrr)
       read(10,*)nt0                ; print '(a,i8)',      'nt0               = ',nt0
       read(10,*)nt1                ; print '(a,i8)',      'nt1               = ',nt1
       read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout
+      read(10,*)irestart           ; print '(a,i8)',      'irestart          = ',irestart
       read(10,*)iprt               ; print '(a,i8)',      'iprt              = ',iprt
       read(10,*)lprtmin            ; print '(a,tr7,l1)',  'lprtmin           = ',lprtmin
       read(10,*)ifout              ; print '(a,i8)',      'ifout             = ',ifout
@@ -91,8 +93,7 @@ subroutine readinfile(ihrr)
       read(10,*)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
       uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
       read(10,*)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
-      read(10,*)avesave; if (avesave > nt1) avesave=nt1; print '(a,i8)',      'avesave iteration = ',avesave
-     
+      read(10,*)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
 
       read(10,'(a)')ca
       if (ca /= '#-T') then

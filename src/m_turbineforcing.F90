@@ -6,6 +6,7 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
    use mod_dimensions
    use m_readinfile
    use m_feqscalar
+   use m_fhrrscalar
    use m_actuatorline
    use m_wtime
    real, intent(out)      :: df(-ieps:ieps,ny,nz,nl,nturbines)     ! forcing distributions
@@ -52,7 +53,7 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
       do j=1,ny
          if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
             do i=-ieps,ieps
-               call feqscalar(df(i,j,k,:,n),rho(ip+i,j,k),&
+               call fhrrscalar(df(i,j,k,:,n),rho(ip+i,j,k),&
                                             u(ip+i,j,k)-force(abs(i),j,k,1),&
                                             v(ip+i,j,k)-force(abs(i),j,k,2),&
                                             w(ip+i,j,k)-force(abs(i),j,k,3))

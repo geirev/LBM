@@ -4,7 +4,7 @@ module m_HRRequil
 !               ~ f^eq + (1-1/tau) * R(f^neq)
 contains
 
-subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
+subroutine HRRequil(feq, f, rho, u, v, w, tau)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
@@ -18,7 +18,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
    real, intent(out)     :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(inout)   :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(out)     :: tau(nx,ny,nz)
-   integer, intent(in)   :: ihrr      ! (1) full third order HRR scheme returing feq and Rfneq
+   !                        ihrr      ! (1) full third order HRR scheme returing feq and Rfneq
                                       ! (2) second order standard BGK returing feq and fneq
                                       ! (3) third order BGK that returns fneq instead of Rfneq,
                                       ! (0) Initialization by feq
@@ -63,7 +63,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau, ihrr)
 
 
    real, parameter :: sigma=1.00
-   real, parameter :: smagorinsky=0.10      !0.18   Smagorinsky 0.065 from abk18a
+   real, parameter :: smagorinsky=0.15      !0.18   Smagorinsky 0.065 from abk18a
 
    real eddyvisc  ! nu in Vreman 2004 Eq (5)
    real Bbeta     ! B_beta in Vreman 2004 Eq (5)

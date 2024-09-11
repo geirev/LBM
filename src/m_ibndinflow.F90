@@ -3,6 +3,7 @@ contains
 subroutine ibndinflow(feqscal,u)
    use mod_dimensions
    use m_feqscalar
+   use m_fhrrscalar
    use m_readinfile
    implicit none
    real, intent(out) :: feqscal(0:nz+1,nl)
@@ -29,7 +30,7 @@ subroutine ibndinflow(feqscal,u)
    enddo
 
    do k=1,nz
-      call feqscalar(feqscal(k,:),rho0,uvel(k),0.0,0.0)
+      call fhrrscalar(feqscal(k,:),rho0,uvel(k),0.0,0.0)
    enddo
 
    feqscal(0,:)=feqscal(1,:)

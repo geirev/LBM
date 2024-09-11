@@ -19,6 +19,7 @@ F90SOURCE = \
 	m_disks.F90\
 	m_drift.F90\
 	m_feqscalar.F90\
+	m_fhrrscalar.F90\
 	m_HRRequil.F90\
 	m_ibndinflow.F90\
 	m_nrelliftdrag.F90\

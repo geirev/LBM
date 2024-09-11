@@ -36,6 +36,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
       D=2.0*(rotorradius+hubradius)
       print *,'rotor diameter',D*p2l%length
       nrsec=int((nx-ipos(1))/(2*iradius))+1
+      nrsec=min(nrsec,nx-1)
       print *,'Number of diagnostic cross sections=',nrsec
       ja=max(1,jpos(1)-2*iradius)
       jb=min(ny,jpos(1)+2*iradius)
@@ -77,13 +78,13 @@ subroutine averaging(u,v,w,lfinal,iradius)
    iave=iave+1
 ! section averages
    do isec=0,nrsec-1
-      uave(isec,ja:jb,ka:kb)=uave(isec,ja:jb,ka:kb)+u(iseci(isec),ja:jb,ka:kb)
-      vave(isec,ja:jb,ka:kb)=vave(isec,ja:jb,ka:kb)+v(iseci(isec),ja:jb,ka:kb)
-      wave(isec,ja:jb,ka:kb)=wave(isec,ja:jb,ka:kb)+w(iseci(isec),ja:jb,ka:kb)
+      uave(isec,:,:)=uave(isec,:,:)+u(iseci(isec),:,:)
+      vave(isec,:,:)=vave(isec,:,:)+v(iseci(isec),:,:)
+      wave(isec,:,:)=wave(isec,:,:)+w(iseci(isec),:,:)
 
-      uave2(isec,ja:jb,ka:kb)=uave2(isec,ja:jb,ka:kb)+u(iseci(isec),ja:jb,ka:kb)**2
-      vave2(isec,ja:jb,ka:kb)=vave2(isec,ja:jb,ka:kb)+v(iseci(isec),ja:jb,ka:kb)**2
-      wave2(isec,ja:jb,ka:kb)=wave2(isec,ja:jb,ka:kb)+w(iseci(isec),ja:jb,ka:kb)**2
+      uave2(isec,:,:)=uave2(isec,:,:)+u(iseci(isec),:,:)**2
+      vave2(isec,:,:)=vave2(isec,:,:)+v(iseci(isec),:,:)**2
+      wave2(isec,:,:)=wave2(isec,:,:)+w(iseci(isec),:,:)**2
    enddo
 
 ! Alongflow averages at center +- 10 grid points (r/D=0.625)
@@ -140,7 +141,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
 
       open(10,file='aveI.dat')
          write(10,'(a)')'VARIABLES = "i" "x" "uave" "vave" "wave" "Ti"'
-         write(10,'(a,i4,a)')'ZONE  T="Averages in j-direction" F=Point, I=  ',nx,', J=   1, K=1'
+         write(10,'(a,i4,a)')'ZONE  T="Averages in i-direction" F=Point, I=  ',nx,', J=   1, K=1'
          do i=1,nx
             x=real(i-ipos(1))/D
             write(10,'(i3,5g13.5)')i,x,uxave(i),vxave(i),wxave(i),Tix(i)

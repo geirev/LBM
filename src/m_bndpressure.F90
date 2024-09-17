@@ -4,7 +4,6 @@ module m_bndpressure
 contains
 subroutine bndpressure(f,rho,u,v,w)
    use mod_dimensions
-   use m_feqscalar
    use m_fhrrscalar
    use m_readinfile
    implicit none

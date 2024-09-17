@@ -5,7 +5,6 @@ contains
 subroutine turbineforcing(df,feq,rho,u,v,w)
    use mod_dimensions
    use m_readinfile
-   use m_feqscalar
    use m_fhrrscalar
    use m_actuatorline
    use m_wtime

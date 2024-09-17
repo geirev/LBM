@@ -1,18 +1,29 @@
 module m_boundarycond
 contains
-subroutine boundarycond(f,rho,u,v,w,feqscal)
+subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
    use mod_dimensions
    use m_readinfile
    use m_bndpressure
+   use m_fhrrscalar
    use m_wtime
    implicit none
    real, intent(inout):: f(0:nx+1,0:ny+1,0:nz+1,nl)
-   real, intent(in)   :: feqscal(0:nz+1,nl)
    real, intent(in)   :: rho(nx,ny,nz)
    real, intent(in)   :: u(nx,ny,nz)
    real, intent(in)   :: v(nx,ny,nz)
    real, intent(in)   :: w(nx,ny,nz)
-   integer i,j,k,l
+   real, intent(in)   :: uu(ny,nz,0:nrturb)
+   real, intent(in)   :: vv(ny,nz,0:nrturb)
+   real, intent(in)   :: ww(ny,nz,0:nrturb)
+   real, intent(in)   :: rr(ny,nz,0:nrturb)
+   real, intent(in)   :: inflowvar
+   real, intent(in)   :: uvel(nz)
+   integer, intent(in):: it
+   real :: rtmp(ny,nz)
+   real :: utmp(ny,nz)
+   real :: vtmp(ny,nz)
+   real :: wtmp(ny,nz)
+   integer i,j,k,l,lit,ja,ka
    integer, parameter :: icpu=8
 
    call cpustart()
@@ -26,10 +37,29 @@ subroutine boundarycond(f,rho,u,v,w,feqscal)
 
    elseif (ibnd==1) then
 ! Inflow outflow boundary conditions in i-direction
+      lit=mod(it,nrturb)
+      if (lit==0) lit=nrturb
+      do k=1,nz
+      do j=1,ny
+         utmp(j,k)=uvel(k)+inflowvar*uu(j,k,lit)
+         vtmp(j,k)=inflowvar*vv(j,k,lit)
+         wtmp(j,k)=inflowvar*ww(j,k,lit)
+         rtmp(j,k)=rho(1,j,k)+inflowvar*rr(j,k,lit)
+      enddo
+      enddo
+
+      do k=0,nz+1
+      ka=min(max(k,1),nz)
+      do j=0,ny+1
+         ja=min(max(j,1),ny)
+         call fhrrscalar(f(0,j,k,1:nl),rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
+      enddo
+      enddo
+
+
       do l=1,nl
       do k=0,nz+1
       do j=0,ny+1
-         f(0,j,k,l)=feqscal(k,l)
          f(nx+1,j,k,l)=f(nx,j,k,l)
       enddo
       enddo

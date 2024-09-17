@@ -5,11 +5,11 @@ F90SOURCE = \
 	m_airfoil.F90\
 	m_applyturbines.F90\
 	m_averaging.F90\
-	m_BGKequil.F90\
 	m_bilin.F90\
 	m_bndbounceback.F90\
 	m_bndpressure.F90\
 	m_boundarycond.F90\
+	m_channeldiag.F90\
 	m_channel.F90\
 	m_collisions.F90\
 	m_cube.F90\
@@ -18,10 +18,9 @@ F90SOURCE = \
 	m_diag.F90\
 	m_disks.F90\
 	m_drift.F90\
-	m_feqscalar.F90\
 	m_fhrrscalar.F90\
 	m_HRRequil.F90\
-	m_ibndinflow.F90\
+	m_initurbulence.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\
@@ -33,10 +32,11 @@ F90SOURCE = \
 	m_saverestart.F90\
 	m_sphere.F90\
 	m_string.F90\
-	m_tecfld.F90\
+	m_tecfldsec.F90\
 	m_tecout.F90\
 	m_tecplot.F90\
 	m_turbineforcing.F90\
+	m_uvelshear.F90\
 	m_velocity.F90\
 	m_vorticity.F90\
 	m_windfarm.F90\

@@ -36,20 +36,15 @@ subroutine diag(it,rho,u,v,w,lblanking)
    if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt) then
       if (minval(rho) < 0.0) then
          print *,'iter=',it,'  minmaxrho=',minval(rho),' -- ',maxval(rho)
+         print *,'iter=',it,'  minmaxloc=',minloc(rho),' -- ',maxloc(rho)
          stop 'Unstable simulation'
       endif
 
-      print '(a)','Dumping diagnostics...'
       if (.not.lprtmin) then
          speed = sqrt(u*u + v*v + w*w)
          call vorticity(u,v,w,vortx,vorty,vortz,vort,lblanking)
       endif
       write(cit,'(i6.6)')it
-!      open(10,file='uvel'//cit//'.dat')
-!         do k=1,nz
-!            write(10,'(i5,2f10.2)')k,real(k)*p2l%length,u(nx/2,ny/2,k)
-!         enddo
-!      close(10)
       if (.not.lprtmin) then
          num_of_vars=16
          call tecout('tec'//cit//'.plt',it,trim(tecplot_maxvar),num_of_vars,lblanking,rho,u,v,w,&

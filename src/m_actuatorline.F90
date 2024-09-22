@@ -25,7 +25,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 
    real, parameter :: dx=1.0
-   real, parameter :: pi=3.1415926535
+   real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
    real, parameter :: eps=2.5              ! smoothing distance in Gaussian kernel 1.6

@@ -124,13 +124,19 @@ subroutine averaging(u,v,w,lfinal,iradius)
       vxave2=vxave2/real(4*iave)
       wxave2=wxave2/real(4*iave)
 
-      Ti=uave2-uave**2 + vave2-vave**2 + wave2-wave**2
-      print *,'averaging: Computing Ti averages',minval(Ti),minloc(Ti)
-      Ti=sqrt(max(Ti,0.0)/3.0)/uini
+      do k=ka,kb
+      do j=ja,jb
+      do isec=0,nrsec-1
+         Ti(isec,j,k)=uave2(isec,j,k)-uave(isec,j,k)**2 + vave2(isec,j,k)-vave(isec,j,k)**2 + wave2(isec,j,k)-wave(isec,j,k)**2
+         Ti(isec,j,k)=sqrt(Ti(isec,j,k)/3.0)/uini
+      enddo
+      enddo
+      enddo
 
-      Tix=uxave2-uxave**2 + vxave2-vxave**2 + wxave2-wxave**2
-      print *,'averaging: Computing Tix averages',minval(Tix),minloc(Tix)
-      Tix=sqrt(max(Tix,0.0)/3.0)/uini
+      do i=1,nx
+         Tix(i)=uxave2(i)-uxave(i)**2 + vxave2(i)-vxave(i)**2 + wxave2(i)-wxave(i)**2
+         Tix(i)=sqrt(Tix(i)/3.0)/uini
+      enddo
 
       uave=uave/uini
       vave=vave/uini

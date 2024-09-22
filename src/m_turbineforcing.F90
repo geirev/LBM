@@ -21,7 +21,7 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
    real, save :: dtheta=0.0
    real rps
 
-   real, parameter :: pi=3.1415926535
+   real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
    integer, parameter :: icpu=5
@@ -53,9 +53,9 @@ subroutine turbineforcing(df,feq,rho,u,v,w)
          if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
             do i=-ieps,ieps
                call fhrrscalar(df(i,j,k,:,n),rho(ip+i,j,k),&
-                                            u(ip+i,j,k)-force(abs(i),j,k,1),&
-                                            v(ip+i,j,k)-force(abs(i),j,k,2),&
-                                            w(ip+i,j,k)-force(abs(i),j,k,3))
+                                            u(ip+i,j,k)-force(abs(i),j,k,1)/rho(ip+i,j,k),&
+                                            v(ip+i,j,k)-force(abs(i),j,k,2)/rho(ip+i,j,k),&
+                                            w(ip+i,j,k)-force(abs(i),j,k,3)/rho(ip+i,j,k))
             enddo
          else
             do i=-ieps,ieps

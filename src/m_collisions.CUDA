@@ -1,0 +1,50 @@
+module m_collisions
+contains
+attributes(global) subroutine collisions_kernel(f, feq, tau, nx, ny, nz, nl)
+   implicit none
+   real, intent(in)    :: f(0:*,0:*,0:*,*)    ! HRR non-equilibrium distribution
+   real, intent(inout) :: feq(0:*,0:*,0:*,*)  ! HRR equilibrium distribution
+   real, intent(in)    :: tau(*)
+   integer, value :: nx, ny, nz, nl
+   integer l, i, j, k
+   integer idx, idy, idz
+
+   ! Calculate the global thread indices
+   idx = threadIdx%x + (blockIdx%x - 1) * blockDim%x
+   idy = threadIdx%y + (blockIdx%y - 1) * blockDim%y
+   idz = threadIdx%z + (blockIdx%z - 1) * blockDim%z
+
+   ! Bounds check to prevent accessing out-of-range memory
+   if (idx >= 1 .and. idx <= nx .and. idy >= 1 .and. idy <= ny .and. idz >= 1 .and. idz <= nz) then
+      do l = 1, nl
+         feq(idx, idy, idz, l) = feq(idx, idy, idz, l) + (1.0 - 1.0 / tau(idx, idy, idz)) * f(idx, idy, idz, l)
+      end do
+   end if
+end subroutine collisions_kernel
+
+subroutine collisions(f, feq, tau, nx, ny, nz, nl)
+   use cudafor
+   implicit none
+   real, intent(in)    :: f(0:nx+1,0:ny+1,0:nz+1,nl)    ! HRR non-equilibrium distribution
+   real, intent(inout) :: feq(0:nx+1,0:ny+1,0:nz+1,nl)  ! HRR equilibrium distribution
+   real, intent(in)    :: tau(nx,ny,nz)
+   integer, value :: nx, ny, nz, nl
+   integer, parameter :: threadsPerBlockX = 8
+   integer, parameter :: threadsPerBlockY = 8
+   integer, parameter :: threadsPerBlockZ = 8
+   integer blocksPerGridX, blocksPerGridY, blocksPerGridZ
+
+   ! Calculate the number of blocks in each dimension
+   blocksPerGridX = (nx + threadsPerBlockX - 1) / threadsPerBlockX
+   blocksPerGridY = (ny + threadsPerBlockY - 1) / threadsPerBlockY
+   blocksPerGridZ = (nz + threadsPerBlockZ - 1) / threadsPerBlockZ
+
+   ! Launch the CUDA kernel
+   call collisions_kernel<<<dim3(blocksPerGridX, blocksPerGridY, blocksPerGridZ), dim3(threadsPerBlockX, threadsPerBlockY, threadsPerBlockZ)>>>(f, feq, tau, nx, ny, nz, nl)
+
+   ! Wait for the kernel to complete
+   call cudaDeviceSynchronize()
+end subroutine collisions
+
+end module
+

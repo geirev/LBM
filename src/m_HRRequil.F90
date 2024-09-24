@@ -23,9 +23,6 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau)
                                       ! (3) third order BGK that returns fneq instead of Rfneq,
                                       ! (0) Initialization by feq
 
-   real, parameter       :: cs2=1/3.0
-   real, parameter       :: cs4=1/9.0
-   real, parameter       :: cs6=1/27.0
 
    logical, save         :: lfirst=.true.
 
@@ -63,7 +60,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau)
 
 
    real, parameter :: sigma=1.00
-   real, parameter :: smagorinsky=0.10      !0.15      !0.18   Smagorinsky 0.065 from abk18a
+   real, parameter :: smagorinsky=0.15      !0.15      !0.18   Smagorinsky 0.065 from abk18a
 
    real eddyvisc  ! nu in Vreman 2004 Eq (5)
    real Bbeta     ! B_beta in Vreman 2004 Eq (5)

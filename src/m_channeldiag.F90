@@ -11,10 +11,9 @@ subroutine channeldiag(f,rho,u,lblanking)
    real, intent(inout)    :: u(nx,ny,nz)
    real, intent(inout)    :: rho(nx,ny,nz)
    logical, intent(inout) :: lblanking(nx,ny,nz)
-   real width,mu,grad,cs2,dw
+   real width,mu,grad,dw
    integer j
 
-   cs2=1.0/3.0
    rho=density(f,lblanking)
    u= velocity(f,rho,cxs,lblanking)
    width=real(ny-2)

@@ -99,6 +99,7 @@ program LatticeBoltzmann
 ! Initial turbulent flow
    inflowvar=0.001
    inflowcor=0.95
+   tau=tauin
 
    if (nt0 == 0) then
       if (lpseudo) call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.true.)
@@ -134,8 +135,8 @@ program LatticeBoltzmann
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a)','Iteration:', it,' Time:',real(it)*p2l%time,' s'
 
+      call turbineforcing(df,rho,u,v,w,tau)       ! define forcing df from each turbine
       call HRRequil(feq,f,rho,u,v,w,tau)          ! f is input, returns feq, R(fneq) in f, and tau
-      call turbineforcing(df,feq,rho,u,v,w)       ! define forcing df from each turbine
       call collisions(f,feq,tau)                  ! Apply collisions, returns feq
       call applyturbines(feq,df)                  ! operates on f stored in feq
       call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)  ! General boundary conditions

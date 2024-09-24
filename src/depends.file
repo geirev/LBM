@@ -171,6 +171,7 @@ m_tecplot.o:      m_string.o
 m_turbineforcing.o:      m_actuatorline.o
 m_turbineforcing.o:      makefile
 m_turbineforcing.o:      m_fhrrscalar.o
+m_turbineforcing.o:      mod_D3Q27setup.o
 m_turbineforcing.o:      mod_dimensions.o
 m_turbineforcing.o:      MODEL.CPP
 m_turbineforcing.o:      m_readinfile.o

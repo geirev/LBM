@@ -12,9 +12,6 @@ subroutine fhrrscalar(feq, rho, u, v, w)
    real,    intent(inout):: feq(nl)
 
 
-   real, parameter       :: cs2=1/3.0
-   real, parameter       :: cs4=1/9.0
-   real, parameter       :: cs6=1/27.0
    real, save            :: H2(3,3,27)      ! Second order Hermite polynomial
    real, save            :: H3(3,3,3,27)    ! Third order Hermite polynomial
    real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs

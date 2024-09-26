@@ -1,7 +1,7 @@
 module m_turbineforcing
    integer, save :: iradius
    real, save :: theta=0.0
-   integer, parameter :: iforce=1
+   integer, parameter :: iforce=4
 contains
 subroutine turbineforcing(df,rho,u,v,w,tau)
 ! Returns the S_i stored in df
@@ -105,7 +105,7 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
                      cy=(cminy + cdot*cys(l))*force(abs(i),j,k,2)
                      cz=(cminz + cdot*czs(l))*force(abs(i),j,k,3)
 
-                     df(i,j,k,l,n)=(1.0-1.0/tau(ip+i,j,k)) * weights(l) * (cx + cy + cz)
+                     df(i,j,k,l,n)=(1.0-0.5/tau(ip+i,j,k)) * weights(l) * (cx + cy + cz)
                   enddo
                enddo
             endif

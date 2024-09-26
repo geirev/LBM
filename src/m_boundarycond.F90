@@ -52,7 +52,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
       ka=min(max(k,1),nz)
       do j=0,ny+1
          ja=min(max(j,1),ny)
-         call fhrrscalar(f(0,j,k,1:nl),rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
+         f(0,j,k,1:nl)=fhrrscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
       enddo
       enddo
 

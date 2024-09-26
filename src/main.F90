@@ -28,7 +28,6 @@ program LatticeBoltzmann
    use m_collisions
    use m_drift
    use m_HRRequil
-   use m_fhrrscalar
    use m_readrestart
    use m_saverestart
    use m_wtime

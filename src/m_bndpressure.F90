@@ -28,16 +28,16 @@ subroutine bndpressure(f,rho,u,v,w)
 ! Equilibrium distribution on boundaries
    do k=1,nz
    do j=1,ny
-      call fhrrscalar(fin(j,k,:),rho(nx,j,k),u(nx,j,k),v(nx,j,k),w(nx,j,k))
-      call fhrrscalar(fou(j,k,:),rho(1 ,j,k),u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
+      fin(j,k,:)=fhrrscalar(rho(nx,j,k),u(nx,j,k),v(nx,j,k),w(nx,j,k))
+      fou(j,k,:)=fhrrscalar(rho(1 ,j,k),u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
    enddo
    enddo
 
 ! New equilibrium distribution on boundaries
    do k=1,nz
    do j=1,ny
-      call fhrrscalar(fbin(j,k,:),rho0+rhoa,u(nx,j,k),v(nx,j,k),w(nx,j,k))
-      call fhrrscalar(fbou(j,k,:),rho0-rhoa,u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
+      fbin(j,k,:)=fhrrscalar(rho0+rhoa,u(nx,j,k),v(nx,j,k),w(nx,j,k))
+      fbou(j,k,:)=fhrrscalar(rho0-rhoa,u(1 ,j,k),v(1 ,j,k),w(1 ,j,k))
    enddo
    enddo
 

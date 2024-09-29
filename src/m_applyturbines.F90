@@ -1,9 +1,8 @@
 module m_applyturbines
-! based on the Kupershtokh (2004) method (see Eq 6.31 in Kruger book).
 contains
 subroutine applyturbines(f,df)
    use mod_dimensions
-   use m_readinfile
+   use m_readinfile, only : ipos,nturbines
    use m_wtime
    implicit none
    real, intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl) ! distribution

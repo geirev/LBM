@@ -39,6 +39,11 @@ module m_readinfile
    real tipspeedratio      ! Imposed tipspeed ratio
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
    integer  ihrr           ! Option for collisions using HRR scheme
+   integer iforce          ! Method for forcing scheme
+                           !  iforce=1  !  Shan and Chen (1993)
+                           !  iforce=8  !  Guo (2002)
+                           !  iforce=10 !  Kupershtokh (2009)
+                           !  iforce=12 !  Khazaeli et al. 2019
 
 contains
 subroutine readinfile()
@@ -72,6 +77,20 @@ subroutine readinfile()
       read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
       read(10,*)coll,ihrr          ; print '(3a,i1)',     'Collision operator= ',coll,' with ihrr option: ',ihrr
       if ((coll /= 'HRR') .and. (coll /= 'BGK')) stop 'invalid collision operator'
+      read(10,*)iforce             ; write(*,'(a,i8)',advance='no') 'iforce            = ',iforce
+      select case (iforce)
+      case(1)
+         print '(a)','  Shan and Chen (1993)'
+      case(8)
+         print '(a)','  Guo (2002)'
+      case(10)
+         print '(a)','  Kupershtokh (2009)'
+      case(12)
+         print '(a)','  Khazaeli et al. 2019'
+      case default
+         print '(a)','  invalid forcing schemme (1,8,10,12)'
+         stop
+      end select
       read(10,*)nt0                ; print '(a,i8)',      'nt0               = ',nt0
       read(10,*)nt1                ; print '(a,i8)',      'nt1               = ',nt1
       read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout

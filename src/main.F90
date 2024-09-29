@@ -62,6 +62,7 @@ program LatticeBoltzmann
    real uvel(nz)                                    ! vertical u-velocity profile
 
    integer :: it,i,j,l,k
+!   integer ip,jp,kp
    logical ex
 
 
@@ -127,10 +128,12 @@ program LatticeBoltzmann
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
+      call HRRequil(feq,f,rho,u,v,w,tau)          ! To get an initial value of tau for turbine forcing
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
+!   open(99,file='checkforce.dat')
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a)','Iteration:', it,' Time:',real(it)*p2l%time,' s'
 
@@ -146,6 +149,14 @@ program LatticeBoltzmann
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
       call diag(it,rho,u,v,w,lblanking)           ! Diagnostics
+
+!      ip=ipos(1)
+!      jp=jpos(1)
+!      kp=kpos(1)
+!      write(99,'(i6,19f8.5,19f8.5)')it,u(ip:ip+36:2,jp-11,kp),w(ip:ip+36:2,jp-11,kp)
+
+
+
       if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
       if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo) then
@@ -155,6 +166,7 @@ program LatticeBoltzmann
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
 
    enddo
+!   close(99)
 
    call cpuprint()
 

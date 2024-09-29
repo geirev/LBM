@@ -17,7 +17,8 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
    real, intent(inout)    :: w(nx,ny,nz)                       ! velocity
    real, intent(in)       :: tau(nx,ny,nz)                     ! tau
 
-   real cx,cy,cz,cminx,cminy,cminz,cdotu,dfeq(nl)
+   real cx,cy,cz,cminx,cminy,cminz,cdotuu,dfeq(nl)
+   real cdotA(nl),udotA,cdotu(nl)
 
    real                   :: force(0:ieps,ny,nz,3)         ! work array for computing the turbine force
    real                   :: du(-ieps:ieps,ny,nz)          ! turbine forced u velocity
@@ -25,7 +26,12 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
    real                   :: dw(-ieps:ieps,ny,nz)          ! turbine forced w velocity
    integer i,n,j,k,l,ip,jp,kp
 
-   integer, parameter :: iforce=1
+!   integer, parameter :: iforce=12
+!   integer, parameter :: iforce=1  !  Shan and Chen (1993)
+!   integer, parameter :: iforce=8  !  Guo (2002)
+!   integer, parameter :: iforce=10 !  Kupershtokh (2009)
+!   integer, parameter :: iforce=12 !  Khazaeli et al. 2019
+
    real, save :: dtheta=0.0
    real rps
 
@@ -68,47 +74,78 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
       enddo
       enddo
 
-! Used for Guo (2002) model
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! (1) Shan and Chen 1993
+!     function [U,S]=SchemeI(A,dt,tau,f,Rho,U)
+!        U= U + dt*tau*A
+!        S=0.0
+!     end
       if (iforce==1) then
-      ! updating the forced equilibrium velocities ueq=u + F/(2rho)
          do k=1,nz
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
-                  u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
-                  v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
-                  w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
+                  ! updating the forced equilibrium velocities
+                  u(ip+i,j,k)=u(ip+i,j,k)+tau(ip+1,j,k)*du(i,j,k)
+                  v(ip+i,j,k)=v(ip+i,j,k)+tau(ip+1,j,k)*dv(i,j,k)
+                  w(ip+i,j,k)=w(ip+i,j,k)+tau(ip+1,j,k)*dw(i,j,k)
+
+                  ! No update of S_i term
+
                enddo
             endif
          enddo
          enddo
 
-      ! Computing the S_i term returned in df
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! (8) Guo 2002
+!     function [U,S]=SchemeVII(A,dt,tau,f,Rho,U)
+!        U= U +  dt*A./2
+!        S= Rho.*W’.*(Cdot(A)- sum(A.*(U+du),1))./ Cs2 *(1-1/(2*tau))
+!        S=S+Rho.*W’.*(Cdot(A) .* Cdot(U+du) )./ Cs2^2*(1-1/(2*tau))
+!     end
+      elseif (iforce==8) then
          do k=1,nz
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
-                  do l=1,nl
-                     cdotu=(real(cxs(l))*u(ip+i,j,k) + real(cys(l))*v(ip+i,j,k) + real(czs(l))*w(ip+i,j,k))/cs4
+                  ! updating the forced equilibrium velocities ueq=u + F/(2rho)
+                  u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
+                  v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
+                  w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
 
+                  ! Computing the S_i term returned in df
+!                  cdota(:)=real(cxs(:))*du(i,j,k) + real(cys(:))*dv(i,j,k) + real(czs(:))*dw(i,j,k)
+!                  cdotu(:)=real(cxs(:))*u(ip+i,j,k) + real(cys(:))*v(ip+i,j,k) + real(czs(:))*w(ip+i,j,k)
+!                  udota   =u(ip+i,j,k)*du(i,j,k) + v(ip+i,j,k)*dv(i,j,k) + w(ip+i,j,k)*dw(i,j,k)
+!
+!                  df(i,j,k,:,n)=(1.0-0.5/tau(ip+i,j,k)) * rho(ip+i,j,k) * weights(:) * &
+!                        ( (cdota(:) - udota)/cs2   + (cdota(:) * cdotu(:) )/cs4 )
+
+                  do l=1,nl
+                     cdotuu=(real(cxs(l))*u(ip+i,j,k) + real(cys(l))*v(ip+i,j,k) + real(czs(l))*w(ip+i,j,k))/cs4
                      cminx=(real(cxs(l))-u(ip+i,j,k))/cs2
                      cminy=(real(cys(l))-v(ip+i,j,k))/cs2
                      cminz=(real(czs(l))-w(ip+i,j,k))/cs2
 
-                     cx=(cminx + cdotu*real(cxs(l)))*force(abs(i),j,k,1)
-                     cy=(cminy + cdotu*real(cys(l)))*force(abs(i),j,k,2)
-                     cz=(cminz + cdotu*real(czs(l)))*force(abs(i),j,k,3)
+                     cx=(cminx + cdotuu*real(cxs(l)))*du(i,j,k)
+                     cy=(cminy + cdotuu*real(cys(l)))*dv(i,j,k)
+                     cz=(cminz + cdotuu*real(czs(l)))*dw(i,j,k)
 
-                     df(i,j,k,l,n)=(1.0-0.5/tau(ip+i,j,k)) * weights(l) * (cx + cy + cz)
+                     df(i,j,k,l,n)=(1.0-0.5/tau(ip+i,j,k)) * rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
                   enddo
                enddo
             endif
          enddo
          enddo
-      endif
 
-! Used for Kupershtokh forcing model.
-      if (iforce==4) then
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! (10) Kupershtokh 2009
+!     function [U,S]=SchemeIX(A,dt,tau,f,Rho,U)
+!        U= U +  0.0
+!        S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt
+!     end
+      elseif (iforce==10) then
       ! No update of equilibrium velocities
 
       ! Computing the S_i term returned in df
@@ -119,13 +156,35 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
                   dfeq(:)      =fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
                   df(i,j,k,:,n)=fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
                   df(i,j,k,:,n)=df(i,j,k,:,n)-dfeq(:)
-
-                  !df(i,j,k,:,n)=fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+1,j,k)+dv(i,j,k), w(ip+1,j,k)+dw(i,j,k))&
-                  !             -fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k)          , v(ip+i,j,k)          , w(ip+i,j,k))
                enddo
             endif
          enddo
          enddo
+
+!(12) Khazaeli et al. 2019
+!     function [U,S]=SchemeXI(A,dt,tau,f,Rho,U)
+!        U= U +  dt*A./2
+!        S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt*(1-1/(2*tau))
+!     end
+      elseif (iforce==12) then
+         do k=1,nz
+         do j=1,ny
+            if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
+               do i=-ieps,ieps
+                  dfeq(:)      =fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
+                  df(i,j,k,:,n)=fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+                  df(i,j,k,:,n)=(1.0-0.5/tau(ip+i,j,k)) * rho(ip+i,j,k) * (df(i,j,k,:,n)-dfeq(:))
+               enddo
+               u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
+               v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
+               w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
+            endif
+         enddo
+         enddo
+
+
+      else
+         stop 'turbine forcing uses invalid forcing model iforce'
       endif
 
    enddo
@@ -134,134 +193,111 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
 end subroutine
 end module
 
-!-    for it=1:MaxIter
-!- ! Calculate Macroscopic Variables
-!-       [Rho,U]=CalculateMacroscopic(f);
-!-
-!- ! Calculate Macroscopic Force (Acceleration)
-!-       [A]=CalculateAcceleration(Rho,U);
-!-
-!- ! Calculate Microscopic Force (S)
-!- ! This function name “ForceModel” should be replaced with the proper name of the desired force scheme.
-!-       [du,S,Uph]=ForceModel(A,dt,tau,f,Rho,U);
-!-
-!- ! Apply Microscopic Force to velocity
-!-       Ueq=U+du; ! calculate the equilibrium velocity
-!-
-!- ! Perform the collision
-!-       [f]=Collision(tau,f,Rho,Ueq);
-!-
-!- ! Apply Microscopic Force to f
-!-       f=f+dt*S; !adding force
-!- ! Perform the streaming
-!-
-!-       f=Streaming(f);
-!- ! Apply the boundary conditions
-!-       f=Boundaries(f,Rho,Ueq);
-!-    end
-!-
-!-
-!- ! A Helper Function
-!- ! Dot Lattice speed with variable X
-!-    function [res]=Cdot(X)
-!-       sizes=size(x);
-!-       sizes(1)=1;
-!-       res=zeros(sizes);
-!-       for id=1:size(X,1)
-!-          res = res +C(id,:)’.* X(id,:);
-!-       end
-!-    end
-!-
-!- ! Shan and Chen 1993
-!-    function [du,S,Uph]=SchemeI(A,dt,tau,f,Rho,U)
-!-       du=dt*tau*A;
-!-       Uph=U+A.*dt./2;
-!-       S=zeros(size(f));
-!-    end
-!-
-!- ! Luo 1997
-!-    function [du,S, Uph]=SchemeII(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U;
-!-       S=W’ .* Cdot(Rho.*A) ./ Cs2;
-!-    end
-!-
-!- !  He et al., 1998
-!-    function [du,S, Uph]=SchemeIII(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U;
-!-       feq=Feq(Rho,U);
-!-       S=feq .* (Cdot(A)- sum(A.*(U),1))./ Cs2;
-!-    end
-!-
-!- ! Martys 1998 and Luo 1998
-!-    function [du,S, Uph]=SchemeIV(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U;
-!-       S= Rho.*W’.*(Cdot(A)- sum(A.*U,1))./ Cs2;
-!-       S=S+Rho.*W’.*(Cdot(A) .* Cdot(U) )./ Cs2^2;
-!-    end
-!-
-!- ! Buick and Greated 2000
-!-    function [du,S, Uph]=SchemeV(A,dt,tau,f,Rho,U)
-!-       du= dt*A./2;
-!-       Uph=U+du;
-!-       S=(1-1/(2*tau))*W’.*Cdot(Rho.*A)./ Cs2;
-!-    end
-!-
-!- ! Ladd and Verberg 2001
-!-    function [du,S, Uph]=SchemeVIa(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U;
-!-       S= Rho.*W’.*(Cdot(A)- sum(A.*U,1))./ Cs2;
-!-       S=S+Rho.*W’.*(Cdot(A) .* Cdot(U) )./ Cs2^2*(1-1/(2*tau));
-!-       S=S+Rho.*W’.* Cdot(A) ./ Cs2 /(2*tau);
-!-    end
-!-
-!- ! Ladd and Verberg 2001
-!-    function [du,S, Uph]=SchemeVIb(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U+dt*A./2;
-!-       S= Rho.*W’.*(Cdot(A)- sum(A.*U,1))./ Cs2;
-!-       S=S+Rho.*W’.*(Cdot(A) .* Cdot(U) )./ Cs2^2;
-!-    end
-!-
-!- ! Guo 2002
-!-    function [du,S, Uph]=SchemeVII(A,dt,tau,f,Rho,U)
-!-       du= dt*A./2;
-!-       Uph=U+du;
-!-       S= Rho.*W’.*(Cdot(A)- sum(A.*(U+du),1))./ Cs2 *(1-1/(2*tau));
-!-       S=S+Rho.*W’.*(Cdot(A) .* Cdot(U+du) )./ Cs2^2*(1-1/(2*tau));
-!-    end
-!-
-!- ! Wagner 2006
-!-    function [du,S, Uph]=SchemeVIII(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U+dt*A./2;
-!-       S= Rho.*W’.*(Cdot(A)- sum(A.*U,1))./ Cs2 ;
-!-       S=S+Rho.*W’.*(Cdot(A) .* Cdot(U) )./ Cs2^2;
-!-       S=S+Rho.*W’.*(Cdot(A) .* Cdot(A) )./ Cs2^2*(1-1/(4*tau))*dt/2;
-!-       S=S-Rho.*W’.*( sum(A.*A,1))./ Cs2 *(1-1/(4*tau))*dt/2;
-!-    end
-!-
-!- ! Kupershtokh 2009
-!-    function [du,S, Uph]=SchemeIX(A,dt,tau,f,Rho,U)
-!-       du= zeros(size(U));
-!-       Uph=U+dt*A./2;
-!-       S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt;
-!-    end
-!-
-!- ! Guo et al. 2011
-!-    function [du,S, Uph]=SchemeX(A,dt,tau,f,Rho,U)
-!-       du= +dt*A./2;
-!-       Uph=U+du;
-!-       feq=Feq(Rho,U+du);
-!-       S=feq .* (Cdot(A)- sum(A.*(U+du),1))./ Cs2*(1-1/(2*tau));
-!-    end
-!-
-!- ! Khazaeli et al. 2019
-!-    function [du,S, Uph]=SchemeXI(A,dt,tau,f,Rho,U)
-!-       du= dt*A./2;
-!-       Uph=U+dt*A./2;
-!-       S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt*(1-1/(2*tau));
-!-    end
+!    for it=1:MaxIter
+!       [Rho,U]= CalculateMacroscopic(f)
+!       [A]    = CalculateAcceleration(Rho,U)
+!       [Ueq,S]= ForceModel(A,dt,tau,f,Rho,U)
+!       [f]    = Collision(tau,f,Rho,Ueq)
+!       f      = f+dt*S; !adding force
+!       f      = Streaming(f)
+!       f      = Boundaries(f,Rho,Ueq)
+!    end
+!
+!
+!   Dot Lattice speed with variable X
+!    function [res(1:nl)]=Cdot(X)
+!       res(:) = res(:) + cxs(:)*X(1) + cys(:)*X(2)  + czs(:)*X(3)
+!    end
+!
+!   (1) Shan and Chen 1993
+!    function [U,S]=SchemeI(A,dt,tau,f,Rho,U)
+!       du=dt*tau*A
+!       U= U + du
+!       S=0
+!    end
+!
+!   (2) Luo 1997
+!    function [U,S]=SchemeII(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S=W’ * Cdot(Rho*A) / Cs2
+!    end
+!
+!   (3)  He et al., 1998
+!    function [U,S]=SchemeIII(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S=Feq(Rho,U) * (Cdot(A)- sum(A*(U),1)) / Cs2
+!    end
+!
+!   (4) Martys 1998 and Luo 1998
+!    function [U,S]=SchemeIV(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S= Rho*W’*(Cdot(A)- sum(A*U,1))/ Cs2
+!       S=S+Rho*W’*(Cdot(A) * Cdot(U) )/ Cs2^2
+!    end
+!
+!   (5) Buick and Greated 2000
+!    function [U,S]=SchemeV(A,dt,tau,f,Rho,U)
+!       du=dt*A/2
+!       U= U + du
+!       S=(1-1/(2*tau))*W’*Cdot(Rho*A)/ Cs2
+!    end
+!
+!   (6) Ladd and Verberg 2001
+!    function [U,S]=SchemeVIa(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S= Rho*W’*(Cdot(A)- sum(A*U,1))/ Cs2
+!       S=S+Rho*W’*(Cdot(A) * Cdot(U) )/ Cs2^2*(1-1/(2*tau))
+!       S=S+Rho*W’* Cdot(A) / Cs2 /(2*tau)
+!    end
+!
+!   (7) Ladd and Verberg 2001
+!    function [U,S]=SchemeVIb(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S= Rho*W’*(Cdot(A)- sum(A*U,1))/ Cs2
+!       S=S+Rho*W’*(Cdot(A) * Cdot(U) )/ Cs2^2
+!    end
+!
+!   (8) Guo 2002
+!    function [U,S]=SchemeVII(A,dt,tau,f,Rho,U)
+!       du=dt*A/2
+!       U= U + du
+!       S= (Cdot(A)- sum(A*(U+du),1))/ Cs2
+!       S=S + (Cdot(A) * Cdot(U+du) )/ Cs2^2
+!       S=(1-1/(2*tau))*Rho*W’*S
+!    end
+!
+!   (9) Wagner 2006
+!    function [U,S]=SchemeVIII(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S= Rho*W’*(Cdot(A)- sum(A*U,1))/ Cs2
+!       S=S+Rho*W’*(Cdot(A) * Cdot(U) )/ Cs2^2
+!       S=S+Rho*W’*(Cdot(A) * Cdot(A) )/ Cs2^2*(1-1/(4*tau))*dt/2
+!       S=S-Rho*W’*( sum(A*A,1))/ Cs2 *(1-1/(4*tau))*dt/2
+!    end
+!
+!   (10) Kupershtokh 2009
+!    function [U,S]=SchemeIX(A,dt,tau,f,Rho,U)
+!       du=0
+!       U= U + du
+!       S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )/ dt
+!    end
+!
+!   (11) Guo et al. 2011
+!    function [U,S]=SchemeX(A,dt,tau,f,Rho,U)
+!       du=dt*A/2
+!       U= U + du
+!       S=Feq(Rho,U+du) * (Cdot(A)- sum(A*(U+du),1))/ Cs2*(1-1/(2*tau))
+!    end
+!
+!   (12) Khazaeli et al. 2019
+!    function [U,S]=SchemeXI(A,dt,tau,f,Rho,U)
+!       du=dt*A/2
+!       U= U + du
+!       S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )/ dt*(1-1/(2*tau))
+!    end

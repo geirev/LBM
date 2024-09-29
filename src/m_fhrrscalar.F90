@@ -1,6 +1,6 @@
 module m_fhrrscalar
 contains
-subroutine fhrrscalar(feq, rho, u, v, w)
+function fhrrscalar(rho, u, v, w) result(feq)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile, only : ihrr
@@ -9,7 +9,7 @@ subroutine fhrrscalar(feq, rho, u, v, w)
    real,    intent(in) :: u
    real,    intent(in) :: v
    real,    intent(in) :: w
-   real,    intent(inout):: feq(nl)
+   real feq(nl)
 
 
    real, save            :: H2(3,3,27)      ! Second order Hermite polynomial
@@ -103,5 +103,5 @@ subroutine fhrrscalar(feq, rho, u, v, w)
 
    enddo
 
-end subroutine
+end function
 end module

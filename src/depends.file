@@ -23,7 +23,6 @@ main.o:      m_density.o
 main.o:      m_diag.o
 main.o:      m_disks.o
 main.o:      m_drift.o
-main.o:      m_fhrrscalar.o
 main.o:      m_HRRequil.o
 main.o:      m_initurbulence.o
 main.o:      mod_D3Q27setup.o

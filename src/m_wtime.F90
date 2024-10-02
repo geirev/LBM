@@ -5,21 +5,13 @@ module m_wtime
    character(len=9) :: cpuname(1:10) = ['rho      ',&
                                        'velocity ',&
                                        'printing ',&
-                                       'HRRequil ',&
+                                       'fequil   ',&
                                        'turbine  ',&
                                        'collision',&
                                        'applyturb',&
                                        'boundary ',&
                                        'bouncebac',&
                                        'drift    ']
-!   character(len=9) :: cpuname(1:8) = ['drift    ',&
-!                                       'bndbb    ',&
-!                                       'rho      ',&
-!                                       'velocity ',&
-!                                       'feq      ',&
-!                                       'collision',&
-!                                       'bndopen  ',&
-!                                       'printing ']
 contains
 
 subroutine cpustart()

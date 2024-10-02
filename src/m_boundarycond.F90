@@ -4,7 +4,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
    use mod_dimensions
    use m_readinfile
    use m_bndpressure
-   use m_fhrrscalar
+   use m_fequilscalar
    use m_wtime
    implicit none
    real, intent(inout):: f(0:nx+1,0:ny+1,0:nz+1,nl)
@@ -52,7 +52,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
       ka=min(max(k,1),nz)
       do j=0,ny+1
          ja=min(max(j,1),ny)
-         f(0,j,k,1:nl)=fhrrscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
+         f(0,j,k,1:nl)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
       enddo
       enddo
 

@@ -1,10 +1,10 @@
-module m_HRRequil
+module m_fequil
 ! NOTE:  f^coll = f - (1/tau) * (f - f^eq)
 !               = f^eq + (1-1/tau) * f^neq       # f^neq= f-f^eq
 !               ~ f^eq + (1-1/tau) * R(f^neq)
 contains
 
-subroutine HRRequil(feq, f, rho, u, v, w, tau)
+subroutine fequil(feq, f, rho, u, v, w, tau)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
@@ -161,8 +161,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau)
                   lfeq(l)=lfeq(l) + H2(p,q,l)*A0_2(p,q)/(2.0*cs4)
                enddo
                enddo
-               ! the above identically recovers the BGK equilibrium, below we add third order contributions
-               ! Add third order correction
+               ! the above identically recovers the BGK equilibrium, now we add third order contributions
                if (ihrr /= 2) then
                   lfeq(l)=lfeq(l)   &
                       + ( H3(1,1,2,l) + H3(2,3,3,l) ) * ( A0_3(1,1,2) + A0_3(2,3,3) )/(2.0*cs6) &
@@ -181,16 +180,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau)
             lfneq(:)=lf(:)-lfeq(:)
 
             if (ihrr == 1) then
-! A1_2 from \citet{fen21a} Eq. (33a)
-!              A1_2=0.0
-!              do l=1,nl
-!                 do q=1,3
-!                 do p=1,3
-!                    A1_2(p,q) = A1_2(p,q) + c(p,l)*c(q,l)*lfneq(l)
-!                 enddo
-!                 enddo
-!              enddo
-! Eq (11) from  Jacob 2018 is idetical to the 33a from Feng (2021)
+! Eq (11) from  Jacob 2018 is identical to the 33a from Feng (2021)
                A1_2=0.0
                do l=1,nl
                   do q=1,3
@@ -263,7 +253,7 @@ subroutine HRRequil(feq, f, rho, u, v, w, tau)
                enddo
             else ! (ihrr /= 1)
 ! Third order BGK without expansion for fneq
-               RFneq(:)=lfneq(:)
+               Rfneq(:)=lfneq(:)
             endif
 
 !            if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) then

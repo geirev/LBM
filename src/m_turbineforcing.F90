@@ -4,10 +4,10 @@ module m_turbineforcing
 contains
 subroutine turbineforcing(df,rho,u,v,w,tau)
 ! Returns the S_i stored in df and possibly updated velocities
-   use mod_dimensions
+   use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
-   use m_readinfile
-   use m_fhrrscalar
+   use m_readinfile,  only : turbrpm,p2l,ipos,nturbines,iforce
+   use m_fequilscalar
    use m_actuatorline
    use m_wtime
    real, intent(out)      :: df(-ieps:ieps,ny,nz,nl,nturbines) ! forcing distributions
@@ -47,8 +47,6 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
    df(:,:,:,:,:)=0.0
    do n=1,nturbines
       ip=ipos(n)
-      jp=jpos(n)
-      kp=kpos(n)
 
 ! My implementation of the actuator line method by Sørensen 2002 computing the force from all the turbines
       force=0.0
@@ -147,8 +145,8 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
-                  dfeq(:)      =fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-                  df(i,j,k,:,n)=fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
+                  df(i,j,k,:,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
                   df(i,j,k,:,n)=df(i,j,k,:,n)-dfeq(:)
                enddo
             endif
@@ -157,25 +155,22 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
 
 !(12) Khazaeli et al. 2019
 !     function [U,S]=SchemeXI(A,dt,tau,f,Rho,U)
-!        S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt*(1-1/(2*tau))
+!        S=(1-1/(2*tau))*( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt
 !        U= U +  dt*A./2
 !     end
       elseif (iforce==12) then
          do k=1,nz
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
-!               if (j==jp .and. k==kp) print '(a,4g14.7)','A: ',u(ip,j,k),v(ip,j,k),w(ip,j,k)
                do i=-ieps,ieps
-                  dfeq(:)      =fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-                  df(i,j,k,:,n)=fhrrscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
-                  df(i,j,k,:,n)=(1.0-0.5/tau(ip+i,j,k)) * (df(i,j,k,:,n)-dfeq(:))
+                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
+                  df(i,j,k,:,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+                  df(i,j,k,:,n)= (df(i,j,k,:,n)-dfeq(:))   ! Moved the tau part to apply turbines since tau is recomputed in feq
 
                   u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
                   v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
                   w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
                enddo
-!               if (j==jp .and. k==kp) print '(a,14g14.7)','B: ', u(ip,j,k),v(ip,j,k),w(ip,j,k)
-!               if (j==jp .and. k==kp) print '(a,14g14.7)','C: ', du(0,j,k),dv(0,j,k),dw(0,j,k),df(0,j,k,1:10,n)
             endif
          enddo
          enddo

@@ -12,12 +12,11 @@ module m_readinfile
    integer  kbnd           ! Type of bondary condition in k direction
    logical  lpseudo        ! Add smooth pseudorandom peturbations to initial rho
    logical  runexp         ! Add smooth pseudorandom peturbations to initial rho
-   character(len=3) coll   ! Collision operator
    real     uini           ! Initial u-velocity
    real     rho0           ! Average density
    real     rhoa           ! Imposed density gradient for ibnd=2 case
    real     tauin          ! Collision timescale
-   real     kinevisc       ! Kinematic viscosity (nondimensional used in HRRequil)
+   real     kinevisc       ! Kinematic viscosity (nondimensional used in fequil)
    character(len=20) experiment ! experiment name
    integer avestart        ! Iteration number for starting to compute section averages
    integer avesave         ! Iteration number for saving section averages
@@ -75,8 +74,7 @@ subroutine readinfile()
       endif
       read(10,'(1x,l1)')runexp     ; print '(a,tr7,l1)',  'runexp            = ',runexp
       read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
-      read(10,*)coll,ihrr          ; print '(3a,i1)',     'Collision operator= ',coll,' with ihrr option: ',ihrr
-      if ((coll /= 'HRR') .and. (coll /= 'BGK')) stop 'invalid collision operator'
+      read(10,*)ihrr               ; print '(a,i1)',      'Collisions ihrr   = ',ihrr
       read(10,*)iforce             ; write(*,'(a,i8)',advance='no') 'iforce            = ',iforce
       select case (iforce)
       case(1)
@@ -156,7 +154,7 @@ subroutine readinfile()
    tauin = 0.5 + 3.0*kinevisc/p2l%visc
    print '(a,g13.6,a)',  'tau from kinevisc    = ',tauin        ,' [ ]'
 
-!  Compute nondimensional kinematic viscosity used to calculate tau in HRRequil
+!  Compute nondimensional kinematic viscosity used to calculate tau in fequil
    kinevisc=kinevisc/p2l%visc
    print '(a,g13.6,a)',  'Non-dim kinevisc     = ',kinevisc      ,' [ ]'
 

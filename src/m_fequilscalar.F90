@@ -1,6 +1,6 @@
-module m_fhrrscalar
+module m_fequilscalar
 contains
-function fhrrscalar(rho, u, v, w) result(feq)
+function fequilscalar(rho, u, v, w) result(feq)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile, only : ihrr

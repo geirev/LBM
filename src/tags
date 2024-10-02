@@ -18,8 +18,8 @@ diag	m_diag.F90	/^module
 dimensions	mod_dimensions.F90	/^module
 disks	m_disks.F90	/^module
 drift	m_drift.F90	/^module
-fhrrscalar	m_fhrrscalar.F90	/^module
-HRRequil	m_HRRequil.F90	/^module
+fequil	m_fequil.F90	/^module
+fequilscalar	m_fequilscalar.F90	/^module
 initurbulence	m_initurbulence.F90	/^module
 mod_D3Q27setup	mod_D3Q27setup.F90	/^module
 mod_dimensions	mod_dimensions.F90	/^module
@@ -42,8 +42,8 @@ m_density	m_density.F90	/^module
 m_diag	m_diag.F90	/^module
 m_disks	m_disks.F90	/^module
 m_drift	m_drift.F90	/^module
-m_fhrrscalar	m_fhrrscalar.F90	/^module
-m_HRRequil	m_HRRequil.F90	/^module
+m_fequil	m_fequil.F90	/^module
+m_fequilscalar	m_fequilscalar.F90	/^module
 m_initurbulence	m_initurbulence.F90	/^module
 m_nrelliftdrag	m_nrelliftdrag.F90	/^module
 m_nrelreadfoil	m_nrelreadfoil.F90	/^module

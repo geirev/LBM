@@ -137,11 +137,11 @@ program LatticeBoltzmann
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s'&
             ,' tau=',tau(nx/2,ny/2,nz/2)
-
-      call turbineforcing(df,rho,u,v,w,tau)       ! define forcing df from each turbine
-      call fequil(feq,f,rho,u,v,w,tau)            ! f is input, returns feq, R(fneq) in f, and tau
-      call collisions(f,feq,tau)                  ! Apply collisions, returns updated f in feq
-      call applyturbines(feq,df,tau)              ! operates on f stored in feq
+                                                  ! start with f,rho,u,v,w
+      call turbineforcing(df,rho,u,v,w,tau)       ! [u,v,w,df]         = turbineforcing(rho,u,v,w)
+      call fequil(feq,f,rho,u,v,w,tau)            ! [feq,f=R(fneq),tau]= fequil(f,rho,u,v,w))
+      call collisions(f,feq,tau)                  ! [feq=f]            = collisions(f,feq,tau)        f=f^eq + (1-1/tau) * R(f^neq)
+      call applyturbines(feq,df,tau)              ! [feq=f]            = applyturbines(feq=f,df,tau)  f=f+df
       call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)  ! General boundary conditions
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f

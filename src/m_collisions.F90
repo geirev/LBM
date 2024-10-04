@@ -2,6 +2,10 @@ module m_collisions
 contains
 subroutine collisions(f,feq,tau)
 ! returns f in feq after collisions
+! NOTE:  f^coll = f - (1/tau) * (f - f^eq)
+!               = f^eq + (f -f^eq) - (1/tau) * (f - f^eq)
+!               = f^eq + (1-1/tau) * f^neq       # f^neq= f-f^eq
+!               ~ f^eq + (1-1/tau) * R(f^neq)
    use mod_dimensions
    use m_wtime
    implicit none

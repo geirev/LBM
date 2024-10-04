@@ -3,7 +3,7 @@ contains
 function fequilscalar(rho, u, v, w) result(feq)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile, only : ihrr
+   use m_readinfile, only : ibgk
    implicit none
    real,    intent(in) :: rho
    real,    intent(in) :: u
@@ -88,8 +88,7 @@ function fequilscalar(rho, u, v, w) result(feq)
       enddo
       enddo
       ! the above identically recovers the BGK equilibrium, below we add third order contributions
-      ! Add third order correction
-      if (ihrr /= 2) then
+      if (ibgk == 3) then
          feq(l)=feq(l)   &
              + ( H3(1,1,2,l) + H3(2,3,3,l) ) * ( A0_3(1,1,2) + A0_3(2,3,3) )/(2.0*cs6) &
              + ( H3(1,3,3,l) + H3(1,2,2,l) ) * ( A0_3(1,3,3) + A0_3(1,2,2) )/(2.0*cs6) &

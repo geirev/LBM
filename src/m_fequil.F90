@@ -60,7 +60,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 
 
    real, parameter :: sigma=1.00
-   real, parameter :: smagorinsky=0.15      !0.15      !0.18   Smagorinsky 0.065 from abk18a
 
    real eddyvisc  ! nu in Vreman 2004 Eq (5)
    real Bbeta     ! B_beta in Vreman 2004 Eq (5)
@@ -121,7 +120,7 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 !$OMP&                                  dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz,   &
 !$OMP&                                  eddyvisc, Bbeta, alpha, beta, alphamag) &
 !$OMP&                           SHARED(feq, f, rho, u, v, w, tau, weights, c, H2, H3, tauin,   &
-!$OMP&                                  kinevisc, uscale, dx, dt, const, ihrr)
+!$OMP&                                  kinevisc, uscale, dx, dt, const, ihrr,ivreman,ibgk)
    do k=1,nz
       call ablim(k,nz,dzfac,ka,kb)
       do j=1,ny
@@ -162,7 +161,7 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
                enddo
                enddo
                ! the above identically recovers the BGK equilibrium, now we add third order contributions
-               if (ihrr /= 2) then
+               if (ibgk == 3) then
                   lfeq(l)=lfeq(l)   &
                       + ( H3(1,1,2,l) + H3(2,3,3,l) ) * ( A0_3(1,1,2) + A0_3(2,3,3) )/(2.0*cs6) &
                       + ( H3(1,3,3,l) + H3(1,2,2,l) ) * ( A0_3(1,3,3) + A0_3(1,2,2) )/(2.0*cs6) &
@@ -179,6 +178,7 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 ! lfneq is defined in \citet{fen21a} between Eqs (32) and (33)
             lfneq(:)=lf(:)-lfeq(:)
 
+! Regularization part where lfneq is replaced by R(lfneq)
             if (ihrr == 1) then
 ! Eq (11) from  Jacob 2018 is identical to the 33a from Feng (2021)
                A1_2=0.0
@@ -190,37 +190,37 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
                   enddo
                enddo
 
-               if (sigma /= 1.0) then
+!               if (sigma /= 1.0) then
 ! A1_2FD from \citet{fen21a} Eq. (33b)
-                  dudx=(u(ib,j,k)-u(ia,j,k))/(dxfac*dx)
-                  dudy=(u(i,jb,k)-u(i,ja,k))/(dyfac*dx)
-                  dudz=(u(i,j,kb)-u(i,j,ka))/(dzfac*dx)
-
-                  dvdx=(v(ib,j,k)-v(ia,j,k))/(dxfac*dx)
-                  dvdy=(v(i,jb,k)-v(i,ja,k))/(dyfac*dx)
-                  dvdz=(v(i,j,kb)-v(i,j,ka))/(dzfac*dx)
-
-                  dwdx=(w(ib,j,k)-w(ia,j,k))/(dxfac*dx)
-                  dwdy=(w(i,jb,k)-w(i,ja,k))/(dyfac*dx)
-                  dwdz=(w(i,j,kb)-w(i,j,ka))/(dzfac*dx)
-
-                  A1_2FD(1,1) = dudx + dudx - (2.0/3.0)* (dudx + dvdy + dwdz)
-                  A1_2FD(2,1) = dudy + dvdx
-                  A1_2FD(3,1) = dudz + dwdx
-                  A1_2FD(1,2) = A1_2FD(2,1)
-                  A1_2FD(2,2) = dvdy + dvdy - (2.0/3.0)* (dudx + dvdy + dwdz)
-                  A1_2FD(3,2) = dvdz + dwdy
-                  A1_2FD(1,3) = A1_2FD(3,1)
-                  A1_2FD(2,3) = A1_2FD(3,2)
-                  A1_2FD(3,3) = dwdz + dwdz - (2.0/3.0)* (dudx + dvdy + dwdz)
-
-                  A1_2FD = -2.0 * uscale * tauin * dens * cs2 * A1_2FD
-
+!                  dudx=(u(ib,j,k)-u(ia,j,k))/(dxfac*dx)
+!                  dudy=(u(i,jb,k)-u(i,ja,k))/(dyfac*dx)
+!                  dudz=(u(i,j,kb)-u(i,j,ka))/(dzfac*dx)
+!
+!                  dvdx=(v(ib,j,k)-v(ia,j,k))/(dxfac*dx)
+!                  dvdy=(v(i,jb,k)-v(i,ja,k))/(dyfac*dx)
+!                  dvdz=(v(i,j,kb)-v(i,j,ka))/(dzfac*dx)
+!
+!                  dwdx=(w(ib,j,k)-w(ia,j,k))/(dxfac*dx)
+!                  dwdy=(w(i,jb,k)-w(i,ja,k))/(dyfac*dx)
+!                  dwdz=(w(i,j,kb)-w(i,j,ka))/(dzfac*dx)
+!
+!                  A1_2FD(1,1) = dudx + dudx - (2.0/3.0)* (dudx + dvdy + dwdz)
+!                  A1_2FD(2,1) = dudy + dvdx
+!                  A1_2FD(3,1) = dudz + dwdx
+!                  A1_2FD(1,2) = A1_2FD(2,1)
+!                  A1_2FD(2,2) = dvdy + dvdy - (2.0/3.0)* (dudx + dvdy + dwdz)
+!                  A1_2FD(3,2) = dvdz + dwdy
+!                  A1_2FD(1,3) = A1_2FD(3,1)
+!                  A1_2FD(2,3) = A1_2FD(3,2)
+!                  A1_2FD(3,3) = dwdz + dwdz - (2.0/3.0)* (dudx + dvdy + dwdz)
+!
+!                  A1_2FD = -2.0 * uscale * tauin * dens * cs2 * A1_2FD
+!
 ! A1_2HRR from \citet{fen21a}, as defined after Eq. (34)
-                  A1_2HRR = sigma*A1_2 + (1.0-sigma)*A1_2FD
-               else
+!                  A1_2HRR = sigma*A1_2 + (1.0-sigma)*A1_2FD
+!               else
                   A1_2HRR=A1_2
-               endif
+!               endif
 
 ! A1_3HRR from \citet{fen21a}, as defined after Eq. (34)
                do r=1,3
@@ -256,31 +256,11 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
                Rfneq(:)=lfneq(:)
             endif
 
-!            if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) then
-!               print '(a,i2)','A1_2 ihrr=',ihrr
-!               print '(3e13.5)',A1_2
-!               print '(a)','A1_2FD'
-!               print '(3e13.5)',A1_2FD
-!               print '(a)','A1_2 - A1_2FD'
-!               print '(3e13.5)',A1_2-A1_2FD
-!               print *
-!               print '(a)','lfeq:'
-!               print '(10e13.5)',lfeq(:)
-!               print '(a)','lfneq:'
-!               print '(10e13.5)',lfneq(:)
-!               print '(a)','Rfneq'
-!               print '(10e13.5)',Rfneq(:)
-!               print '(a)','Rfneq-lfneq'
-!               print '(10e13.5)',Rfneq(:)-lfneq(:)
-!               print *
-!            endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  Vreman (2004) subgridscale turbulence model
             eddyvisc=0.0
-            if (ihrr == 1) then
-! S_ij
+            if (ivreman==1) then
                alpha=A1_2
-
 ! alphamag
                alphamag=0.00001
                do q=1,3
@@ -288,7 +268,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
                   alphamag=alphamag+alpha(p,q)*alpha(p,q)
                enddo
                enddo
-               !print *,'HRR alphamag:',alphamag
 
 ! beta = del^2 * alpha' * alpha
                beta=0.00001
@@ -305,12 +284,9 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
                Bbeta=beta(1,1)*beta(2,2) - beta(1,2)**2  &
                     +beta(1,1)*beta(3,3) - beta(1,3)**2  &
                     +beta(2,2)*beta(3,3) - beta(2,3)**2
-               !print *,'HRR Bbeta:',Bbeta,Bbeta/alphamag
 
 ! Vreman 2004 Eq (5)
                eddyvisc=const*sqrt(Bbeta/alphamag)
-               !print *,'HRR eddyvisc:',eddyvisc
-
             endif
 
             tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
@@ -318,9 +294,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 
             f(i,j,k,:) = Rfneq(:)
             feq(i,j,k,:)= lfeq(:)
-           !if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) then
-           !   print '(a,3e13.5)','tau=',tau(i,j,k),kinevisc,eddyvisc
-           !endif
 
          enddo
       enddo

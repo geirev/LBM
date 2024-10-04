@@ -17,8 +17,11 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
    logical, intent(in)  :: lfirst
 
    real cor1,cor2,dx,dy,dir
-   integer n1,n2
+   integer(kind=4) n1,n2
    integer i,k
+   integer(kind=4) nxx,nyy,nzz
+   logical(kind=4) :: verbose=.false.
+   integer(kind=4) :: nt
 
    if (lfirst) then
       call system('rm seed.dat')
@@ -30,12 +33,16 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
       dir=0.0
       dx=1.0
       dy=1.0
-      n1=nx
-      n2=ny
-      call pseudo2D(rho,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-      call pseudo2D(u,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-      call pseudo2D(v,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-      call pseudo2D(w,nx,ny,nz,cor1,cor2,dx,dy,n1,n2,dir,.false.)
+      nt=int(nrturb)
+      n1=int(nx,4)
+      n2=int(ny,4)
+      nxx=int(nx,4)
+      nyy=int(ny,4)
+      nzz=int(nz,4)
+      call pseudo2D(rho,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+      call pseudo2D(u,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+      call pseudo2D(v,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+      call pseudo2D(w,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)
 
 ! Imposing vertical correlation
       do k=2,nz
@@ -67,10 +74,10 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
    dy=1.0
    n1=ny
    n2=nz
-   call pseudo2D(uu(:,:,1:nrturb),ny,nz,nrturb,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-   call pseudo2D(vv(:,:,1:nrturb),ny,nz,nrturb,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-   call pseudo2D(ww(:,:,1:nrturb),ny,nz,nrturb,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-   call pseudo2D(rr(:,:,1:nrturb),ny,nz,nrturb,cor1,cor2,dx,dy,n1,n2,dir,.false.)
+   call pseudo2D(uu(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2D(vv(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2D(ww(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2D(rr(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
 
 ! Imposing time correlations
    do i=1,nrturb

@@ -39,7 +39,6 @@ contains
    integer function findunit()
    implicit none
    integer  iunit
-   integer  incr
    logical  busy
 
    iunit=10
@@ -62,7 +61,6 @@ contains
    integer,          intent(in) :: nnx,nny,nnz
    character(len=*), intent(in) :: title
    character(len=*), intent(in) :: variables
-   character(len=20)            :: temp_str
 
    if(this%isInitialized) then
       write(*,*) 'Tecplot, ERROR : plt file already initialized'

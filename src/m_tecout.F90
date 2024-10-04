@@ -33,7 +33,7 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    integer :: i,j,k,d
    real(kind=4), allocatable :: your_datas(:,:,:,:)
    real(kind=4) :: physics_time
-   real :: xyz(3), ijk(3)
+   real :: xyz(3)
    integer dd
 
 

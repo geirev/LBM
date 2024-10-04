@@ -37,7 +37,6 @@ program LatticeBoltzmann
 ! Main variables
    real    :: f(  0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! density function
    real    :: feq(0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! Maxwells equilibrium density function
-   real    :: feqinflow(0:ny+1,0:nz+1,nl)    = 0.0  ! A scalar f used for inflow boundary conditions
    logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
 
 ! Spatially dependent relaxation time
@@ -48,7 +47,6 @@ program LatticeBoltzmann
    real    :: v(nx,ny,nz)        = 0.0              ! y component of fluid velocity
    real    :: w(nx,ny,nz)        = 0.0              ! z component of fluid velocity
    real    :: rho(nx,ny,nz)      = 0.0              ! fluid density
-   real    :: sigma(3,3,nx,ny,nz)
 
 ! Stochastic input field on inflow boundary
    real uu(ny,nz,0:nrturb)
@@ -61,9 +59,8 @@ program LatticeBoltzmann
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
    real uvel(nz)                                    ! vertical u-velocity profile
 
-   integer :: it,i,j,l,k
+   integer :: it,k
    integer ip,jp,kp
-   logical ex
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -137,11 +134,11 @@ program LatticeBoltzmann
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s'&
             ,' tau=',tau(nx/2,ny/2,nz/2)
-
-      call turbineforcing(df,rho,u,v,w,tau)       ! define forcing df from each turbine
-      call fequil(feq,f,rho,u,v,w,tau)            ! f is input, returns feq, R(fneq) in f, and tau
-      call collisions(f,feq,tau)                  ! Apply collisions, returns updated f in feq
-      call applyturbines(feq,df,tau)              ! operates on f stored in feq
+                                                  ! start with f,rho,u,v,w
+      call turbineforcing(df,rho,u,v,w,tau)       ! [u,v,w,df]         = turbineforcing(rho,u,v,w)
+      call fequil(feq,f,rho,u,v,w,tau)            ! [feq,f=R(fneq),tau]= fequil(f,rho,u,v,w))
+      call collisions(f,feq,tau)                  ! [feq=f]            = collisions(f,feq,tau)        f=f^eq + (1-1/tau) * R(f^neq)
+      call applyturbines(feq,df,tau)              ! [feq=f]            = applyturbines(feq=f,df,tau)  f=f+df
       call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)  ! General boundary conditions
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
       call drift(f,feq)                           ! Drift of feq returned in f

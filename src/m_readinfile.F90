@@ -37,7 +37,10 @@ module m_readinfile
    real turbrpm            ! Imposed turbine RPM
    real tipspeedratio      ! Imposed tipspeed ratio
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
-   integer  ihrr           ! Option for collisions using HRR scheme
+   integer  ihrr           ! Option (1) for regularized R(fneq) scheme
+   integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
+   integer  ivreman        ! Option (1) for subgridscale mixing using Vreman
+   real smagorinsky        ! smagorinsky constant (0.15) used in subgridscale mixing
    integer iforce          ! Method for forcing scheme
                            !  iforce=1  !  Shan and Chen (1993)
                            !  iforce=8  !  Guo (2002)
@@ -52,10 +55,6 @@ subroutine readinfile()
    character(len=3) :: version='1.0'
    character(len=3) ver
    logical ex
-   real reynoldsnr
-   real nu
-   real newtau
-   real tmpvisc
    real gridrn
    integer n
 
@@ -74,7 +73,9 @@ subroutine readinfile()
       endif
       read(10,'(1x,l1)')runexp     ; print '(a,tr7,l1)',  'runexp            = ',runexp
       read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
-      read(10,*)ihrr               ; print '(a,i1)',      'Collisions ihrr   = ',ihrr
+      read(10,*)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
+      read(10,*)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
+      read(10,*)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
       read(10,*)iforce             ; write(*,'(a,i8)',advance='no') 'iforce            = ',iforce
       select case (iforce)
       case(1)

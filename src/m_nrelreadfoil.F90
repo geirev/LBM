@@ -5,7 +5,7 @@ subroutine nrelreadfoil()
    implicit none
 
 
-   integer i,j,k
+   integer i,k
 
 
    character(len=14) :: filenames(1:nrc)= [ 'Cylinder1.dat ', &

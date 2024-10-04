@@ -12,7 +12,6 @@ subroutine tecfldsec(fname,nrsec,ja,jb,ka,kb,u,v,w,Ti)
    integer j,k,isec
    logical lopen
    integer iunit
-   character(len=100) fn
    character(len=2) csec
 
    do iunit=10,20

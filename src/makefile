@@ -12,13 +12,16 @@ LD = gfortran
 CF90 = gfortran
 CF77 = gfortran
 
-FFLAGS = -c -g -fdefault-real-8 -fdefault-integer-8 -C -u -Xlist -Os -std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Werror -Ofast -fopenmp
 
-FFLAGS = -c -fdefault-real-8 -mcmodel=large -O2 -std=gnu -fimplicit-none -fmax-errors=10 \
-           -frange-check  -pedantic -pedantic-errors \
-          -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror \
-          -ffpe-trap=invalid,zero,overflow -Ofast -fopenmp
+FFLAGS = -c -g -fdefault-real-8 -fdefault-integer-8 -C -u -Xlist -Os -std=gnu -fimplicit-none -frange-check -fmax-errors=10 \
+         -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow \
+         -ffpe-trap=invalid,zero,overflow -Wunused -Werror -Ofast -fopenmp -mcmodel=large
 
+
+#FFLAGS = -c -fdefault-real-8 -mcmodel=large -O2 -std=gnu -fimplicit-none -fmax-errors=10 \
+#           -frange-check  -pedantic -pedantic-errors \
+#          -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror \
+#          -ffpe-trap=invalid,zero,overflow -Ofast -fopenmp
 
 F77FLG =
 F90FLG =

@@ -4,7 +4,6 @@ subroutine windfarm(blanking,kbnd)
    use mod_dimensions
    logical, intent(inout) :: blanking(nx,ny,nz)
    integer, intent(in)    :: kbnd
-   integer i,j,k
 
 ! No-slip at ground
    if (kbnd /= 0 ) then

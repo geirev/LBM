@@ -36,8 +36,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
    real xb,yb                             ! x-y locatiuon along a blade
    real x,y                               ! x-y locatiuon of a grid point
    real xp,yp                             ! x-y locatiopn of point on blade closest to x-y
-   real xy                                ! length along the blade from x0,y0 to xp,yp
-   real a,b,t                             ! work variables
    real theta                             ! work blade rotation angle
    real q                                 ! Dynamic pressure
    real ux,vx,wx,dens                     ! local velocity and density variables
@@ -47,7 +45,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
    integer i,ia,ib                        ! counter and loop limits in horizontal direction in rotor plane
    integer j,ja,jb                        ! counter and loop limits in vertical direction in rotor plane
    integer k                              ! counter normal to the rotor plane
-   integer ic,jc,nc                       ! gridpoint along a blade
+   integer ic,jc                          ! gridpoint along a blade
    integer iblade                         ! blade counter
    real u0
 
@@ -74,7 +72,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
    real c1,c2,blades,frac,tiploss
    real, save :: g,lambda
    real angattack                         ! computed angle of attack
-   real, save :: refang                   ! relative velocity angle at blade tip
    real angle                             ! work angle
    integer iave
 
@@ -159,7 +156,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
       omegand=omega*p2l%time
       lambda=radius*p2l%length*omega/(u0*p2l%vel)
    else
-     tipspeedratio=lambda
      u0=uini
    endif
 

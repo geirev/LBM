@@ -55,10 +55,6 @@ subroutine readinfile()
    character(len=3) :: version='1.0'
    character(len=3) ver
    logical ex
-   real reynoldsnr
-   real nu
-   real newtau
-   real tmpvisc
    real gridrn
    integer n
 

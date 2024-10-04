@@ -16,7 +16,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
    logical, intent(in)   :: lblanking(nx,ny,nz)
    character(len=6) cit
 
-   character(len=200)::tecplot_fvars='i,j,k,blanking,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27'
+!   character(len=200)::tecplot_fvars='i,j,k,blanking,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27'
    integer, parameter :: num_of_fvars=31
    character(len=200) :: tecplot_maxvar='i,j,k,x,y,z,blanking,rho,u,v,w,vel,vortx,vorty,vortz,vort'
    character(len=200) :: tecplot_minvar='i,j,k,blanking,rho,u,v,w'
@@ -27,7 +27,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real    :: vort(nx,ny,nz)     = 0.0        ! absolute value of vorticity
    integer, parameter :: icpu=3
 
-   integer k,num_of_vars
+   integer num_of_vars
 
 
 

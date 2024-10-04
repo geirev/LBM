@@ -37,7 +37,6 @@ program LatticeBoltzmann
 ! Main variables
    real    :: f(  0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! density function
    real    :: feq(0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! Maxwells equilibrium density function
-   real    :: feqinflow(0:ny+1,0:nz+1,nl)    = 0.0  ! A scalar f used for inflow boundary conditions
    logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
 
 ! Spatially dependent relaxation time
@@ -48,7 +47,6 @@ program LatticeBoltzmann
    real    :: v(nx,ny,nz)        = 0.0              ! y component of fluid velocity
    real    :: w(nx,ny,nz)        = 0.0              ! z component of fluid velocity
    real    :: rho(nx,ny,nz)      = 0.0              ! fluid density
-   real    :: sigma(3,3,nx,ny,nz)
 
 ! Stochastic input field on inflow boundary
    real uu(ny,nz,0:nrturb)
@@ -61,9 +59,8 @@ program LatticeBoltzmann
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
    real uvel(nz)                                    ! vertical u-velocity profile
 
-   integer :: it,i,j,l,k
+   integer :: it,k
    integer ip,jp,kp
-   logical ex
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

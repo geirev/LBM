@@ -20,7 +20,7 @@ subroutine pdfout(filename,variables_string,num_of_variables,lblanking,f)
    integer :: i,j,k,d
    real(kind=4), allocatable :: your_datas(:,:,:,:)
    real(kind=4) :: physics_time
-   real :: xyz(3), ijk(3)
+   real :: xyz(3)
 
 
    real, allocatable :: blanking(:,:,:)

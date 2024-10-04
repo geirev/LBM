@@ -18,11 +18,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real, intent(out)     :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(inout)   :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(out)     :: tau(nx,ny,nz)
-   !                        ihrr      ! (1) full third order HRR scheme returing feq and Rfneq
-                                      ! (2) second order standard BGK returing feq and fneq
-                                      ! (3) third order BGK that returns fneq instead of Rfneq,
-                                      ! (0) Initialization by feq
-
 
    logical, save         :: lfirst=.true.
 
@@ -57,8 +52,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real                  :: vel(1:3),dens
 
    integer :: i, j, k, l, m, p, q, r, ia, ib, ja, jb, ka , kb
-
-
    real, parameter :: sigma=1.00
 
    real eddyvisc  ! nu in Vreman 2004 Eq (5)
@@ -66,11 +59,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real alpha(3,3)
    real beta(3,3)
    real alphamag
-
-
-
-
-
 
    integer, parameter :: icpu=4
    call cpustart()

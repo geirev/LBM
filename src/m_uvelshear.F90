@@ -7,7 +7,7 @@ subroutine uvelshear(uvel)
    implicit none
    real, intent(out) :: uvel(nz)
    real z(nz)
-   integer i,j,k,kk
+   integer k,kk
    logical ex
 
 ! If the uvel.dat file exists we read the normalized vertical velocity profile into uvel(k)

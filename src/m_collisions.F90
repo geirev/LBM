@@ -9,8 +9,8 @@ subroutine collisions(f,feq,tau)
    use mod_dimensions
    use m_wtime
    implicit none
-   real, intent(in)    :: f(0:nx+1,0:ny+1,0:nz+1,nl)    ! non-equlibrium distribution
-   real, intent(inout) :: feq(0:nx+1,0:ny+1,0:nz+1,nl)  ! equilibrium distribution
+   real, intent(in)    :: f(0:nx+1,0:ny+1,0:nz+1,nl)    ! non-equlibrium distribution R(fneq)
+   real, intent(inout) :: feq(0:nx+1,0:ny+1,0:nz+1,nl)  ! equilibrium distribution on input
    real, intent(in)    :: tau(nx,ny,nz)
    integer l,i,j,k
    integer, parameter :: icpu=6

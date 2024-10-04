@@ -18,7 +18,7 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
    real, intent(in)       :: tau(nx,ny,nz)                     ! tau
 
    real cx,cy,cz,cminx,cminy,cminz,cdotuu,dfeq(nl)
-   real cdotA(nl),udotA,cdotu(nl)
+!   real cdotA(nl),udotA,cdotu(nl)
 
    real                   :: force(0:ieps,ny,nz,3)         ! work array for computing the turbine force
    real                   :: du(-ieps:ieps,ny,nz)          ! turbine forced u velocity

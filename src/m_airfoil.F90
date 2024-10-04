@@ -23,7 +23,7 @@ subroutine airfoil(blanking)
    real, parameter :: yref=50.0           ! y-center point of airfoil
    real, parameter :: tilt=-0.10          ! y-center point of airfoil
 
-   integer :: i,j,k
+   integer :: i,j
    real :: theta, yt, yc, dyc_dx, x
 
    do i = 1, num_points

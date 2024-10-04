@@ -23,7 +23,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
    real :: utmp(ny,nz)
    real :: vtmp(ny,nz)
    real :: wtmp(ny,nz)
-   integer i,j,k,l,lit,ja,ka
+   integer j,k,l,lit,ja,ka
    integer, parameter :: icpu=8
 
    call cpustart()

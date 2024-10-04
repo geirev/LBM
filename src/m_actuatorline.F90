@@ -39,8 +39,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
    real xy                                ! length along the blade from x0,y0 to xp,yp
    real a,b,t                             ! work variables
    real theta                             ! work blade rotation angle
-   real omega                             ! Rotation speed in radians per second
-   real, save :: omegand                  ! Nondimensional rotation speed
    real q                                 ! Dynamic pressure
    real ux,vx,wx,dens                     ! local velocity and density variables
    real utheta                            ! tangential velocity from v and w
@@ -68,6 +66,8 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
    integer, save :: ifirst=0
    real fL,fD,fN,fT,fTa,fNa
 
+   real, save :: omega                    ! Rotation speed in radians per second
+   real, save :: omegand                  ! Nondimensional rotation speed
    real, save :: relma(nrchords),relmb(nrchords)
    character(len=3) tag3
    real newton,R
@@ -82,6 +82,8 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! I N I T I A L I Z A T I O N   D O N E   A T   F I R S T   C A L L
+
+
 
    if (ifirst == 1) then
 ! Read lift and drag from foil data files
@@ -143,7 +145,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 ! If given tipspeed ratio is larger than 0.0 we recompute the rotation speed to match the imposed tipspeed ratio
    if (tipspeedratio > 0.0) then
       if (ifirst==1) print '(a)','Recomputing omega based on average  u velocity in rotor plane'
-      u0=0
+      u0=0.0
       iave=0
       do k=0,360,10
          angle=real(k)*pi2/360.0
@@ -151,7 +153,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
          j=jpos+nint(real(iradius)*sin(angle)/2.0)
          u0=u0+u(i,j)
          iave=iave+1
-         !print *,iave,k,i,j,u(i,j)
       enddo
       u0=u0/real(iave)
       omega=tipspeedratio*u0*p2l%vel/(radius*p2l%length)
@@ -188,7 +189,6 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! C O M P U T I N G   T H E   B L A D E   F O R C E S
-
 ! Set rotation angle
    theta=thetain
 

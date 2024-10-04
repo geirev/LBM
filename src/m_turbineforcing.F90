@@ -6,7 +6,7 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
 ! Returns the S_i stored in df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
-   use m_readinfile,  only : turbrpm,p2l,ipos,nturbines,iforce
+   use m_readinfile,  only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
    use m_fequilscalar
    use m_actuatorline
    use m_wtime
@@ -47,6 +47,8 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
    df(:,:,:,:,:)=0.0
    do n=1,nturbines
       ip=ipos(n)
+      jp=jpos(n)
+      kp=kpos(n)
 
 ! My implementation of the actuator line method by Sørensen 2002 computing the force from all the turbines
       force=0.0

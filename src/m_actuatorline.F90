@@ -156,7 +156,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
       omegand=omega*p2l%time
       lambda=radius*p2l%length*omega/(u0*p2l%vel)
    else
-     u0=uini
+      u0=uini
    endif
 
    if (ifirst==1) then

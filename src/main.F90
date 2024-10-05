@@ -151,7 +151,6 @@ program LatticeBoltzmann
       ip=ipos(1)
       jp=jpos(1)
       kp=kpos(1)
-      !write(99,'(i6,19f8.5,19f8.5)')it,u(ip:ip+36:2,jp-11,kp),w(ip:ip+36:2,jp-11,kp)
       write(99,'(i6,21f8.5,21f8.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
 
 

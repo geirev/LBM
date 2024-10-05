@@ -1,2 +1,2 @@
-TARGET = boltzmann
+TARGET = boltzmann2
 

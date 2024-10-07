@@ -19,9 +19,8 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
    real cor1,cor2,dx,dy,dir
    integer(kind=4) n1,n2
    integer i,k
-   integer(kind=4) nxx,nyy,nzz
+   integer(kind=4), save :: nxx,nyy,nzz,nt
    logical(kind=4) :: verbose=.false.
-   integer(kind=4) :: nt
 
    if (lfirst) then
       call system('rm seed.dat')
@@ -56,11 +55,13 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
 ! Simulating a time series of inflow boundary perturbations for u
    print '(a)','initurbulence: Simulating inflow boundary turbulence'
    if (lfirst) then
+      print '(a,l1)','initurbulence: lfirst=',lfirst
       uu(:,:,0)=u(1,:,:)
       vv(:,:,0)=v(1,:,:)
       ww(:,:,0)=w(1,:,:)
       rr(:,:,0)=rho(1,:,:)
    else
+      print '(a,l1)','initurbulence: lfirst=',lfirst
       uu(:,:,0)=uu(:,:,nrturb)
       vv(:,:,0)=vv(:,:,nrturb)
       ww(:,:,0)=ww(:,:,nrturb)
@@ -72,8 +73,11 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
    dir=0.0
    dx=1.0
    dy=1.0
-   n1=ny
-   n2=nz
+   n1=int(ny,4)
+   n2=int(nz,4)
+   nyy=int(ny,4)
+   nzz=int(nz,4)
+   nt=int(nrturb)
    call pseudo2D(uu(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
    call pseudo2D(vv(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
    call pseudo2D(ww(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)

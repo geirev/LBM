@@ -18,11 +18,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real, intent(out)     :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(inout)   :: f(0:nx+1,0:ny+1,0:nz+1,nl)
    real, intent(out)     :: tau(nx,ny,nz)
-   !                        ihrr      ! (1) full third order HRR scheme returing feq and Rfneq
-                                      ! (2) second order standard BGK returing feq and fneq
-                                      ! (3) third order BGK that returns fneq instead of Rfneq,
-                                      ! (0) Initialization by feq
-
 
    logical, save         :: lfirst=.true.
 
@@ -57,8 +52,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real                  :: vel(1:3),dens
 
    integer :: i, j, k, l, m, p, q, r, ia, ib, ja, jb, ka , kb
-
-
    real, parameter :: sigma=1.00
 
    real eddyvisc  ! nu in Vreman 2004 Eq (5)
@@ -66,11 +59,6 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real alpha(3,3)
    real beta(3,3)
    real alphamag
-
-
-
-
-
 
    integer, parameter :: icpu=4
    call cpustart()
@@ -178,9 +166,9 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 ! lfneq is defined in \citet{fen21a} between Eqs (32) and (33)
             lfneq(:)=lf(:)-lfeq(:)
 
-! Regularization part where lfneq is replaced by R(lfneq)
-            if (ihrr == 1) then
 ! Eq (11) from  Jacob 2018 is identical to the 33a from Feng (2021)
+! Used for regularization and turbulence calculation
+            if (ihrr == 1 .or. ivreman == 1) then
                A1_2=0.0
                do l=1,nl
                   do q=1,3
@@ -189,7 +177,10 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
                   enddo
                   enddo
                enddo
+            endif
 
+! Regularization part where lfneq is replaced by R(lfneq)
+            if (ihrr == 1) then
 !               if (sigma /= 1.0) then
 ! A1_2FD from \citet{fen21a} Eq. (33b)
 !                  dudx=(u(ib,j,k)-u(ia,j,k))/(dxfac*dx)
@@ -219,17 +210,17 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 ! A1_2HRR from \citet{fen21a}, as defined after Eq. (34)
 !                  A1_2HRR = sigma*A1_2 + (1.0-sigma)*A1_2FD
 !               else
-                  A1_2HRR=A1_2
+                   A1_2HRR=A1_2
 !               endif
 
 ! A1_3HRR from \citet{fen21a}, as defined after Eq. (34)
-               do r=1,3
-               do q=1,3
-               do p=1,3
-                  A1_3HRR(p,q,r)=vel(p)*A1_2HRR(q,r) +vel(q)*A1_2HRR(r,p) +  vel(r)*A1_2HRR(p,q)
-               enddo
-               enddo
-               enddo
+                do r=1,3
+                do q=1,3
+                do p=1,3
+                   A1_3HRR(p,q,r)=vel(p)*A1_2HRR(q,r) +vel(q)*A1_2HRR(r,p) +  vel(r)*A1_2HRR(p,q)
+                enddo
+                enddo
+                enddo
 
 ! Rfneq from \citet{fen21a}, as defined in Eq. (34)
                do l=1,nl
@@ -251,11 +242,16 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
 
                   Rfneq(l)=weights(l)*Rfneq(l)
                enddo
-            else ! (ihrr /= 1)
+            else
 ! Third order BGK without expansion for fneq
-               Rfneq(:)=lfneq(:)
+               do l=1,nl
+                  Rfneq(l)=lfneq(l)
+               enddo
             endif
-
+!            if (i==32 .and. j==58 .and. k==48) then
+!               print '(a,30e12.3)','lfneq:',lfneq(:)
+!               print '(a,30e12.3)','Rfneq:',Rfneq(:)
+!            endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  Vreman (2004) subgridscale turbulence model
             eddyvisc=0.0

@@ -38,7 +38,6 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
       nxx=int(nx,4)
       nyy=int(ny,4)
       nzz=int(nz,4)
-      print *,'nzz=',nzz,nz
       call pseudo2D(rho,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)
       call pseudo2D(u,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)
       call pseudo2D(v,nxx,nyy,nzz,cor1,cor2,dx,dy,n1,n2,dir,verbose)

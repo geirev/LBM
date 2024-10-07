@@ -116,7 +116,7 @@ program LatticeBoltzmann
 !     endif
 
 ! Final inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil(f,feq,rho,u,v,w,tau)            ! returns f for initialization
+      call fequil(f,feq,rho,u,v,w,tau)            ! returns feq in f for initialization
 
    else
 ! Restart from restart file
@@ -126,6 +126,7 @@ program LatticeBoltzmann
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
       call fequil(feq,f,rho,u,v,w,tau)            ! To get an initial value of tau for turbine forcing
+      f=feq+f                                     ! To restore f=feq+R(fneq)
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -17,26 +17,6 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    write(cit,'(i6.6)')it
    print '(a,a)','readrestart:',cit
 
-   print '(3a)','reading: restart'//cit//'.uf'
-   inquire(file='restart'//cit//'.uf',exist=ex)
-   if (ex) then
-      inquire(iolength=irec)i,j,k,n,f
-      open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
-         read(10,rec=1,err=999)i,j,k,n
-         if ((i==nx).and.(j==ny).and.(k==nz).and.(n==nl)) then
-            read(10,rec=1,err=999)i,j,k,n,f
-         else
-            print '(a)','readrestart: Attempting to read incompatable restart file'
-            print '(a,4i5)','readrestart: Dimensions in restart file are:',i,j,k,nl
-            close(10)
-            stop
-         endif
-      close(10)
-   else
-      print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
-      stop
-   endif
-
    print '(3a)','reading: turbulence'//cit//'.uf'
    inquire(file='turbulence'//cit//'.uf',exist=ex)
    if (ex) then
@@ -68,6 +48,24 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       stop
    endif
 
+   inquire(file='restart'//cit//'.uf',exist=ex)
+   if (ex) then
+      inquire(iolength=irec)i,j,k,n,f
+      open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
+         read(10,rec=1,err=999)i,j,k,n
+         if ((i==nx).and.(j==ny).and.(k==nz).and.(n==nl)) then
+            read(10,rec=1,err=999)i,j,k,n,f
+         else
+            print '(a)','readrestart: Attempting to read incompatable restart file'
+            print '(a,4i5)','readrestart: Dimensions in restart file are:',i,j,k,nl
+            close(10)
+            stop
+         endif
+      close(10)
+   else
+      print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
+      stop
+   endif
    return
    998 stop 'readrestart: error during read of turbulence restart field'
    999 stop 'readrestart: error during read of restart file'

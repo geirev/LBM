@@ -43,9 +43,9 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real                  :: lf(nl)          ! Local predicted distribution
 
 
-   real                  :: delta(1:3, 1:3) = reshape([1, 0, 0, &
-                                                       0, 1, 0, &
-                                                       0, 0, 1], [3, 3])
+   real                  :: delta(1:3, 1:3) = reshape([1.0, 0.0, 0.0, &
+                                                       0.0, 1.0, 0.0, &
+                                                       0.0, 0.0, 1.0], [3, 3])
 
    real dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz
    real dxfac, dyfac, dzfac

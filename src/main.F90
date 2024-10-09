@@ -28,9 +28,13 @@ program LatticeBoltzmann
    use m_collisions
    use m_drift
    use m_fequil
+   use m_fequil3
+   use m_fregularization
+   use m_vreman
    use m_readrestart
    use m_saverestart
    use m_wtime
+   use m_set_random_seed2
    use, intrinsic :: omp_lib
    implicit none
 
@@ -61,7 +65,12 @@ program LatticeBoltzmann
 
    integer :: it,k
    integer ip,jp,kp
+   real x
 
+   call set_random_seed2()
+
+   call random_number(x)
+   print *,'x=',x
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
@@ -99,13 +108,15 @@ program LatticeBoltzmann
    tau=tauin
 
    if (nt0 == 0) then
-      if (lpseudo) call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.true.)
+      if (lpseudo) call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.true.,nt0)
       rho=rho0 + inflowvar*rho
       do k=1,nz
          u(:,:,k)=uvel(k)+inflowvar*u(:,:,k)
       enddo
       v=0.0+inflowvar*v
       w=0.0+inflowvar*w
+      open(98,file='test.dat')
+      write(98,'(a,27f10.6)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
       call diag(0,rho,u,v,w,lblanking)            ! Initial diagnostics
 
 ! Pressure gradient initialization for periodic boundaries with pressure drive.
@@ -116,7 +127,7 @@ program LatticeBoltzmann
 !     endif
 
 ! Final inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil(f,feq,rho,u,v,w,tau)            ! returns feq in f for initialization
+      call fequil3(feq,rho,u,v,w)                 ! returns feq in f for initialization
 
    else
 ! Restart from restart file
@@ -126,23 +137,60 @@ program LatticeBoltzmann
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
       call fequil(feq,f,rho,u,v,w,tau)            ! To get an initial value of tau for turbine forcing
+      print '(a)','tau='
+      print '(9f13.6)',tau(30:40,30,30)
+      print '(a)','feq ='
+      print '(9f13.6)',feq(30,30,30,:)
+      print '(a)','f   ='
+      print '(9f13.6)',f(30,30,30,:)
       f=feq+f                                     ! To restore f=feq+R(fneq)
+      call fequil3(feq,rho,u,v,w)
+      print '(a)','feq3='
+      print '(9f13.6)',feq(30,30,30,:)
+      call fregularization(f, feq, rho, u, v, w)
+      print '(a)','f3='
+      print '(9f13.6)',f(30,30,30,:)
+      call vreman(f,tau)
+      print '(a)','tau3='
+      print '(9f13.6)',tau(30:40,30,30)
+      stop
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    open(99,file='checkforce.dat')
+      write(99,'(i6,21f8.5,21f8.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s'&
             ,' tau=',tau(nx/2,ny/2,nz/2)
                                                   ! start with f,rho,u,v,w
+      ip=ipos(1)
+      jp=jpos(1)-11
+      kp=kpos(1)
+         write(98,'(a,i7)')'ite:',it
+         write(98,'(a,27f10.6)')'ini:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+         write(98,'(a,27f10.6)')'ini:',f(ip,jp,kp,1:25)
       call turbineforcing(df,rho,u,v,w,tau)       ! [u,v,w,df]         = turbineforcing(rho,u,v,w)
-      call fequil(feq,f,rho,u,v,w,tau)            ! [feq,f=R(fneq),tau]= fequil(f,rho,u,v,w))
+      !call fequil(feq,f,rho,u,v,w,tau)           ! [feq,f=R(fneq),tau]= fequil(f,rho,u,v,w))
+
+      call fequil3(feq,rho,u,v,w)
+         write(98,'(a,27f10.6)')'ini:',feq(ip,jp,kp,1:25)
+      call fregularization(f, feq, rho, u, v, w)
+         write(98,'(a,27f10.6)')'reg:',feq(ip,jp,kp,1:25)
+         write(98,'(a,27e10.3)')'reg:',f(ip,jp,kp,1:25)
+      call vreman(f,tau)
+         write(98,'(a,27f10.6)')'vre:',tau(ip,jp,kp)
       call collisions(f,feq,tau)                  ! [feq=f]            = collisions(f,feq,tau)        f=f^eq + (1-1/tau) * R(f^neq)
+         write(98,'(a,27f10.6)')'col:',feq(ip,jp,kp,1:25)
       call applyturbines(feq,df,tau)              ! [feq=f]            = applyturbines(feq=f,df,tau)  f=f+df
+         write(98,'(a,27f10.6)')'tur:',feq(ip,jp,kp,1:25)
       call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)  ! General boundary conditions
+         write(98,'(a,27f10.6)')'bnd:',feq(ip,jp,kp,1:25)
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
+         write(98,'(a,27f10.6)')'ini:',feq(ip,jp,kp,1:25)
       call drift(f,feq)                           ! Drift of feq returned in f
+         write(98,'(a,27f10.6)')'dri:',f(ip,jp,kp,1:25)
+         write(98,'(a)')
       rho=density(f,lblanking)                    ! macro density
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
@@ -160,12 +208,13 @@ program LatticeBoltzmann
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
       if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo) then
          print '(a,i6)','Recomputing inflow noise: it=',it
-         call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.false.)
+         call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.false.,it)
       endif
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
 
    enddo
    close(99)
+   close(98)
 
    call cpuprint()
 

@@ -1,6 +1,6 @@
 module m_initurbulence
 contains
-subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
+subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst,nt0)
    use mod_dimensions
    use m_set_random_seed2
    use m_pseudo2D
@@ -15,6 +15,7 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
    real, intent(inout)  :: w(nx,ny,nz)
    real, intent(in)     :: inflowcor
    logical, intent(in)  :: lfirst
+   integer, intent(in)  :: nt0
 
    real cor1,cor2,dx,dy,dir
    integer(kind=4) n1,n2
@@ -23,8 +24,10 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst)
    logical(kind=4) :: verbose=.false.
 
    if (lfirst) then
-      call system('rm seed.dat')
-      call set_random_seed2
+      if (nt0 > 0) then
+         call system('rm seed.dat')
+         call set_random_seed2
+      endif
       print '(a)','initurbulence: Computing initial turbulence field'
 ! Simulating smooth initial field perturbations
       cor1=20.0/sqrt(3.0)

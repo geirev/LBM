@@ -1,8 +1,9 @@
 module m_wtime
    real start,finish,cpu0,cpu1
-   real :: cputime(10)=0.0
-   real :: waltime(10)=0.0
-   character(len=9) :: cpuname(1:10) = ['rho      ',&
+   integer, parameter :: nrtimes=13
+   real :: cputime(1:nrtimes)=0.0
+   real :: waltime(1:nrtimes)=0.0
+   character(len=9) :: cpuname(1:nrtimes) = ['rho      ',&
                                        'velocity ',&
                                        'printing ',&
                                        'fequil   ',&
@@ -11,7 +12,10 @@ module m_wtime
                                        'applyturb',&
                                        'boundary ',&
                                        'bouncebac',&
-                                       'drift    ']
+                                       'drift    ',&
+                                       'fequil2  ',&
+                                       'fregular ',&
+                                       'vreman   ']
 contains
 
 subroutine cpustart()
@@ -31,15 +35,16 @@ subroutine cpuprint()
    implicit none
    integer l
    print '(tr22,3a)','cputime    ','walltime    ','speedup     '
-   do l=1,10
+   do l=1,nrtimes
       print '(tr10,a9,3f12.4)',cpuname(l),cputime(l),waltime(l),cputime(l)/(waltime(l)+tiny(cpu1))
    enddo
-   print '(tr10,a9,3f12.4)','summary  ',sum(cputime(1:8)),sum(waltime(1:8)),sum(cputime(1:8))/sum(waltime(1:8))
+   print '(tr10,a9,3f12.4)','summary  ',sum(cputime(1:nrtimes)),sum(waltime(1:nrtimes)),&
+                                        sum(cputime(1:nrtimes))/sum(waltime(1:nrtimes))
 end subroutine
 
 function wtime ( )
 
-!*****************************************************************************80
+!*****************************************************************************
 !
 !! WTIME returns a reading of the wall clock time.
 !

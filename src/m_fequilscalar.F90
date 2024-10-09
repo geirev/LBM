@@ -17,9 +17,9 @@ function fequilscalar(rho, u, v, w) result(feq)
    real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs
    real                  :: A0_2(3,3)
    real                  :: A0_3(3,3,3)
-   real                  :: delta(1:3, 1:3) = reshape([1, 0, 0, &
-                                                       0, 1, 0, &
-                                                       0, 0, 1], [3, 3])
+   real                  :: delta(1:3, 1:3) = reshape([1.0, 0.0, 0.0, &
+                                                       0.0, 1.0, 0.0, &
+                                                       0.0, 0.0, 1.0], [3, 3])
    real                  :: vel(1:3),dens
 
    logical, save         :: lfirst=.true.

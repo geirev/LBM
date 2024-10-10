@@ -12,8 +12,8 @@ subroutine fregularization(f, feq, rho, u, v, w)
    real, intent(in)      :: u(nx,ny,nz)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
-   real, intent(in)      :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
-   real, intent(inout)   :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real, intent(in)      :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)   :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 
    logical, save         :: lfirst=.true.
 
@@ -70,7 +70,15 @@ subroutine fregularization(f, feq, rho, u, v, w)
    endif
 
 ! lfneq is defined in \citet{fen21a} between Eqs (32) and (33)
-   f=f-feq
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx
+               do l=1,nl
+                  f(l,i,j,k)=f(l,i,j,k)-feq(l,i,j,k)
+               enddo
+            enddo
+         enddo
+      enddo
 
    if (ihrr == 1) then
 ! projecting non-equilibrium distribution on the Hermitian polynomials for regularization
@@ -84,7 +92,7 @@ subroutine fregularization(f, feq, rho, u, v, w)
                vel(2)=v(i,j,k)
                vel(3)=w(i,j,k)
                dens=rho(i,j,k)
-               lfneq(:)=f(i,j,k,:)
+               lfneq(:)=f(:,i,j,k)
 
 ! A0_2 from \citet{fen21a} (following Eq. 32)
                do q=1,3
@@ -134,7 +142,7 @@ subroutine fregularization(f, feq, rho, u, v, w)
                   lfneq(l)=weights(l)*lfneq(l)
                enddo
 
-               f(i,j,k,:) = lfneq(:)
+               f(:,i,j,k) = lfneq(:)
 
             enddo
          enddo

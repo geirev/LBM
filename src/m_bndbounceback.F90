@@ -5,7 +5,7 @@ subroutine bndbounceback(f,blanking)
    use m_wtime
    implicit none
    logical, intent(in)    :: blanking(nx,ny,nz)
-   real,    intent(inout) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real,    intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real tmp
    integer i,j,k,l
    integer, parameter :: icpu=9
@@ -17,9 +17,9 @@ subroutine bndbounceback(f,blanking)
    do i=1,nx
       if (blanking(i,j,k)) then
          do l=2,nl-1,2
-            tmp=f(i,j,k,l)
-            f(i,j,k,l)=f(i,j,k,l+1)
-            f(i,j,k,l+1)=tmp
+            tmp=f(l,i,j,k)
+            f(l,i,j,k)=f(l+1,i,j,k)
+            f(l+1,i,j,k)=tmp
          enddo
       endif
    enddo

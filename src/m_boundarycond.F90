@@ -7,7 +7,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
    use m_fequilscalar
    use m_wtime
    implicit none
-   real, intent(inout):: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: rho(nx,ny,nz)
    real, intent(in)   :: u(nx,ny,nz)
    real, intent(in)   :: v(nx,ny,nz)
@@ -23,7 +23,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
    real :: utmp(ny,nz)
    real :: vtmp(ny,nz)
    real :: wtmp(ny,nz)
-   integer j,k,l,lit,ja,ka
+   integer j,k,lit,ja,ka
    integer, parameter :: icpu=8
 
    call cpustart()
@@ -32,8 +32,8 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
 ! Boundary conditions in i-direction
    if (ibnd==0) then
 ! Periodic boundary conditions in i-direction
-      f(0   ,:,:,:)=f(nx,:,:,:)
-      f(nx+1,:,:,:)=f(1 ,:,:,:)
+      f(:,0   ,:,:)=f(:,nx,:,:)
+      f(:,nx+1,:,:)=f(:,1 ,:,:)
 
    elseif (ibnd==1) then
 ! Inflow outflow boundary conditions in i-direction
@@ -52,23 +52,21 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
       ka=min(max(k,1),nz)
       do j=0,ny+1
          ja=min(max(j,1),ny)
-         f(0,j,k,1:nl)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
+         f(1:nl,0,j,k)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
       enddo
       enddo
 
 
-      do l=1,nl
       do k=0,nz+1
       do j=0,ny+1
-         f(nx+1,j,k,l)=f(nx,j,k,l)
-      enddo
+         f(:,nx+1,j,k)=f(:,nx,j,k)
       enddo
       enddo
 
    elseif (ibnd==2) then
 ! Periodic boundary conditions with pressure gradient in i-direction
-      f(0   ,:,:,:)=f(nx,:,:,:)
-      f(nx+1,:,:,:)=f(1 ,:,:,:)
+      f(:,0   ,:,:)=f(:,nx,:,:)
+      f(:,nx+1,:,:)=f(:,1 ,:,:)
       call bndpressure(f,rho,u,v,w)
    endif
 
@@ -79,8 +77,8 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
 
    if (jbnd==0) then
 ! Periodic boundary conditions in i-direction
-      f(:,0,:,:)=f(:,ny,:,:)
-      f(:,ny+1,:,:)=f(:,1,:,:)
+      f(:,:,0,:)   =f(:,:,ny,:)
+      f(:,:,ny+1,:)=f(:,:,1,:)
    endif
 
 
@@ -89,17 +87,17 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
 ! Boundary conditions in k-direction (vertical)
    if (kbnd==0) then
 ! Periodic boundary conditions in k-direction
-      f(:,:,0,:)=f(:,:,nz,:)
-      f(:,:,nz+1,:)=f(: ,:,1,:)
+      f(:,:,:,0)   =f(:,:,:,nz)
+      f(:,:,:,nz+1)=f(:,: ,:,1)
 
    elseif (kbnd==1) then
 ! Outflow boundary on top
-      f(:,:,nz+1,:)=f(:,:,nz,:)
+      f(:,:,:,nz+1)=f(:,:,:,nz)
 
    elseif (kbnd==2) then
 ! Outflow boundary on top and bottom
-      f(:,:,0,:)=f(:,:,1,:)
-      f(:,:,nz+1,:)=f(: ,:,nz,:)
+      f(:,:,:,0)   =f(:,:,:,1)
+      f(:,:,:,nz+1)=f(:,:,:,nz)
    endif
 
 

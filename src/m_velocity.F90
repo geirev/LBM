@@ -4,7 +4,7 @@ contains
 function velocity(f,rho,cs,blanking) result(vel)
    use mod_dimensions
    use m_wtime
-   real,    intent(in) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in) :: rho(nx,ny,nz)
    integer, intent(in) :: cs(nl)
    logical, intent(in) :: blanking(nx,ny,nz)
@@ -15,19 +15,17 @@ function velocity(f,rho,cs,blanking) result(vel)
 
 
    vel=0.0
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(vel, f, cs)
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
    do l=1,nl
-      if (cs(l) /=0) then
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(l, vel, f, cs)
-         do k=1,nz
-         do j=1,ny
-         do i=1,nx
-            vel(i,j,k) =  vel(i,j,k) + f(i,j,k,l)*real(cs(l))
-         enddo
-         enddo
-         enddo
-!$OMP END PARALLEL DO
-      endif
+      vel(i,j,k) =  vel(i,j,k) + f(l,i,j,k)*real(cs(l))
    enddo
+   enddo
+   enddo
+   enddo
+!$OMP END PARALLEL DO
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(vel, cs, rho, blanking)
    do k=1,nz

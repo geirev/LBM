@@ -7,7 +7,7 @@ subroutine channeldiag(f,rho,u,lblanking)
    use m_velocity
    use mod_D3Q27setup
    implicit none
-   real, intent(inout)    :: f(  0:nx+1,0:ny+1,0:nz+1,nl)
+   real, intent(inout)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)    :: u(nx,ny,nz)
    real, intent(inout)    :: rho(nx,ny,nz)
    logical, intent(inout) :: lblanking(nx,ny,nz)

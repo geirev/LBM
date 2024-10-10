@@ -12,7 +12,7 @@ subroutine fequil3(feq, rho, u, v, w)
    real, intent(in)      :: u(nx,ny,nz)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
-   real, intent(out)     :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
+   real, intent(out)     :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 
    logical, save         :: lfirst=.true.
    real, save            :: H2(3,3,27)      ! Second order Hermite polynomial
@@ -118,7 +118,7 @@ subroutine fequil3(feq, rho, u, v, w)
                lfeq(l)= weights(l)*lfeq(l)
 
             enddo
-            feq(i,j,k,:)=lfeq(:)
+            feq(:,i,j,k)=lfeq(:)
          enddo
       enddo
    enddo

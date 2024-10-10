@@ -9,7 +9,7 @@ subroutine pdfout(filename,variables_string,num_of_variables,lblanking,f)
    character(len=*), intent(in) :: variables_string
    integer, intent(in) :: num_of_variables
    logical, intent(in) :: lblanking(nx,ny,nz)
-   real, intent(in)    :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 
 
    ! define a tecplot object

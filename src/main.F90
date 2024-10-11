@@ -67,6 +67,9 @@ program LatticeBoltzmann
    integer ip,jp,kp
    real x
 
+   logical, parameter :: forcecheck=.true.
+   logical, parameter :: runtest=.true.
+
    call set_random_seed2()
 
    call random_number(x)
@@ -115,11 +118,10 @@ program LatticeBoltzmann
       enddo
       v=0.0+inflowvar*v
       w=0.0+inflowvar*w
-         open(98,file='test.dat')
-         ip=ipos(1); jp=jpos(1)-11; kp=kpos(1)
-         ip=2
-         write(98,*)'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         write(98,*)'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
+         if (runtest) open(98,file='test.dat')
+         ip=2; jp=jpos(1)-11; kp=kpos(1)
+         if (runtest) write(98,*)'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+         if (runtest) write(98,*)'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
       call diag(0,rho,u,v,w,lblanking)            ! Initial diagnostics
 
 ! Pressure gradient initialization for periodic boundaries with pressure drive.
@@ -147,64 +149,93 @@ program LatticeBoltzmann
       call vreman(f,tau)
    endif
 
+   if (forcecheck) then
       open(99,file='checkforce.dat')
       ip=ipos(1); jp=jpos(1); kp=kpos(1)
       write(99,'(i6,21f9.5,21f9.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
+   endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
-      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s'&
-            ,' tau=',tau(nx/2,ny/2,nz/2)
-                                                  ! start with f,rho,u,v,w
-         ip=ipos(1); jp=jpos(1)-11; kp=kpos(1)
-         ip=2
+      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a)','Iteration:', it,' Time:',real(it)*p2l%time,' s'
+
+! start with f,rho,u,v,w
+      if (runtest) then
+         ip=2; jp=jpos(1)-11; kp=kpos(1)
          write(98,'(a,i7)')'ite:',it
          write(98,*)'ini:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
          write(98,*)'ini:',f(1:25,ip,jp,kp)
-      call turbineforcing(df,rho,u,v,w)           ! [u,v,w,df]         = turbineforcing(rho,u,v,w)
-      !call fequil(feq,f,rho,u,v,w,tau)           ! [feq,f=R(fneq),tau]= fequil(f,rho,u,v,w))
+      endif
 
+! [u,v,w,df] = turbineforcing[rho,u,v,w]
+      call turbineforcing(df,rho,u,v,w)
+
+! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
-         write(98,*)'ini:',feq(1:25,ip,jp,kp)
-      call fregularization(f, feq, rho, u, v, w)
-         write(98,*)'reg:',feq(1:25,ip,jp,kp)
-         write(98,*)'reg:',f(1:25,ip,jp,kp)
-      call vreman(f,tau)
-         write(98,*)'vre:',tau(ip,jp,kp)
-      call collisions(f,feq,tau)                  ! [feq=f]            = collisions(f,feq,tau)        f=f^eq + (1-1/tau) * R(f^neq)
-         write(98,*)'col:',feq(1:25,ip,jp,kp)
-      call applyturbines(feq,df,tau)              ! [feq=f]            = applyturbines(feq=f,df,tau)  f=f+df
-         write(98,*)'tur:',feq(1:25,ip,jp,kp)
-      call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)  ! General boundary conditions
-         write(98,*)'bnd:',feq(1:25,ip,jp,kp)
-      call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
-         write(98,*)'ini:',feq(1:25,ip,jp,kp)
-      call drift(f,feq)                           ! Drift of feq returned in f
-         write(98,*)'dri:',f(1:25,ip,jp,kp)
-         write(98,'(a)')
-      rho=density(f,lblanking)                    ! macro density
-      u= velocity(f,rho,cxs,lblanking)            ! macro uvel
-      v= velocity(f,rho,cys,lblanking)            ! macro vvel
-      w= velocity(f,rho,czs,lblanking)            ! macro wvel
-      call diag(it,rho,u,v,w,lblanking)           ! Diagnostics
+      if (runtest) write(98,*)'ini:',feq(1:25,ip,jp,kp)
 
+! [f=Rneqf] = fregularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
+      call fregularization(f, feq, rho, u, v, w)
+      if (runtest) write(98,*)'reg:',feq(1:25,ip,jp,kp)
+      if (runtest) write(98,*)'reg:',f(1:25,ip,jp,kp)
+
+! [tau] = vreman[f] [f=Rneqf]
+      call vreman(f,tau)
+      if (runtest) write(98,*)'vre:',tau(ip,jp,kp)
+
+! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
+      call collisions(f,feq,tau)
+      if (runtest) write(98,*)'col:',feq(1:25,ip,jp,kp)
+
+! [feq=f] = applyturbines(feq,df,tau)  f=f+df
+      call applyturbines(feq,df,tau)
+      if (runtest) write(98,*)'tur:',feq(1:25,ip,jp,kp)
+
+! General boundary conditions
+      call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
+      if (runtest) write(98,*)'bnd:',feq(1:25,ip,jp,kp)
+
+! Bounce back boundary on fixed walls
+      call bndbounceback(feq,lblanking)
+      if (runtest) write(98,*)'bon:',feq(1:25,ip,jp,kp)
+
+! Drift of feq returned in f
+      call drift(f,feq)
+      if (runtest) write(98,*)'dri:',f(1:25,ip,jp,kp)
+      if (runtest) write(98,'(a)')
+
+! Compute updated macro variables
+      rho=density(f,lblanking)
+      u= velocity(f,rho,cxs,lblanking)
+      v= velocity(f,rho,cys,lblanking)
+      w= velocity(f,rho,czs,lblanking)
+
+! Diagnostics
+      call diag(it,rho,u,v,w,lblanking)
+
+      if (forcecheck) then
          ip=ipos(1); jp=jpos(1); kp=kpos(1)
          write(99,'(i6,21f9.5,21f9.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
+      endif
 
-
-
+! Averaging for diagnostics
       if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
+
+! Updating input turbulence matrix
       if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo) then
          print '(a,i6)','Recomputing inflow noise: it=',it
          call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.false.,it)
       endif
+
+! Save restart file
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
 
    enddo
-   close(99)
-   close(98)
+
+   if (forcecheck) close(99)
+   if (runtest) close(98)
 
    call cpuprint()
 

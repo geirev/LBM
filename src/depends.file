@@ -27,6 +27,7 @@ main.o:      m_fequil3.o
 main.o:      m_fequil.o
 main.o:      m_fregularization.o
 main.o:      m_initurbulence.o
+main.o:      m_macrovars.o
 main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o
 main.o:      MODEL.CPP
@@ -121,13 +122,6 @@ m_fequil3.o:      mod_dimensions.o
 m_fequil3.o:      MODEL.CPP
 m_fequil3.o:      m_readinfile.o
 m_fequil3.o:      m_wtime.o
-m_fequil.o:      m_ablim.o
-m_fequil.o:      makefile
-m_fequil.o:      mod_D3Q27setup.o
-m_fequil.o:      mod_dimensions.o
-m_fequil.o:      MODEL.CPP
-m_fequil.o:      m_readinfile.o
-m_fequil.o:      m_wtime.o
 m_fequilscalar.o:      makefile
 m_fequilscalar.o:      mod_D3Q27setup.o
 m_fequilscalar.o:      mod_dimensions.o
@@ -145,6 +139,10 @@ m_initurbulence.o:      mod_dimensions.o
 m_initurbulence.o:      MODEL.CPP
 m_initurbulence.o:      m_pseudo2D.o
 m_initurbulence.o:      m_set_random_seed2.o
+m_macrovars.o:      makefile
+m_macrovars.o:      mod_dimensions.o
+m_macrovars.o:      MODEL.CPP
+m_macrovars.o:      m_wtime.o
 m_nrelliftdrag.o:      makefile
 m_nrelliftdrag.o:      MODEL.CPP
 m_nrelliftdrag.o:      mod_nrel5mw.o

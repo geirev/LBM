@@ -99,7 +99,7 @@ subroutine vreman(f,tau)
                enddo
             enddo
             enddo
-            beta=dx**2*beta
+!            beta=dx**2*beta    ! This must be wrong...........
 
 ! Vreman 2004 Eq (8)
             Bbeta=beta(1,1)*beta(2,2) - beta(1,2)**2  &

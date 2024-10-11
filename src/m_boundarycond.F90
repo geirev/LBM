@@ -1,6 +1,6 @@
 module m_boundarycond
 contains
-subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
+subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
    use mod_dimensions
    use m_readinfile
    use m_bndpressure
@@ -16,7 +16,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
    real, intent(in)   :: vv(ny,nz,0:nrturb)
    real, intent(in)   :: ww(ny,nz,0:nrturb)
    real, intent(in)   :: rr(ny,nz,0:nrturb)
-   real, intent(in)   :: inflowvar
+   real, intent(in)   :: inflowstd
    real, intent(in)   :: uvel(nz)
    integer, intent(in):: it
    real :: rtmp(ny,nz)
@@ -41,10 +41,10 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)
       if (lit==0) lit=nrturb
       do k=1,nz
       do j=1,ny
-         utmp(j,k)=uvel(k)+inflowvar*uu(j,k,lit)
-         vtmp(j,k)=inflowvar*vv(j,k,lit)
-         wtmp(j,k)=inflowvar*ww(j,k,lit)
-         rtmp(j,k)=rho(1,j,k)+inflowvar*rr(j,k,lit)
+         utmp(j,k)=uvel(k)+0.1*inflowstd*uu(j,k,lit)
+         vtmp(j,k)=0.1*inflowstd*vv(j,k,lit)
+         wtmp(j,k)=0.1*inflowstd*ww(j,k,lit)
+         rtmp(j,k)=rho(1,j,k)+inflowstd*rr(j,k,lit)
       enddo
       enddo
 

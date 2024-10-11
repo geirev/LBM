@@ -2,7 +2,7 @@ module m_turbineforcing
    integer, save :: iradius
    real, save :: theta=0.0
 contains
-subroutine turbineforcing(df,rho,u,v,w,tau)
+subroutine turbineforcing(df,rho,u,v,w)
 ! Returns the S_i stored in df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
@@ -10,12 +10,11 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
    use m_fequilscalar
    use m_actuatorline
    use m_wtime
-   real, intent(out)      :: df(-ieps:ieps,ny,nz,nl,nturbines) ! forcing distributions
+   real, intent(out)      :: df(nl,-ieps:ieps,ny,nz,nturbines) ! forcing distributions
    real, intent(inout)    :: rho(nx,ny,nz)                     ! density
    real, intent(inout)    :: u(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: v(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: w(nx,ny,nz)                       ! velocity
-   real, intent(in)       :: tau(nx,ny,nz)                     ! tau
 
    real cx,cy,cz,cminx,cminy,cminz,cdotuu,dfeq(nl)
 !   real cdotA(nl),udotA,cdotu(nl)
@@ -68,28 +67,6 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
       enddo
       enddo
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! (1) Shan and Chen 1993
-!     function [U,S]=SchemeI(A,dt,tau,f,Rho,U)
-!        U= U + dt*tau*A
-!        S=0.0
-!     end
-      if (iforce==1) then
-         do k=1,nz
-         do j=1,ny
-            if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
-               do i=-ieps,ieps
-                  ! updating the forced equilibrium velocities
-                  u(ip+i,j,k)=u(ip+i,j,k)+tau(ip+i,j,k)*du(i,j,k)
-                  v(ip+i,j,k)=v(ip+i,j,k)+tau(ip+i,j,k)*dv(i,j,k)
-                  w(ip+i,j,k)=w(ip+i,j,k)+tau(ip+i,j,k)*dw(i,j,k)
-
-                  ! No update of S_i term
-
-               enddo
-            endif
-         enddo
-         enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! (8) Guo 2002
@@ -98,7 +75,7 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
 !        S= Rho.*W’.*(Cdot(A)- sum(A.*(U+du),1))./ Cs2 *(1-1/(2*tau))
 !        S=S+Rho.*W’.*(Cdot(A) .* Cdot(U+du) )./ Cs2^2*(1-1/(2*tau))
 !     end
-      elseif (iforce==8) then
+      if (iforce==8) then
          do k=1,nz
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
@@ -113,8 +90,7 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
 !                  cdotu(:)=real(cxs(:))*u(ip+i,j,k) + real(cys(:))*v(ip+i,j,k) + real(czs(:))*w(ip+i,j,k)
 !                  udota   =u(ip+i,j,k)*du(i,j,k) + v(ip+i,j,k)*dv(i,j,k) + w(ip+i,j,k)*dw(i,j,k)
 !
-!                  df(i,j,k,:,n)=(1.0-0.5/tau(ip+i,j,k)) * rho(ip+i,j,k) * weights(:) * &
-!                        ( (cdota(:) - udota)/cs2   + (cdota(:) * cdotu(:) )/cs4 )
+!                  df(i,j,k,:,n)= rho(ip+i,j,k) * weights(:) * ( (cdota(:) - udota)/cs2   + (cdota(:) * cdotu(:) )/cs4 )
 
                   do l=1,nl
                      cdotuu=(real(cxs(l))*u(ip+i,j,k) + real(cys(l))*v(ip+i,j,k) + real(czs(l))*w(ip+i,j,k))/cs4
@@ -126,7 +102,7 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
                      cy=(cminy + cdotuu*real(cys(l)))*dv(i,j,k)
                      cz=(cminz + cdotuu*real(czs(l)))*dw(i,j,k)
 
-                     df(i,j,k,l,n)=(1.0-0.5/tau(ip+i,j,k)) * rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
+                     df(l,i,j,k,n)= rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
                   enddo
                enddo
             endif
@@ -148,8 +124,8 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
                   dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-                  df(i,j,k,:,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
-                  df(i,j,k,:,n)=df(i,j,k,:,n)-dfeq(:)
+                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+                  df(:,i,j,k,n)=df(:,i,j,k,n)-dfeq(:)
                enddo
             endif
          enddo
@@ -166,8 +142,8 @@ subroutine turbineforcing(df,rho,u,v,w,tau)
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
                   dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-                  df(i,j,k,:,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
-                  df(i,j,k,:,n)= (df(i,j,k,:,n)-dfeq(:))   ! Moved the tau part to apply turbines since tau is recomputed in feq
+                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+                  df(:,i,j,k,n)= (df(:,i,j,k,n)-dfeq(:))
 
                   u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
                   v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)

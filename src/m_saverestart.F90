@@ -3,7 +3,7 @@ contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
    integer, intent(in) :: it
-   real,    intent(in) :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in) :: theta
    real,    intent(in) :: uu(ny,nz,0:nrturb)
    real,    intent(in) :: vv(ny,nz,0:nrturb)

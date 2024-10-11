@@ -8,7 +8,7 @@ subroutine vreman(f,tau)
    use m_readinfile
    use m_wtime
    implicit none
-   real, intent(in)      :: f(0:nx+1,0:ny+1,0:nz+1,nl) ! Nonequilibrium f as input
+   real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input
    real, intent(out)     :: tau(nx,ny,nz)              ! Tau including subgrid scale mixing
 
    logical, save         :: lfirst=.true.
@@ -70,7 +70,7 @@ subroutine vreman(f,tau)
       do j=1,ny
          do i=1,nx
 
-            lfneq(:)=f(i,j,k,:)
+            lfneq(:)=f(:,i,j,k)
 
 ! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
             alpha=0.0

@@ -15,8 +15,8 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
    real, intent(in)      :: u(nx,ny,nz)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
-   real, intent(out)     :: feq(0:nx+1,0:ny+1,0:nz+1,nl)
-   real, intent(inout)   :: f(0:nx+1,0:ny+1,0:nz+1,nl)
+   real, intent(out)     :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)   :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(out)     :: tau(nx,ny,nz)
 
    logical, save         :: lfirst=.true.
@@ -120,7 +120,7 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
             vel(2)=v(i,j,k)
             vel(3)=w(i,j,k)
             dens=rho(i,j,k)
-            lf(:)=f(i,j,k,:)
+            lf(:)=f(:,i,j,k)
 
 ! A0_2 and A0_3 from \citet{fen21a} (following Eq. 32)
             do q=1,3
@@ -288,8 +288,8 @@ subroutine fequil(feq, f, rho, u, v, w, tau)
             tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            f(i,j,k,:) = Rfneq(:)
-            feq(i,j,k,:)= lfeq(:)
+            f(:,i,j,k) = Rfneq(:)
+            feq(:,i,j,k)= lfeq(:)
 
          enddo
       enddo

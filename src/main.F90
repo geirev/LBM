@@ -39,8 +39,8 @@ program LatticeBoltzmann
    implicit none
 
 ! Main variables
-   real    :: f(  0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! density function
-   real    :: feq(0:nx+1,0:ny+1,0:nz+1,nl)   = 0.0  ! Maxwells equilibrium density function
+   real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)     = 0.0  ! density function
+   real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)   = 0.0  ! Maxwells equilibrium density function
    logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
 
 ! Spatially dependent relaxation time
@@ -75,7 +75,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
-   if (nturbines > 0) allocate(df(-ieps:ieps,1:ny,1:nz,1:nl,nturbines))
+   if (nturbines > 0) allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Define solid elements and walls
@@ -129,8 +129,10 @@ program LatticeBoltzmann
 !        enddo
 !     endif
 
-! Final inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w)                 ! returns feq in f for initialization
+! Inititialization with equilibrium distribution from u,v,w, and rho
+      call fequil3(feq,rho,u,v,w)
+      f=feq
+      tau=tauin
 
    else
 ! Restart from restart file
@@ -139,31 +141,18 @@ program LatticeBoltzmann
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel
       v= velocity(f,rho,cys,lblanking)            ! macro vvel
       w= velocity(f,rho,czs,lblanking)            ! macro wvel
-      call fequil(feq,f,rho,u,v,w,tau)            ! To get an initial value of tau for turbine forcing
-      print '(a)','tau='
-      print '(9f13.6)',tau(30:40,30,30)
-      print '(a)','feq ='
-      print '(9f13.6)',feq(30,30,30,:)
-      print '(a)','f   ='
-      print '(9f13.6)',f(30,30,30,:)
-      f=feq+f                                     ! To restore f=feq+R(fneq)
+      ! to recover initial tau
       call fequil3(feq,rho,u,v,w)
-      print '(a)','feq3='
-      print '(9f13.6)',feq(30,30,30,:)
       call fregularization(f, feq, rho, u, v, w)
-      print '(a)','f3='
-      print '(9f13.6)',f(30,30,30,:)
       call vreman(f,tau)
-      print '(a)','tau3='
-      print '(9f13.6)',tau(30:40,30,30)
-      stop
    endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Simulation Main Loop
       open(99,file='checkforce.dat')
       ip=ipos(1); jp=jpos(1); kp=kpos(1)
       write(99,'(i6,21f9.5,21f9.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Simulation Main Loop
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s'&
             ,' tau=',tau(nx/2,ny/2,nz/2)
@@ -172,27 +161,27 @@ program LatticeBoltzmann
          ip=2
          write(98,'(a,i7)')'ite:',it
          write(98,*)'ini:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         write(98,*)'ini:',f(ip,jp,kp,1:25)
-      call turbineforcing(df,rho,u,v,w,tau)       ! [u,v,w,df]         = turbineforcing(rho,u,v,w)
+         write(98,*)'ini:',f(1:25,ip,jp,kp)
+      call turbineforcing(df,rho,u,v,w)           ! [u,v,w,df]         = turbineforcing(rho,u,v,w)
       !call fequil(feq,f,rho,u,v,w,tau)           ! [feq,f=R(fneq),tau]= fequil(f,rho,u,v,w))
 
       call fequil3(feq,rho,u,v,w)
-         write(98,*)'ini:',feq(ip,jp,kp,1:25)
+         write(98,*)'ini:',feq(1:25,ip,jp,kp)
       call fregularization(f, feq, rho, u, v, w)
-         write(98,*)'reg:',feq(ip,jp,kp,1:25)
-         write(98,*)'reg:',f(ip,jp,kp,1:25)
+         write(98,*)'reg:',feq(1:25,ip,jp,kp)
+         write(98,*)'reg:',f(1:25,ip,jp,kp)
       call vreman(f,tau)
          write(98,*)'vre:',tau(ip,jp,kp)
       call collisions(f,feq,tau)                  ! [feq=f]            = collisions(f,feq,tau)        f=f^eq + (1-1/tau) * R(f^neq)
-         write(98,*)'col:',feq(ip,jp,kp,1:25)
+         write(98,*)'col:',feq(1:25,ip,jp,kp)
       call applyturbines(feq,df,tau)              ! [feq=f]            = applyturbines(feq=f,df,tau)  f=f+df
-         write(98,*)'tur:',feq(ip,jp,kp,1:25)
+         write(98,*)'tur:',feq(1:25,ip,jp,kp)
       call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowvar,uvel)  ! General boundary conditions
-         write(98,*)'bnd:',feq(ip,jp,kp,1:25)
+         write(98,*)'bnd:',feq(1:25,ip,jp,kp)
       call bndbounceback(feq,lblanking)           ! Bounce back boundary on fixed walls
-         write(98,*)'ini:',feq(ip,jp,kp,1:25)
+         write(98,*)'ini:',feq(1:25,ip,jp,kp)
       call drift(f,feq)                           ! Drift of feq returned in f
-         write(98,*)'dri:',f(ip,jp,kp,1:25)
+         write(98,*)'dri:',f(1:25,ip,jp,kp)
          write(98,'(a)')
       rho=density(f,lblanking)                    ! macro density
       u= velocity(f,rho,cxs,lblanking)            ! macro uvel

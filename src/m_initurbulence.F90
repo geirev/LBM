@@ -19,13 +19,21 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst,nt0)
 
    real cor1,cor2,dx,dy,dir
    integer(kind=4) n1,n2
-   integer i,k
+   integer i,j,k
    integer(kind=4), save :: nxx,nyy,nzz,nt
    logical(kind=4) :: verbose=.false.
+   logical ex
+   real aveu,avev,avew,aver
+   real varu,varv,varw,varr
 
    if (lfirst) then
       if (nt0 > 0) then
-         call system('rm seed.dat')
+         inquire(file='seed.orig',exist=ex)
+         if (ex) then
+            call system('rm seed.dat')
+         else
+            call system('mv seed.dat seed.orig')
+         endif
          call set_random_seed2
       endif
       print '(a)','initurbulence: Computing initial turbulence field'
@@ -92,6 +100,92 @@ subroutine initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,lfirst,nt0)
       vv(:,:,i)=inflowcor*vv(:,:,i-1)+sqrt(1.0-inflowcor**2)*vv(:,:,i)
       ww(:,:,i)=inflowcor*ww(:,:,i-1)+sqrt(1.0-inflowcor**2)*ww(:,:,i)
       rr(:,:,i)=inflowcor*rr(:,:,i-1)+sqrt(1.0-inflowcor**2)*rr(:,:,i)
+   enddo
+
+! Ensure zero mean and variance equal to one
+   print *,'removing nonzero average and scaling variance'
+   do i=1,nrturb
+      aveu=0.0
+      avev=0.0
+      avew=0.0
+      aver=0.0
+      do k=1,nz
+      do j=1,ny
+         aveu = aveu + uu(j,k,i)
+         avev = avev + vv(j,k,i)
+         avew = avew + ww(j,k,i)
+         aver = aver + rr(j,k,i)
+      enddo
+      enddo
+      aveu=aveu/real(ny*nz)
+      avev=avev/real(ny*nz)
+      avew=avew/real(ny*nz)
+      aver=aver/real(ny*nz)
+      uu(:,:,i)=uu(:,:,i)-aveu
+      vv(:,:,i)=vv(:,:,i)-avev
+      ww(:,:,i)=ww(:,:,i)-avew
+      rr(:,:,i)=rr(:,:,i)-aver
+
+      varu=0.0
+      varv=0.0
+      varw=0.0
+      varr=0.0
+      do k=1,nz
+      do j=1,ny
+         varu = varu + uu(j,k,i)**2
+         varv = varv + vv(j,k,i)**2
+         varw = varw + ww(j,k,i)**2
+         varr = varr + rr(j,k,i)**2
+      enddo
+      enddo
+      varu=sqrt(varu/real(ny*nz-1))
+      varv=sqrt(varv/real(ny*nz-1))
+      varw=sqrt(varw/real(ny*nz-1))
+      varr=sqrt(varr/real(ny*nz-1))
+      uu(:,:,i)=(1.0/varu)*uu(:,:,i)
+      vv(:,:,i)=(1.0/varv)*vv(:,:,i)
+      ww(:,:,i)=(1.0/varw)*ww(:,:,i)
+      rr(:,:,i)=(1.0/varr)*rr(:,:,i)
+
+   enddo
+
+   print *,'checking average and variance'
+   do i=1,nrturb
+      aveu=0.0
+      avev=0.0
+      avew=0.0
+      aver=0.0
+      do k=1,nz
+      do j=1,ny
+         aveu = aveu + uu(j,k,i)
+         avev = avev + vv(j,k,i)
+         avew = avew + ww(j,k,i)
+         aver = aver + rr(j,k,i)
+      enddo
+      enddo
+      aveu=aveu/real(ny*nz)
+      avev=avev/real(ny*nz)
+      avew=avew/real(ny*nz)
+      aver=aver/real(ny*nz)
+
+      varu=0.0
+      varv=0.0
+      varw=0.0
+      varr=0.0
+      do k=1,nz
+      do j=1,ny
+         varu = varu + uu(j,k,i)**2
+         varv = varv + vv(j,k,i)**2
+         varw = varw + ww(j,k,i)**2
+         varr = varr + rr(j,k,i)**2
+      enddo
+      enddo
+      varu=varu/real(ny*nz-1)
+      varv=varv/real(ny*nz-1)
+      varw=varw/real(ny*nz-1)
+      varr=varr/real(ny*nz-1)
+  !    print '(a,i5,8g13.5)','check turbulence stat:',i,aveu,avev,avew,aver,varu,varv,varw,varr
+
    enddo
 
 end subroutine

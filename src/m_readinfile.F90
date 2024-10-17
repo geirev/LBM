@@ -92,6 +92,7 @@ subroutine readinfile()
       end select
       read(10,*)nt0                ; print '(a,i8)',      'nt0               = ',nt0
       read(10,*)nt1                ; print '(a,i8)',      'nt1               = ',nt1
+      if (nt1 .le. nt0) stop 'readinfile: nt1 <= nt0'
       read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout
       read(10,*)irestart           ; print '(a,i8)',      'irestart          = ',irestart
       read(10,*)iprt               ; print '(a,i8)',      'iprt              = ',iprt

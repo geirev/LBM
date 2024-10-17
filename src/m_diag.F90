@@ -2,7 +2,7 @@ module m_diag
 contains
 subroutine diag(it,rho,u,v,w,lblanking)
    use mod_dimensions
-   use m_readinfile
+   use m_readinfile, only : iout, iprt, lprtmin,  nt1
    use m_vorticity
    use m_tecout
    use m_pdfout

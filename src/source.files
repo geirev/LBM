@@ -19,10 +19,10 @@ F90SOURCE = \
 	m_disks.F90\
 	m_drift.F90\
 	m_fequil3.F90\
-	m_fequil.F90\
 	m_fequilscalar.F90\
 	m_fregularization.F90\
 	m_initurbulence.F90\
+	m_macrovars.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\

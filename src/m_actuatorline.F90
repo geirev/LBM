@@ -290,6 +290,8 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing the forces on the grid
+!$OMP PARALLEL DO PRIVATE(i,j,ichord,k,y,x,xp,yp,gauss)  &
+!$OMP             SHARED(ja,jb,ia,ib,x0,y0,costheta,sintheta,ieps,force,forceN,forceT)
       do j=ja,jb
          y=real(j)
          do i=ia,ib
@@ -303,24 +305,21 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
                   else
                      gauss=(1.0/(sqrt(pi**3)*eps**3)) * exp(-((x-xp)**2 + (y-yp)**2 + real(k)**2)/eps**2)
                   endif
-
                   force(k,i,j,1) = force(k,i,j,1) + forceN(ichord)  * gauss
                   force(k,i,j,2) = force(k,i,j,2) - forceT(ichord)  * sintheta * gauss
                   force(k,i,j,3) = force(k,i,j,3) + forceT(ichord)  * costheta * gauss
-
                enddo
-
             enddo
-
          enddo
       enddo
+!$OMP END PARALLEL DO
 
       theta=theta+rad120
    enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Dumping detailed diagnostics for one turbine case
-   if ((ifirst <= 40).and.(nturbines==1)) then
+   if ((ifirst <= 0).and.(nturbines==1)) then
       do k=0,ieps
          write(tag3,'(i3.3)')k
          if (ifirst==1) then

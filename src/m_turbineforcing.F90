@@ -6,7 +6,7 @@ subroutine turbineforcing(df,rho,u,v,w)
 ! Returns the S_i stored in df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
-   use m_readinfile,  only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
+   use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
    use m_fequilscalar
    use m_actuatorline
    use m_wtime
@@ -55,6 +55,7 @@ subroutine turbineforcing(df,rho,u,v,w)
       call actuatorline(force,ny,nz,jp,kp,theta,iradius,u(ip,:,:),v(ip,:,:),w(ip,:,:),rho(ip,:,:),ieps)
 
 ! Computing the force induced velocity increments in the circular 3D rotor plane (F/rho)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(du, dv, dw, force, rho, ip, jp, kp, iradius)
       do k=1,nz
       do j=1,ny
          if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
@@ -66,6 +67,7 @@ subroutine turbineforcing(df,rho,u,v,w)
          endif
       enddo
       enddo
+!$OMP END PARALLEL DO
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -119,6 +121,7 @@ subroutine turbineforcing(df,rho,u,v,w)
       ! No update of equilibrium velocities
 
       ! Computing the S_i term returned in df
+!$OMP PARALLEL DO PRIVATE(i,j,k,dfeq) SHARED(df, rho, u, v, w, jp, kp, iradius )
          do k=1,nz
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
@@ -130,6 +133,7 @@ subroutine turbineforcing(df,rho,u,v,w)
             endif
          enddo
          enddo
+!$OMP END PARALLEL DO
 
 !(12) Khazaeli et al. 2019
 !     function [U,S]=SchemeXI(A,dt,tau,f,Rho,U)

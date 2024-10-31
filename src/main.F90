@@ -64,7 +64,7 @@ program LatticeBoltzmann
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
    real uvel(nz)                                    ! vertical u-velocity profile
 
-   integer :: it,k
+   integer :: it,k,i
    integer ip,jp,kp
    real x
 
@@ -113,24 +113,34 @@ program LatticeBoltzmann
 
    if (nt0 == 0) then
       if (lpseudo) call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.true.,nt0)
-      rho=rho0 + inflowstd*rho
-      do k=1,nz
-         u(:,:,k)=uvel(k)+0.1*inflowstd*u(:,:,k)
-      enddo
-      v=0.0+0.1*inflowstd*v
-      w=0.0+0.1*inflowstd*w
-         if (runtest) open(98,file='test.dat')
-         ip=2; jp=jpos(1)-11; kp=kpos(1)
-         if (runtest) write(98,'(a,100e19.10)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         if (runtest) write(98,'(a,100e19.10)')'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
-      call diag(0,rho,u,v,w,lblanking)            ! Initial diagnostics
 
+      if (ibnd==2) then
 ! Pressure gradient initialization for periodic boundaries with pressure drive.
-!     if (ibnd==2) then
-!        do i=1,nx
-!           rho(i,:,:)=rho(i,:,:)+ rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
-!        enddo
-!     endif
+         do i=1,nx
+            rho(i,:,:)=rho0 + inflowstd*rho(i,:,:) +  rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
+         enddo
+         u=0.0; v=0.0; w=0.0
+      else
+! Adding noise to all macro variables
+         rho=rho0 + inflowstd*rho
+         do k=1,nz
+            u(:,:,k)=uvel(k)+0.1*inflowstd*u(:,:,k)
+         enddo
+         v=0.0+0.1*inflowstd*v
+         w=0.0+0.1*inflowstd*w
+      endif
+
+! Outputs for testing
+      if (runtest) then
+         open(98,file='test.dat')
+         ip=2; jp=jpos(1)-11; kp=kpos(1)
+         write(98,'(a,100e19.10)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+         write(98,'(a,100e19.10)')'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
+      endif
+
+! Initial diagnostics
+      call diag(0,rho,u,v,w,lblanking)
+
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w)
@@ -139,7 +149,7 @@ program LatticeBoltzmann
 
    else
 ! Restart from restart file
-      call readrestart(nt0,f,theta,uu,vv,ww,rr)
+      call readrestart(nt0,f,theta,uu,vv,ww,rr,ibnd)
       call macrovars(rho,u,v,w,f,lblanking)
 
 ! to recover initial tau
@@ -158,8 +168,9 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
-      if (it .ge. 35000) iout=5
-      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a)','Iteration:', it,' Time:',real(it)*p2l%time,' s'
+      if (it .ge. 3000) iout=1
+      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s,',&
+                                           ' uinave:',sum(u(1,:,:))/real(ny*nz)
 
 ! start with f,rho,u,v,w
       if (runtest) then
@@ -207,10 +218,6 @@ program LatticeBoltzmann
       if (runtest) write(98,'(a)')
 
 ! Compute updated macro variables
-     ! rho=density(f,lblanking)
-     ! u= velocity(f,rho,cxs,lblanking)
-     ! v= velocity(f,rho,cys,lblanking)
-     ! w= velocity(f,rho,czs,lblanking)
       call macrovars(rho,u,v,w,f,lblanking)
 
 ! Diagnostics
@@ -226,13 +233,13 @@ program LatticeBoltzmann
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
 
 ! Updating input turbulence matrix
-      if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo) then
+      if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo .and. ibnd==1) then
          print '(a,i6)','Recomputing inflow noise: it=',it
          call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.false.,it)
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
+      if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr,ibnd)
 
    enddo
 
@@ -241,7 +248,7 @@ program LatticeBoltzmann
 
    call cpuprint()
 
-   call saverestart(it-1,f,theta,uu,vv,ww,rr)
+   call saverestart(it-1,f,theta,uu,vv,ww,rr,ibnd)
 
    select case(trim(experiment))
    case('channel')

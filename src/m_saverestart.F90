@@ -1,6 +1,6 @@
 module m_saverestart
 contains
-subroutine saverestart(it,f,theta,uu,vv,ww,rr)
+subroutine saverestart(it,f,theta,uu,vv,ww,rr,ibnd)
    use mod_dimensions
    integer, intent(in) :: it
    real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
@@ -9,6 +9,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    real,    intent(in) :: vv(ny,nz,0:nrturb)
    real,    intent(in) :: ww(ny,nz,0:nrturb)
    real,    intent(in) :: rr(ny,nz,0:nrturb)
+   integer, intent(in) :: ibnd
 
    character(len=6) cit
    integer :: irec
@@ -16,10 +17,12 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
 
-   inquire(iolength=irec)ny,nz,nrturb,uu,vv,ww,rr
-   open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
-      write(10,rec=1)ny,nz,nrturb,uu,vv,ww,rr
-   close(10)
+   if (ibnd == 1) then
+      inquire(iolength=irec)ny,nz,nrturb,uu,vv,ww,rr
+      open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
+         write(10,rec=1)ny,nz,nrturb,uu,vv,ww,rr
+      close(10)
+   endif
 
    open(10,file='theta'//cit//'.dat')
       write(10,*)theta

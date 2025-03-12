@@ -4,13 +4,14 @@ F90SOURCE = \
 	main.F90\
 	m_airfoil.F90\
 	m_applyturbines.F90\
+	m_applyturbulence.F90\
 	m_averaging.F90\
 	m_bilin.F90\
 	m_bndbounceback.F90\
 	m_bndpressure.F90\
 	m_boundarycond.F90\
 	m_channeldiag.F90\
-	m_channel.F90\
+	m_closedbnd.F90\
 	m_collisions.F90\
 	m_cube.F90\
 	m_cylinder.F90\
@@ -39,10 +40,10 @@ F90SOURCE = \
 	m_tecout.F90\
 	m_tecplot.F90\
 	m_turbineforcing.F90\
+	m_turbulenceforcing.F90\
 	m_uvelshear.F90\
 	m_velocity.F90\
 	m_vorticity.F90\
 	m_vreman.F90\
-	m_windfarm.F90\
 	m_wtime.F90
 

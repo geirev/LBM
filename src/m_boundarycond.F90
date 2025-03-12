@@ -41,10 +41,10 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
       if (lit==0) lit=nrturb
       do k=1,nz
       do j=1,ny
-         utmp(j,k)=uvel(k)+0.1*inflowstd*uu(j,k,lit)
-         vtmp(j,k)=0.1*inflowstd*vv(j,k,lit)
-         wtmp(j,k)=0.1*inflowstd*ww(j,k,lit)
-         rtmp(j,k)=rho(1,j,k)+inflowstd*rr(j,k,lit)
+         utmp(j,k)=uvel(k)
+         vtmp(j,k)=0.0
+         wtmp(j,k)=0.0
+         rtmp(j,k)=rho(1,j,k)
       enddo
       enddo
 
@@ -73,10 +73,9 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Boundary conditions in j-direction (sideways) periodic through drift.
-
+! Boundary conditions in j-direction (sideways) periodic.
    if (jbnd==0) then
-! Periodic boundary conditions in i-direction
+! Periodic boundary conditions in j-direction
       f(:,:,0,:)   =f(:,:,ny,:)
       f(:,:,ny+1,:)=f(:,:,1,:)
    endif
@@ -85,8 +84,7 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Boundary conditions in k-direction (vertical)
-   if (kbnd==0) then
-! Periodic boundary conditions in k-direction
+   if (kbnd==0) then ! Periodic boundary conditions in k-direction
       f(:,:,:,0)   =f(:,:,:,nz)
       f(:,:,:,nz+1)=f(:,: ,:,1)
 

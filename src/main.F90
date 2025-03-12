@@ -6,17 +6,16 @@ program LatticeBoltzmann
    use m_averaging
 
    use m_airfoil
-   use m_channel
    use m_cube
    use m_cylinder
    use m_disks
    use m_sphere
-   use m_windfarm
    use m_channeldiag
 
    use m_uvelshear
    use m_boundarycond
    use m_bndbounceback
+   use m_closedbnd
    use m_bndpressure
    use m_initurbulence
 
@@ -25,7 +24,9 @@ program LatticeBoltzmann
    use m_velocity
    use m_stress
    use m_turbineforcing
+   use m_turbulenceforcing
    use m_applyturbines
+   use m_applyturbulence
    use m_collisions
    use m_drift
    use m_fequil
@@ -62,6 +63,7 @@ program LatticeBoltzmann
 
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
+   real, allocatable  :: turb_df(:,:,:,:)         ! Turbulence forcing
    real uvel(nz)                                    ! vertical u-velocity profile
 
    integer :: it,k,i
@@ -81,6 +83,8 @@ program LatticeBoltzmann
    call readinfile()
    if (nturbines > 0) allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
 
+   allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Define solid elements and walls
    select case(trim(experiment))
@@ -90,18 +94,13 @@ program LatticeBoltzmann
       call sphere(lblanking,nx/6,ny/2,nz/2,10)
    case('cylinder')
       call cylinder(lblanking,nx/6,ny/2,25)
-   case('windfarm')
-      call windfarm(lblanking,kbnd)
-   case('channel') ! Pouisille flow
-      call channel(lblanking,nx/6,ny/2,25)
    case('airfoil')
       call airfoil(lblanking)
    case('disks')
       call disks(lblanking)
-   case default
-      print *,'invalid experiment',trim(experiment)
-      stop
    end select
+
+   call closedbnd(lblanking)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
@@ -168,7 +167,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
-      if (it .ge. 3000) iout=1
+      !if (it .ge. 3000) iout=1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s,',&
                                            ' uinave:',sum(u(1,:,:))/real(ny*nz)
 
@@ -182,6 +181,9 @@ program LatticeBoltzmann
 
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
       call turbineforcing(df,rho,u,v,w)
+
+! [u,v,w,turb_df] = turbineforcing[rho,u,v,w]
+      call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
@@ -202,6 +204,10 @@ program LatticeBoltzmann
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
       call applyturbines(feq,df,tau)
+      if (runtest) write(98,'(a,100e19.10)')'tur:',feq(1:25,ip,jp,kp)
+
+! [feq=f] = applyturbines(feq,df,tau)  f=f+df
+      call applyturbulence(feq,turb_df,tau)
       if (runtest) write(98,'(a,100e19.10)')'tur:',feq(1:25,ip,jp,kp)
 
 ! General boundary conditions

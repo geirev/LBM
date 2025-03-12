@@ -7,9 +7,9 @@ module m_readinfile
    logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
    integer  irestart       ! number of steps between restart files
    integer  ifout          ! number of steps between outputs 0, 0+iout, ...
-   integer  ibnd           ! Type of bondary condition in i direction
-   integer  jbnd           ! Type of bondary condition in i direction
-   integer  kbnd           ! Type of bondary condition in k direction
+   integer  ibnd,ibndbb       ! Type of bondary condition in i direction (ibnd=0 periodic, ibb=11,22,33)
+   integer  jbnd,jbndbb       ! Type of bondary condition in i direction
+   integer  kbnd,kbndbb       ! Type of bondary condition in k direction
    logical  lpseudo        ! Add smooth pseudorandom peturbations to initial rho
    logical  runexp         ! Add smooth pseudorandom peturbations to initial rho
    real     uini           ! Initial u-velocity
@@ -98,9 +98,9 @@ subroutine readinfile()
       read(10,*)iprt               ; print '(a,i8)',      'iprt              = ',iprt
       read(10,*)lprtmin            ; print '(a,tr7,l1)',  'lprtmin           = ',lprtmin
       read(10,*)ifout              ; print '(a,i8)',      'ifout             = ',ifout
-      read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
-      read(10,*)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
-      read(10,*)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
+      read(10,*)ibnd,ibndbb        ; print '(a,i8,i3)',   'ibnd,ibndbb       = ',ibnd,ibndbb
+      read(10,*)jbnd,jbndbb        ; print '(a,i8,i3)',   'jbnd,jbndbb       = ',jbnd,jbndbb
+      read(10,*)kbnd,kbndbb        ; print '(a,i8,i3)',   'kbnd,kbndbb       = ',kbnd,kbndbb
       read(10,*)uini               ; print '(a,f8.3,a)',  'uini (inflow uvel)= ',uini,       ' [m/s]'
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'

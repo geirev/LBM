@@ -2,6 +2,7 @@ module m_bndbounceback
 contains
 subroutine bndbounceback(f,blanking)
    use mod_dimensions
+!   use m_readinfile,   only : kbndbb
    use m_wtime
    implicit none
    logical, intent(in)    :: blanking(nx,ny,nz)
@@ -11,7 +12,7 @@ subroutine bndbounceback(f,blanking)
    integer, parameter :: icpu=9
    call cpustart()
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, tmp) SHARED(f, blanking)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, tmp) SHARED(f, blanking)
    do k=1,nz
    do j=1,ny
    do i=1,nx

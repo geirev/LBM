@@ -12,7 +12,7 @@ subroutine sphere(blanking,ipos,jpos,kpos,radius)
    do k=1,nz
    do j=1,ny
    do i=1,nx
-      if ( (i-ipos)**2 + (j-jpos)**2 + ((k-kpos)/0.5)**2 <  radius**2)  blanking(i,j,k) = .true.
+      if ( (i-ipos)**2 + (j-jpos)**2 + (k-kpos)**2 <  radius**2)  blanking(i,j,k) = .true.
    enddo
    enddo
    enddo

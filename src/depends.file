@@ -27,6 +27,7 @@ main.o:      m_drift.o
 main.o:      m_fequil3.o
 main.o:      m_fequil.o
 main.o:      m_fregularization.o
+main.o:      m_inipert.o
 main.o:      m_initurbulence.o
 main.o:      m_macrovars.o
 main.o:      mod_D3Q27setup.o
@@ -35,6 +36,7 @@ main.o:      MODEL.CPP
 main.o:      m_readinfile.o
 main.o:      m_readrestart.o
 main.o:      m_saverestart.o
+main.o:      m_seedmanagement.o
 main.o:      m_set_random_seed2.o
 main.o:      m_sphere.o
 main.o:      m_stress.o
@@ -142,6 +144,12 @@ m_fregularization.o:      mod_dimensions.o
 m_fregularization.o:      MODEL.CPP
 m_fregularization.o:      m_readinfile.o
 m_fregularization.o:      m_wtime.o
+m_inipert.o:      makefile
+m_inipert.o:      mod_dimensions.o
+m_inipert.o:      MODEL.CPP
+m_inipert.o:      m_pseudo2D.o
+m_inipert.o:      m_readinfile.o
+m_inipert.o:      m_set_random_seed2.o
 m_initurbulence.o:      makefile
 m_initurbulence.o:      mod_dimensions.o
 m_initurbulence.o:      MODEL.CPP
@@ -173,9 +181,14 @@ m_readinfile.o:      MODEL.CPP
 m_readrestart.o:      makefile
 m_readrestart.o:      mod_dimensions.o
 m_readrestart.o:      MODEL.CPP
+m_readrestart.o:      m_readinfile.o
 m_saverestart.o:      makefile
 m_saverestart.o:      mod_dimensions.o
 m_saverestart.o:      MODEL.CPP
+m_saverestart.o:      m_readinfile.o
+m_seedmanagement.o:      makefile
+m_seedmanagement.o:      MODEL.CPP
+m_seedmanagement.o:      m_set_random_seed2.o
 m_set_random_seed2.o:      makefile
 m_set_random_seed2.o:      MODEL.CPP
 m_sphere.o:      makefile
@@ -205,6 +218,7 @@ m_turbulenceforcing.o:      makefile
 m_turbulenceforcing.o:      m_fequilscalar.o
 m_turbulenceforcing.o:      mod_dimensions.o
 m_turbulenceforcing.o:      MODEL.CPP
+m_turbulenceforcing.o:      m_readinfile.o
 m_turbulenceforcing.o:      m_wtime.o
 m_uvelshear.o:      makefile
 m_uvelshear.o:      mod_dimensions.o

@@ -10,7 +10,7 @@ subroutine cylinder(blanking,ipos,jpos,radius)
 
    do j=1,ny
    do i=1,nx
-      if ( ((i-ipos)**2 + (j-jpos)**2 ) <  radius**2) blanking(i,j,:) = .true.
+      if ( ((i-ipos)**2 + (j-jpos)**2 ) <  radius**2) blanking(i,j,1:30) = .true.
    enddo
    enddo
 

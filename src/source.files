@@ -22,6 +22,7 @@ F90SOURCE = \
 	m_fequil3.F90\
 	m_fequilscalar.F90\
 	m_fregularization.F90\
+	m_inipert.F90\
 	m_initurbulence.F90\
 	m_macrovars.F90\
 	m_nrelliftdrag.F90\
@@ -33,6 +34,7 @@ F90SOURCE = \
 	m_readinfile.F90\
 	m_readrestart.F90\
 	m_saverestart.F90\
+	m_seedmanagement.F90\
 	m_set_random_seed2.F90\
 	m_sphere.F90\
 	m_string.F90\

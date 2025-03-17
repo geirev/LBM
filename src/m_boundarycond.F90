@@ -1,6 +1,6 @@
 module m_boundarycond
 contains
-subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
+subroutine boundarycond(f,rho,u,v,w,uvel)
    use mod_dimensions
    use m_readinfile
    use m_bndpressure
@@ -12,18 +12,12 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
    real, intent(in)   :: u(nx,ny,nz)
    real, intent(in)   :: v(nx,ny,nz)
    real, intent(in)   :: w(nx,ny,nz)
-   real, intent(in)   :: uu(ny,nz,0:nrturb)
-   real, intent(in)   :: vv(ny,nz,0:nrturb)
-   real, intent(in)   :: ww(ny,nz,0:nrturb)
-   real, intent(in)   :: rr(ny,nz,0:nrturb)
-   real, intent(in)   :: inflowstd
    real, intent(in)   :: uvel(nz)
-   integer, intent(in):: it
    real :: rtmp(ny,nz)
    real :: utmp(ny,nz)
    real :: vtmp(ny,nz)
    real :: wtmp(ny,nz)
-   integer j,k,lit,ja,ka
+   integer j,k,ja,ka
    integer, parameter :: icpu=8
 
    call cpustart()
@@ -37,14 +31,12 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
 
    elseif (ibnd==1) then
 ! Inflow outflow boundary conditions in i-direction
-      lit=mod(it,nrturb)
-      if (lit==0) lit=nrturb
       do k=1,nz
       do j=1,ny
          utmp(j,k)=uvel(k)
          vtmp(j,k)=0.0
          wtmp(j,k)=0.0
-         rtmp(j,k)=rho(1,j,k)
+         rtmp(j,k)= rho0   !rho(1,j,k)
       enddo
       enddo
 
@@ -73,9 +65,8 @@ subroutine boundarycond(f,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Boundary conditions in j-direction (sideways) periodic.
+! Periodic boundary conditions in j-direction (sideways) periodic.
    if (jbnd==0) then
-! Periodic boundary conditions in j-direction
       f(:,:,0,:)   =f(:,:,ny,:)
       f(:,:,ny+1,:)=f(:,:,1,:)
    endif

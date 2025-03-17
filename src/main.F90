@@ -4,21 +4,19 @@ program LatticeBoltzmann
    use m_readinfile
    use m_diag
    use m_averaging
-
    use m_airfoil
    use m_cube
    use m_cylinder
    use m_disks
    use m_sphere
    use m_channeldiag
-
    use m_uvelshear
    use m_boundarycond
    use m_bndbounceback
    use m_closedbnd
    use m_bndpressure
+   use m_inipert
    use m_initurbulence
-
    use m_macrovars
    use m_density
    use m_velocity
@@ -33,6 +31,7 @@ program LatticeBoltzmann
    use m_fequil3
    use m_fregularization
    use m_vreman
+   use m_seedmanagement
    use m_readrestart
    use m_saverestart
    use m_wtime
@@ -59,31 +58,27 @@ program LatticeBoltzmann
    real vv(ny,nz,0:nrturb)
    real ww(ny,nz,0:nrturb)
    real rr(ny,nz,0:nrturb)
-   real inflowstd,inflowcor
 
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
    real, allocatable  :: turb_df(:,:,:,:)         ! Turbulence forcing
    real uvel(nz)                                    ! vertical u-velocity profile
 
-   integer :: it,k,i
+   integer :: it
    integer ip,jp,kp
-   real x
 
    logical, parameter :: forcecheck=.false.
    logical, parameter :: runtest=.false.
 
    call set_random_seed2()
 
-   call random_number(x)
-   print *,'x=',x
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
-   if (nturbines > 0) allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
 
-   allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
+   if (nturbines > 0) allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
+   if (lturb)         allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
+   !allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Define solid elements and walls
@@ -91,9 +86,9 @@ program LatticeBoltzmann
    case('cube')
       call cube(lblanking,nx/6,ny/2,nz/2,7)
    case('sphere')
-      call sphere(lblanking,nx/6,ny/2,nz/2,10)
+      call sphere(lblanking,nx/2,ny/2,nz/2,10)
    case('cylinder')
-      call cylinder(lblanking,nx/6,ny/2,25)
+      call cylinder(lblanking,nx/2,ny/2,5)
    case('airfoil')
       call airfoil(lblanking)
    case('disks')
@@ -105,29 +100,25 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
    call uvelshear(uvel)
-! Initial turbulent flow
-   inflowstd=0.01
-   inflowcor=0.95
    tau=tauin
 
-   if (nt0 == 0) then
-      if (lpseudo) call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.true.,nt0)
+! setting seed to seed.orig if exist and nt0=0, otherwise generate new seed
+   call seedmanagement(nt0)
 
-      if (ibnd==2) then
-! Pressure gradient initialization for periodic boundaries with pressure drive.
-         do i=1,nx
-            rho(i,:,:)=rho0 + inflowstd*rho(i,:,:) +  rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
-         enddo
-         u=0.0; v=0.0; w=0.0
-      else
-! Adding noise to all macro variables
-         rho=rho0 + inflowstd*rho
-         do k=1,nz
-            u(:,:,k)=uvel(k)+0.1*inflowstd*u(:,:,k)
-         enddo
-         v=0.0+0.1*inflowstd*v
-         w=0.0+0.1*inflowstd*w
-      endif
+   if (nt0 == 0) then
+! Intialization of macro variables
+      call inipert(rho,u,v,w,uvel)
+
+! Generate trubulence forcing fields
+      if (lturb) call initurbulence(uu,vv,ww,rr,.true.)
+
+!      if (ibnd==2) then ! Pressure gradient initialization for periodic boundaries with pressure drive.
+!         stop 'ibnd=2 does not work I think'
+!         do i=1,nx
+!            rho(i,:,:)=rho0 + inflowstd*rho(i,:,:) +  rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
+!         enddo
+!         u=0.0; v=0.0; w=0.0
+!      endif
 
 ! Outputs for testing
       if (runtest) then
@@ -143,12 +134,13 @@ program LatticeBoltzmann
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w)
+      call boundarycond(feq,rho,u,v,w,uvel)
       f=feq
       tau=tauin
 
    else
 ! Restart from restart file
-      call readrestart(nt0,f,theta,uu,vv,ww,rr,ibnd)
+      call readrestart(nt0,f,theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,f,lblanking)
 
 ! to recover initial tau
@@ -167,7 +159,6 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
-      !if (it .ge. 3000) iout=1
       if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a,a,f10.4)','Iteration:', it,' Time:',real(it)*p2l%time,' s,',&
                                            ' uinave:',sum(u(1,:,:))/real(ny*nz)
 
@@ -180,10 +171,10 @@ program LatticeBoltzmann
       endif
 
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
-      call turbineforcing(df,rho,u,v,w)
+      if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
 
 ! [u,v,w,turb_df] = turbineforcing[rho,u,v,w]
-      call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
+      if (lturb) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
@@ -203,15 +194,15 @@ program LatticeBoltzmann
       if (runtest) write(98,'(a,100e19.10)')'col:',feq(1:25,ip,jp,kp)
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
-      call applyturbines(feq,df,tau)
+      if (nturbines > 0) call applyturbines(feq,df,tau)
       if (runtest) write(98,'(a,100e19.10)')'tur:',feq(1:25,ip,jp,kp)
 
-! [feq=f] = applyturbines(feq,df,tau)  f=f+df
-      call applyturbulence(feq,turb_df,tau)
+! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
+      if (lturb) call applyturbulence(feq,turb_df,tau)
       if (runtest) write(98,'(a,100e19.10)')'tur:',feq(1:25,ip,jp,kp)
 
 ! General boundary conditions
-      call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
+      call boundarycond(feq,rho,u,v,w,uvel)
       if (runtest) write(98,'(a,100e19.10)')'bnd:',feq(1:25,ip,jp,kp)
 
 ! Bounce back boundary on fixed walls
@@ -239,13 +230,13 @@ program LatticeBoltzmann
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
 
 ! Updating input turbulence matrix
-      if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo .and. ibnd==1) then
+      if (mod(it, nrturb) == 0 .and. it > 1 .and. lturb .and. ibnd==1) then
          print '(a,i6)','Recomputing inflow noise: it=',it
-         call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.false.,it)
+         call initurbulence(uu,vv,ww,rr,.false.)
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr,ibnd)
+      if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
 
    enddo
 
@@ -254,7 +245,7 @@ program LatticeBoltzmann
 
    call cpuprint()
 
-   call saverestart(it-1,f,theta,uu,vv,ww,rr,ibnd)
+   call saverestart(it-1,f,theta,uu,vv,ww,rr)
 
    select case(trim(experiment))
    case('channel')

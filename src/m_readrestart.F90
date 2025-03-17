@@ -1,7 +1,8 @@
 module m_readrestart
 contains
-subroutine readrestart(it,f,theta,uu,vv,ww,rr,ibnd)
+subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
+   use m_readinfile, only : lturb,nturbines
    integer, intent(in)  :: it
    real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(out) :: theta
@@ -9,7 +10,6 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,ibnd)
    real,    intent(out) :: vv(ny,nz,0:nrturb)
    real,    intent(out) :: ww(ny,nz,0:nrturb)
    real,    intent(out) :: rr(ny,nz,0:nrturb)
-   integer, intent(in)  :: ibnd
 
    logical ex
    integer :: irec,i,j,k,l,n
@@ -18,7 +18,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,ibnd)
    write(cit,'(i6.6)')it
    print '(a,a)','readrestart:',cit
 
-   if (ibnd == 1) then
+   if (lturb) then
       print '(3a)','reading: turbulence'//cit//'.uf'
       inquire(file='turbulence'//cit//'.uf',exist=ex)
       if (ex) then
@@ -40,15 +40,17 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,ibnd)
       endif
    endif
 
-   print '(3a)','reading: theta'//cit//'.uf'
-   inquire(file='theta'//cit//'.dat',exist=ex)
-   if (ex) then
-      open(10,file='theta'//cit//'.dat')
-         read(10,*)theta
-      close(10)
-   else
-      print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
-      stop
+   if (nturbines > 0) then
+      print '(3a)','reading: theta'//cit//'.uf'
+      inquire(file='theta'//cit//'.dat',exist=ex)
+      if (ex) then
+         open(10,file='theta'//cit//'.dat')
+            read(10,*)theta
+         close(10)
+      else
+         print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
+         stop
+      endif
    endif
 
    inquire(file='restart'//cit//'.uf',exist=ex)

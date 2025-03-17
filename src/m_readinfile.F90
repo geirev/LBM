@@ -7,11 +7,11 @@ module m_readinfile
    logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
    integer  irestart       ! number of steps between restart files
    integer  ifout          ! number of steps between outputs 0, 0+iout, ...
-   integer  ibnd,ibndbb       ! Type of bondary condition in i direction (ibnd=0 periodic, ibb=11,22,33)
-   integer  jbnd,jbndbb       ! Type of bondary condition in i direction
-   integer  kbnd,kbndbb       ! Type of bondary condition in k direction
-   logical  lpseudo        ! Add smooth pseudorandom peturbations to initial rho
-   logical  runexp         ! Add smooth pseudorandom peturbations to initial rho
+   integer  ibnd,ibndbb    ! Type of bondary condition in i direction (ibnd=0 periodic, ibb=11,22,33)
+   integer  jbnd,jbndbb    ! Type of bondary condition in i direction
+   integer  kbnd,kbndbb    ! Type of bondary condition in k direction
+   logical  linipert       ! Add smooth pseudo-random peturbations to initial rho
+   logical  lturb          ! Add smooth pseudo-random peturbations to initial rho
    real     uini           ! Initial u-velocity
    real     rho0           ! Average density
    real     rhoa           ! Imposed density gradient for ibnd=2 case
@@ -57,6 +57,7 @@ subroutine readinfile()
    logical ex
    real gridrn
    integer n
+   logical  runexp
 
 ! reading input data
    inquire(file='infile.in',exist=ex)
@@ -104,7 +105,8 @@ subroutine readinfile()
       read(10,*)uini               ; print '(a,f8.3,a)',  'uini (inflow uvel)= ',uini,       ' [m/s]'
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
-      read(10,'(1x,l1)')lpseudo    ; print '(a,tr7,l1)',  'lpseudo           = ',lpseudo
+      read(10,'(1x,l1)')linipert   ; print '(a,tr7,l1)',  'linipert          = ',linipert
+      read(10,'(1x,l1)')lturb      ; print '(a,tr7,l1)',  'lturb             = ',lturb
 !      read(10,*)tauin              ; print '(a,f8.3,a)',  'tauin             = ',tauin,      ' [] '
       read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
       read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density

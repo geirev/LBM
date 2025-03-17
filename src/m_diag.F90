@@ -29,9 +29,6 @@ subroutine diag(it,rho,u,v,w,lblanking)
 
    integer num_of_vars
 
-
-
-
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt) then
       if (minval(rho) < 0.0) then

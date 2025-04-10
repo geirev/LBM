@@ -111,6 +111,9 @@ subroutine vreman(f,tau)
 
             tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
 
+!            if (i < 20 ) tau(i,j,k)= tau(i,j,k) + real(10*(20-i))*kinevisc
+!            if (j < 10 ) tau(i,j,k)= tau(i,j,k) + real(10*(10-j))*kinevisc
+
          enddo
       enddo
    enddo

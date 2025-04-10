@@ -1,5 +1,5 @@
 module m_turbulenceforcing
-   integer, parameter     :: iturb_pos=20
+   integer, parameter     :: iturb_pos=10
    integer, parameter     :: iturb_radius=0
 contains
 subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)

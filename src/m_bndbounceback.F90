@@ -5,7 +5,7 @@ subroutine bndbounceback(f,blanking)
 !   use m_readinfile,   only : kbndbb
    use m_wtime
    implicit none
-   logical, intent(in)    :: blanking(nx,ny,nz)
+   logical, intent(in)    :: blanking(0:nx+1,0:ny+1,0:nz+1)
    real,    intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real tmp
    integer i,j,k,l
@@ -13,9 +13,9 @@ subroutine bndbounceback(f,blanking)
    call cpustart()
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, tmp) SHARED(f, blanking)
-   do k=1,nz
-   do j=1,ny
-   do i=1,nx
+   do k=0,nz+1
+   do j=0,ny+1
+   do i=0,nx+1
       if (blanking(i,j,k)) then
          do l=2,nl-1,2
             tmp=f(l,i,j,k)

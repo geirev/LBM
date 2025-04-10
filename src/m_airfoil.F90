@@ -4,7 +4,7 @@ contains
 subroutine airfoil(blanking)
    use mod_dimensions
    implicit none
-   logical, intent(inout)  :: blanking(nx,ny,nz)
+   logical, intent(inout)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
    integer, parameter :: num_points = 100
    real :: xcc(num_points)
    real :: ycu(num_points)

@@ -13,7 +13,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real,    intent(in)   :: u(nx,ny,nz)
    real,    intent(in)   :: v(nx,ny,nz)
    real,    intent(in)   :: w(nx,ny,nz)
-   logical, intent(in)   :: lblanking(nx,ny,nz)
+   logical, intent(in)   :: lblanking(0:nx+1,0:ny+1,0:nz+1)
    character(len=6) cit
 
 !   character(len=200)::tecplot_fvars='i,j,k,blanking,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27'

@@ -13,7 +13,7 @@ subroutine inipert(rho,u,v,w,uvel)
    real, intent(in)     :: uvel(nz)
 
    real :: vertcor=0.95
-   real :: stddev=0.001
+   real :: stddev=0.01
 
    real cor1,cor2,dx,dy,dir
    integer(kind=4) n1,n2

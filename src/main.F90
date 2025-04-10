@@ -5,9 +5,9 @@ program LatticeBoltzmann
    use m_diag
    use m_averaging
    use m_airfoil
+   use m_city
    use m_cube
    use m_cylinder
-   use m_disks
    use m_sphere
    use m_channeldiag
    use m_uvelshear
@@ -42,7 +42,7 @@ program LatticeBoltzmann
 ! Main variables
    real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)     = 0.0  ! density function
    real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)   = 0.0  ! Maxwells equilibrium density function
-   logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
+   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)= .false.  ! blanking boundary and object grid points
 
 ! Spatially dependent relaxation time
    real    :: tau(nx,ny,nz)      = 0.0              ! relaxation time scale
@@ -87,12 +87,12 @@ program LatticeBoltzmann
       call cube(lblanking,nx/6,ny/2,nz/2,7)
    case('sphere')
       call sphere(lblanking,nx/2,ny/2,nz/2,10)
+   case('city')
+      call city(lblanking)
    case('cylinder')
       call cylinder(lblanking,nx/2,ny/2,5)
    case('airfoil')
       call airfoil(lblanking)
-   case('disks')
-      call disks(lblanking)
    end select
 
    call closedbnd(lblanking)

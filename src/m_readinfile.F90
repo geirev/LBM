@@ -10,8 +10,8 @@ module m_readinfile
    integer  ibnd,ibndbb    ! Type of bondary condition in i direction (ibnd=0 periodic, ibb=11,22,33)
    integer  jbnd,jbndbb    ! Type of bondary condition in i direction
    integer  kbnd,kbndbb    ! Type of bondary condition in k direction
-   logical  linipert       ! Add smooth pseudo-random peturbations to initial rho
-   logical  lturb          ! Add smooth pseudo-random peturbations to initial rho
+   logical  linipert       ! Add smooth pseudo-random peturbations to initial fields
+   logical  lturb          ! Add smooth pseudo-random peturbations for turbulent inflow
    real     uini           ! Initial u-velocity
    real     rho0           ! Average density
    real     rhoa           ! Imposed density gradient for ibnd=2 case

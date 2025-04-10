@@ -16,13 +16,13 @@ main.o:      m_bndbounceback.o
 main.o:      m_bndpressure.o
 main.o:      m_boundarycond.o
 main.o:      m_channeldiag.o
+main.o:      m_city.o
 main.o:      m_closedbnd.o
 main.o:      m_collisions.o
 main.o:      m_cube.o
 main.o:      m_cylinder.o
 main.o:      m_density.o
 main.o:      m_diag.o
-main.o:      m_disks.o
 main.o:      m_drift.o
 main.o:      m_fequil3.o
 main.o:      m_fequil.o
@@ -91,6 +91,10 @@ m_channeldiag.o:      mod_dimensions.o
 m_channeldiag.o:      MODEL.CPP
 m_channeldiag.o:      m_readinfile.o
 m_channeldiag.o:      m_velocity.o
+m_city.o:      makefile
+m_city.o:      mod_dimensions.o
+m_city.o:      MODEL.CPP
+m_city.o:      m_tecfld.o
 m_closedbnd.o:      makefile
 m_closedbnd.o:      mod_dimensions.o
 m_closedbnd.o:      MODEL.CPP
@@ -117,9 +121,6 @@ m_diag.o:      m_readinfile.o
 m_diag.o:      m_tecout.o
 m_diag.o:      m_vorticity.o
 m_diag.o:      m_wtime.o
-m_disks.o:      makefile
-m_disks.o:      mod_dimensions.o
-m_disks.o:      MODEL.CPP
 m_drift.o:      makefile
 m_drift.o:      mod_D3Q27setup.o
 m_drift.o:      mod_dimensions.o
@@ -196,6 +197,8 @@ m_sphere.o:      mod_dimensions.o
 m_sphere.o:      MODEL.CPP
 m_string.o:      makefile
 m_string.o:      MODEL.CPP
+m_tecfld.o:      makefile
+m_tecfld.o:      MODEL.CPP
 m_tecfldsec.o:      makefile
 m_tecfldsec.o:      MODEL.CPP
 m_tecout.o:      makefile

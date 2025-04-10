@@ -11,13 +11,13 @@ F90SOURCE = \
 	m_bndpressure.F90\
 	m_boundarycond.F90\
 	m_channeldiag.F90\
+	m_city.F90\
 	m_closedbnd.F90\
 	m_collisions.F90\
 	m_cube.F90\
 	m_cylinder.F90\
 	m_density.F90\
 	m_diag.F90\
-	m_disks.F90\
 	m_drift.F90\
 	m_fequil3.F90\
 	m_fequilscalar.F90\
@@ -38,6 +38,7 @@ F90SOURCE = \
 	m_set_random_seed2.F90\
 	m_sphere.F90\
 	m_string.F90\
+	m_tecfld.F90\
 	m_tecfldsec.F90\
 	m_tecout.F90\
 	m_tecplot.F90\

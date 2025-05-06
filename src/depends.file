@@ -173,6 +173,8 @@ mod_dimensions.o:      makefile
 mod_dimensions.o:      MODEL.CPP
 mod_nrel5mw.o:      makefile
 mod_nrel5mw.o:      MODEL.CPP
+mod_shapiro.o:      makefile
+mod_shapiro.o:      MODEL.CPP
 m_pdfout.o:      makefile
 m_pdfout.o:      mod_dimensions.o
 m_pdfout.o:      MODEL.CPP

@@ -30,6 +30,7 @@ F90SOURCE = \
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
 	mod_nrel5mw.F90\
+	mod_shapiro.F90\
 	m_pdfout.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\

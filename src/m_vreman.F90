@@ -5,7 +5,7 @@ contains
 subroutine vreman(f,tau)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile
+   use m_readinfile, only : ivreman,kinevisc,p2l,smagorinsky,tauin
    use m_wtime
    implicit none
    real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input
@@ -111,8 +111,7 @@ subroutine vreman(f,tau)
 
             tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
 
-!            if (i < 20 ) tau(i,j,k)= tau(i,j,k) + real(10*(20-i))*kinevisc
-!            if (j < 10 ) tau(i,j,k)= tau(i,j,k) + real(10*(10-j))*kinevisc
+            if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) print '(a,f12.7,2g13.5)','tau:',tau(i,j,k),eddyvisc,kinevisc
 
          enddo
       enddo

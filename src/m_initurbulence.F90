@@ -19,7 +19,7 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    real aveu,avev,avew,aver
    real varu,varv,varw,varr
 
-   real :: vertcor=0.95
+   real :: timecor=0.98
 
 ! New seed
    call system('rm seed.dat')
@@ -58,10 +58,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
 
 ! Imposing time correlations
    do i=1,nrturb
-      uu(:,:,i)=vertcor*uu(:,:,i-1)+sqrt(1.0-vertcor**2)*uu(:,:,i)
-      vv(:,:,i)=vertcor*vv(:,:,i-1)+sqrt(1.0-vertcor**2)*vv(:,:,i)
-      ww(:,:,i)=vertcor*ww(:,:,i-1)+sqrt(1.0-vertcor**2)*ww(:,:,i)
-      rr(:,:,i)=vertcor*rr(:,:,i-1)+sqrt(1.0-vertcor**2)*rr(:,:,i)
+      uu(:,:,i)=timecor*uu(:,:,i-1)+sqrt(1.0-timecor**2)*uu(:,:,i)
+      vv(:,:,i)=timecor*vv(:,:,i-1)+sqrt(1.0-timecor**2)*vv(:,:,i)
+      ww(:,:,i)=timecor*ww(:,:,i-1)+sqrt(1.0-timecor**2)*ww(:,:,i)
+      rr(:,:,i)=timecor*rr(:,:,i-1)+sqrt(1.0-timecor**2)*rr(:,:,i)
    enddo
 
 ! Ensure zero mean and variance equal to one

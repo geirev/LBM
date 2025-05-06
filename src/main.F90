@@ -145,7 +145,7 @@ program LatticeBoltzmann
 
 ! to recover initial tau
       call fequil3(feq,rho,u,v,w)
-      call fregularization(f, feq, rho, u, v, w)
+      call fregularization(f, feq, u, v, w)
       call vreman(f,tau)
       f=feq+f
    endif
@@ -181,7 +181,7 @@ program LatticeBoltzmann
       if (runtest) write(98,'(a,100e19.10)')'ini:',feq(1:25,ip,jp,kp)
 
 ! [f=Rneqf] = fregularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call fregularization(f, feq, rho, u, v, w)
+      call fregularization(f, feq, u, v, w)
       if (runtest) write(98,'(a,100e19.10)')'reg:',feq(1:25,ip,jp,kp)
       if (runtest) write(98,'(a,100e19.10)')'reg:',f(1:25,ip,jp,kp)
 

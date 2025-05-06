@@ -1,12 +1,12 @@
 module m_turbulenceforcing
    integer, parameter     :: iturb_pos=10
-   integer, parameter     :: iturb_radius=0
+   integer, parameter     :: iturb_radius=2
 contains
 subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
    use mod_dimensions
    use m_fequilscalar
    use m_wtime
-   use m_readinfile, only : rho0,lturb
+   use m_readinfile, only : lturb
 
    real, intent(out)      :: turb_df(nl,-ieps:ieps,ny,nz)      ! forcing distributions
    real, intent(inout)    :: rho(nx,ny,nz)                     ! density
@@ -20,7 +20,6 @@ subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 
    real dfeq(nl)
-   real :: rtmp(ny,nz)
    real :: utmp(ny,nz)
    real :: vtmp(ny,nz)
    real :: wtmp(ny,nz)
@@ -38,10 +37,9 @@ subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
    if (lit==0) lit=nrturb
    do k=1,nz
    do j=1,ny
-      utmp(j,k)=0.0001*uu(j,k,lit)
-      vtmp(j,k)=0.0001*vv(j,k,lit)
-      wtmp(j,k)=0.0001*ww(j,k,lit)
-      rtmp(j,k)=rho0    !rho(1,j,k)
+      utmp(j,k)=0.00001*uu(j,k,lit)
+      vtmp(j,k)=0.00001*vv(j,k,lit)
+      wtmp(j,k)=0.00001*ww(j,k,lit)
    enddo
    enddo
 

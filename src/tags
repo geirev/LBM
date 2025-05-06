@@ -28,6 +28,7 @@ macrovars	m_macrovars.F90	/^module
 mod_D3Q27setup	mod_D3Q27setup.F90	/^module
 mod_dimensions	mod_dimensions.F90	/^module
 mod_nrel5mw	mod_nrel5mw.F90	/^module
+mod_shapiro	mod_shapiro.F90	/^module
 m_ablim	m_ablim.F90	/^module
 m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
@@ -83,6 +84,7 @@ readrestart	m_readrestart.F90	/^module
 saverestart	m_saverestart.F90	/^module
 seedmanagement	m_seedmanagement.F90	/^module
 set	m_set_random_seed2.F90	/^module
+shapiro	mod_shapiro.F90	/^module
 sphere	m_sphere.F90	/^module
 string	m_string.F90	/^module
 tecfld	m_tecfld.F90	/^module

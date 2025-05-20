@@ -14,9 +14,9 @@ subroutine drift(f,feq)
    call cpustart()
 
 !!!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k) SHARED(f, feq) SCHEDULE(static)
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(f, feq)
    do k=1,nz
    do j=1,ny
+!$OMP PARALLEL DO COLLAPSE(1) PRIVATE(i) SHARED(f, feq,j,k)
    do i=1,nx
 !      do l=1,nl
 !         f(l,i,j,k) = feq(l,i-cxs(l),j-cys(l),k-czs(l))
@@ -49,9 +49,9 @@ subroutine drift(f,feq)
          f(26,i,j,k) = feq(26,i+1,j-1,k+1)
          f(27,i,j,k) = feq(27,i-1,j+1,k-1)
    enddo
-   enddo
-   enddo
 !$OMP END PARALLEL DO
+   enddo
+   enddo
 
     call cpufinish(icpu)
 

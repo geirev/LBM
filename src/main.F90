@@ -173,7 +173,7 @@ program LatticeBoltzmann
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
       if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
 
-! [u,v,w,turb_df] = turbineforcing[rho,u,v,w]
+! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
       if (lturb) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)

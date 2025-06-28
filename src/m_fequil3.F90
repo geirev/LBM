@@ -31,7 +31,7 @@ subroutine fequil3(feq, rho, u, v, w)
 
    real                  :: vel(1:3)
 
-   integer :: i, j, k, l, p, q, r
+   integer :: i, j, k, l, p, q, r, ia
 
    real, parameter :: inv1cs2 = 1.0/(cs2)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
@@ -71,60 +71,61 @@ subroutine fequil3(feq, rho, u, v, w)
 
 
 ! Loop over grid
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q, r, vel, A0_2, A0_3 )      &
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, ia, j, k, l, p, q, r, vel, A0_2, A0_3 )      &
 !$OMP&                          SHARED(feq, rho, u, v, w, weights, c, H2, ibgk, H3)
    do k=1,nz
       do j=1,ny
-         do i=1,nx
+         do i=0,nx
+            ia=max(i,1)
 
-            vel(1)=u(i,j,k)
-            vel(2)=v(i,j,k)
-            vel(3)=w(i,j,k)
+            vel(1)=u(ia,j,k)
+            vel(2)=v(ia,j,k)
+            vel(3)=w(ia,j,k)
 
 ! A0_2 and A0_3 from \citet{fen21a} (following Eq. 32)
             do q=1,3
             do p=1,3
-               A0_2(p,q)=rho(i,j,k)*vel(p)*vel(q)
+               A0_2(p,q)=rho(ia,j,k)*vel(p)*vel(q)
             enddo
             enddo
 
             do r=1,3
             do q=1,3
             do p=1,3
-               A0_3(p,q,r)=rho(i,j,k)*vel(p)*vel(q)*vel(r)
+               A0_3(p,q,r)=rho(ia,j,k)*vel(p)*vel(q)*vel(r)
             enddo
             enddo
             enddo
 
 
 ! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
-            feq( 1,i,j,k) = rho(i,j,k) * (cs2                              ) / cs2
-            feq( 2,i,j,k) = rho(i,j,k) * (cs2  + vel(1)                    ) / cs2
-            feq( 3,i,j,k) = rho(i,j,k) * (cs2  - vel(1)                    ) / cs2
-            feq( 4,i,j,k) = rho(i,j,k) * (cs2            + vel(2)          ) / cs2
-            feq( 5,i,j,k) = rho(i,j,k) * (cs2            - vel(2)          ) / cs2
-            feq( 6,i,j,k) = rho(i,j,k) * (cs2                      - vel(3)) / cs2
-            feq( 7,i,j,k) = rho(i,j,k) * (cs2                      + vel(3)) / cs2
-            feq( 8,i,j,k) = rho(i,j,k) * (cs2  + vel(1)  + vel(2)          ) / cs2
-            feq( 9,i,j,k) = rho(i,j,k) * (cs2  - vel(1)  - vel(2)          ) / cs2
-            feq(10,i,j,k) = rho(i,j,k) * (cs2  + vel(1)  - vel(2)          ) / cs2
-            feq(11,i,j,k) = rho(i,j,k) * (cs2  - vel(1)  + vel(2)          ) / cs2
-            feq(12,i,j,k) = rho(i,j,k) * (cs2  - vel(1)            - vel(3)) / cs2
-            feq(13,i,j,k) = rho(i,j,k) * (cs2  + vel(1)            + vel(3)) / cs2
-            feq(14,i,j,k) = rho(i,j,k) * (cs2            + vel(2)  + vel(3)) / cs2
-            feq(15,i,j,k) = rho(i,j,k) * (cs2            - vel(2)  - vel(3)) / cs2
-            feq(16,i,j,k) = rho(i,j,k) * (cs2  - vel(1)            + vel(3)) / cs2
-            feq(17,i,j,k) = rho(i,j,k) * (cs2  + vel(1)            - vel(3)) / cs2
-            feq(18,i,j,k) = rho(i,j,k) * (cs2            - vel(2)  + vel(3)) / cs2
-            feq(19,i,j,k) = rho(i,j,k) * (cs2            + vel(2)  - vel(3)) / cs2
-            feq(20,i,j,k) = rho(i,j,k) * (cs2  - vel(1)  + vel(2)  + vel(3)) / cs2
-            feq(21,i,j,k) = rho(i,j,k) * (cs2  + vel(1)  - vel(2)  - vel(3)) / cs2
-            feq(22,i,j,k) = rho(i,j,k) * (cs2  - vel(1)  - vel(2)  - vel(3)) / cs2
-            feq(23,i,j,k) = rho(i,j,k) * (cs2  + vel(1)  + vel(2)  + vel(3)) / cs2
-            feq(24,i,j,k) = rho(i,j,k) * (cs2  + vel(1)  + vel(2)  - vel(3)) / cs2
-            feq(25,i,j,k) = rho(i,j,k) * (cs2  - vel(1)  - vel(2)  + vel(3)) / cs2
-            feq(26,i,j,k) = rho(i,j,k) * (cs2  - vel(1)  + vel(2)  - vel(3)) / cs2
-            feq(27,i,j,k) = rho(i,j,k) * (cs2  + vel(1)  - vel(2)  + vel(3)) / cs2
+            feq( 1,i,j,k) = rho(ia,j,k) * (cs2                              ) / cs2
+            feq( 2,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)                    ) / cs2
+            feq( 3,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)                    ) / cs2
+            feq( 4,i,j,k) = rho(ia,j,k) * (cs2            + vel(2)          ) / cs2
+            feq( 5,i,j,k) = rho(ia,j,k) * (cs2            - vel(2)          ) / cs2
+            feq( 6,i,j,k) = rho(ia,j,k) * (cs2                      - vel(3)) / cs2
+            feq( 7,i,j,k) = rho(ia,j,k) * (cs2                      + vel(3)) / cs2
+            feq( 8,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)  + vel(2)          ) / cs2
+            feq( 9,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)  - vel(2)          ) / cs2
+            feq(10,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)  - vel(2)          ) / cs2
+            feq(11,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)  + vel(2)          ) / cs2
+            feq(12,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)            - vel(3)) / cs2
+            feq(13,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)            + vel(3)) / cs2
+            feq(14,i,j,k) = rho(ia,j,k) * (cs2            + vel(2)  + vel(3)) / cs2
+            feq(15,i,j,k) = rho(ia,j,k) * (cs2            - vel(2)  - vel(3)) / cs2
+            feq(16,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)            + vel(3)) / cs2
+            feq(17,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)            - vel(3)) / cs2
+            feq(18,i,j,k) = rho(ia,j,k) * (cs2            - vel(2)  + vel(3)) / cs2
+            feq(19,i,j,k) = rho(ia,j,k) * (cs2            + vel(2)  - vel(3)) / cs2
+            feq(20,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)  + vel(2)  + vel(3)) / cs2
+            feq(21,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)  - vel(2)  - vel(3)) / cs2
+            feq(22,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)  - vel(2)  - vel(3)) / cs2
+            feq(23,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)  + vel(2)  + vel(3)) / cs2
+            feq(24,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)  + vel(2)  - vel(3)) / cs2
+            feq(25,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)  - vel(2)  + vel(3)) / cs2
+            feq(26,i,j,k) = rho(ia,j,k) * (cs2  - vel(1)  + vel(2)  - vel(3)) / cs2
+            feq(27,i,j,k) = rho(ia,j,k) * (cs2  + vel(1)  - vel(2)  + vel(3)) / cs2
 
 
 !            do p=1,3

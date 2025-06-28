@@ -11,6 +11,7 @@ main.o:      m_airfoil.o
 main.o:      makefile
 main.o:      m_applyturbines.o
 main.o:      m_applyturbulence.o
+main.o:      m_assigncvel.o
 main.o:      m_averaging.o
 main.o:      m_bndbounceback.o
 main.o:      m_bndpressure.o
@@ -33,6 +34,7 @@ main.o:      m_macrovars.o
 main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o
 main.o:      MODEL.CPP
+main.o:      mod_shapiro.o
 main.o:      m_readinfile.o
 main.o:      m_readrestart.o
 main.o:      m_saverestart.o
@@ -60,6 +62,8 @@ m_applyturbulence.o:      MODEL.CPP
 m_applyturbulence.o:      m_readinfile.o
 m_applyturbulence.o:      m_turbulenceforcing.o
 m_applyturbulence.o:      m_wtime.o
+m_assigncvel.o:      makefile
+m_assigncvel.o:      MODEL.CPP
 m_averaging.o:      makefile
 m_averaging.o:      mod_dimensions.o
 m_averaging.o:      MODEL.CPP
@@ -69,6 +73,7 @@ m_averaging.o:      m_tecfldsec.o
 m_bilin.o:      makefile
 m_bilin.o:      MODEL.CPP
 m_bndbounceback.o:      makefile
+m_bndbounceback.o:      m_fequilscalar.o
 m_bndbounceback.o:      mod_dimensions.o
 m_bndbounceback.o:      MODEL.CPP
 m_bndbounceback.o:      m_wtime.o
@@ -80,6 +85,7 @@ m_bndpressure.o:      m_readinfile.o
 m_boundarycond.o:      makefile
 m_boundarycond.o:      m_bndpressure.o
 m_boundarycond.o:      m_fequilscalar.o
+m_boundarycond.o:      mod_D3Q27setup.o
 m_boundarycond.o:      mod_dimensions.o
 m_boundarycond.o:      MODEL.CPP
 m_boundarycond.o:      m_readinfile.o

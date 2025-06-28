@@ -2,6 +2,7 @@ module m_boundarycond
 contains
 subroutine boundarycond(f,rho,u,v,w,uvel)
    use mod_dimensions
+   use mod_D3Q27setup
    use m_readinfile
    use m_bndpressure
    use m_fequilscalar
@@ -17,7 +18,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
    real :: utmp(ny,nz)
    real :: vtmp(ny,nz)
    real :: wtmp(ny,nz)
-   integer j,k,ja,ka
+!   real uin,rhoin
+   real tmp
+   integer i,j,k,l,m,ja,ka
    integer, parameter :: icpu=8
 
    call cpustart()
@@ -36,7 +39,7 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
          utmp(j,k)=uvel(k)
          vtmp(j,k)=0.0
          wtmp(j,k)=0.0
-         rtmp(j,k)= rho0   !rho(1,j,k)
+         rtmp(j,k)=rho0 !rho(1,j,k)
       enddo
       enddo
 
@@ -44,9 +47,33 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
       ka=min(max(k,1),nz)
       do j=0,ny+1
          ja=min(max(j,1),ny)
-         f(1:nl,0,j,k)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
+!         f(1:nl,0,j,k)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
+         f(1:nl,0,j,k)=f(1:nl,1,j,k)
+!         rhoin=0.0
+!         do l=1,nl
+!            if (cxs(l) <= 0) rhoin= rhoin + f(l,0,ja,ka)
+!         enddo
+!         uin=utmp(ja,ka)
+!         rhoin = rhoin / (1.0 - uin)
+
+         do l=1,nl
+            f(l,0,j,k)=f(l,0,j,k)-2.0*weights(l)*rtmp(ja,ka)*(cxs(l)*uvel(ka)+cys(l)*vtmp(ja,ka)+czs(l)*wtmp(ja,ka))/cs2
+         enddo
+         do l=2,nl-1,2
+            tmp=f(l,0,j,k)
+            if (cxs(l)==1)   f(l,0,j,k)=f(l+1,0,j,k)
+            if (cxs(l+1)==1) f(l+1,0,j,k)=tmp
+         enddo
+
+
+!                           1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7
+!   integer :: cxs(1:nl) = [0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1,-1, 1, 0, 0,-1, 1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1]
+!   integer :: cys(1:nl) = [0, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 0, 0,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1]
+!   integer :: czs(1:nl) = [0, 0, 0, 0, 0,-1, 1, 0, 0, 0, 0,-1, 1, 1,-1, 1,-1, 1,-1, 1,-1,-1, 1,-1, 1,-1, 1]
+
       enddo
       enddo
+
 
 
       do k=0,nz+1
@@ -81,7 +108,32 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 
    elseif (kbnd==1) then
 ! Outflow boundary on top
-      f(:,:,:,nz+1)=f(:,:,:,nz)
+!      f(:,:,:,nz+1)=f(:,:,:,nz)
+      do j = 1, ny
+      do i = 1, nx
+         f( 6,i,j,nz+1) = f( 7,i,j,nz)
+         f(12,i,j,nz+1) = f(16,i,j,nz)
+         f(15,i,j,nz+1) = f(18,i,j,nz)
+         f(17,i,j,nz+1) = f(13,i,j,nz)
+         f(19,i,j,nz+1) = f(14,i,j,nz)
+         f(21,i,j,nz+1) = f(27,i,j,nz)
+         f(22,i,j,nz+1) = f(25,i,j,nz)
+         f(24,i,j,nz+1) = f(23,i,j,nz)
+         f(26,i,j,nz+1) = f(20,i,j,nz)
+!         do l = 1, nl
+!            if (czs(l) < 0) then
+!               ! Find specular reflection: (cx(j), cy(j), cz(j)) = (cx(i), cy(i), -cz(i))
+!               do m = 1, nl
+!                  if (cxs(m) == cxs(l) .and. cys(m) == cys(l) .and. czs(m) == -czs(l)) then
+!                    f(l, i, j, nz+1) = f(m, i, j, nz)
+!                    if ((j==ny/2).and.(i==nx/2)) print '(a,i2,a,i2,a)','f(',l,'i,j,nz+1) = f(',m,'i,j,nz)'
+!                    exit
+!                  endif
+!               enddo
+!            endif
+!         enddo
+      enddo
+      enddo
 
    elseif (kbnd==2) then
 ! Outflow boundary on top and bottom

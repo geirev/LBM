@@ -27,9 +27,8 @@ subroutine city(lblanking)
    enddo
 
 
-   call tecfld('elevation.dat',nx,ny,1,elevation)
+   call tecfld('elevation',nx,ny,1,elevation)
 
-   stop
 
 end subroutine
 end module

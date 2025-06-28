@@ -3,6 +3,7 @@ actuatorline	m_actuatorline.F90	/^module
 airfoil	m_airfoil.F90	/^module
 applyturbines	m_applyturbines.F90	/^module
 applyturbulence	m_applyturbulence.F90	/^module
+assigncvel	m_assigncvel.F90	/^module
 averaging	m_averaging.F90	/^module
 bilin	m_bilin.F90	/^module
 bndbounceback	m_bndbounceback.F90	/^module
@@ -34,6 +35,7 @@ m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_applyturbines	m_applyturbines.F90	/^module
 m_applyturbulence	m_applyturbulence.F90	/^module
+m_assigncvel	m_assigncvel.F90	/^module
 m_averaging	m_averaging.F90	/^module
 m_bilin	m_bilin.F90	/^module
 m_bndbounceback	m_bndbounceback.F90	/^module

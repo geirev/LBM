@@ -174,4 +174,47 @@ subroutine shfilt2D(ish,sh,shdim,field,nx,ny)
    deallocate(x,y)
 end subroutine
 
+subroutine shfilt3D(ish,sh,shdim,field,nx,ny,nz)
+   implicit none
+   integer, intent(in) :: nx,ny,nz
+   integer, intent(in) :: ish
+   integer, intent(in) :: shdim
+   real,    intent(in) :: sh(shdim)
+   real,    intent(inout) :: field(nx,ny,nz)
+   real, allocatable :: x(:),y(:)
+   integer i,j,k
+   integer :: incx=1
+   integer :: incy=1
+   allocate(x(nx),y(nx))
+   do k=1,nz
+   do j=1,ny
+      x(:)=field(:,j,k)
+      call shfilt(ish,sh,nx,x,incx,y,incy,shdim)
+      field(:,j,k)=y(:)
+   enddo
+   enddo
+   deallocate(x,y)
+
+   allocate(x(ny),y(ny))
+   do k=1,nz
+   do i=1,nx
+      x(:)=field(i,:,k)
+      call shfilt(ish,sh,ny,x,incx,y,incy,shdim)
+      field(i,:,k)=y(:)
+   enddo
+   enddo
+   deallocate(x,y)
+
+   allocate(x(nz),y(nz))
+   do j=1,ny
+   do i=1,nx
+      x(:)=field(i,j,:)
+      call shfilt(ish,sh,nz,x,incx,y,incy,shdim)
+      field(i,j,:)=y(:)
+   enddo
+   enddo
+   deallocate(x,y)
+
+end subroutine
+
 end module

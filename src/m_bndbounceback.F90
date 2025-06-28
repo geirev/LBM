@@ -2,6 +2,7 @@ module m_bndbounceback
 contains
 subroutine bndbounceback(f,blanking)
    use mod_dimensions
+   use m_fequilscalar
 !   use m_readinfile,   only : kbndbb
    use m_wtime
    implicit none
@@ -17,6 +18,7 @@ subroutine bndbounceback(f,blanking)
    do j=0,ny+1
    do i=0,nx+1
       if (blanking(i,j,k)) then
+         f(1:nl,i,j,k)=fequilscalar(1.0,0.0,0.0,0.0)
          do l=2,nl-1,2
             tmp=f(l,i,j,k)
             f(l,i,j,k)=f(l+1,i,j,k)

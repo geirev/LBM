@@ -5,7 +5,7 @@ subroutine tecfld(fname,ii,jj,nr,fld)
    character(len=*), intent(in) :: fname
    integer,          intent(in) :: ii,jj,nr
    real,             intent(in) :: fld(ii,jj,nr)
-   integer m,i,j
+   integer i,j
    logical lopen
    integer iunit
    character(len=100) fn
@@ -20,14 +20,11 @@ subroutine tecfld(fname,ii,jj,nr,fld)
          print *,trim(fn)
          open(iunit,file=trim(fn),status='unknown')
             write(iunit,*)'TITLE = "',fname,'"'
-            write(iunit,*)'VARIABLES = "i-index" "j-index" '
-            write(iunit,'(5(a,i5,a))')(' "F',i,'"',i=1,nr)
+            write(iunit,*)'VARIABLES = "i" "j" "k"'
             write(iunit,'(a,i5,a,i5,a)')' ZONE  F=BLOCK, I=',ii,', J=',jj,', K=1'
             write(iunit,'(30I5)')((i,i=1,ii),j=1,jj)
             write(iunit,'(30I5)')((j,i=1,ii),j=1,jj)
-            do m=1,nr
-               write(iunit,900)((fld(i,j,m),i=1,ii),j=1,jj)
-            enddo
+            write(iunit,900)((fld(i,j,1),i=1,ii),j=1,jj)
          close(iunit)
          exit
       endif

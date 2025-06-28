@@ -111,8 +111,6 @@ subroutine vreman(f,tau)
 
             tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
 
-            if ((i==nx/2).and.(j==ny/2).and.(k==nz/2)) print '(a,f12.7,2g13.5)','tau:',tau(i,j,k),eddyvisc,kinevisc
-
          enddo
       enddo
    enddo

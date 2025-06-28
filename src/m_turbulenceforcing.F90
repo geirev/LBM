@@ -37,9 +37,9 @@ subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
    if (lit==0) lit=nrturb
    do k=1,nz
    do j=1,ny
-      utmp(j,k)=0.00001*uu(j,k,lit)
-      vtmp(j,k)=0.00001*vv(j,k,lit)
-      wtmp(j,k)=0.00001*ww(j,k,lit)
+      utmp(j,k)=0.0001*uu(j,k,lit)
+      vtmp(j,k)=0.0001*vv(j,k,lit)
+      wtmp(j,k)=0.0001*ww(j,k,lit)
    enddo
    enddo
 

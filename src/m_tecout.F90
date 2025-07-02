@@ -13,7 +13,7 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    character(len=*), intent(in) :: variables_string ! Variables to print separated by ,
    integer,          intent(in) :: num_of_variables ! Number of vaiables to print
 
-   logical,  intent(in)             :: lblanking(nx,ny,nz) ! blanking boundary
+   logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking boundary
    real,     intent(in)             :: rho(nx,ny,nz)       ! fluid density
    real,     intent(in)             :: u(nx,ny,nz)         ! x component of fluid velocity
    real,     intent(in)             :: v(nx,ny,nz)         ! y component of fluid velocity
@@ -35,17 +35,23 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    real(kind=4) :: physics_time
    real :: xyz(3)
    integer dd
-
-
-   real, allocatable :: blanking(:,:,:)
+   logical, save :: lfirst=.true.
+   real, save :: blanking(nx,ny,nz)=0.0
 
 
    physics_time=real(it)
    print *,'tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
 
-   allocate(blanking(nx,ny,nz))
-   blanking=0
-   where (lblanking) blanking=1.0
+   if (lfirst) then
+      lfirst=.false.
+      do k=1,nz
+      do j=1,ny
+      do i=1,nx
+         if (lblanking(i,j,k)) blanking(i,j,k)=1.0
+      enddo
+      enddo
+      enddo
+   endif
 
    allocate(your_datas(nx,ny,nz,num_of_variables))
    allocate(locations(num_of_variables))
@@ -104,7 +110,6 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
 
    ! before exit, you must call complete subroutine
    call plt_file%complete
-   if (allocated(blanking)) deallocate(blanking)
 
 end subroutine
 

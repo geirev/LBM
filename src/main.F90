@@ -1,37 +1,38 @@
 program LatticeBoltzmann
    use mod_dimensions
    use mod_D3Q27setup
+   use mod_shapiro
    use m_readinfile
+   use m_assigncvel
    use m_diag
    use m_averaging
-
    use m_airfoil
-   use m_channel
+   use m_city
    use m_cube
    use m_cylinder
-   use m_disks
    use m_sphere
-   use m_windfarm
    use m_channeldiag
-
    use m_uvelshear
    use m_boundarycond
-   use m_bndbounceback
    use m_bndpressure
+   use m_inipert
    use m_initurbulence
-
    use m_macrovars
    use m_density
    use m_velocity
    use m_stress
+   use m_solids
    use m_turbineforcing
+   use m_turbulenceforcing
    use m_applyturbines
+   use m_applyturbulence
    use m_collisions
    use m_drift
    use m_fequil
    use m_fequil3
    use m_fregularization
    use m_vreman
+   use m_seedmanagement
    use m_readrestart
    use m_saverestart
    use m_wtime
@@ -39,10 +40,15 @@ program LatticeBoltzmann
    use, intrinsic :: omp_lib
    implicit none
 
+   integer, parameter :: nshapiro=4
+   real sh(0:nshapiro)
+
+
 ! Main variables
    real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)     = 0.0  ! density function
    real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)   = 0.0  ! Maxwells equilibrium density function
-   logical :: lblanking(nx,ny,nz)= .false.          ! blanking boundary
+   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)= .false.  ! blanking boundary and object grid points
+   logical :: lsolids=.false.
 
 ! Spatially dependent relaxation time
    real    :: tau(nx,ny,nz)      = 0.0              ! relaxation time scale
@@ -58,82 +64,78 @@ program LatticeBoltzmann
    real vv(ny,nz,0:nrturb)
    real ww(ny,nz,0:nrturb)
    real rr(ny,nz,0:nrturb)
-   real inflowstd,inflowcor
 
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
+   real, allocatable  :: turb_df(:,:,:,:)         ! Turbulence forcing
    real uvel(nz)                                    ! vertical u-velocity profile
 
-   integer :: it,k
+   integer :: it
    integer ip,jp,kp
-   real x
 
-   logical, parameter :: forcecheck=.false.
    logical, parameter :: runtest=.false.
 
    call set_random_seed2()
 
-   call random_number(x)
-   print *,'x=',x
+   !call assigncvel()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
+
    if (nturbines > 0) allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
+   if (lturb)         allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
+   !allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Define solid elements and walls
    select case(trim(experiment))
    case('cube')
-      call cube(lblanking,nx/6,ny/2,nz/2,7)
+      call cube(lsolids,lblanking,nx/6,ny/2,nz/2,7)
    case('sphere')
-      call sphere(lblanking,nx/6,ny/2,nz/2,10)
+      call sphere(lsolids,lblanking,nx/2,ny/2,nz/2,10)
+   case('city')
+      call city(lsolids,lblanking)
    case('cylinder')
-      call cylinder(lblanking,nx/6,ny/2,25)
-   case('windfarm')
-      call windfarm(lblanking,kbnd)
-   case('channel') ! Pouisille flow
-      call channel(lblanking,nx/6,ny/2,25)
+      call cylinder(lsolids,lblanking,nx/2,ny/2,5)
    case('airfoil')
-      call airfoil(lblanking)
-   case('disks')
-      call disks(lblanking)
-   case default
-      print *,'invalid experiment',trim(experiment)
-      stop
+      call airfoil(lsolids,lblanking)
    end select
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
    call uvelshear(uvel)
-! Initial turbulent flow
-   inflowstd=0.01
-   inflowcor=0.95
    tau=tauin
 
-   if (nt0 == 0) then
-      if (lpseudo) call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.true.,nt0)
-      rho=rho0 + inflowstd*rho
-      do k=1,nz
-         u(:,:,k)=uvel(k)+0.1*inflowstd*u(:,:,k)
-      enddo
-      v=0.0+0.1*inflowstd*v
-      w=0.0+0.1*inflowstd*w
-         if (runtest) open(98,file='test.dat')
-         ip=2; jp=jpos(1)-11; kp=kpos(1)
-         if (runtest) write(98,'(a,100e19.10)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         if (runtest) write(98,'(a,100e19.10)')'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
-      call diag(0,rho,u,v,w,lblanking)            ! Initial diagnostics
+! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
+   call seedmanagement(nt0)
 
-! Pressure gradient initialization for periodic boundaries with pressure drive.
-!     if (ibnd==2) then
-!        do i=1,nx
-!           rho(i,:,:)=rho(i,:,:)+ rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
-!        enddo
-!     endif
+! setting shapiro factors (no really used)
+   call shfact(nshapiro,sh)
+
+   if (nt0 == 0) then
+! Intialization of macro variables
+      call inipert(rho,u,v,w,uvel)
+
+! Generate trubulence forcing fields
+      if (lturb) call initurbulence(uu,vv,ww,rr,.true.)
+
+! Outputs for testing
+      if (runtest) then
+         open(98,file='test.dat')
+         ip=1; jp=jpos(1)-11; kp=kpos(1)
+         ip=1; jp=ny/2; kp=nz/2
+         write(98,'(a,100g13.5)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+         !write(98,'(a,100g13.5)')'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
+      endif
+
+! Initial diagnostics
+      call diag(0,rho,u,v,w,lblanking)
+
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w)
+      call boundarycond(feq,rho,u,v,w,uvel)
       f=feq
       tau=tauin
 
@@ -142,101 +144,104 @@ program LatticeBoltzmann
       call readrestart(nt0,f,theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,f,lblanking)
 
-! to recover initial tau
+! To recover initial tau
       call fequil3(feq,rho,u,v,w)
-      call fregularization(f, feq, rho, u, v, w)
+      call fregularization(f, feq, u, v, w)
       call vreman(f,tau)
       f=feq+f
-   endif
-
-   if (forcecheck) then
-      open(99,file='checkforce.dat')
-      ip=ipos(1); jp=jpos(1); kp=kpos(1)
-      write(99,'(i6,21f9.5,21f9.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
-      if (it .ge. 35000) iout=5
-      if ((mod(it, 10) == 0) .or. it == nt1) print '(a,i6,a,f10.2,a)','Iteration:', it,' Time:',real(it)*p2l%time,' s'
+      if (runtest) write(98,'(a,100g13.5)')'001:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+!      if ((mod(it, 10) == 0) .or. it == nt1) then
+         write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='no')'Iteration:', it,                     &
+                                                            ' Time:'  ,real(it)*p2l%time,' s,',   &
+                                                            ' uinave:',sum(u(1,:,:))/real(ny*nz), &
+                                                            ' rinave:',sum(rho(1,:,:))/real(ny*nz), &
+                                                            ' tau:'   ,tau(nx/2,ny/2,nz/2)
+!         do l=1,nl
+!            write(*,'(a)',advance='no')'.'
+!            call shfilt3D(nshapiro,sh,nshapiro,f(l,:,:,:),nx+2,ny+2,nz+2)
+!         enddo
+!         write(*,'(a)')'filtered'
+         write(*,'(a)')'.'
+!      endif
 
 ! start with f,rho,u,v,w
       if (runtest) then
-         ip=2; jp=jpos(1)-11; kp=kpos(1)
-         write(98,'(a,i7)')'ite:',it
-         write(98,'(a,100e19.10)')'ini:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         write(98,'(a,100e19.10)')'ini:',f(1:25,ip,jp,kp)
+         write(98,'(a,i7)')'it: ',it
+         write(98,'(a,100g13.5)')'u02:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+         write(98,'(a,100g13.5)')'f02:',f(1:10,ip,jp,kp)
       endif
 
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
-      call turbineforcing(df,rho,u,v,w)
+      if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
+
+! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
+      if (lturb) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
-      if (runtest) write(98,'(a,100e19.10)')'ini:',feq(1:25,ip,jp,kp)
+      if (runtest) write(98,'(a,100g13.5)')'ini:',feq(1:10,ip,jp,kp)
 
 ! [f=Rneqf] = fregularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call fregularization(f, feq, rho, u, v, w)
-      if (runtest) write(98,'(a,100e19.10)')'reg:',feq(1:25,ip,jp,kp)
-      if (runtest) write(98,'(a,100e19.10)')'reg:',f(1:25,ip,jp,kp)
+      call fregularization(f, feq, u, v, w)
+      if (runtest) write(98,'(a,100g13.5)')'reg:',feq(1:10,ip,jp,kp)
+      if (runtest) write(98,'(a,100g13.5)')'reg:',f(1:10,ip,jp,kp)
 
 ! [tau] = vreman[f] [f=Rneqf]
       call vreman(f,tau)
-      if (runtest) write(98,'(a,100e19.10)')'vre:',tau(ip,jp,kp)
+      if (runtest) write(98,'(a,100g13.5)')'vre:',tau(ip,jp,kp)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau)
-      if (runtest) write(98,'(a,100e19.10)')'col:',feq(1:25,ip,jp,kp)
+      if (runtest) write(98,'(a,100g13.5)')'col:',feq(1:10,ip,jp,kp)
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
-      call applyturbines(feq,df,tau)
-      if (runtest) write(98,'(a,100e19.10)')'tur:',feq(1:25,ip,jp,kp)
+      if (nturbines > 0) call applyturbines(feq,df,tau)
+      if (runtest) write(98,'(a,100g13.5)')'tur:',feq(1:10,ip,jp,kp)
+
+! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
+      if (lturb) call applyturbulence(feq,turb_df,tau)
+      if (runtest) write(98,'(a,100g13.5)')'tur:',feq(1:10,ip,jp,kp)
+
+! Bounce back boundary on fixed walls within the fluid
+      if (lsolids) call solids(feq,lblanking)
 
 ! General boundary conditions
-      call boundarycond(feq,rho,u,v,w,rr,uu,vv,ww,it,inflowstd,uvel)
-      if (runtest) write(98,'(a,100e19.10)')'bnd:',feq(1:25,ip,jp,kp)
-
-! Bounce back boundary on fixed walls
-      call bndbounceback(feq,lblanking)
-      if (runtest) write(98,'(a,100e19.10)')'bon:',feq(1:25,ip,jp,kp)
+      call boundarycond(feq,rho,u,v,w,uvel)
+      if (runtest) write(98,'(a,100g13.5)')'bnd:',feq(1:10,ip,jp,kp)
 
 ! Drift of feq returned in f
       call drift(f,feq)
-      if (runtest) write(98,'(a,100e19.10)')'dri:',f(1:25,ip,jp,kp)
-      if (runtest) write(98,'(a)')
+      if (runtest) write(98,'(a,100g13.5)')'dri:',f(1:10,ip,jp,kp)
+
 
 ! Compute updated macro variables
-     ! rho=density(f,lblanking)
-     ! u= velocity(f,rho,cxs,lblanking)
-     ! v= velocity(f,rho,cys,lblanking)
-     ! w= velocity(f,rho,czs,lblanking)
       call macrovars(rho,u,v,w,f,lblanking)
+      if (runtest) write(98,'(a,100g13.5)')'u03:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
 
 ! Diagnostics
       call diag(it,rho,u,v,w,lblanking)
-
-      if (forcecheck) then
-         ip=ipos(1); jp=jpos(1); kp=kpos(1)
-         write(99,'(i6,21f9.5,21f9.5)')it,u(ip-10:ip+10,jp-11,kp),w(ip-10:ip+10,jp-11,kp)
-      endif
 
 ! Averaging for diagnostics
       if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
 
 ! Updating input turbulence matrix
-      if (mod(it, nrturb) == 0 .and. it > 1 .and. lpseudo) then
+      if (mod(it, nrturb) == 0 .and. it > 1 .and. lturb .and. ibnd==1) then
          print '(a,i6)','Recomputing inflow noise: it=',it
-         call initurbulence(uu,vv,ww,rr,rho,u,v,w,inflowcor,.false.,it)
+         call initurbulence(uu,vv,ww,rr,.false.)
       endif
 
 ! Save restart file
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
+      if (runtest) write(98,'(a)')
 
    enddo
 
-   if (forcecheck) close(99)
    if (runtest) close(98)
 
    call cpuprint()

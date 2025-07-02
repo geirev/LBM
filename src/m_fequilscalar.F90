@@ -25,6 +25,8 @@ function fequilscalar(rho, u, v, w) result(feq)
    logical, save         :: lfirst=.true.
    integer l, p, q, r
 
+   real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
+
 
 
    if (lfirst) then
@@ -76,6 +78,7 @@ function fequilscalar(rho, u, v, w) result(feq)
    enddo
    enddo
 
+
 ! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
    do l=1,nl
       feq(l)=dens
@@ -89,13 +92,13 @@ function fequilscalar(rho, u, v, w) result(feq)
       enddo
       ! the above identically recovers the BGK equilibrium, below we add third order contributions
       if (ibgk == 3) then
-         feq(l)=feq(l)   &
-             + ( H3(1,1,2,l) + H3(2,3,3,l) ) * ( A0_3(1,1,2) + A0_3(2,3,3) )/(2.0*cs6) &
-             + ( H3(1,3,3,l) + H3(1,2,2,l) ) * ( A0_3(1,3,3) + A0_3(1,2,2) )/(2.0*cs6) &
-             + ( H3(2,2,3,l) + H3(1,1,3,l) ) * ( A0_3(2,2,3) + A0_3(1,1,3) )/(2.0*cs6) &
-             + ( H3(1,1,2,l) - H3(2,3,3,l) ) * ( A0_3(1,1,2) - A0_3(2,3,3) )/(6.0*cs6) &
-             + ( H3(1,3,3,l) - H3(1,2,2,l) ) * ( A0_3(1,3,3) - A0_3(1,2,2) )/(6.0*cs6) &
-             + ( H3(2,2,3,l) - H3(1,1,3,l) ) * ( A0_3(2,2,3) - A0_3(1,1,3) )/(6.0*cs6)
+         do p=1,3
+         do q=1,3
+         do r=1,3
+            feq(l)=feq(l) + H3(l,p,q,r)*A0_3(p,q,r)*inv6cs6
+         enddo
+         enddo
+         enddo
       endif
 
       feq(l)= weights(l)*feq(l)

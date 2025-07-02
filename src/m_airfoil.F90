@@ -1,10 +1,11 @@
 module m_airfoil
 
 contains
-subroutine airfoil(blanking)
+subroutine airfoil(lsolids,blanking)
    use mod_dimensions
    implicit none
-   logical, intent(inout)  :: blanking(nx,ny,nz)
+   logical, intent(inout)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
+   logical, intent(inout) :: lsolids
    integer, parameter :: num_points = 100
    real :: xcc(num_points)
    real :: ycu(num_points)
@@ -25,6 +26,7 @@ subroutine airfoil(blanking)
 
    integer :: i,j
    real :: theta, yt, yc, dyc_dx, x
+   lsolids=.true.
 
    do i = 1, num_points
       x = (i-1)/real(num_points-1)*chord_len

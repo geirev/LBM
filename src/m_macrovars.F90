@@ -9,7 +9,7 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    real,    intent(out) :: u(nx,ny,nz)
    real,    intent(out) :: v(nx,ny,nz)
    real,    intent(out) :: w(nx,ny,nz)
-   logical, intent(in)  :: blanking(nx,ny,nz)
+   logical, intent(in)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
    integer i,j,k,l
    integer, parameter :: icpu=2
    if (nl /= 27) stop 'macrovars routine set up for D3Q27'
@@ -21,12 +21,6 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    do k=1,nz
    do j=1,ny
    do i=1,nx
-      if (blanking(i,j,k)) then
-         rho(i,j,k)=0.0
-         u(i,j,k)=0.0
-         v(i,j,k)=0.0
-         w(i,j,k)=0.0
-      else
          rho(i,j,k)=f(1,i,j,k)
          do l = 2, nl
             rho(i,j,k)=rho(i,j,k)+f(l,i,j,k)
@@ -91,12 +85,11 @@ subroutine macrovars(rho,u,v,w,f,blanking)
                              -f(26,i,j,k) &
                              +f(27,i,j,k)
          w(i,j,k) =  w(i,j,k)/rho(i,j,k)
-      endif
+!      endif
    enddo
    enddo
    enddo
 !$OMP END PARALLEL DO
-
 
    call cpufinish(icpu)
 

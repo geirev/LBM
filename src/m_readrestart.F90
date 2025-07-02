@@ -2,6 +2,7 @@ module m_readrestart
 contains
 subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
+   use m_readinfile, only : lturb,nturbines
    integer, intent(in)  :: it
    real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(out) :: theta
@@ -17,35 +18,39 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    write(cit,'(i6.6)')it
    print '(a,a)','readrestart:',cit
 
-   print '(3a)','reading: turbulence'//cit//'.uf'
-   inquire(file='turbulence'//cit//'.uf',exist=ex)
-   if (ex) then
-      inquire(iolength=irec)j,k,l,uu,vv,ww,rr
-      open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
-         read(10,rec=1,err=998)j,k,l
-         if ((j==ny).and.(k==nz).and.(l==nrturb)) then
-            read(10,rec=1,err=998)j,k,l,uu,vv,ww,rr
-         else
-            print '(a)','readrestart: Attempting to read incompatable turbulence restart file'
-            print '(a,4i6)','readrestart: Dimensions in restart file are:',j,k,l
-            close(10)
-            stop
-         endif
-      close(10)
-   else
-      print '(a)','readrestart: No restart file for inflow turbulence fields available','turbulence'//cit//'.uf'
-      stop
+   if (lturb) then
+      print '(3a)','reading: turbulence'//cit//'.uf'
+      inquire(file='turbulence'//cit//'.uf',exist=ex)
+      if (ex) then
+         inquire(iolength=irec)j,k,l,uu,vv,ww,rr
+         open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
+            read(10,rec=1,err=998)j,k,l
+            if ((j==ny).and.(k==nz).and.(l==nrturb)) then
+               read(10,rec=1,err=998)j,k,l,uu,vv,ww,rr
+            else
+               print '(a)','readrestart: Attempting to read incompatable turbulence restart file'
+               print '(a,4i6)','readrestart: Dimensions in restart file are:',j,k,l
+               close(10)
+               stop
+            endif
+         close(10)
+      else
+         print '(a)','readrestart: No restart file for inflow turbulence fields available','turbulence'//cit//'.uf'
+         stop
+      endif
    endif
 
-   print '(3a)','reading: theta'//cit//'.uf'
-   inquire(file='theta'//cit//'.dat',exist=ex)
-   if (ex) then
-      open(10,file='theta'//cit//'.dat')
-         read(10,*)theta
-      close(10)
-   else
-      print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
-      stop
+   if (nturbines > 0) then
+      print '(3a)','reading: theta'//cit//'.uf'
+      inquire(file='theta'//cit//'.dat',exist=ex)
+      if (ex) then
+         open(10,file='theta'//cit//'.dat')
+            read(10,*)theta
+         close(10)
+      else
+         print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
+         stop
+      endif
    endif
 
    inquire(file='restart'//cit//'.uf',exist=ex)

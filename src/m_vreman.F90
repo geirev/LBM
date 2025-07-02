@@ -5,7 +5,7 @@ contains
 subroutine vreman(f,tau)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile
+   use m_readinfile, only : ivreman,kinevisc,p2l,smagorinsky,tauin
    use m_wtime
    implicit none
    real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input

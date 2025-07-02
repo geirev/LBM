@@ -75,7 +75,7 @@ subroutine fequil3(feq, rho, u, v, w)
 !$OMP&                          SHARED(feq, rho, u, v, w, weights, c, H2, ibgk, H3)
    do k=1,nz
       do j=1,ny
-         do i=0,nx
+         do i=1,nx
             ia=max(i,1)
 
             vel(1)=u(ia,j,k)

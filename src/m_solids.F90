@@ -1,6 +1,6 @@
-module m_bndbounceback
+module m_solids
 contains
-subroutine bndbounceback(f,blanking)
+subroutine solids(f,blanking)
    use mod_dimensions
    use m_fequilscalar
 !   use m_readinfile,   only : kbndbb
@@ -14,11 +14,10 @@ subroutine bndbounceback(f,blanking)
    call cpustart()
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, tmp) SHARED(f, blanking)
-   do k=0,nz+1
-   do j=0,ny+1
-   do i=0,nx+1
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
       if (blanking(i,j,k)) then
-         f(1:nl,i,j,k)=fequilscalar(1.0,0.0,0.0,0.0)
          do l=2,nl-1,2
             tmp=f(l,i,j,k)
             f(l,i,j,k)=f(l+1,i,j,k)

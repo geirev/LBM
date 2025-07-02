@@ -13,12 +13,10 @@ main.o:      m_applyturbines.o
 main.o:      m_applyturbulence.o
 main.o:      m_assigncvel.o
 main.o:      m_averaging.o
-main.o:      m_bndbounceback.o
 main.o:      m_bndpressure.o
 main.o:      m_boundarycond.o
 main.o:      m_channeldiag.o
 main.o:      m_city.o
-main.o:      m_closedbnd.o
 main.o:      m_collisions.o
 main.o:      m_cube.o
 main.o:      m_cylinder.o
@@ -40,6 +38,7 @@ main.o:      m_readrestart.o
 main.o:      m_saverestart.o
 main.o:      m_seedmanagement.o
 main.o:      m_set_random_seed2.o
+main.o:      m_solids.o
 main.o:      m_sphere.o
 main.o:      m_stress.o
 main.o:      m_turbineforcing.o
@@ -72,11 +71,6 @@ m_averaging.o:      m_readinfile.o
 m_averaging.o:      m_tecfldsec.o
 m_bilin.o:      makefile
 m_bilin.o:      MODEL.CPP
-m_bndbounceback.o:      makefile
-m_bndbounceback.o:      m_fequilscalar.o
-m_bndbounceback.o:      mod_dimensions.o
-m_bndbounceback.o:      MODEL.CPP
-m_bndbounceback.o:      m_wtime.o
 m_bndpressure.o:      makefile
 m_bndpressure.o:      m_fequilscalar.o
 m_bndpressure.o:      mod_dimensions.o
@@ -101,10 +95,6 @@ m_city.o:      makefile
 m_city.o:      mod_dimensions.o
 m_city.o:      MODEL.CPP
 m_city.o:      m_tecfld.o
-m_closedbnd.o:      makefile
-m_closedbnd.o:      mod_dimensions.o
-m_closedbnd.o:      MODEL.CPP
-m_closedbnd.o:      m_readinfile.o
 m_collisions.o:      makefile
 m_collisions.o:      mod_dimensions.o
 m_collisions.o:      MODEL.CPP
@@ -200,6 +190,11 @@ m_seedmanagement.o:      MODEL.CPP
 m_seedmanagement.o:      m_set_random_seed2.o
 m_set_random_seed2.o:      makefile
 m_set_random_seed2.o:      MODEL.CPP
+m_solids.o:      makefile
+m_solids.o:      m_fequilscalar.o
+m_solids.o:      mod_dimensions.o
+m_solids.o:      MODEL.CPP
+m_solids.o:      m_wtime.o
 m_sphere.o:      makefile
 m_sphere.o:      mod_dimensions.o
 m_sphere.o:      MODEL.CPP

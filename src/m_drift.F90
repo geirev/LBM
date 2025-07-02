@@ -9,18 +9,13 @@ subroutine drift(f,feq)
    implicit none
    real, intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)  :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
-   integer i,j,k,l
+   integer i,j,k
    integer, parameter :: icpu=10
    call cpustart()
 
 !!!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k) SHARED(f, feq) SCHEDULE(static)
    do k=1,nz
    do j=1,ny
-   i=0
-   do l=1,nl
-      if (cxs(l) <= 0) f(l,i,j,k) = feq(l,i-cxs(l),j-cys(l),k-czs(l))
-   enddo
-
 
 !$OMP PARALLEL DO COLLAPSE(1) PRIVATE(i) SHARED(f, feq,j,k)
    do i=1,nx

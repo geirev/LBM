@@ -1,12 +1,14 @@
 module m_cylinder
 contains
-subroutine cylinder(blanking,ipos,jpos,radius)
+subroutine cylinder(lsolids,blanking,ipos,jpos,radius)
    use mod_dimensions
    logical, intent(inout) :: blanking(0:nx+1,0:ny+1,0:nz+1)
    integer, intent(in)    :: ipos
    integer, intent(in)    :: jpos
    integer, intent(in)    :: radius
    integer i,j
+   logical, intent(inout) :: lsolids
+   lsolids=.true.
 
    do j=0,ny+1
    do i=0,nx+1

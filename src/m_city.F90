@@ -1,11 +1,13 @@
 module m_city
 contains
-subroutine city(lblanking)
+subroutine city(lsolids,lblanking)
    use mod_dimensions
    use m_tecfld
    logical, intent(inout) :: lblanking(0:nx+1,0:ny+1,0:nz+1)
    integer i,j,ipos,jpos,kpos,irad
    real elevation(nx,ny)
+   logical, intent(inout) :: lsolids
+   lsolids=.true.
 
 ! Building row one
    elevation=0.0

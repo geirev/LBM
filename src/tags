@@ -6,12 +6,10 @@ applyturbulence	m_applyturbulence.F90	/^module
 assigncvel	m_assigncvel.F90	/^module
 averaging	m_averaging.F90	/^module
 bilin	m_bilin.F90	/^module
-bndbounceback	m_bndbounceback.F90	/^module
 bndpressure	m_bndpressure.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
 channeldiag	m_channeldiag.F90	/^module
 city	m_city.F90	/^module
-closedbnd	m_closedbnd.F90	/^module
 collisions	m_collisions.F90	/^module
 cube	m_cube.F90	/^module
 cylinder	m_cylinder.F90	/^module
@@ -38,12 +36,10 @@ m_applyturbulence	m_applyturbulence.F90	/^module
 m_assigncvel	m_assigncvel.F90	/^module
 m_averaging	m_averaging.F90	/^module
 m_bilin	m_bilin.F90	/^module
-m_bndbounceback	m_bndbounceback.F90	/^module
 m_bndpressure	m_bndpressure.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
 m_channeldiag	m_channeldiag.F90	/^module
 m_city	m_city.F90	/^module
-m_closedbnd	m_closedbnd.F90	/^module
 m_collisions	m_collisions.F90	/^module
 m_cube	m_cube.F90	/^module
 m_cylinder	m_cylinder.F90	/^module
@@ -64,6 +60,7 @@ m_readrestart	m_readrestart.F90	/^module
 m_saverestart	m_saverestart.F90	/^module
 m_seedmanagement	m_seedmanagement.F90	/^module
 m_set_random_seed2	m_set_random_seed2.F90	/^module
+m_solids	m_solids.F90	/^module
 m_sphere	m_sphere.F90	/^module
 m_string	m_string.F90	/^module
 m_tecfld	m_tecfld.F90	/^module
@@ -87,6 +84,7 @@ saverestart	m_saverestart.F90	/^module
 seedmanagement	m_seedmanagement.F90	/^module
 set	m_set_random_seed2.F90	/^module
 shapiro	mod_shapiro.F90	/^module
+solids	m_solids.F90	/^module
 sphere	m_sphere.F90	/^module
 string	m_string.F90	/^module
 tecfld	m_tecfld.F90	/^module

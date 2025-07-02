@@ -54,9 +54,9 @@ subroutine inipert(rho,u,v,w,uvel)
       call random_number(rho)
       rho=rho0 + stddev*rho
       do k=1,nz
-         u(:,:,k)=uvel(k)  ! +0.1*stddev*u(:,:,k)
+         u(:,:,k)=uvel(k)      ! +0.1*stddev*u(:,:,k)
+         v(:,:,k)=0.5*uvel(k)  ! +0.1*stddev*u(:,:,k)
       enddo
-      v=0.0                ! +0.1*stddev*v
       w=0.0                ! +0.1*stddev*w
    endif
 

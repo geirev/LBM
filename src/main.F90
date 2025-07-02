@@ -14,8 +14,6 @@ program LatticeBoltzmann
    use m_channeldiag
    use m_uvelshear
    use m_boundarycond
-   use m_bndbounceback
-   use m_closedbnd
    use m_bndpressure
    use m_inipert
    use m_initurbulence
@@ -23,6 +21,7 @@ program LatticeBoltzmann
    use m_density
    use m_velocity
    use m_stress
+   use m_solids
    use m_turbineforcing
    use m_turbulenceforcing
    use m_applyturbines
@@ -49,6 +48,7 @@ program LatticeBoltzmann
    real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)     = 0.0  ! density function
    real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)   = 0.0  ! Maxwells equilibrium density function
    logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)= .false.  ! blanking boundary and object grid points
+   logical :: lsolids=.false.
 
 ! Spatially dependent relaxation time
    real    :: tau(nx,ny,nz)      = 0.0              ! relaxation time scale
@@ -91,18 +91,16 @@ program LatticeBoltzmann
 ! Define solid elements and walls
    select case(trim(experiment))
    case('cube')
-      call cube(lblanking,nx/6,ny/2,nz/2,7)
+      call cube(lsolids,lblanking,nx/6,ny/2,nz/2,7)
    case('sphere')
-      call sphere(lblanking,nx/2,ny/2,nz/2,10)
+      call sphere(lsolids,lblanking,nx/2,ny/2,nz/2,10)
    case('city')
-      call city(lblanking)
+      call city(lsolids,lblanking)
    case('cylinder')
-      call cylinder(lblanking,nx/2,ny/2,5)
+      call cylinder(lsolids,lblanking,nx/2,ny/2,5)
    case('airfoil')
-      call airfoil(lblanking)
+      call airfoil(lsolids,lblanking)
    end select
-
-   call closedbnd(lblanking)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
@@ -111,8 +109,9 @@ program LatticeBoltzmann
 
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
    call seedmanagement(nt0)
-   call shfact(nshapiro,sh)
 
+! setting shapiro factors (no really used)
+   call shfact(nshapiro,sh)
 
    if (nt0 == 0) then
 ! Intialization of macro variables
@@ -120,14 +119,6 @@ program LatticeBoltzmann
 
 ! Generate trubulence forcing fields
       if (lturb) call initurbulence(uu,vv,ww,rr,.true.)
-
-!      if (ibnd==2) then ! Pressure gradient initialization for periodic boundaries with pressure drive.
-!         stop 'ibnd=2 does not work I think'
-!         do i=1,nx
-!            rho(i,:,:)=rho0 + inflowstd*rho(i,:,:) +  rhoa - 2.0*rhoa*(real(i-1)/real(nx-1))
-!         enddo
-!         u=0.0; v=0.0; w=0.0
-!      endif
 
 ! Outputs for testing
       if (runtest) then
@@ -153,7 +144,7 @@ program LatticeBoltzmann
       call readrestart(nt0,f,theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,f,lblanking)
 
-! to recover initial tau
+! To recover initial tau
       call fequil3(feq,rho,u,v,w)
       call fregularization(f, feq, u, v, w)
       call vreman(f,tau)
@@ -216,15 +207,12 @@ program LatticeBoltzmann
       if (lturb) call applyturbulence(feq,turb_df,tau)
       if (runtest) write(98,'(a,100g13.5)')'tur:',feq(1:10,ip,jp,kp)
 
+! Bounce back boundary on fixed walls within the fluid
+      if (lsolids) call solids(feq,lblanking)
+
 ! General boundary conditions
       call boundarycond(feq,rho,u,v,w,uvel)
       if (runtest) write(98,'(a,100g13.5)')'bnd:',feq(1:10,ip,jp,kp)
-      call macrovars(rho,u,v,w,feq,lblanking)
-      write(98,'(a,100g13.5)')'u0y:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-
-! Bounce back boundary on fixed walls
-      call bndbounceback(feq,lblanking)
-      if (runtest) write(98,'(a,100g13.5)')'bon:',feq(1:10,ip,jp,kp)
 
 ! Drift of feq returned in f
       call drift(f,feq)

@@ -11,9 +11,9 @@ module m_wtime
                                        'collision',&
                                        'applyturb',&
                                        'boundary ',&
-                                       'bouncebac',&
+                                       'solids   ',&
                                        'drift    ',&
-                                       'fequil2  ',&
+                                       'fequil3  ',&
                                        'fregular ',&
                                        'vreman   ']
 contains

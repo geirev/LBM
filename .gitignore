@@ -1,11 +1,11 @@
 build
+animations
 F90-bgk
 latticeboltzmann-python
 run*
 src/old
 src/actuator
 src/actuatorline
-NACA
 FAST
 papers
 pictures

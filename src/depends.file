@@ -24,7 +24,6 @@ main.o:      m_density.o
 main.o:      m_diag.o
 main.o:      m_drift.o
 main.o:      m_fequil3.o
-main.o:      m_fequil.o
 main.o:      m_fregularization.o
 main.o:      m_inipert.o
 main.o:      m_initurbulence.o
@@ -40,7 +39,6 @@ main.o:      m_seedmanagement.o
 main.o:      m_set_random_seed2.o
 main.o:      m_solids.o
 main.o:      m_sphere.o
-main.o:      m_stress.o
 main.o:      m_turbineforcing.o
 main.o:      m_turbulenceforcing.o
 main.o:      m_uvelshear.o
@@ -50,6 +48,7 @@ main.o:      m_wtime.o
 m_airfoil.o:      makefile
 m_airfoil.o:      mod_dimensions.o
 m_airfoil.o:      MODEL.CPP
+m_airfoil.o:      m_tecfld.o
 m_applyturbines.o:      makefile
 m_applyturbines.o:      mod_dimensions.o
 m_applyturbines.o:      MODEL.CPP
@@ -105,6 +104,7 @@ m_cube.o:      MODEL.CPP
 m_cylinder.o:      makefile
 m_cylinder.o:      mod_dimensions.o
 m_cylinder.o:      MODEL.CPP
+m_cylinder.o:      m_tecfld.o
 m_density.o:      makefile
 m_density.o:      mod_dimensions.o
 m_density.o:      MODEL.CPP

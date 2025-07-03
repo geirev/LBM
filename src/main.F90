@@ -97,7 +97,7 @@ program LatticeBoltzmann
    case('city')
       call city(lsolids,lblanking)
    case('cylinder')
-      call cylinder(lsolids,lblanking,nx/2,ny/2,5)
+      call cylinder(lsolids,lblanking)
    case('airfoil')
       call airfoil(lsolids,lblanking)
    end select
@@ -154,6 +154,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
+      if (it>=25000) iout=2
       if (runtest) write(98,'(a,100g13.5)')'001:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
 !      if ((mod(it, 10) == 0) .or. it == nt1) then
          write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='no')'Iteration:', it,                     &

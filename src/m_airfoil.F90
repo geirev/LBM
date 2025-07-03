@@ -3,6 +3,7 @@ module m_airfoil
 contains
 subroutine airfoil(lsolids,blanking)
    use mod_dimensions
+   use m_tecfld
    implicit none
    logical, intent(inout)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
    logical, intent(inout) :: lsolids
@@ -20,10 +21,11 @@ subroutine airfoil(lsolids,blanking)
    real, parameter :: T = 12.0/100.0      ! Thickness in percent of the chord
    real, parameter :: chord_len =100.0    ! Chord len of the airfoil
    real, parameter :: yscale=150.0        ! Thickness of the airfoil
-   real, parameter :: xref=50.0          ! x-starting point of airfoil
+   real, parameter :: xref=50.0           ! x-starting point of airfoil
    real, parameter :: yref=50.0           ! y-center point of airfoil
-   real, parameter :: tilt=-0.10          ! y-center point of airfoil
+   real, parameter :: tilt=-0.10          ! Tilt of airfoil
 
+   real :: elevation(nx,ny)=-1.0
    integer :: i,j
    real :: theta, yt, yc, dyc_dx, x
    lsolids=.true.
@@ -79,6 +81,20 @@ subroutine airfoil(lsolids,blanking)
       enddo
       enddo
    close(10)
+
+
+      do j=1,ny
+      do i=1,nx
+         if (blanking(i,j,1)) then
+            elevation(i,j)=nz
+         endif
+      enddo
+      enddo
+
+
+   call tecfld('elevation',nx,ny,1,elevation)
+
+
 end subroutine
 end module
 

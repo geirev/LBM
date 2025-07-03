@@ -22,10 +22,30 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
    real tmp
    integer i,j,k,l,m,ja,ka,ip
    integer, parameter :: icpu=8
+   real, parameter :: pi=3.1415927410125732
 !   integer bouncefreey(nl)
 !   integer bouncefreez(nl)
 
    call cpustart()
+
+! Periodic boundary conditions in i-direction.
+   if (ibnd==0) then
+      f(:,0   ,:,:)=f(:,nx,:,:)
+      f(:,nx+1,:,:)=f(:,1 ,:,:)
+   endif
+
+! Periodic boundary conditions in j-direction.
+   if (jbnd==0) then
+      f(:,:,0,:)   =f(:,:,ny,:)
+      f(:,:,ny+1,:)=f(:,:,1,:)
+   endif
+
+! Periodic boundary conditions in k-direction.
+   if (kbnd==0) then
+      f(:,:,:,0)   =f(:,:,:,nz)
+      f(:,:,:,nz+1)=f(:,: ,:,1)
+   endif
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Closed boundary conditions in i-direction
@@ -34,8 +54,8 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 ! Inflow outflow boundary conditions in i-direction
       do k=1,nz
       do j=1,ny
-         utmp(j,k)=uvel(k)
-         vtmp(j,k)=0.5*uvel(k)
+         utmp(j,k)=uvel(k)*cos(udir*pi/180.0)
+         vtmp(j,k)=uvel(k)*sin(udir*pi/180.0)
          wtmp(j,k)=0.0
          rtmp(j,k)=rho0 !rho(1,j,k)
       enddo
@@ -47,12 +67,6 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
          ja=min(max(j,1),ny)
 !         f(1:nl,0,j,k)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
          f(1:nl,0,j,k)=f(1:nl,1,j,k)
-!         rhoin=0.0
-!         do l=1,nl
-!            if (cxs(l) <= 0) rhoin= rhoin + f(l,0,ja,ka)
-!         enddo
-!         uin=utmp(ja,ka)
-!         rhoin = rhoin / (1.0 - uin)
 
          do l=1,nl
             f(l,0,j,k)=f(l,0,j,k)-2.0*weights(l)*rtmp(ja,ka)*(cxs(l)*utmp(ja,ka)+cys(l)*vtmp(ja,ka)+czs(l)*wtmp(ja,ka))/cs2

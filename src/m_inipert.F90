@@ -4,7 +4,7 @@ subroutine inipert(rho,u,v,w,uvel)
    use mod_dimensions
    use m_set_random_seed2
    use m_pseudo2D
-   use m_readinfile, only : rho0,linipert
+   use m_readinfile, only : rho0,linipert,udir
    implicit none
    real, intent(inout)  :: rho(nx,ny,nz)
    real, intent(inout)  :: u(nx,ny,nz)
@@ -14,6 +14,7 @@ subroutine inipert(rho,u,v,w,uvel)
 
 !   real :: vertcor=0.95
    real :: stddev=0.00001  ! value running stable in uniform flow for 2000 timesteps
+   real, parameter :: pi=3.1415927410125732
 
 !   real cor1,cor2,dx,dy,dir
 !   integer(kind=4) n1,n2
@@ -54,10 +55,10 @@ subroutine inipert(rho,u,v,w,uvel)
       call random_number(rho)
       rho=rho0 + stddev*rho
       do k=1,nz
-         u(:,:,k)=uvel(k)      ! +0.1*stddev*u(:,:,k)
-         v(:,:,k)=0.5*uvel(k)  ! +0.1*stddev*u(:,:,k)
+         u(:,:,k)=uvel(k)*cos(udir*pi/180.0)
+         v(:,:,k)=uvel(k)*sin(udir*pi/180.0)
       enddo
-      w=0.0                ! +0.1*stddev*w
+      w=0.0
    endif
 
 end subroutine

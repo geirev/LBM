@@ -12,7 +12,8 @@ module m_readinfile
    integer  kbnd           ! Type of bondary condition in k direction
    logical  linipert       ! Add smooth pseudo-random peturbations to initial fields
    logical  lturb          ! Add smooth pseudo-random peturbations for turbulent inflow
-   real     uini           ! Initial u-velocity
+   real     uini           ! Initial absolute velocity
+   real     udir           ! Initial velocity direction in degrees
    real     rho0           ! Average density
    real     rhoa           ! Imposed density gradient for ibnd=2 case
    real     tauin          ! Collision timescale
@@ -102,7 +103,7 @@ subroutine readinfile()
       read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
       read(10,*)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
       read(10,*)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
-      read(10,*)uini               ; print '(a,f8.3,a)',  'uini (inflow uvel)= ',uini,       ' [m/s]'
+      read(10,*)uini,udir          ; print '(a,2(f8.3,a))','inflow (uini,udir)= ',uini,       ' [m/s]',udir,' [degrees]'
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
       read(10,'(1x,l1)')linipert   ; print '(a,tr7,l1)',  'linipert          = ',linipert

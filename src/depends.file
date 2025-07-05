@@ -24,8 +24,8 @@ main.o:      m_density.o
 main.o:      m_diag.o
 main.o:      m_drift.o
 main.o:      m_fequil3.o
-main.o:      m_fequil.o
 main.o:      m_fregularization.o
+main.o:      m_hermite_polynomials.o
 main.o:      m_inipert.o
 main.o:      m_initurbulence.o
 main.o:      m_macrovars.o
@@ -40,7 +40,6 @@ main.o:      m_seedmanagement.o
 main.o:      m_set_random_seed2.o
 main.o:      m_solids.o
 main.o:      m_sphere.o
-main.o:      m_stress.o
 main.o:      m_turbineforcing.o
 main.o:      m_turbulenceforcing.o
 main.o:      m_uvelshear.o
@@ -143,10 +142,13 @@ m_fregularization.o:      mod_dimensions.o
 m_fregularization.o:      MODEL.CPP
 m_fregularization.o:      m_readinfile.o
 m_fregularization.o:      m_wtime.o
+m_hermite_polynomials.o:      makefile
+m_hermite_polynomials.o:      mod_D3Q27setup.o
+m_hermite_polynomials.o:      mod_dimensions.o
+m_hermite_polynomials.o:      MODEL.CPP
 m_inipert.o:      makefile
 m_inipert.o:      mod_dimensions.o
 m_inipert.o:      MODEL.CPP
-m_inipert.o:      m_pseudo2D.o
 m_inipert.o:      m_readinfile.o
 m_inipert.o:      m_set_random_seed2.o
 m_initurbulence.o:      makefile

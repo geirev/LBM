@@ -21,6 +21,7 @@ drift	m_drift.F90	/^module
 fequil3	m_fequil3.F90	/^module
 fequilscalar	m_fequilscalar.F90	/^module
 fregularization	m_fregularization.F90	/^module
+hermite	m_hermite_polynomials.F90	/^module
 inipert	m_inipert.F90	/^module
 initurbulence	m_initurbulence.F90	/^module
 macrovars	m_macrovars.F90	/^module
@@ -49,6 +50,7 @@ m_drift	m_drift.F90	/^module
 m_fequil3	m_fequil3.F90	/^module
 m_fequilscalar	m_fequilscalar.F90	/^module
 m_fregularization	m_fregularization.F90	/^module
+m_hermite_polynomials	m_hermite_polynomials.F90	/^module
 m_inipert	m_inipert.F90	/^module
 m_initurbulence	m_initurbulence.F90	/^module
 m_macrovars	m_macrovars.F90	/^module

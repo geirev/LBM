@@ -14,8 +14,8 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    real cor1,cor2,dx,dy,dir
    integer(kind=4) n1,n2
    integer i,j,k
-   integer(kind=4), save :: nyy,nzz,nt
-   logical(kind=4) :: verbose=.false.
+   integer, save :: nyy,nzz,nt
+   logical :: verbose=.false.
    real aveu,avev,avew,aver
    real varu,varv,varw,varr
 
@@ -51,10 +51,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    nyy=int(ny,4)
    nzz=int(nz,4)
    nt=int(nrturb)
-   call pseudo2D(uu(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2D(vv(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2D(ww(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2D(rr(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(uu(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(vv(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(ww(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(rr(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
 
 ! Imposing time correlations
    do i=1,nrturb

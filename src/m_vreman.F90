@@ -13,7 +13,6 @@ subroutine vreman(f,tau)
 
    logical, save         :: lfirst=.true.
 
-   real, save            :: H2(3,3,27)      ! Second order Hermite polynomial
    real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs
    real, save            :: dx              ! length scale lattice to physical
    real, save            :: const           ! c in Vreman 2004 Eq (5)
@@ -41,7 +40,7 @@ subroutine vreman(f,tau)
       return
    endif
 
-   if (lfirst) then
+   !if (lfirst) then
       const=2.5*smagorinsky**2
       dx=p2l%length
 
@@ -50,16 +49,16 @@ subroutine vreman(f,tau)
       c(3,:)=real(czs(:))
 
 ! Hermitian polynomials of 2nd order H2
-      do l=1,nl
-         do q=1,3
-         do p=1,3
-            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
-         enddo
-         enddo
-      enddo
-
-      lfirst=.false.
-   endif
+!      do l=1,nl
+!         do q=1,3
+!         do p=1,3
+!            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
+!         enddo
+!         enddo
+!      enddo
+!
+!      lfirst=.false.
+!   endif
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

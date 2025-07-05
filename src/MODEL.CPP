@@ -1,1 +1,1 @@
-#define LINUX
+#define CUDA

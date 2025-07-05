@@ -1,7 +1,15 @@
 module m_fregularization
+  interface fregularization
+    module procedure fregularization_cpu
+#ifdef _CUDA
+    module procedure fregularization_gpu
+#endif
+  end interface
+
+
 contains
 
-subroutine fregularization(f, feq, u, v, w)
+subroutine fregularization_cpu(f, feq, u, v, w)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
@@ -15,10 +23,8 @@ subroutine fregularization(f, feq, u, v, w)
 
    real, intent(inout)   :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 
-   logical, save         :: lfirst=.true.
-   real, save            :: H2(3,3,nl)      ! Second order Hermite polynomial
-   real, save            :: H3(3,3,3,nl)    ! Third order Hermite polynomial
-   real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs
+   !logical, save         :: lfirst=.true.
+   real                  :: c(3,nl)         ! Array storage of cxs, cys, and czs
 
    real                  :: A1_2(3,3)
    real                  :: A1_3(3,3,3)
@@ -36,22 +42,24 @@ subroutine fregularization(f, feq, u, v, w)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=12
    call cpustart()
+   print '(a)','fregularization CPU'
 
-   if (lfirst) then
+!   if (lfirst) then
       c(1,:)=real(cxs(:))
       c(2,:)=real(cys(:))
       c(3,:)=real(czs(:))
 
 ! Hermitian polynomials of 2nd order H2
-      do l=1,nl
-         do q=1,3
-         do p=1,3
-            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
-         enddo
-         enddo
-      enddo
+!      do l=1,nl
+!         do q=1,3
+!         do p=1,3
+!            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
+!         enddo
+!         enddo
+!      enddo
 
-!      open(10,file='H2.dat')
+
+!      open(10,file='H2n.dat')
 !         do l=1,nl
 !            write(10,'(i3,a,9f10.5)')l,':',H2(:,:,l)
 !         enddo
@@ -59,24 +67,25 @@ subroutine fregularization(f, feq, u, v, w)
 
 ! Hermitian polynomials of 3nd order H3 with
 ! [c_\alpha \delta]_{ijk} = c_{\alpha,i} \delta_{jk} + c_{\alpha,j} \delta_{ik} +c_{\alpha,k} \delta_{ij}
-      do l=1,nl
-         do r=1,3
-         do q=1,3
-         do p=1,3
-            H3(p,q,r,l)=c(p,l)*c(q,l)*c(r,l) - cs2*(c(p,l)*delta(q,r) + c(q,l)*delta(p,r) +  c(r,l)*delta(p,q))
-         enddo
-         enddo
-         enddo
-      enddo
-
-!      open(10,file='H3.dat')
-!         do l=1,nl
-!            write(10,'(i3,a,27g12.5)')l,':',H3(:,:,:,l)
+!      do l=1,nl
+!         do r=1,3
+!         do q=1,3
+!         do p=1,3
+!            H3(p,q,r,l)=c(p,l)*c(q,l)*c(r,l) - cs2*(c(p,l)*delta(q,r) + c(q,l)*delta(p,r) +  c(r,l)*delta(p,q))
 !         enddo
-!      close(10)
+!         enddo
+!         enddo
+!      enddo
 
-      lfirst=.false.
-   endif
+      open(10,file='H3n.dat')
+         do l=1,nl
+            write(10,'(i3,a,27g12.5)')l,':',H3(:,:,:,l)
+         enddo
+      close(10)
+
+!      stop
+!      lfirst=.false.
+!   endif
 
 ! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
 !$OMP PARALLEL DO collapse(2) DEFAULT(NONE) PRIVATE(i, j, k) &
@@ -159,11 +168,118 @@ subroutine fregularization(f, feq, u, v, w)
 !$OMP END PARALLEL DO
          enddo
       enddo
-  endif
+   endif
+   call cpufinish(icpu)
+end subroutine
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+#ifdef _CUDA
+subroutine fregularization_gpu(f, feq, u, v, w)
+   use mod_dimensions
+   use mod_D3Q27setup
+   use m_ablim
+   use m_readinfile
+   use m_wtime
+   use cublas
+   implicit none
+   real, intent(in)    , managed   :: u(nx,ny,nz)
+   real, intent(in)    , managed   :: v(nx,ny,nz)
+   real, intent(in)    , managed   :: w(nx,ny,nz)
+   real, intent(in)    , managed   :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) , managed   :: f(nl,0:nx+1,0:ny+1,0:nz+1)
+
+   real,                 device   :: c(3,nl)
+   real,                 device   :: A1_2(3,3)
+   real,                 device   :: A1_3(3,3,3)
+   real,                 device   :: vel(1:3)
+
+   integer :: i, j, k, l, p, q, r
+
+   real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
+   real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
+   real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
+   integer, parameter :: icpu=12
+   call cpustart()
+   print '(a)','fregularization GPU'
+
+   c(1,:)=real(cxs(:))
+   c(2,:)=real(cys(:))
+   c(3,:)=real(czs(:))
+
+!$cuf kernel do
+   do k=1,nz
+      do j=1,ny
+         do i=1,nx
+            f(:,i,j,k)=f(:,i,j,k)-feq(:,i,j,k)
+         enddo
+      enddo
+   enddo
+
+
+   if (ihrr == 1) then
+!$cuf kernel do
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx
+               vel(1)=u(i,j,k)
+               vel(2)=v(i,j,k)
+               vel(3)=w(i,j,k)
+
+               A1_2=0.0
+               do l=1,nl
+                  do q=1,3
+                  do p=1,3
+                     A1_2(p,q) = A1_2(p,q) + H2(p,q,l)*f(l,i,j,k)
+                  enddo
+                  enddo
+               enddo
+
+               do r=1,3
+               do q=1,3
+               do p=1,3
+                  A1_3(p,q,r)=vel(p)*A1_2(q,r) +vel(q)*A1_2(r,p) +  vel(r)*A1_2(p,q)
+               enddo
+               enddo
+               enddo
+
+               do l=1,nl
+                  f(l,i,j,k)=0.0
+
+                  do q=1,3
+                  do p=1,3
+                     f(l,i,j,k)=f(l,i,j,k) + H2(p,q,l)*A1_2(p,q)*inv2cs4
+                  enddo
+                  enddo
+
+                  do r=1,3
+                  do q=1,3
+                  do p=1,3
+                     f(l,i,j,k)=f(l,i,j,k) + H3(p,q,r,l)*A1_3(p,q,r)*inv6cs6
+                  enddo
+                  enddo
+                  enddo
+
+                  f(l,i,j,k)=weights(l)*f(l,i,j,k)
+               enddo
+
+            enddo
+         enddo
+      enddo
+   endif
 
    call cpufinish(icpu)
 
 
 end subroutine
+#endif
 
 end module

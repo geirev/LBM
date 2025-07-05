@@ -3,7 +3,6 @@ contains
 subroutine inipert(rho,u,v,w,uvel)
    use mod_dimensions
    use m_set_random_seed2
-   use m_pseudo2D
    use m_readinfile, only : rho0,linipert,udir
    implicit none
    real, intent(inout)  :: rho(nx,ny,nz)
@@ -13,7 +12,7 @@ subroutine inipert(rho,u,v,w,uvel)
    real, intent(in)     :: uvel(nz)
 
 !   real :: vertcor=0.95
-   real :: stddev=0.00001  ! value running stable in uniform flow for 2000 timesteps
+   real :: stddev=0.000001  ! value running stable in uniform flow for 2000 timesteps
    real, parameter :: pi=3.1415927410125732
 
 !   real cor1,cor2,dx,dy,dir

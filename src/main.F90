@@ -209,17 +209,11 @@ program LatticeBoltzmann
       if (runtest) write(98,'(a,100g15.7)')'ini:',feq(1:10,ip,jp,kp)
 
 ! [f=Rneqf] = fregularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
+      call fregularization(f, feq, u, v, w)
 #ifdef _CUDA
-      print *,'freg GPU starts'
-      !f_d=f; feq_d=feq; u_d=u; v_d=v; w_d=w
-      !call fregularization(f_d, feq_d, u_d, v_d, w_d)
-      call fregularization(f, feq, u, v, w)
       istat = cudaDeviceSynchronize()
-      !f=f_d
-      print *,'freg GPU done'
-#else
-      call fregularization(f, feq, u, v, w)
 #endif
+
       if (runtest) write(98,'(a,100g15.7)')'reg:',feq(1:10,ip,jp,kp)
       if (runtest) write(98,'(a,100g15.7)')'reg:',f(1:10,ip,jp,kp)
 

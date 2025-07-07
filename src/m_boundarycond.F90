@@ -5,7 +5,6 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
    use mod_D3Q27setup
    use m_readinfile
    use m_bndpressure
-   use m_fequilscalar
    use m_wtime
    implicit none
    real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
@@ -14,17 +13,19 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
    real, intent(in)   :: v(nx,ny,nz)
    real, intent(in)   :: w(nx,ny,nz)
    real, intent(in)   :: uvel(nz)
-   real :: rtmp(ny,nz)
-   real :: utmp(ny,nz)
-   real :: vtmp(ny,nz)
-   real :: wtmp(ny,nz)
-!   real uin,rhoin
+#ifdef _CUDA
+   attributes(managed) :: f
+   attributes(managed) :: rho
+   attributes(managed) :: u
+   attributes(managed) :: v
+   attributes(managed) :: w
+   attributes(managed) :: uvel
+#endif
    real tmp
    integer i,j,k,l,m,ja,ka,ip
    integer, parameter :: icpu=8
    real, parameter :: pi=3.1415927410125732
-!   integer bouncefreey(nl)
-!   integer bouncefreez(nl)
+
 
    call cpustart()
 
@@ -48,42 +49,33 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Closed boundary conditions in i-direction
-
-   if (ibnd==1) then
 ! Inflow outflow boundary conditions in i-direction
-      do k=1,nz
-      do j=1,ny
-         utmp(j,k)=uvel(k)*cos(udir*pi/180.0)
-         vtmp(j,k)=uvel(k)*sin(udir*pi/180.0)
-         wtmp(j,k)=0.0
-         rtmp(j,k)=rho0 !rho(1,j,k)
-      enddo
-      enddo
-
+   if (ibnd==1) then
+#ifdef _CUDA
+!!$cuf kernel do(2) <<<*,*>>>
+#endif
       do k=0,nz+1
-      ka=min(max(k,1),nz)
       do j=0,ny+1
-         ja=min(max(j,1),ny)
-!         f(1:nl,0,j,k)=fequilscalar(rtmp(ja,ka),utmp(ja,ka),vtmp(ja,ka),wtmp(ja,ka))
-         f(1:nl,0,j,k)=f(1:nl,1,j,k)
-
+         ka = min(max(k,1), nz)
+         ja = min(max(j,1), ny)
+!         ka=k; if (k<1) ka=1; if (k>nz) ka = nz
+!         ja=j; if (j<1) ja=1; if (j>ny) ja = ny
          do l=1,nl
-            f(l,0,j,k)=f(l,0,j,k)-2.0*weights(l)*rtmp(ja,ka)*(cxs(l)*utmp(ja,ka)+cys(l)*vtmp(ja,ka)+czs(l)*wtmp(ja,ka))/cs2
+            f(l,0,j,k) = f(l,1,j,k) - 2.0*weights(l)*rho0*(cxs(l)*uvel(ka)*cos(udir*pi/180.0)&
+                                                         + cys(l)*uvel(ka)*sin(udir*pi/180.0)&
+                                                         + czs(l)*0.0)/cs2
          enddo
          do l=2,nl-1,2
             tmp=f(l,0,j,k)
             if (cxs(l)==1)   f(l,0,j,k)=f(l+1,0,j,k)
             if (cxs(l+1)==1) f(l+1,0,j,k)=tmp
          enddo
-
-
-
       enddo
       enddo
 
-
-
+#ifdef _CUDA
+!$cuf kernel do(2) <<<*,*>>>
+#endif
       do k=0,nz+1
       do j=0,ny+1
          f(:,nx+1,j,k)=f(:,nx,j,k)
@@ -126,6 +118,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !           enddo
 !        endif
 !     enddo
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do k=1,nz
       do i=1,nx
          f( 4,i,0,k) = f( 5,i,0,k)
@@ -176,6 +171,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !           enddo
 !        endif
 !     enddo
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do k=1,nz
       do i=1,nx
          f( 4,i,0,k) = f( 5,i,0,k)
@@ -229,6 +227,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !        endif
 !     enddo
 !     stop
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do k=1,nz
       do i=1,nx
          f( 5,i,ny+1,k) = f( 4,i,ny+1,k)
@@ -279,6 +280,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !           enddo
 !        endif
 !     enddo
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do k=1,nz
       do i=1,nx
          f( 5,i,ny+1,k) = f( 4,i,ny+1,k)
@@ -337,6 +341,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !           enddo
 !        endif
 !     enddo
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do j=1,ny
       do i=1,nx
          f( 7,i,j,0) = f( 6,i,j,0)
@@ -391,6 +398,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !            endif
 !         enddo
 !      stop
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do j=1,ny
       do i=1,nx
          f( 7,i,j,0) = f( 6,i,j,0)
@@ -442,6 +452,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !            endif
 !         enddo
 !         stop
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do j=1,ny+1
       do i=1,nx+1
          f( 6,i,j,nz+1) = f( 7,i,j,nz+1)
@@ -497,6 +510,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 !         enddo
 !      stop
 
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
       do j = 1, ny
       do i = 1, nx
          f( 6,i,j,nz+1) =  f( 7,i,j,nz+1)
@@ -566,10 +582,12 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
 ! The free-slip edges have not yet been implemented and I didn't care about the corners yet.
 
    if ((jbnd < 10) .or. (kbnd < 10)) return
-   k=1; j=1; i=1; l=1; m=1; ip=1
 
 
 ! === Edge along j=1 and k=1 === No slip
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
     do i=1,nx
        do l=1,nl
           ip = bounce(l)
@@ -589,6 +607,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
     enddo
 
 ! === Edge along j=ny and k=1 === No slip
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
     do i=1,nx
        do l=1,nl
           ip = bounce(l)
@@ -608,6 +629,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
     enddo
 
 ! === Edge along j=1 and k=nz === No slip
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
     do i=1,nx
        do l=1,nl
           ip = bounce(l)
@@ -627,6 +651,9 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
     enddo
 
 ! === Edge along j=ny and k=nz === No slip
+#ifdef CUDAS
+!!$cuf kernel do
+#endif
     do i=1,nx
        do l=1,nl
           ip = bounce(l)

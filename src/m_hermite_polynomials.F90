@@ -51,18 +51,18 @@ subroutine hermite_polynomials()
       enddo
    enddo
 
-   open(10,file='H2n.dat')
-       do l=1,nl
-          write(10,'(i3,a,9f10.5)')l,':',H2(:,:,l)
-       enddo
-   close(10)
-
-
-   open(10,file='H3n.dat')
-      do l=1,nl
-         write(10,'(i3,a,27g12.5)')l,':',H3(:,:,:,l)
-      enddo
-   close(10)
+!   open(10,file='H2n.dat')
+!       do l=1,nl
+!          write(10,'(i3,a,9f10.5)')l,':',H2(:,:,l)
+!       enddo
+!   close(10)
+!
+!
+!   open(10,file='H3n.dat')
+!      do l=1,nl
+!         write(10,'(i3,a,27g12.5)')l,':',H3(:,:,:,l)
+!      enddo
+!   close(10)
 
 
 end subroutine

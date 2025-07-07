@@ -31,29 +31,6 @@ function fequilscalar(rho, u, v, w) result(feq)
       c(2,:)=real(cys(:))
       c(3,:)=real(czs(:))
 
-! Hermitian polynomials of 2nd order H2
-!      do l=1,nl
-!         do q=1,3
-!         do p=1,3
-!            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
-!         enddo
-!         enddo
-!      enddo
-
-! Hermitian polynomials of 3nd order H3 with
-! [c_\alpha \delta]_{ijk} = c_{\alpha,i} \delta_{jk} + c_{\alpha,j} \delta_{ik} +c_{\alpha,k} \delta_{ij}
-!      do l=1,nl
-!         do r=1,3
-!         do q=1,3
-!         do p=1,3
-!            H3(p,q,r,l)=c(p,l)*c(q,l)*c(r,l) - cs2*(c(p,l)*delta(q,r) + c(q,l)*delta(p,r) +  c(r,l)*delta(p,q))
-!         enddo
-!         enddo
-!         enddo
-!      enddo
-
-!      lfirst=.false.
-!   endif
 
    vel(1)=u
    vel(2)=v

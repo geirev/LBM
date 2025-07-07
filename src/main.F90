@@ -37,6 +37,7 @@ program LatticeBoltzmann
    use m_seedmanagement
    use m_readrestart
    use m_saverestart
+   use m_tecfld
    use m_wtime
    use m_set_random_seed2
    use, intrinsic :: omp_lib
@@ -53,22 +54,62 @@ program LatticeBoltzmann
    attributes(managed) :: f
    attributes(managed) :: feq
 #endif
-   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)= .false.  ! blanking boundary and object grid points
+
+   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)       ! blanking boundary and object grid points
+#ifdef _CUDA
+   attributes(managed) :: lblanking
+   logical, dimension(:,:,:), allocatable :: lblanking_h ! Host blanking variable
+#endif
+
+   real uvel(nz)
+   real, dimension(:), allocatable :: uvel_d        ! vertical u-velocity profile host version
+#ifdef _CUDA
+   attributes(managed) :: uvel_d
+#endif
+
    logical :: lsolids=.false.
 
 ! Spatially dependent relaxation time
-   real    :: tau(nx,ny,nz)      = 0.0              ! relaxation time scale
+   real    :: tau(nx,ny,nz)                         ! relaxation time scale
+#ifdef _CUDA
+   attributes(managed) :: tau
+#endif
 
 ! Fluid variables
    real    :: u(nx,ny,nz)                           ! x component of fluid velocity
    real    :: v(nx,ny,nz)                           ! y component of fluid velocity
    real    :: w(nx,ny,nz)                           ! z component of fluid velocity
+   real    :: rho(nx,ny,nz)                         ! fluid density
 #ifdef _CUDA
    attributes(managed) :: u
    attributes(managed) :: v
    attributes(managed) :: w
+   attributes(managed) :: rho
 #endif
-   real    :: rho(nx,ny,nz)      = 0.0              ! fluid density
+
+! Hermite coefficients fequil and fregularization
+   real :: vel(3,nx,ny,nz)
+   real :: A2(3,3,nx,ny,nz)
+   real :: A3(3,3,3,nx,ny,nz)
+#ifdef _CUDA
+   attributes(managed) :: vel
+   attributes(managed) :: A2
+   attributes(managed) :: A3
+#endif
+
+! Vreman arrays
+   real eddyvisc(nx,ny,nz)
+   real Bbeta(nx,ny,nz)
+   real alphamag(nx,ny,nz)
+   real alpha(3,3,nx,ny,nz)
+   real beta(3,3,nx,ny,nz)
+#ifdef _CUDA
+   attributes(managed) :: alpha
+   attributes(managed) :: beta
+   attributes(managed) :: eddyvisc
+   attributes(managed) :: Bbeta
+   attributes(managed) :: alphamag
+#endif
 
 ! Stochastic input field on inflow boundary
    real uu(ny,nz,0:nrturb)
@@ -79,8 +120,9 @@ program LatticeBoltzmann
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
    real, allocatable  :: turb_df(:,:,:,:)         ! Turbulence forcing
-   real uvel(nz)                                    ! vertical u-velocity profile
 
+   real :: elevation(nx,ny)=0.0
+   integer i,j,k,l
    integer :: it
    integer ip,jp,kp
    integer :: istat
@@ -108,33 +150,65 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Define solid elements and walls
+#ifdef _CUDA
+    ! We can use a source allocation to create a host copy of C. Alternatively, we
+    ! could use a standard allocate statement, followed by C_h = C to copy device data
+    ! to the host
+    ! To reuse the following code block, we can use an associate statement to rename variable C
+    ! to be our new host array copy
+      allocate(lblanking_h, source = lblanking)
+!    associate(lblanking => lblanking_h)
+#else
+     allocate(lblanking_h(0:nx,0:ny,0:nz)
+#endif
+
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
+   do k = 0, nz+1
+   do j = 0, ny+1
+   do i = 0, nx+1
+      lblanking(i,j,k) = .false.
+   end do
+   end do
+   end do
    select case(trim(experiment))
    case('cube')
-      call cube(lsolids,lblanking,nx/6,ny/2,nz/2,7)
+!      call cube(lsolids,lblanking,nx/6,ny/2,nz/2,7)
    case('sphere')
-      call sphere(lsolids,lblanking,nx/2,ny/2,nz/2,10)
+!      call sphere(lsolids,lblanking,nx/2,ny/2,nz/2,10)
    case('city')
-      call city(lsolids,lblanking)
+!      call city(lsolids,lblanking)
    case('cylinder')
       call cylinder(lsolids,lblanking)
+      lblanking_h=lblanking
+      do j=1,ny
+      do i=1,nx
+         if (lblanking_h(i,j,1)) then
+            elevation(i,j)=nz
+         endif
+      enddo
+      enddo
+      call tecfld('elevation',nx,ny,1,elevation)
    case('airfoil')
-      call airfoil(lsolids,lblanking)
+!      call airfoil(lsolids,lblanking)
    end select
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
    call uvelshear(uvel)
-   tau=tauin
+   allocate(uvel_d(nz))
+   uvel_d=uvel
 
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
    call seedmanagement(nt0)
 
 ! setting shapiro factors (no really used)
-   call shfact(nshapiro,sh)
+!   call shfact(nshapiro,sh)
 
    if (nt0 == 0) then
 ! Intialization of macro variables
-      call inipert(rho,u,v,w,uvel)
+      call inipert(rho,u,v,w,uvel_d)
 
 ! Generate trubulence forcing fields
       if (lturb) call initurbulence(uu,vv,ww,rr,.true.)
@@ -153,12 +227,31 @@ program LatticeBoltzmann
 
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel)
       write(98,'(a,100g15.7)')'fXX:',feq(1:10,ip,jp,kp)
-      call boundarycond(feq,rho,u,v,w,uvel)
-      f=feq
-      tau=tauin
+      call boundarycond(feq,rho,u,v,w,uvel_d)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
+      do k = 0, nz+1
+      do j = 0, ny+1
+      do i = 0, nx+1
+         f(:,i,j,k) = feq(:,i,j,k)
+      end do
+      end do
+      end do
       write(98,'(a,100g15.7)')'f00:',f(1:10,ip,jp,kp)
+
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
+      do k = 1, nz
+      do j = 1, ny
+      do i = 1, nx
+         tau(i,j,k) = tauin
+      end do
+      end do
+      end do
 
    else
 ! Restart from restart file
@@ -166,9 +259,9 @@ program LatticeBoltzmann
       call macrovars(rho,u,v,w,f,lblanking)
 
 ! To recover initial tau
-      call fequil3(feq,rho,u,v,w)
-      call fregularization(f, feq, u, v, w)
-      call vreman(f,tau)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+      call fregularization(f, feq, u, v, w, A2, A3, vel)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
       f=feq+f
    endif
 
@@ -205,20 +298,23 @@ program LatticeBoltzmann
       if (lturb) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+#ifdef _CUDA
+     ! istat = cudaDeviceSynchronize()
+#endif
       if (runtest) write(98,'(a,100g15.7)')'ini:',feq(1:10,ip,jp,kp)
 
 ! [f=Rneqf] = fregularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call fregularization(f, feq, u, v, w)
+      call fregularization(f, feq, u, v, w, A2, A3, vel)
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+     ! istat = cudaDeviceSynchronize()
 #endif
 
       if (runtest) write(98,'(a,100g15.7)')'reg:',feq(1:10,ip,jp,kp)
       if (runtest) write(98,'(a,100g15.7)')'reg:',f(1:10,ip,jp,kp)
 
 ! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f,tau)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
       if (runtest) write(98,'(a,100g15.7)')'vre:',tau(ip,jp,kp)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
@@ -237,7 +333,7 @@ program LatticeBoltzmann
       if (lsolids) call solids(feq,lblanking)
 
 ! General boundary conditions
-      call boundarycond(feq,rho,u,v,w,uvel)
+      call boundarycond(feq,rho,u,v,w,uvel_d)
       if (runtest) write(98,'(a,100g15.7)')'bnd:',feq(1:10,ip,jp,kp)
 
 ! Drift of feq returned in f

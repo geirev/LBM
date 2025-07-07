@@ -10,6 +10,13 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    real,    intent(out) :: v(nx,ny,nz)
    real,    intent(out) :: w(nx,ny,nz)
    logical, intent(in)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
+#ifdef _CUDA
+   attributes(managed) :: f
+   attributes(managed) :: rho
+   attributes(managed) :: u
+   attributes(managed) :: v
+   attributes(managed) :: w
+#endif
    integer i,j,k,l
    integer, parameter :: icpu=2
    if (nl /= 27) stop 'macrovars routine set up for D3Q27'
@@ -17,7 +24,11 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    call cpustart()
 
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f, blanking)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f)
+#endif
    do k=1,nz
    do j=1,ny
    do i=1,nx
@@ -85,11 +96,12 @@ subroutine macrovars(rho,u,v,w,f,blanking)
                              -f(26,i,j,k) &
                              +f(27,i,j,k)
          w(i,j,k) =  w(i,j,k)/rho(i,j,k)
-!      endif
    enddo
    enddo
    enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
    call cpufinish(icpu)
 

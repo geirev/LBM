@@ -2,7 +2,7 @@ module m_vreman
 !  Vreman (2004) subgridscale turbulence model
 contains
 
-subroutine vreman(f,tau)
+subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile, only : ivreman,kinevisc,p2l,smagorinsky,tauin
@@ -10,110 +10,108 @@ subroutine vreman(f,tau)
    implicit none
    real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input
    real, intent(out)     :: tau(nx,ny,nz)              ! Tau including subgrid scale mixing
+#ifdef _CUDA
+   attributes(managed) :: f
+   attributes(managed) :: tau
+#endif
 
-   logical, save         :: lfirst=.true.
-
-   real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs
-   real, save            :: dx              ! length scale lattice to physical
-   real, save            :: const           ! c in Vreman 2004 Eq (5)
-
-   real                  :: lfneq(nl)       ! Local equilibrium distribution
-
-   real                  :: delta(1:3, 1:3) = reshape([1.0, 0.0, 0.0, &
-                                                       0.0, 1.0, 0.0, &
-                                                       0.0, 0.0, 1.0], [3, 3])
+   real          :: dx              ! length scale lattice to physical
+   real          :: const           ! c in Vreman 2004 Eq (5)
 
 
    integer :: i, j, k, l, m, p, q
 
-   real eddyvisc  ! nu in Vreman 2004 Eq (5)
-   real Bbeta     ! B_beta in Vreman 2004 Eq (5)
-   real alpha(3,3)
-   real beta(3,3)
-   real alphamag
+   real, intent(out) :: eddyvisc(nx,ny,nz)  ! nu in Vreman 2004 Eq (5)
+   real, intent(out) :: Bbeta(nx,ny,nz)     ! B_beta in Vreman 2004 Eq (5)
+   real, intent(out) :: alphamag(nx,ny,nz)
+   real, intent(out) :: alpha(3,3,nx,ny,nz)
+   real, intent(out) :: beta(3,3,nx,ny,nz)
+#ifdef _CUDA
+   attributes(managed) :: alpha
+   attributes(managed) :: beta
+   attributes(managed) :: eddyvisc
+   attributes(managed) :: Bbeta
+   attributes(managed) :: alphamag
+#endif
 
    integer, parameter :: icpu=13
    call cpustart()
 
    if (ivreman /= 1) then
-      tau = 3.0*kinevisc + 0.5
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>> 
+#else
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) &
+!$OMP&              SHARED(tau, kinevisc)
+#endif
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx
+               tau(i,j,k) = 3.0*kinevisc + 0.5
+            enddo
+         enddo
+      enddo
       return
    endif
 
-   !if (lfirst) then
-      const=2.5*smagorinsky**2
-      dx=p2l%length
+   const=2.5*smagorinsky**2
+   dx=p2l%length
 
-      c(1,:)=real(cxs(:))
-      c(2,:)=real(cys(:))
-      c(3,:)=real(czs(:))
-
-! Hermitian polynomials of 2nd order H2
-!      do l=1,nl
-!         do q=1,3
-!         do p=1,3
-!            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
-!         enddo
-!         enddo
-!      enddo
-!
-!      lfirst=.false.
-!   endif
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Loop over grid
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q, lfneq, eddyvisc, Bbeta, alpha, beta, alphamag) &
-!$OMP&                           SHARED(f, tau, weights, c, H2, tauin, kinevisc, dx, const, ivreman)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) &
+!$OMP&              SHARED(f, tau, weights, H2, tauin, kinevisc, const, eddyvisc, Bbeta, alpha, beta, alphamag)
+#endif
    do k=1,nz
       do j=1,ny
          do i=1,nx
 
-            lfneq(:)=f(:,i,j,k)
-
 ! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
-            alpha=0.0
+            alpha(:,:,i,j,k)=0.0
             do l=1,nl
                do q=1,3
                do p=1,3
-                  alpha(p,q) = alpha(p,q) + H2(p,q,l)*lfneq(l)
+                  alpha(p,q,i,j,k) = alpha(p,q,i,j,k) + H2(p,q,l)*f(l,i,j,k)
                enddo
                enddo
             enddo
-
-! alphamag
-            alphamag=0.00001
+!! alphamag
+            alphamag(i,j,k)=0.00001
             do q=1,3
             do p=1,3
-               alphamag=alphamag+alpha(p,q)*alpha(p,q)
+               alphamag(i,j,k)=alphamag(i,j,k)+alpha(p,q,i,j,k)*alpha(p,q,i,j,k)
             enddo
             enddo
-
-! beta = del^2 * alpha' * alpha
-            beta=0.00001
+!
+!! beta = del^2 * alpha' * alpha
+            beta(:,:,i,j,k)=0.00001
             do q=1,3
             do p=1,3
                do m=1,3
-                  beta(p,q)=beta(p,q)+alpha(m,p)*alpha(m,q)
+                  beta(p,q,i,j,k)=beta(p,q,i,j,k)+alpha(m,p,i,j,k)*alpha(m,q,i,j,k)
                enddo
             enddo
             enddo
-!            beta=dx**2*beta    ! This must be wrong...........
+!
+!! Vreman 2004 Eq (8)
+            Bbeta(i,j,k)=beta(1,1,i,j,k)*beta(2,2,i,j,k) - beta(1,2,i,j,k)**2  &
+                 +beta(1,1,i,j,k)*beta(3,3,i,j,k) - beta(1,3,i,j,k)**2  &
+                 +beta(2,2,i,j,k)*beta(3,3,i,j,k) - beta(2,3,i,j,k)**2
 
-! Vreman 2004 Eq (8)
-            Bbeta=beta(1,1)*beta(2,2) - beta(1,2)**2  &
-                 +beta(1,1)*beta(3,3) - beta(1,3)**2  &
-                 +beta(2,2)*beta(3,3) - beta(2,3)**2
+!! Vreman 2004 Eq (5)
+            eddyvisc(i,j,k)=const*sqrt(Bbeta(i,j,k)/alphamag(i,j,k))
 
-! Vreman 2004 Eq (5)
-            eddyvisc=const*sqrt(Bbeta/alphamag)
-
-            tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
+            tau(i,j,k) = 3.0*(kinevisc + eddyvisc(i,j,k)) + 0.5
 
          enddo
       enddo
    enddo
-!$OMP END PARALLEL DO
+#ifndef _CUDA
+!!$OMP END PARALLEL DO
+#endif
 
    call cpufinish(icpu)
 

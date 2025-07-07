@@ -1,7 +1,7 @@
 module m_fregularization
 contains
 
-subroutine fregularization(f, feq, u, v, w)
+subroutine fregularization(f, feq, u, v, w, A1_2, A1_3, vel)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
@@ -22,15 +22,13 @@ subroutine fregularization(f, feq, u, v, w)
    attributes(managed) :: feq
 #endif
 
-   real   :: c(3,nl)
-   real   :: A1_2(3,3)
-   real   :: A1_3(3,3,3)
-   real   :: vel(1:3)
+   real, intent(out)   :: A1_2(3,3,nx,ny,nz)
+   real, intent(out)   :: A1_3(3,3,3,nx,ny,nz)
+   real, intent(out)   :: vel(1:3,nx,ny,nz)
 #ifdef _CUDA
-   attributes(device) :: c
-   attributes(device) :: A1_2
-   attributes(device) :: A1_3
-   attributes(device) :: vel
+   attributes(managed) :: A1_2
+   attributes(managed) :: A1_3
+   attributes(managed) :: vel
 #endif
 
    integer :: i, j, k, l, p, q, r
@@ -40,16 +38,14 @@ subroutine fregularization(f, feq, u, v, w)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=12
    call cpustart()
-   print '(a)','fregularization GPU'
 
-   c(1,:)=real(cxs(:))
-   c(2,:)=real(cys(:))
-   c(3,:)=real(czs(:))
 
 ! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
-!$OMP PARALLEL DO collapse(2) DEFAULT(NONE) PRIVATE(i, j, k) &
-!$OMP&                           SHARED(feq, f)
-!$cuf kernel do
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
+!$OMP PARALLEL DO collapse(2) DEFAULT(NONE) PRIVATE(i,j,k) SHARED(feq, f)
+#endif
    do k=1,nz
       do j=1,ny
          do i=1,nx
@@ -57,21 +53,27 @@ subroutine fregularization(f, feq, u, v, w)
          enddo
       enddo
    enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
 
    if (ihrr == 1) then
 ! projecting non-equilibrium distribution on the Hermitian polynomials for regularization
 
-!$cuf kernel do
+#ifdef _CUDA
+!!$cuf kernel do(3) <<<*,*>>>
+#endif
       do k=1,nz
          do j=1,ny
-!$OMP PARALLEL DO collapse(1) DEFAULT(NONE) PRIVATE(i, l, p, q, r, vel, A1_2, A1_3 ) &
-!$OMP&                           SHARED( j, k, f, u, v, w,  weights, H2, H3)
+#ifndef _CUDA
+!$OMP PARALLEL DO collapse(1) DEFAULT(NONE) PRIVATE(i, l, p, q, r ) &
+!$OMP&                           SHARED( j, k, f, u, v, w,  weights, H2, H3, vel, A1_2, A1_3)
+#endif
             do i=1,nx
-               vel(1)=u(i,j,k)
-               vel(2)=v(i,j,k)
-               vel(3)=w(i,j,k)
+               vel(1,i,j,k)=u(i,j,k)
+               vel(2,i,j,k)=v(i,j,k)
+               vel(3,i,j,k)=w(i,j,k)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -79,11 +81,11 @@ subroutine fregularization(f, feq, u, v, w)
 !! Used for regularization and turbulence calculation
 !              call dgemv('n', 9,27,1.0,H2, 9,f(1,i,j,k),1,0.0,A1_2,1)
 
-               A1_2=0.0
+               A1_2(:,:,i,j,k)=0.0
                do l=1,nl
                   do q=1,3
                   do p=1,3
-                     A1_2(p,q) = A1_2(p,q) + H2(p,q,l)*f(l,i,j,k)
+                     A1_2(p,q,i,j,k) = A1_2(p,q,i,j,k) + H2(p,q,l)*f(l,i,j,k)
                   enddo
                   enddo
                enddo
@@ -92,7 +94,7 @@ subroutine fregularization(f, feq, u, v, w)
                do r=1,3
                do q=1,3
                do p=1,3
-                  A1_3(p,q,r)=vel(p)*A1_2(q,r) +vel(q)*A1_2(r,p) +  vel(r)*A1_2(p,q)
+                  A1_3(p,q,r,i,j,k)=vel(p,i,j,k)*A1_2(q,r,i,j,k) +vel(q,i,j,k)*A1_2(r,p,i,j,k) +  vel(r,i,j,k)*A1_2(p,q,i,j,k)
                enddo
                enddo
                enddo
@@ -107,14 +109,14 @@ subroutine fregularization(f, feq, u, v, w)
 
                   do q=1,3
                   do p=1,3
-                     f(l,i,j,k)=f(l,i,j,k) + H2(p,q,l)*A1_2(p,q)*inv2cs4
+                     f(l,i,j,k)=f(l,i,j,k) + H2(p,q,l)*A1_2(p,q,i,j,k)*inv2cs4
                   enddo
                   enddo
 
                   do r=1,3
                   do q=1,3
                   do p=1,3
-                     f(l,i,j,k)=f(l,i,j,k) + H3(p,q,r,l)*A1_3(p,q,r)*inv6cs6
+                     f(l,i,j,k)=f(l,i,j,k) + H3(p,q,r,l)*A1_3(p,q,r,i,j,k)*inv6cs6
                   enddo
                   enddo
                   enddo
@@ -123,7 +125,9 @@ subroutine fregularization(f, feq, u, v, w)
                enddo
 
             enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
          enddo
       enddo
    endif

@@ -40,6 +40,7 @@ main.o:      m_seedmanagement.o
 main.o:      m_set_random_seed2.o
 main.o:      m_solids.o
 main.o:      m_sphere.o
+main.o:      m_tecfld.o
 main.o:      m_turbineforcing.o
 main.o:      m_turbulenceforcing.o
 main.o:      m_uvelshear.o
@@ -78,7 +79,6 @@ m_bndpressure.o:      MODEL.CPP
 m_bndpressure.o:      m_readinfile.o
 m_boundarycond.o:      makefile
 m_boundarycond.o:      m_bndpressure.o
-m_boundarycond.o:      m_fequilscalar.o
 m_boundarycond.o:      mod_D3Q27setup.o
 m_boundarycond.o:      mod_dimensions.o
 m_boundarycond.o:      MODEL.CPP
@@ -195,7 +195,6 @@ m_seedmanagement.o:      m_set_random_seed2.o
 m_set_random_seed2.o:      makefile
 m_set_random_seed2.o:      MODEL.CPP
 m_solids.o:      makefile
-m_solids.o:      m_fequilscalar.o
 m_solids.o:      mod_dimensions.o
 m_solids.o:      MODEL.CPP
 m_solids.o:      m_wtime.o

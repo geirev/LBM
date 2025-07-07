@@ -9,15 +9,22 @@ subroutine drift(f,feq)
    implicit none
    real, intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)  :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+#ifdef _CUDA
+   attributes(managed) :: f
+   attributes(managed) :: feq
+#endif
    integer i,j,k
    integer, parameter :: icpu=10
    call cpustart()
 
-!!!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k) SHARED(f, feq) SCHEDULE(static)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
    do k=1,nz
    do j=1,ny
-
+#ifndef _CUDA
 !$OMP PARALLEL DO COLLAPSE(1) PRIVATE(i) SHARED(f, feq,j,k)
+#endif
    do i=1,nx
 !      do l=1,nl
 !         f(l,i,j,k) = feq(l,i-cxs(l),j-cys(l),k-czs(l))
@@ -50,7 +57,9 @@ subroutine drift(f,feq)
          f(26,i,j,k) = feq(26,i+1,j-1,k+1)
          f(27,i,j,k) = feq(27,i-1,j+1,k-1)
    enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
    enddo
    enddo
 

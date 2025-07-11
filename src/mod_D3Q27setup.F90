@@ -10,21 +10,36 @@ module mod_D3Q27setup
 
 
 ! Define velocity vectors
-!                                        1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7
-   integer, parameter :: cxs(1:nl)    = [0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1,-1, 1, 0, 0,-1, 1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1]
-   integer, parameter :: cys(1:nl)    = [0, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 0, 0,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1]
-   integer, parameter :: czs(1:nl)    = [0, 0, 0, 0, 0,-1, 1, 0, 0, 0, 0,-1, 1, 1,-1, 1,-1, 1,-1, 1,-1,-1, 1,-1, 1,-1, 1]
-   integer, parameter :: bounce(1:nl) = [1, 3, 2, 5, 4, 7, 6, 9, 8,11,10,13,12,15,14,17,16,19,18,21,20,23,22,25,24,27,26]
+!                                           1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7
+   integer, parameter :: cxs_h(1:nl)     = [0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1,-1, 1, 0, 0,-1, 1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1]
+   integer, parameter :: cys_h(1:nl)     = [0, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 0, 0,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1]
+   integer, parameter :: czs_h(1:nl)     = [0, 0, 0, 0, 0,-1, 1, 0, 0, 0, 0,-1, 1, 1,-1, 1,-1, 1,-1, 1,-1,-1, 1,-1, 1,-1, 1]
+   integer, parameter :: bounce_h(1:nl)  = [1, 3, 2, 5, 4, 7, 6, 9, 8,11,10,13,12,15,14,17,16,19,18,21,20,23,22,25,24,27,26]
+   real,    parameter :: weights_h(1:nl) = [8.0/27.0, &
+                                            2.0/27.0, 2.0/27.0, 2.0/27.0, 2.0/27.0, 2.0/27.0, 2.0/27.0, &
+                                            1.0/54.0, 1.0/54.0, 1.0/54.0, 1.0/54.0, 1.0/54.0, 1.0/54.0, &
+                                            1.0/54.0, 1.0/54.0, 1.0/54.0, 1.0/54.0, 1.0/54.0, 1.0/54.0, &
+                                            1.0/216.0, 1.0/216.0, 1.0/216.0, 1.0/216.0, 1.0/216.0, 1.0/216.0, 1.0/216.0, 1.0/216.0]
 
-   real, allocatable, dimension(:)       :: weights
-   real, allocatable, dimension(:,:,:)   :: H2
-   real, allocatable, dimension(:,:,:,:) :: H3
+
+   integer, allocatable :: cxs(:)
+   integer, allocatable :: cys(:)
+   integer, allocatable :: czs(:)
+   integer, allocatable :: bounce(:)
+   real,  dimension(:)      , allocatable :: weights
+   real,  dimension(:,:,:)  , allocatable :: H2
+   real,  dimension(:,:,:,:), allocatable :: H3
 #ifdef _CUDA
-   attributes(managed) :: weights
-   attributes(managed) :: H2
-   attributes(managed) :: H3
+   attributes(device) :: cxs
+   attributes(device) :: cys
+   attributes(device) :: czs
+   attributes(device) :: bounce
+   attributes(device) :: weights
+   attributes(device) :: H2
+   attributes(device) :: H3
 #endif
 
+end module
 
 
 
@@ -102,4 +117,3 @@ module mod_D3Q27setup
 !                                                                                              -2./3.,2./3.,-2./3.,0./), shape(H3))
 
 
-end module

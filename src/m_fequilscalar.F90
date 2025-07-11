@@ -1,5 +1,8 @@
 module m_fequilscalar
 contains
+#ifdef _CUDA
+attributes(device) &
+#endif
 function fequilscalar(rho, u, v, w) result(feq)
    use mod_dimensions
    use mod_D3Q27setup
@@ -9,27 +12,22 @@ function fequilscalar(rho, u, v, w) result(feq)
    real,    intent(in) :: u
    real,    intent(in) :: v
    real,    intent(in) :: w
-   real feq(nl)
+   real :: feq(nl)
 
 
-   real                  :: c(3,nl)         ! Array storage of cxs, cys, and czs
-   real                  :: A0_2(3,3)
-   real                  :: A0_3(3,3,3)
-   real                  :: delta(1:3, 1:3) = reshape([1.0, 0.0, 0.0, &
-                                                       0.0, 1.0, 0.0, &
-                                                       0.0, 0.0, 1.0], [3, 3])
-   real                  :: vel(1:3),dens
+   real  :: cc(3,nl)         ! Array storage of cxs, cys, and czs
+   real  :: A0_2(3,3)
+   real  :: A0_3(3,3,3)
+   real  :: vel(1:3),dens
+   real tmp
 
    integer l, p, q, r
 
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
 
-
-
-!   if (lfirst) then
-      c(1,:)=real(cxs(:))
-      c(2,:)=real(cys(:))
-      c(3,:)=real(czs(:))
+   cc(1,1:nl) = [0., 1.,-1., 0., 0., 0., 0., 1.,-1., 1.,-1.,-1., 1., 0., 0.,-1., 1., 0., 0.,-1., 1.,-1., 1., 1.,-1.,-1., 1.]
+   cc(2,1:nl) = [0., 0., 0., 1.,-1., 0., 0., 1.,-1.,-1., 1., 0., 0., 1.,-1., 0., 0.,-1., 1., 1.,-1.,-1., 1., 1.,-1., 1.,-1.]
+   cc(3,1:nl) = [0., 0., 0., 0., 0.,-1., 1., 0., 0., 0., 0.,-1., 1., 1.,-1., 1.,-1., 1.,-1., 1.,-1.,-1., 1.,-1., 1.,-1., 1.]
 
 
    vel(1)=u
@@ -56,8 +54,7 @@ function fequilscalar(rho, u, v, w) result(feq)
 ! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
    do l=1,nl
       feq(l)=dens
-
-      feq(l)=feq(l) + dens*( c(1,l)*vel(1) + c(2,l)*vel(2) + c(3,l)*vel(3) )/cs2
+      feq(l)=feq(l) + dens*( cc(1,l)*vel(1) + cc(2,l)*vel(2) + cc(3,l)*vel(3) )/cs2
 
       do p=1,3
       do q=1,3
@@ -65,7 +62,7 @@ function fequilscalar(rho, u, v, w) result(feq)
       enddo
       enddo
       ! the above identically recovers the BGK equilibrium, below we add third order contributions
-      if (ibgk == 3) then
+!      if (ibgk == 3) then
          do p=1,3
          do q=1,3
          do r=1,3
@@ -73,7 +70,7 @@ function fequilscalar(rho, u, v, w) result(feq)
          enddo
          enddo
          enddo
-      endif
+!      endif
 
       feq(l)= weights(l)*feq(l)
 

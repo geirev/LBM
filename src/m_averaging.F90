@@ -9,9 +9,9 @@ subroutine averaging(u,v,w,lfinal,iradius)
    real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
    real, intent(in)    :: w(nx,ny,nz)        ! z component of fluid velocity
 #ifdef _CUDA
-   attributes(managed) :: u
-   attributes(managed) :: v
-   attributes(managed) :: w
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
 #endif
    logical, intent(in) :: lfinal
    integer, intent(in) :: iradius

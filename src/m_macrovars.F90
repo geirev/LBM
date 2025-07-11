@@ -11,11 +11,12 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    real,    intent(out) :: w(nx,ny,nz)
    logical, intent(in)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(managed) :: f
-   attributes(managed) :: rho
-   attributes(managed) :: u
-   attributes(managed) :: v
-   attributes(managed) :: w
+   attributes(device) :: f
+   attributes(device) :: rho
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: blanking
 #endif
    integer i,j,k,l
    integer, parameter :: icpu=2

@@ -10,8 +10,8 @@ subroutine drift(f,feq)
    real, intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)  :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(managed) :: f
-   attributes(managed) :: feq
+   attributes(device) :: f
+   attributes(device) :: feq
 #endif
    integer i,j,k
    integer, parameter :: icpu=10

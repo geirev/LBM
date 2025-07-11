@@ -8,9 +8,7 @@ F90SOURCE = \
 	m_assigncvel.F90\
 	m_averaging.F90\
 	m_bilin.F90\
-	m_bndpressure.F90\
 	m_boundarycond.F90\
-	m_channeldiag.F90\
 	m_city.F90\
 	m_collisions.F90\
 	m_cube.F90\
@@ -34,6 +32,7 @@ F90SOURCE = \
 	m_pdfout.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
+	m_regularization.F90\
 	m_saverestart.F90\
 	m_seedmanagement.F90\
 	m_set_random_seed2.F90\

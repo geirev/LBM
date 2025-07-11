@@ -11,11 +11,11 @@ subroutine inipert(rho,u,v,w,uvel)
    real, intent(inout)  :: w(nx,ny,nz)
    real, intent(in)     :: uvel(nz)
 #ifdef _CUDA
-   attributes(managed) :: rho
-   attributes(managed) :: u
-   attributes(managed) :: v
-   attributes(managed) :: w
-   attributes(managed) :: uvel
+   attributes(device) :: rho
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: uvel
 #endif
 
    real :: stddev=0.000010  ! value running stable in uniform flow for 2000 timesteps

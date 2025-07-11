@@ -15,11 +15,11 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real,    intent(in)   :: w(nx,ny,nz)
    logical, intent(in)   :: lblanking(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(managed) :: rho
-   attributes(managed) :: u
-   attributes(managed) :: v
-   attributes(managed) :: w
-   attributes(managed) :: lblanking
+   attributes(device) :: rho
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: lblanking
 #endif
    character(len=6) cit
 
@@ -33,51 +33,68 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real    :: vortz(nx,ny,nz)           ! fluid vorticity z-component
    real    :: vort(nx,ny,nz)            ! absolute value of vorticity
 #ifdef _CUDA
-   attributes(managed) :: speed
-   attributes(managed) :: vortx
-   attributes(managed) :: vorty
-   attributes(managed) :: vortz
-   attributes(managed) :: vort
+   attributes(device) :: speed
+   attributes(device) :: vortx
+   attributes(device) :: vorty
+   attributes(device) :: vortz
+   attributes(device) :: vort
 #endif
+   real    :: u_h(nx,ny,nz)
+   real    :: v_h(nx,ny,nz)
+   real    :: w_h(nx,ny,nz)
+   real    :: rho_h(nx,ny,nz)
+   logical :: lblanking_h(0:nx+1,0:ny+1,0:nz+1)
    integer, parameter :: icpu=3
    integer num_of_vars
+   real tmp
+   integer i,j,k
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt) then
 
-      speed(nx,ny,nz)    = 0.0
-      vortx(nx,ny,nz)    = 0.0
-      vorty(nx,ny,nz)    = 0.0
-      vortz(nx,ny,nz)    = 0.0
-      vort(nx,ny,nz)     = 0.0
 
 
-
-
-      if (minval(rho) < 0.0) then
-         print *,'iter=',it,'  minmaxrho=',minval(rho),' -- ',maxval(rho)
-         print *,'iter=',it,'  minmaxloc=',minloc(rho),' -- ',maxloc(rho)
-         stop 'Unstable simulation'
-      endif
 
       if (.not.lprtmin) then
-         speed = sqrt(u*u + v*v + w*w)
          call vorticity(u,v,w,vortx,vorty,vortz,vort,lblanking)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(speed,u,v,w)
+#endif
+         do k=1,nz
+         do j=1,ny
+         do i=1,nx
+            tmp=u(i,j,k)*u(i,j,k) + v(i,j,k)*v(i,j,k) + w(i,j,k)*w(i,j,k)
+            speed(i,j,k)=sqrt(tmp)
+         enddo
+         enddo
+         enddo
+#ifndef _CUDA
+!$OMP END PARALLEL DO
+#endif
       endif
+
       write(cit,'(i6.6)')it
       if (.not.lprtmin) then
-         num_of_vars=16
-         call tecout('tec'//cit//'.plt',it,trim(tecplot_maxvar),num_of_vars,lblanking,rho,u,v,w,&
-                     speed,vortx,vorty,vortz,vort)
+        !num_of_vars=16
+        !call tecout('tec'//cit//'.plt',it,trim(tecplot_maxvar),num_of_vars,lblanking,rho,u,v,w,&
+        !            speed,vortx,vorty,vortz,vort)
       else
          num_of_vars=8
-         call tecout('tec'//cit//'.plt',it,trim(tecplot_minvar),num_of_vars,lblanking,rho,u,v,w)
+         u_h=u
+         v_h=v
+         w_h=w
+         rho_h=rho
+         lblanking_h=lblanking
+         if (minval(rho_h) < 0.0) then
+            print *,'iter=',it,'  minmaxrho=',minval(rho_h),' -- ',maxval(rho_h)
+            print *,'iter=',it,'  minmaxloc=',minloc(rho_h),' -- ',maxloc(rho_h)
+            stop 'Unstable simulation'
+         endif
+         call tecout('tec'//cit//'.plt',it,trim(tecplot_minvar),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h)
       endif
    endif
 
-!      if ((mod(it, ifout) == 0)) then
-!         write(cit,'(i6.6)')it
-!         call pdfout('pdf'//cit//'.plt',trim(tecplot_fvars),num_of_fvars,lblanking,f)
-!      endif
    call cpufinish(icpu)
 
 end subroutine

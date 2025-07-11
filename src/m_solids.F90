@@ -8,8 +8,8 @@ subroutine solids(f,blanking)
    logical, intent(in)    :: blanking(0:nx+1,0:ny+1,0:nz+1)
    real,    intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(managed) :: f
-   attributes(managed) :: blanking
+   attributes(device) :: f
+   attributes(device) :: blanking
 #endif
    real tmp
    integer i,j,k,l

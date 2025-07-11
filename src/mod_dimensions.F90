@@ -13,6 +13,7 @@ module mod_dimensions
 
 
 
+   integer, parameter :: sz=8              ! size of a real
    integer, parameter :: nl = 27           ! number of componets of D3Q27
    integer, parameter :: ieps = 5          ! number of gridcells for smoothing actuatorline forcing in i-dir
    integer, parameter :: nrturb = 1000       ! number of precomputed batches if inflow turbulence for u,v,w, and rho

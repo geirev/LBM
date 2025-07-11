@@ -15,10 +15,8 @@ program LatticeBoltzmann
    use m_cube
    use m_cylinder
    use m_sphere
-   use m_channeldiag
    use m_uvelshear
    use m_boundarycond
-   use m_bndpressure
    use m_inipert
    use m_initurbulence
    use m_macrovars
@@ -32,7 +30,7 @@ program LatticeBoltzmann
    use m_collisions
    use m_drift
    use m_fequil3
-   use m_fregularization
+   use m_regularization
    use m_vreman
    use m_seedmanagement
    use m_readrestart
@@ -51,20 +49,20 @@ program LatticeBoltzmann
    real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)            ! density function
    real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)          ! Maxwells equilibrium density function
 #ifdef _CUDA
-   attributes(managed) :: f
-   attributes(managed) :: feq
+   attributes(device) :: f
+   attributes(device) :: feq
 #endif
 
    logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)       ! blanking boundary and object grid points
 #ifdef _CUDA
-   attributes(managed) :: lblanking
-   logical, dimension(:,:,:), allocatable :: lblanking_h ! Host blanking variable
+   attributes(device) :: lblanking
 #endif
+   logical, dimension(:,:,:), allocatable :: lblanking_h ! Host blanking variable
 
    real uvel(nz)
    real, dimension(:), allocatable :: uvel_d        ! vertical u-velocity profile host version
 #ifdef _CUDA
-   attributes(managed) :: uvel_d
+   attributes(device) :: uvel_d
 #endif
 
    logical :: lsolids=.false.
@@ -72,8 +70,10 @@ program LatticeBoltzmann
 ! Spatially dependent relaxation time
    real    :: tau(nx,ny,nz)                         ! relaxation time scale
 #ifdef _CUDA
-   attributes(managed) :: tau
+   attributes(device) :: tau
 #endif
+   real, allocatable :: work_h(:,:,:)
+   real tmptau,tmpu,tmprho
 
 ! Fluid variables
    real    :: u(nx,ny,nz)                           ! x component of fluid velocity
@@ -81,20 +81,20 @@ program LatticeBoltzmann
    real    :: w(nx,ny,nz)                           ! z component of fluid velocity
    real    :: rho(nx,ny,nz)                         ! fluid density
 #ifdef _CUDA
-   attributes(managed) :: u
-   attributes(managed) :: v
-   attributes(managed) :: w
-   attributes(managed) :: rho
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: rho
 #endif
 
-! Hermite coefficients fequil and fregularization
+! Hermite coefficients fequil and regularization
    real :: vel(3,nx,ny,nz)
    real :: A2(3,3,nx,ny,nz)
    real :: A3(3,3,3,nx,ny,nz)
 #ifdef _CUDA
-   attributes(managed) :: vel
-   attributes(managed) :: A2
-   attributes(managed) :: A3
+   attributes(device) :: vel
+   attributes(device) :: A2
+   attributes(device) :: A3
 #endif
 
 ! Vreman arrays
@@ -104,11 +104,11 @@ program LatticeBoltzmann
    real alpha(3,3,nx,ny,nz)
    real beta(3,3,nx,ny,nz)
 #ifdef _CUDA
-   attributes(managed) :: alpha
-   attributes(managed) :: beta
-   attributes(managed) :: eddyvisc
-   attributes(managed) :: Bbeta
-   attributes(managed) :: alphamag
+   attributes(device) :: alpha
+   attributes(device) :: beta
+   attributes(device) :: eddyvisc
+   attributes(device) :: Bbeta
+   attributes(device) :: alphamag
 #endif
 
 ! Stochastic input field on inflow boundary
@@ -116,10 +116,20 @@ program LatticeBoltzmann
    real vv(ny,nz,0:nrturb)
    real ww(ny,nz,0:nrturb)
    real rr(ny,nz,0:nrturb)
+#ifdef _CUDA
+   attributes(device) :: uu
+   attributes(device) :: vv
+   attributes(device) :: ww
+   attributes(device) :: rr
+#endif
 
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
    real, allocatable  :: turb_df(:,:,:,:)         ! Turbulence forcing
+#ifdef _CUDA
+   attributes(device) :: df
+   attributes(device) :: turb_df
+#endif
 
    real :: elevation(nx,ny)=0.0
    integer i,j,k,l
@@ -149,18 +159,6 @@ program LatticeBoltzmann
    !allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Define solid elements and walls
-#ifdef _CUDA
-    ! We can use a source allocation to create a host copy of C. Alternatively, we
-    ! could use a standard allocate statement, followed by C_h = C to copy device data
-    ! to the host
-    ! To reuse the following code block, we can use an associate statement to rename variable C
-    ! to be our new host array copy
-      allocate(lblanking_h, source = lblanking)
-!    associate(lblanking => lblanking_h)
-#else
-     allocate(lblanking_h(0:nx,0:ny,0:nz)
-#endif
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -172,6 +170,7 @@ program LatticeBoltzmann
    end do
    end do
    end do
+   allocate(lblanking_h(0:nx,0:ny,0:nz))
    select case(trim(experiment))
    case('cube')
 !      call cube(lsolids,lblanking,nx/6,ny/2,nz/2,7)
@@ -214,13 +213,12 @@ program LatticeBoltzmann
       if (lturb) call initurbulence(uu,vv,ww,rr,.true.)
 
 ! Outputs for testing
-      if (runtest) then
-         open(98,file='test.dat')
-         ip=1; jp=jpos(1)-11; kp=kpos(1)
-         ip=1; jp=ny/2; kp=nz/2
-         write(98,'(a,100g15.7)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         !write(98,'(a,100g15.7)')'111:',uu(jp,kp,0:5),vv(jp,kp,0:5),ww(jp,kp,0:5),rr(jp,kp,0:5)
-      endif
+!      if (runtest) then
+!         open(98,file='test.dat')
+!         ip=1; jp=jpos(1)-11; kp=kpos(1)
+!         ip=1; jp=ny/2; kp=nz/2
+!         write(98,'(a,100g15.7)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+!      endif
 
 ! Initial diagnostics
       call diag(0,rho,u,v,w,lblanking)
@@ -228,7 +226,7 @@ program LatticeBoltzmann
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w, A2, A3, vel)
-      write(98,'(a,100g15.7)')'fXX:',feq(1:10,ip,jp,kp)
+!      write(98,'(a,100g15.7)')'fXX:',feq(1:10,ip,jp,kp)
       call boundarycond(feq,rho,u,v,w,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -240,7 +238,7 @@ program LatticeBoltzmann
       end do
       end do
       end do
-      write(98,'(a,100g15.7)')'f00:',f(1:10,ip,jp,kp)
+!      write(98,'(a,100g15.7)')'f00:',f(1:10,ip,jp,kp)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -260,36 +258,56 @@ program LatticeBoltzmann
 
 ! To recover initial tau
       call fequil3(feq,rho,u,v,w, A2, A3, vel)
-      call fregularization(f, feq, u, v, w, A2, A3, vel)
+      call regularization(f, feq, u, v, w, A2, A3, vel)
       call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
-      f=feq+f
+
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
+      do k = 0, nz+1
+      do j = 0, ny+1
+      do i = 0, nx+1
+         f(:,i,j,k)=feq(:,i,j,k)+f(:,i,j,k)
+      end do
+      end do
+      end do
+
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
       if (it>=25000) iout=2
-      if (runtest) write(98,'(a,100g15.7)')'001:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-!      if ((mod(it, 10) == 0) .or. it == nt1) then
+!      if (runtest) write(98,'(a,100g15.7)')'001:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+      if ((mod(it, 10) == 0) .or. it == nt1) then
+!          istat=cudaMemcpy(tmptau, tau(nx/2,ny/2,nz/2), 8, cudaMemcpyDeviceToHost)
+!         print '(a)','x'
+!          tmptau = work_h(nx/2,ny/2,nz/2)
+!         print '(a)','Y'
+!         work_h=u;   tmpu   = sum(work_h(1,:,:))/real(ny*nz)
+!         print '(a)','Z'
+!         work_h=rho; tmprho = sum(work_h(1,:,:))/real(ny*nz)
+!         print '(a)','A'
          write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='no')'Iteration:', it,                     &
-                                                            ' Time:'  ,real(it)*p2l%time,' s,',   &
-                                                            ' uinave:',sum(u(1,:,:))/real(ny*nz), &
-                                                            ' rinave:',sum(rho(1,:,:))/real(ny*nz), &
-                                                            ' tau:'   ,tau(nx/2,ny/2,nz/2)
+                                                            ' Time:'  ,real(it)*p2l%time,' s,'
+!                                                            ' uinave:',tmpu,                      &
+!                                                            ' rinave:',tmprho,                    &
+                                                             !' tau:'   ,tmptau
+          !deallocate(work_h)
 !         do l=1,nl
 !            write(*,'(a)',advance='no')'.'
 !            call shfilt3D(nshapiro,sh,nshapiro,f(l,:,:,:),nx+2,ny+2,nz+2)
 !         enddo
 !         write(*,'(a)')'filtered'
          write(*,'(a)')'.'
-!      endif
+      endif
 
 ! start with f,rho,u,v,w
-      if (runtest) then
-         write(98,'(a,i7)')'it: ',it
-         write(98,'(a,100g15.7)')'u02:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-         write(98,'(a,100g15.7)')'f02:',f(1:10,ip,jp,kp)
-      endif
+!      if (runtest) then
+!         write(98,'(a,i7)')'it: ',it
+!         write(98,'(a,100g15.7)')'u02:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+!         write(98,'(a,100g15.7)')'f02:',f(1:10,ip,jp,kp)
+!      endif
 
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
       if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
@@ -302,48 +320,48 @@ program LatticeBoltzmann
 #ifdef _CUDA
      ! istat = cudaDeviceSynchronize()
 #endif
-      if (runtest) write(98,'(a,100g15.7)')'ini:',feq(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'ini:',feq(1:10,ip,jp,kp)
 
-! [f=Rneqf] = fregularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call fregularization(f, feq, u, v, w, A2, A3, vel)
+! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
+      call regularization(f, feq, u, v, w, A2, A3, vel)
 #ifdef _CUDA
      ! istat = cudaDeviceSynchronize()
 #endif
 
-      if (runtest) write(98,'(a,100g15.7)')'reg:',feq(1:10,ip,jp,kp)
-      if (runtest) write(98,'(a,100g15.7)')'reg:',f(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'reg:',feq(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'reg:',f(1:10,ip,jp,kp)
 
 ! [tau] = vreman[f] [f=Rneqf]
       call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
-      if (runtest) write(98,'(a,100g15.7)')'vre:',tau(ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'vre:',tau(ip,jp,kp)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau)
-      if (runtest) write(98,'(a,100g15.7)')'col:',feq(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'col:',feq(1:10,ip,jp,kp)
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
       if (nturbines > 0) call applyturbines(feq,df,tau)
-      if (runtest) write(98,'(a,100g15.7)')'tur:',feq(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'tur:',feq(1:10,ip,jp,kp)
 
 ! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
       if (lturb) call applyturbulence(feq,turb_df,tau)
-      if (runtest) write(98,'(a,100g15.7)')'tur:',feq(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'tur:',feq(1:10,ip,jp,kp)
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(feq,lblanking)
 
 ! General boundary conditions
       call boundarycond(feq,rho,u,v,w,uvel_d)
-      if (runtest) write(98,'(a,100g15.7)')'bnd:',feq(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'bnd:',feq(1:10,ip,jp,kp)
 
 ! Drift of feq returned in f
       call drift(f,feq)
-      if (runtest) write(98,'(a,100g15.7)')'dri:',f(1:10,ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'dri:',f(1:10,ip,jp,kp)
 
 
 ! Compute updated macro variables
       call macrovars(rho,u,v,w,f,lblanking)
-      if (runtest) write(98,'(a,100g15.7)')'u03:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+!      if (runtest) write(98,'(a,100g15.7)')'u03:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
 
 ! Diagnostics
       call diag(it,rho,u,v,w,lblanking)
@@ -369,11 +387,6 @@ program LatticeBoltzmann
    call cpuprint()
 
    call saverestart(it-1,f,theta,uu,vv,ww,rr)
-
-   select case(trim(experiment))
-   case('channel')
-      call channeldiag(f,rho,u,lblanking)
-   end select
 
    if (allocated(df)) deallocate(df)
 

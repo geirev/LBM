@@ -4,12 +4,24 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
    use m_readinfile, only : lturb,nturbines
    integer, intent(in)  :: it
-   real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(out) :: theta
+   real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(out) :: uu(ny,nz,0:nrturb)
    real,    intent(out) :: vv(ny,nz,0:nrturb)
    real,    intent(out) :: ww(ny,nz,0:nrturb)
    real,    intent(out) :: rr(ny,nz,0:nrturb)
+#ifdef _CUDA
+   attributes(device) :: f
+   attributes(device) :: uu
+   attributes(device) :: vv
+   attributes(device) :: ww
+   attributes(device) :: rr
+#endif
+   real :: f_h(nl,0:nx+1,0:ny+1,0:nz+1)
+   real :: uu_h(ny,nz,0:nrturb)
+   real :: vv_h(ny,nz,0:nrturb)
+   real :: ww_h(ny,nz,0:nrturb)
+   real :: rr_h(ny,nz,0:nrturb)
 
    logical ex
    integer :: irec,i,j,k,l,n
@@ -22,11 +34,16 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       print '(3a)','reading: turbulence'//cit//'.uf'
       inquire(file='turbulence'//cit//'.uf',exist=ex)
       if (ex) then
-         inquire(iolength=irec)j,k,l,uu,vv,ww,rr
+         inquire(iolength=irec)j,k,l,uu_h,vv_h,ww_h,rr_h
          open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
             read(10,rec=1,err=998)j,k,l
             if ((j==ny).and.(k==nz).and.(l==nrturb)) then
-               read(10,rec=1,err=998)j,k,l,uu,vv,ww,rr
+               read(10,rec=1,err=998)j,k,l,uu_h,vv_h,ww_h,rr_h
+               uu=uu_h
+               vv=vv_h
+               ww=ww_h
+               rr=rr_h
+
             else
                print '(a)','readrestart: Attempting to read incompatable turbulence restart file'
                print '(a,4i6)','readrestart: Dimensions in restart file are:',j,k,l
@@ -55,11 +72,12 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 
    inquire(file='restart'//cit//'.uf',exist=ex)
    if (ex) then
-      inquire(iolength=irec)i,j,k,n,f
+      inquire(iolength=irec)i,j,k,n,f_h
       open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
          read(10,rec=1,err=999)i,j,k,n
          if ((i==nx).and.(j==ny).and.(k==nz).and.(n==nl)) then
-            read(10,rec=1,err=999)i,j,k,n,f
+            read(10,rec=1,err=999)i,j,k,n,f_h
+            f=f_h
          else
             print '(a)','readrestart: Attempting to read incompatable restart file'
             print '(a,4i5)','readrestart: Dimensions in restart file are:',i,j,k,nl

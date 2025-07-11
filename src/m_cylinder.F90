@@ -3,11 +3,11 @@ contains
 subroutine cylinder(lsolids,blanking)
    use mod_dimensions
    use m_tecfld
+   logical, intent(out)   :: lsolids
    logical, intent(inout) :: blanking(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(managed) :: blanking
+   attributes(device) :: blanking
 #endif
-   logical, intent(out) :: lsolids
    integer ipos
    integer jpos
    integer radius

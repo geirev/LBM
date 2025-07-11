@@ -9,6 +9,16 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    real, intent(inout)  :: vv(ny,nz,0:nrturb)
    real, intent(inout)  :: ww(ny,nz,0:nrturb)
    real, intent(inout)  :: rr(ny,nz,0:nrturb)
+#ifdef _CUDA
+   attributes(device) :: uu
+   attributes(device) :: vv
+   attributes(device) :: ww
+   attributes(device) :: rr
+#endif
+   real   :: uu_h(ny,nz,0:nrturb)
+   real   :: vv_h(ny,nz,0:nrturb)
+   real   :: ww_h(ny,nz,0:nrturb)
+   real   :: rr_h(ny,nz,0:nrturb)
    logical, intent(in)  :: lfirst
 
    real cor1,cor2,dx,dy,dir
@@ -29,16 +39,16 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    print '(a)','initurbulence: Simulating inflow turbulence forcing'
    if (lfirst) then
       print '(a,l1)','initurbulence: lfirst=',lfirst
-      uu(:,:,0)=0.0
-      vv(:,:,0)=0.0
-      ww(:,:,0)=0.0
-      rr(:,:,0)=0.0
+      uu_h(:,:,0)=0.0
+      vv_h(:,:,0)=0.0
+      ww_h(:,:,0)=0.0
+      rr_h(:,:,0)=0.0
    else
       print '(a,l1)','initurbulence: lfirst=',lfirst
-      uu(:,:,0)=uu(:,:,nrturb)
-      vv(:,:,0)=vv(:,:,nrturb)
-      ww(:,:,0)=ww(:,:,nrturb)
-      rr(:,:,0)=rr(:,:,nrturb)
+      uu_h(:,:,0)=uu(:,:,nrturb)
+      vv_h(:,:,0)=vv(:,:,nrturb)
+      ww_h(:,:,0)=ww(:,:,nrturb)
+      rr_h(:,:,0)=rr(:,:,nrturb)
    endif
 
    cor1=10.0/sqrt(3.0)
@@ -51,17 +61,17 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    nyy=int(ny,4)
    nzz=int(nz,4)
    nt=int(nrturb)
-   call pseudo2d(uu(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2d(vv(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2d(ww(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2d(rr(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(uu_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(vv_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(ww_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(rr_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
 
 ! Imposing time correlations
    do i=1,nrturb
-      uu(:,:,i)=timecor*uu(:,:,i-1)+sqrt(1.0-timecor**2)*uu(:,:,i)
-      vv(:,:,i)=timecor*vv(:,:,i-1)+sqrt(1.0-timecor**2)*vv(:,:,i)
-      ww(:,:,i)=timecor*ww(:,:,i-1)+sqrt(1.0-timecor**2)*ww(:,:,i)
-      rr(:,:,i)=timecor*rr(:,:,i-1)+sqrt(1.0-timecor**2)*rr(:,:,i)
+      uu_h(:,:,i)=timecor*uu_h(:,:,i-1)+sqrt(1.0-timecor**2)*uu_h(:,:,i)
+      vv_h(:,:,i)=timecor*vv_h(:,:,i-1)+sqrt(1.0-timecor**2)*vv_h(:,:,i)
+      ww_h(:,:,i)=timecor*ww_h(:,:,i-1)+sqrt(1.0-timecor**2)*ww_h(:,:,i)
+      rr_h(:,:,i)=timecor*rr_h(:,:,i-1)+sqrt(1.0-timecor**2)*rr_h(:,:,i)
    enddo
 
 ! Ensure zero mean and variance equal to one
@@ -73,20 +83,20 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
       aver=0.0
       do k=1,nz
       do j=1,ny
-         aveu = aveu + uu(j,k,i)
-         avev = avev + vv(j,k,i)
-         avew = avew + ww(j,k,i)
-         aver = aver + rr(j,k,i)
+         aveu = aveu + uu_h(j,k,i)
+         avev = avev + vv_h(j,k,i)
+         avew = avew + ww_h(j,k,i)
+         aver = aver + rr_h(j,k,i)
       enddo
       enddo
       aveu=aveu/real(ny*nz)
       avev=avev/real(ny*nz)
       avew=avew/real(ny*nz)
       aver=aver/real(ny*nz)
-      uu(:,:,i)=uu(:,:,i)-aveu
-      vv(:,:,i)=vv(:,:,i)-avev
-      ww(:,:,i)=ww(:,:,i)-avew
-      rr(:,:,i)=rr(:,:,i)-aver
+      uu_h(:,:,i)=uu_h(:,:,i)-aveu
+      vv_h(:,:,i)=vv_h(:,:,i)-avev
+      ww_h(:,:,i)=ww_h(:,:,i)-avew
+      rr_h(:,:,i)=rr_h(:,:,i)-aver
 
       varu=0.0
       varv=0.0
@@ -94,20 +104,20 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
       varr=0.0
       do k=1,nz
       do j=1,ny
-         varu = varu + uu(j,k,i)**2
-         varv = varv + vv(j,k,i)**2
-         varw = varw + ww(j,k,i)**2
-         varr = varr + rr(j,k,i)**2
+         varu = varu + uu_h(j,k,i)**2
+         varv = varv + vv_h(j,k,i)**2
+         varw = varw + ww_h(j,k,i)**2
+         varr = varr + rr_h(j,k,i)**2
       enddo
       enddo
       varu=sqrt(varu/real(ny*nz-1))
       varv=sqrt(varv/real(ny*nz-1))
       varw=sqrt(varw/real(ny*nz-1))
       varr=sqrt(varr/real(ny*nz-1))
-      uu(:,:,i)=(1.0/varu)*uu(:,:,i)
-      vv(:,:,i)=(1.0/varv)*vv(:,:,i)
-      ww(:,:,i)=(1.0/varw)*ww(:,:,i)
-      rr(:,:,i)=(1.0/varr)*rr(:,:,i)
+      uu_h(:,:,i)=(1.0/varu)*uu_h(:,:,i)
+      vv_h(:,:,i)=(1.0/varv)*vv_h(:,:,i)
+      ww_h(:,:,i)=(1.0/varw)*ww_h(:,:,i)
+      rr_h(:,:,i)=(1.0/varr)*rr_h(:,:,i)
 
    enddo
 
@@ -119,10 +129,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
       aver=0.0
       do k=1,nz
       do j=1,ny
-         aveu = aveu + uu(j,k,i)
-         avev = avev + vv(j,k,i)
-         avew = avew + ww(j,k,i)
-         aver = aver + rr(j,k,i)
+         aveu = aveu + uu_h(j,k,i)
+         avev = avev + vv_h(j,k,i)
+         avew = avew + ww_h(j,k,i)
+         aver = aver + rr_h(j,k,i)
       enddo
       enddo
       aveu=aveu/real(ny*nz)
@@ -136,10 +146,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
       varr=0.0
       do k=1,nz
       do j=1,ny
-         varu = varu + uu(j,k,i)**2
-         varv = varv + vv(j,k,i)**2
-         varw = varw + ww(j,k,i)**2
-         varr = varr + rr(j,k,i)**2
+         varu = varu + uu_h(j,k,i)**2
+         varv = varv + vv_h(j,k,i)**2
+         varw = varw + ww_h(j,k,i)**2
+         varr = varr + rr_h(j,k,i)**2
       enddo
       enddo
       varu=varu/real(ny*nz-1)
@@ -149,6 +159,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
   !    print '(a,i5,8g13.5)','check turbulence stat:',i,aveu,avev,avew,aver,varu,varv,varw,varr
 
    enddo
+   uu=uu_h
+   vv=vv_h
+   ww=ww_h
+   rr=rr_h
 
 end subroutine
 end module

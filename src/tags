@@ -6,9 +6,7 @@ applyturbulence	m_applyturbulence.F90	/^module
 assigncvel	m_assigncvel.F90	/^module
 averaging	m_averaging.F90	/^module
 bilin	m_bilin.F90	/^module
-bndpressure	m_bndpressure.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
-channeldiag	m_channeldiag.F90	/^module
 city	m_city.F90	/^module
 collisions	m_collisions.F90	/^module
 cube	m_cube.F90	/^module
@@ -37,9 +35,7 @@ m_applyturbulence	m_applyturbulence.F90	/^module
 m_assigncvel	m_assigncvel.F90	/^module
 m_averaging	m_averaging.F90	/^module
 m_bilin	m_bilin.F90	/^module
-m_bndpressure	m_bndpressure.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
-m_channeldiag	m_channeldiag.F90	/^module
 m_city	m_city.F90	/^module
 m_collisions	m_collisions.F90	/^module
 m_cube	m_cube.F90	/^module
@@ -59,6 +55,7 @@ m_nrelreadfoil	m_nrelreadfoil.F90	/^module
 m_pdfout	m_pdfout.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
+m_regularization	m_regularization.F90	/^module
 m_saverestart	m_saverestart.F90	/^module
 m_seedmanagement	m_seedmanagement.F90	/^module
 m_set_random_seed2	m_set_random_seed2.F90	/^module
@@ -82,6 +79,7 @@ nrelreadfoil	m_nrelreadfoil.F90	/^module
 pdfout	m_pdfout.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module
+regularization	m_regularization.F90	/^module
 saverestart	m_saverestart.F90	/^module
 seedmanagement	m_seedmanagement.F90	/^module
 set	m_set_random_seed2.F90	/^module

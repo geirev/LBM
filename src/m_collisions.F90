@@ -13,9 +13,9 @@ subroutine collisions(f,feq,tau)
    real, intent(inout) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)  ! equilibrium distribution on input
    real, intent(in)    :: tau(nx,ny,nz)
 #ifdef _CUDA
-   attributes(managed) :: tau
-   attributes(managed) :: f
-   attributes(managed) :: feq
+   attributes(device) :: tau
+   attributes(device) :: f
+   attributes(device) :: feq
 #endif
    integer i,j,k
    integer, parameter :: icpu=6
@@ -23,7 +23,7 @@ subroutine collisions(f,feq,tau)
 
 
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
+!$cuf kernel do(2) <<<*,*>>>
 #else
 !$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(f, feq, tau)
 #endif

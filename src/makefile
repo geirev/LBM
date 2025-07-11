@@ -17,8 +17,10 @@ F77 = pgf90   #gfortran
 
 FFLAGS = -c -r8 -Mpreprocess -mp=gpu -O2 -Mcache_align -Mlfs -mcmodel=medium\
          -Minfo=accel -Mstack_arrays -Mlarge_arrays\
-         -gpu=ccall,mem:managed,lineinfo\
+         -gpu=ccall,lineinfo,maxregcount:255\
+         -Minfo=accel\
          -traceback -Ktrap=fp
+         
 ifdef CUDA
 FFLAGS+= -cuda
 endif
@@ -100,7 +102,7 @@ depend:
 	sed -i '/cudafor/d' depends.file
 	sed -i '/cublas/d'  depends.file
 
-tags: $(F90FILES) $(F77FILES) $(INCFILES)
+tags: source.files
 	tags.sh
 	#ctags *.F90
 	#f90tags.sh

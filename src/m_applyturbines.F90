@@ -8,12 +8,21 @@ subroutine applyturbines(f,df,tau)
    real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution
    real, intent(in)    :: df(nl,-ieps:ieps,ny,nz,nturbines) ! forcing distributions
    real, intent(in)    :: tau(nx,ny,nz)                     ! Tau
-   integer n,ip,i,j,k
+#ifdef _CUDA
+   attributes(device) :: f
+   attributes(device) :: df
+   attributes(device) :: tau
+#endif
+
+   integer n,ip,i,j,k,ii
    integer, parameter :: icpu=7
    call cpustart()
    if (iforce == 12 .or. iforce == 8) then
       do n=1,nturbines
          ip=ipos(n)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
          do k=1,nz
          do j=1,ny
          do i=-ieps,ieps
@@ -23,9 +32,16 @@ subroutine applyturbines(f,df,tau)
          enddo
       enddo
    else
-      do n=1,nturbines
-         ip=ipos(n)
-         f(1:nl,ip-ieps:ip+ieps,1:ny,1:nz) = f(1:nl,ip-ieps:ip+ieps,1:ny,1:nz) + df(1:nl,-ieps:ieps,1:ny,1:nz,n)
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#endif
+      do k=1,nz
+      do j=1,ny
+      do ii=-ieps,ieps
+         i=ip+ii
+         f(1:nl,i,j,k) = f(1:nl,i,j,k) + df(1:nl,ii,j,k)
+      enddo
+      enddo
       enddo
    endif
    call cpufinish(icpu)

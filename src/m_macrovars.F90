@@ -19,7 +19,7 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    attributes(device) :: blanking
 #endif
    integer i,j,k,l
-   integer, parameter :: icpu=2
+   integer, parameter :: icpu=13
    if (nl /= 27) stop 'macrovars routine set up for D3Q27'
 
    call cpustart()

@@ -18,7 +18,7 @@ subroutine collisions(f,feq,tau)
    attributes(device) :: feq
 #endif
    integer i,j,k
-   integer, parameter :: icpu=6
+   integer, parameter :: icpu=7
    call cpustart()
 
 

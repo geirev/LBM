@@ -13,7 +13,7 @@ subroutine solids(f,blanking)
 #endif
    real tmp
    integer i,j,k,l
-   integer, parameter :: icpu=9
+   integer, parameter :: icpu=10
    call cpustart()
 
 #ifdef _CUDA

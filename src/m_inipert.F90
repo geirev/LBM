@@ -2,7 +2,6 @@ module m_inipert
 contains
 subroutine inipert(rho,u,v,w,uvel)
    use mod_dimensions
-   use m_set_random_seed2
    use m_readinfile, only : rho0,linipert,udir
    implicit none
    real, intent(inout)  :: rho(nx,ny,nz)
@@ -30,7 +29,7 @@ subroutine inipert(rho,u,v,w,uvel)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) SHARED(rho, u, v, w, rho0)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) SHARED(rho, u, v, w, rho0, uvel, stddev, udir)
 #endif
    do k=1,nz
       do j=1,ny

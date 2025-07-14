@@ -15,7 +15,7 @@ subroutine applyturbines(f,df,tau)
 #endif
 
    integer n,ip,i,j,k,ii
-   integer, parameter :: icpu=7
+   integer, parameter :: icpu=8
    call cpustart()
    if (iforce == 12 .or. iforce == 8) then
       do n=1,nturbines

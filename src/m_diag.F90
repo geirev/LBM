@@ -39,19 +39,17 @@ subroutine diag(it,rho,u,v,w,lblanking)
    attributes(device) :: vortz
    attributes(device) :: vort
 #endif
-   real    :: u_h(nx,ny,nz)
-   real    :: v_h(nx,ny,nz)
-   real    :: w_h(nx,ny,nz)
-   real    :: rho_h(nx,ny,nz)
-   logical :: lblanking_h(0:nx+1,0:ny+1,0:nz+1)
-   integer, parameter :: icpu=3
+   real, allocatable    :: u_h(:,:,:)
+   real, allocatable    :: v_h(:,:,:)
+   real, allocatable    :: w_h(:,:,:)
+   real, allocatable    :: rho_h(:,:,:)
+   logical, allocatable :: lblanking_h(:,:,:)
+   integer, parameter :: icpu=14
    integer num_of_vars
-   real tmp
+   real tmp,minrho
    integer i,j,k
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt) then
-
-
 
 
       if (.not.lprtmin) then
@@ -80,18 +78,29 @@ subroutine diag(it,rho,u,v,w,lblanking)
         !call tecout('tec'//cit//'.plt',it,trim(tecplot_maxvar),num_of_vars,lblanking,rho,u,v,w,&
         !            speed,vortx,vorty,vortz,vort)
       else
+         allocate(u_h(nx,ny,nz))
+         allocate(v_h(nx,ny,nz))
+         allocate(w_h(nx,ny,nz))
+         allocate(rho_h(nx,ny,nz))
+         allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
          num_of_vars=8
          u_h=u
          v_h=v
          w_h=w
          rho_h=rho
          lblanking_h=lblanking
+
          if (minval(rho_h) < 0.0) then
             print *,'iter=',it,'  minmaxrho=',minval(rho_h),' -- ',maxval(rho_h)
             print *,'iter=',it,'  minmaxloc=',minloc(rho_h),' -- ',maxloc(rho_h)
             stop 'Unstable simulation'
          endif
          call tecout('tec'//cit//'.plt',it,trim(tecplot_minvar),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h)
+         deallocate(u_h)
+         deallocate(v_h)
+         deallocate(w_h)
+         deallocate(rho_h)
+         deallocate(lblanking_h)
       endif
    endif
 

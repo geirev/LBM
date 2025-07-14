@@ -1,6 +1,6 @@
-module m_set_random_seed2
+module m_set_random_seed3
 contains
-subroutine set_random_seed2
+subroutine set_random_seed3
 ! Sets a random seed based on the system and wall clock time
    implicit none
 
@@ -30,5 +30,5 @@ subroutine set_random_seed2
    endif
    call RANDOM_SEED(put=pt)
    deallocate(pt)
-end subroutine set_random_seed2
-end module m_set_random_seed2
+end subroutine set_random_seed3
+end module m_set_random_seed3

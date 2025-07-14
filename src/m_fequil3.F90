@@ -7,12 +7,6 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
    use m_readinfile
    use m_wtime
 
-   use m_fequilgetA0
-   use m_fequil1ord
-   use m_fequil2ord
-   use m_fequil3ord
-   use m_fequilscale
-
    implicit none
    real, intent(in)      :: rho(nx,ny,nz)
    real, intent(in)      :: u(nx,ny,nz)
@@ -42,7 +36,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
-   integer, parameter :: icpu=11
+   integer, parameter :: icpu=4
    call cpustart()
 
 !  Compute A0_2, A0_3, and vel

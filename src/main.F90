@@ -2,6 +2,7 @@ program LatticeBoltzmann
 #ifdef _CUDA
    use cudafor
 #endif
+   use m_rhotest
    use mod_dimensions
    use mod_D3Q27setup
    use mod_shapiro
@@ -18,15 +19,15 @@ program LatticeBoltzmann
    use m_uvelshear
    use m_boundarycond
    use m_inipert
-   use m_initurbulence
    use m_macrovars
    use m_density
    use m_velocity
    use m_solids
    use m_turbineforcing
+   use m_applyturbulence
+   use m_initurbulence
    use m_turbulenceforcing
    use m_applyturbines
-   use m_applyturbulence
    use m_collisions
    use m_drift
    use m_fequil3
@@ -37,7 +38,7 @@ program LatticeBoltzmann
    use m_saverestart
    use m_tecfld
    use m_wtime
-   use m_set_random_seed2
+   use m_set_random_seed3
    use, intrinsic :: omp_lib
    implicit none
 
@@ -125,38 +126,37 @@ program LatticeBoltzmann
 
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
-   real, allocatable  :: turb_df(:,:,:,:)         ! Turbulence forcing
+   real, allocatable  :: turb_df(:,:,:)         ! Turbulence forcing
 #ifdef _CUDA
    attributes(device) :: df
    attributes(device) :: turb_df
 #endif
 
+   real, allocatable :: myturb(:,:,:)
    real :: elevation(nx,ny)=0.0
    integer i,j,k,l
    integer :: it
    integer ip,jp,kp
    integer :: istat
 
-   logical, parameter :: runtest=.true.
+   logical, parameter :: runtest=.false.
+   logical, parameter :: debug=.false.
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
    print*, "Running GPU version!"
 #else
    print*, "Running CPU version!"
 #endif
-
-   call set_random_seed2()
+   call cpustart()
    call hermite_polynomials()
-
-   !call assigncvel()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
 
-   if (nturbines > 0) allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
-   if (lturb)         allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
-   !allocate(turb_df(1:nl,-ieps:ieps,1:ny,1:nz))
+   if (nturbines > 0)      allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
+   if (inflowturbulence)   allocate(turb_df(1:nl,1:ny,1:nz))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -210,15 +210,7 @@ program LatticeBoltzmann
       call inipert(rho,u,v,w,uvel_d)
 
 ! Generate trubulence forcing fields
-      if (lturb) call initurbulence(uu,vv,ww,rr,.true.)
-
-! Outputs for testing
-!      if (runtest) then
-!         open(98,file='test.dat')
-!         ip=1; jp=jpos(1)-11; kp=kpos(1)
-!         ip=1; jp=ny/2; kp=nz/2
-!         write(98,'(a,100g15.7)')'000:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-!      endif
+      if (inflowturbulence) call initurbulence(uu,vv,ww,rr,.true.)
 
 ! Initial diagnostics
       call diag(0,rho,u,v,w,lblanking)
@@ -226,30 +218,30 @@ program LatticeBoltzmann
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w, A2, A3, vel)
-!      write(98,'(a,100g15.7)')'fXX:',feq(1:10,ip,jp,kp)
       call boundarycond(feq,rho,u,v,w,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #endif
-      do k = 0, nz+1
-      do j = 0, ny+1
-      do i = 0, nx+1
-         f(:,i,j,k) = feq(:,i,j,k)
-      end do
-      end do
-      end do
-!      write(98,'(a,100g15.7)')'f00:',f(1:10,ip,jp,kp)
+      do k=0,nz+1
+      do j=0,ny+1
+      do i=0,nx+1
+         do l=1,nl
+            f(l,i,j,k) = feq(l,i,j,k)
+         enddo
+      enddo
+      enddo
+      enddo
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #endif
-      do k = 1, nz
-      do j = 1, ny
-      do i = 1, nx
+      do k=1,nz
+      do j=1,ny
+      do i=1,nx
          tau(i,j,k) = tauin
-      end do
-      end do
-      end do
+      enddo
+      enddo
+      enddo
 
    else
 ! Restart from restart file
@@ -264,21 +256,23 @@ program LatticeBoltzmann
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #endif
-      do k = 0, nz+1
-      do j = 0, ny+1
-      do i = 0, nx+1
-         f(:,i,j,k)=feq(:,i,j,k)+f(:,i,j,k)
-      end do
-      end do
-      end do
+      do k=0,nz+1
+      do j=0,ny+1
+      do i=0,nx+1
+         do l=1,nl
+            f(:,i,j,k)=feq(:,i,j,k)+f(:,i,j,k)
+         enddo
+      enddo
+      enddo
+      enddo
 
    endif
+   call cpufinish(1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
       if (it>=25000) iout=2
-!      if (runtest) write(98,'(a,100g15.7)')'001:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
       if ((mod(it, 10) == 0) .or. it == nt1) then
 !          istat=cudaMemcpy(tmptau, tau(nx/2,ny/2,nz/2), 8, cudaMemcpyDeviceToHost)
 !         print '(a)','x'
@@ -288,8 +282,8 @@ program LatticeBoltzmann
 !         print '(a)','Z'
 !         work_h=rho; tmprho = sum(work_h(1,:,:))/real(ny*nz)
 !         print '(a)','A'
-         write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='no')'Iteration:', it,                     &
-                                                            ' Time:'  ,real(it)*p2l%time,' s,'
+         write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='yes')'Iteration:', it,                     &
+                                                            ' Time:'  ,real(it)*p2l%time,' s.'
 !                                                            ' uinave:',tmpu,                      &
 !                                                            ' rinave:',tmprho,                    &
                                                              !' tau:'   ,tmptau
@@ -299,95 +293,101 @@ program LatticeBoltzmann
 !            call shfilt3D(nshapiro,sh,nshapiro,f(l,:,:,:),nx+2,ny+2,nz+2)
 !         enddo
 !         write(*,'(a)')'filtered'
-         write(*,'(a)')'.'
+         !write(*,'(a)')'.'
       endif
 
 ! start with f,rho,u,v,w
-!      if (runtest) then
-!         write(98,'(a,i7)')'it: ',it
-!         write(98,'(a,100g15.7)')'u02:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
-!         write(98,'(a,100g15.7)')'f02:',f(1:10,ip,jp,kp)
-!      endif
+
 
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
       if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
 
+
 ! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
-      if (lturb) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
+      if (inflowturbulence) then
+         call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
+!         allocate(myturb(nl,ny,nz))
+!         myturb=turb_df
+!         print '(a,10g13.5)','turb:',myturb(1:10,ny/2,nz/2)
+!         deallocate(myturb)
+      endif
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w, A2, A3, vel)
-#ifdef _CUDA
-     ! istat = cudaDeviceSynchronize()
-#endif
-!      if (runtest) write(98,'(a,100g15.7)')'ini:',feq(1:10,ip,jp,kp)
+
+         if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
       call regularization(f, feq, u, v, w, A2, A3, vel)
-#ifdef _CUDA
-     ! istat = cudaDeviceSynchronize()
-#endif
 
-!      if (runtest) write(98,'(a,100g15.7)')'reg:',feq(1:10,ip,jp,kp)
-!      if (runtest) write(98,'(a,100g15.7)')'reg:',f(1:10,ip,jp,kp)
 
 ! [tau] = vreman[f] [f=Rneqf]
       call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
-!      if (runtest) write(98,'(a,100g15.7)')'vre:',tau(ip,jp,kp)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau)
-!      if (runtest) write(98,'(a,100g15.7)')'col:',feq(1:10,ip,jp,kp)
+
+         if (debug) call rhotest(feq,rho,'collisions')
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
       if (nturbines > 0) call applyturbines(feq,df,tau)
-!      if (runtest) write(98,'(a,100g15.7)')'tur:',feq(1:10,ip,jp,kp)
 
 ! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
-      if (lturb) call applyturbulence(feq,turb_df,tau)
-!      if (runtest) write(98,'(a,100g15.7)')'tur:',feq(1:10,ip,jp,kp)
+      if (inflowturbulence) call applyturbulence(feq,turb_df,tau)
+
+         if (debug) call rhotest(feq,rho,'applyturbulence')
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(feq,lblanking)
 
+         if (debug) call rhotest(feq,rho,'solids')
+
 ! General boundary conditions
       call boundarycond(feq,rho,u,v,w,uvel_d)
-!      if (runtest) write(98,'(a,100g15.7)')'bnd:',feq(1:10,ip,jp,kp)
+
+         if (debug) call rhotest(feq,rho,'boundarycond')
 
 ! Drift of feq returned in f
       call drift(f,feq)
-!      if (runtest) write(98,'(a,100g15.7)')'dri:',f(1:10,ip,jp,kp)
+
+         if (debug) call rhotest(f,rho,'drift')
 
 
 ! Compute updated macro variables
       call macrovars(rho,u,v,w,f,lblanking)
-!      if (runtest) write(98,'(a,100g15.7)')'u03:',u(ip,jp,kp),v(ip,jp,kp),w(ip,jp,kp),rho(ip,jp,kp)
+
+         if (debug) call rhotest(f,rho,'macrovars')
 
 ! Diagnostics
       call diag(it,rho,u,v,w,lblanking)
 
+         if (debug) call rhotest(f,rho,'diag')
+
+      call cpustart()
 ! Averaging for diagnostics
       if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
       if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
 
 ! Updating input turbulence matrix
-      if (mod(it, nrturb) == 0 .and. it > 1 .and. lturb .and. ibnd==1) then
+      if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence .and. ibnd==1) then
          print '(a,i6)','Recomputing inflow noise: it=',it
          call initurbulence(uu,vv,ww,rr,.false.)
       endif
 
 ! Save restart file
+      if (debug) call rhotest(f,rho,'saverestart')
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
-      if (runtest) write(98,'(a)')
+      call cpufinish(15)
 
    enddo
 
-   if (runtest) close(98)
 
-   call cpuprint()
-
+   call cpustart()
    call saverestart(it-1,f,theta,uu,vv,ww,rr)
+   call cpufinish(16)
 
    if (allocated(df)) deallocate(df)
+
+   call cpuprint()
 
 end program LatticeBoltzmann

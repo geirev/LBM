@@ -23,7 +23,7 @@ subroutine boundarycond(f,rho,u,v,w,uvel)
    real tmp
    real tmpval
    integer i,j,k,l,m,ja,ka,ip,ix,jy,kz
-   integer, parameter :: icpu=8
+   integer, parameter :: icpu=11
    real, parameter :: pi=3.1415927410125732
 
 

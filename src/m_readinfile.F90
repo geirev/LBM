@@ -11,7 +11,7 @@ module m_readinfile
    integer  jbnd           ! Type of bondary condition in i direction
    integer  kbnd           ! Type of bondary condition in k direction
    logical  linipert       ! Add smooth pseudo-random peturbations to initial fields
-   logical  lturb          ! Add smooth pseudo-random peturbations for turbulent inflow
+   logical  inflowturbulence          ! Add smooth pseudo-random peturbations for turbulent inflow
    real     uini           ! Initial absolute velocity
    real     udir           ! Initial velocity direction in degrees
    real     rho0           ! Average density
@@ -107,7 +107,7 @@ subroutine readinfile()
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
       read(10,'(1x,l1)')linipert   ; print '(a,tr7,l1)',  'linipert          = ',linipert
-      read(10,'(1x,l1)')lturb      ; print '(a,tr7,l1)',  'lturb             = ',lturb
+      read(10,'(1x,l1)')inflowturbulence      ; print '(a,tr7,l1)',  'inflowturbulence             = ',inflowturbulence
 !      read(10,*)tauin              ; print '(a,f8.3,a)',  'tauin             = ',tauin,      ' [] '
       read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
       read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density

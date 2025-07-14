@@ -2,7 +2,7 @@ module m_saverestart
 contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
-   use m_readinfile, only : lturb,nturbines
+   use m_readinfile, only : inflowturbulence,nturbines
    integer, intent(in) :: it
    real,    intent(in) :: theta
    real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
@@ -28,8 +28,8 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
-
-   if (lturb) then
+   print *,'a'
+   if (inflowturbulence) then
       inquire(iolength=irec)ny,nz,nrturb,uu_h,vv_h,ww_h,rr_h
       open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
          uu_h=uu
@@ -40,17 +40,20 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
       close(10)
    endif
 
+   print *,'b'
    if (nturbines > 0) then
       open(10,file='theta'//cit//'.dat')
          write(10,*)theta
       close(10)
    endif
+   print *,'c'
 
    inquire(iolength=irec) nx,ny,nz,nl,f_h
    open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
       f_h=f
       write(10,rec=1)nx,ny,nz,nl,f_h
    close(10)
+   print *,'d'
 
 end subroutine
 end module

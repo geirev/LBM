@@ -2,7 +2,7 @@ module m_initurbulence
 contains
 subroutine initurbulence(uu,vv,ww,rr,lfirst)
    use mod_dimensions
-   use m_set_random_seed2
+!   use m_set_random_seed3
    use m_pseudo2D
    implicit none
    real, intent(inout)  :: uu(ny,nz,0:nrturb)
@@ -24,7 +24,6 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    real cor1,cor2,dx,dy,dir
    integer(kind=4) n1,n2
    integer i,j,k
-   integer, save :: nyy,nzz,nt
    logical :: verbose=.false.
    real aveu,avev,avew,aver
    real varu,varv,varw,varr
@@ -32,8 +31,8 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    real :: timecor=0.98
 
 ! New seed
-   call system('rm seed.dat')
-   call set_random_seed2
+!   call system('rm seed.dat')
+!   call set_random_seed3
 
 ! Simulating a time series of inflow boundary perturbations for u
    print '(a)','initurbulence: Simulating inflow turbulence forcing'
@@ -45,10 +44,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
       rr_h(:,:,0)=0.0
    else
       print '(a,l1)','initurbulence: lfirst=',lfirst
-      uu_h(:,:,0)=uu(:,:,nrturb)
-      vv_h(:,:,0)=vv(:,:,nrturb)
-      ww_h(:,:,0)=ww(:,:,nrturb)
-      rr_h(:,:,0)=rr(:,:,nrturb)
+      uu_h(:,:,0)=uu_h(:,:,nrturb)
+      vv_h(:,:,0)=vv_h(:,:,nrturb)
+      ww_h(:,:,0)=ww_h(:,:,nrturb)
+      rr_h(:,:,0)=rr_h(:,:,nrturb)
    endif
 
    cor1=10.0/sqrt(3.0)
@@ -56,15 +55,12 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    dir=0.0
    dx=1.0
    dy=1.0
-   n1=int(ny,4)
-   n2=int(nz,4)
-   nyy=int(ny,4)
-   nzz=int(nz,4)
-   nt=int(nrturb)
-   call pseudo2d(uu_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2d(vv_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2d(ww_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
-   call pseudo2d(rr_h(:,:,1:nt),nyy,nzz,nt,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   n1=ny
+   n2=nz
+   call pseudo2d(uu_h(:,:,0:nrturb),ny,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(vv_h(:,:,0:nrturb),ny,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(ww_h(:,:,0:nrturb),ny,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,verbose)
+   call pseudo2d(rr_h(:,:,0:nrturb),ny,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,verbose)
 
 ! Imposing time correlations
    do i=1,nrturb
@@ -121,44 +117,7 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
 
    enddo
 
-   print *,'checking average and variance'
-   do i=1,nrturb
-      aveu=0.0
-      avev=0.0
-      avew=0.0
-      aver=0.0
-      do k=1,nz
-      do j=1,ny
-         aveu = aveu + uu_h(j,k,i)
-         avev = avev + vv_h(j,k,i)
-         avew = avew + ww_h(j,k,i)
-         aver = aver + rr_h(j,k,i)
-      enddo
-      enddo
-      aveu=aveu/real(ny*nz)
-      avev=avev/real(ny*nz)
-      avew=avew/real(ny*nz)
-      aver=aver/real(ny*nz)
-
-      varu=0.0
-      varv=0.0
-      varw=0.0
-      varr=0.0
-      do k=1,nz
-      do j=1,ny
-         varu = varu + uu_h(j,k,i)**2
-         varv = varv + vv_h(j,k,i)**2
-         varw = varw + ww_h(j,k,i)**2
-         varr = varr + rr_h(j,k,i)**2
-      enddo
-      enddo
-      varu=varu/real(ny*nz-1)
-      varv=varv/real(ny*nz-1)
-      varw=varw/real(ny*nz-1)
-      varr=varr/real(ny*nz-1)
-  !    print '(a,i5,8g13.5)','check turbulence stat:',i,aveu,avev,avew,aver,varu,varv,varw,varr
-
-   enddo
+! Copy to device
    uu=uu_h
    vv=vv_h
    ww=ww_h

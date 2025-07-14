@@ -4,7 +4,7 @@ HOME = /home/geev/
 HOME = /home/AD.NORCERESEARCH.NO/geev
 
 .SUFFIXES:
-.SUFFIXES: .o .F90 .f90 .F .f
+.SUFFIXES: .o .F90 .f90 .F .f .c
 
 
 
@@ -16,11 +16,11 @@ F77 = pgf90   #gfortran
 #FFLAGS = -c -r8 -Mpreprocess -O2 -Mcache_align -Mlfs -mcmodel=medium
 
 FFLAGS = -c -r8 -Mpreprocess -mp=gpu -O2 -Mcache_align -Mlfs -mcmodel=medium\
-         -Minfo=accel -Mstack_arrays -Mlarge_arrays\
-         -gpu=ccall,lineinfo,maxregcount:255\
-         -Minfo=accel\
+         -g -lineinfo -gpu=lineinfo -Minfo=accel\
+         -Mstack_arrays -Mlarge_arrays\
+         -gpu=ccall,maxregcount:255\
          -traceback -Ktrap=fp
-         
+
 ifdef CUDA
 FFLAGS+= -cuda
 endif
@@ -50,9 +50,13 @@ BINDIR = $(HOME)/bin
 
 .F.o:
 	@mkdir -p $(BUILD)
-	@rm -f ./$(BUILD)/$*.f
+	@rm -f ./$(BUILD)/$*.*
 	cd $(BUILD) ; $(F77) $(FFLAGS) $(F77FLG) -o $*.o ../src/$*.F
 
+.c.o:
+	@mkdir -p $(BUILD)
+	@rm -f ./$(BUILD)/$*.*
+	cd $(BUILD) ; gcc -c ../src/$*.c
 
 
 include source.files
@@ -68,8 +72,8 @@ all: touch libsampling.a libpreplot.a new $(TARGET) install
 
 libs: libsampling.a libenkfanalysis.a libpreplot.a -lcuda -lcublas
 
-libsampling.a: all.compile
-	cd ../../EnKF_sampling/lib; make -f makefile.cuda  BUILD=../../LBM/build
+libsampling.a:
+	cd ../../EnKF_sampling/lib; make -B -f makefile.cuda  BUILD=../../LBM/build
 
 libenkfanalysis.a:
 	cd ../../EnKF_analysis/lib; make BUILD=../../LBM/build
@@ -77,9 +81,9 @@ libenkfanalysis.a:
 libpreplot.a: all.compile
 	cp $(HOME)/Dropbox/Progs/tecplot-binary-files/libpreplot.a $(HOME)/Dropbox/Progs/LBM/build
 
-$(TARGET): $(INCFILES) $(OBJECTS) libsampling.a
+$(TARGET): $(INCFILES) $(OBJECTS) libsampling.a timer.o
 	@mkdir -p $(BUILD)
-	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) $(LIBDIR) $(LIBS)
+	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) timer.o $(LIBDIR) $(LIBS)
 
 install:
 	cp $(BUILD)/$(TARGET) $(BINDIR)
@@ -88,6 +92,10 @@ veryclean:
 	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a
 
 new: source depend
+
+timer.o: timer.c
+	cd ./$(BUILD)
+	gcc -c ../src/timer.c -o ./$(BUILD)/timer.o
 
 touch:
 	touch all.compile

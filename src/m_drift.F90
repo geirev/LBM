@@ -14,7 +14,7 @@ subroutine drift(f,feq)
    attributes(device) :: feq
 #endif
    integer i,j,k
-   integer, parameter :: icpu=10
+   integer, parameter :: icpu=12
    call cpustart()
 
 #ifdef _CUDA

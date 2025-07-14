@@ -41,7 +41,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
-   integer, parameter :: icpu=12
+   integer, parameter :: icpu=5
    call cpustart()
 
 
@@ -67,7 +67,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel)
 
 
 
-   if (ihrr == 1) then
+!   if (ihrr == 1) then
 ! projecting non-equilibrium distribution on the Hermitian polynomials for regularization
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
@@ -187,7 +187,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-   endif
+!   endif
 
    call cpufinish(icpu)
 

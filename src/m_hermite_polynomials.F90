@@ -18,27 +18,20 @@ subroutine hermite_polynomials()
    attributes(device) :: delta
 #endif
 
-   print *,'a'
 
    allocate(cxs(nl))
    allocate(cys(nl))
    allocate(czs(nl))
    allocate(bounce(nl))
    allocate(weights(1:nl))
-   print *,'b'
 
 #ifdef _CUDA
     ierr = cudaMemcpy(cxs, cxs_h, nl*4, cudaMemcpyHostToDevice)
-   print *,'ba'
     ierr = cudaMemcpy(cys, cys_h, nl*4, cudaMemcpyHostToDevice)
-   print *,'bb'
     ierr = cudaMemcpy(czs, czs_h, nl*4, cudaMemcpyHostToDevice)
-   print *,'bc'
     ierr = cudaMemcpy(bounce, bounce_h, nl*4, cudaMemcpyHostToDevice)
-   print *,'bd'
 !   ierr = cudaMemcpy(weights, weights_h, nl*sz, cudaMemcpyHostToDevice)
     weights=weights_h
-   print *,'be',ierr
 #else
     cxs=cxs_h
     cys=cys_h
@@ -46,7 +39,6 @@ subroutine hermite_polynomials()
     bounce=bounce_h
     weights=weights_h
 #endif
-   print *,'c'
 
 
 ! Build lattice velocity matrix
@@ -58,7 +50,6 @@ subroutine hermite_polynomials()
    ! ierr = cudaMemcpy(c, c_h, 3*nl*sz, cudaMemcpyHostToDevice)
 #endif
    c=c_h
-   print *,'d'
 
 ! Kronecker delta
    allocate(delta(3,3))
@@ -70,7 +61,6 @@ subroutine hermite_polynomials()
     !ierr = cudaMemcpy(delta, delta_h, 3*3*sz, cudaMemcpyHostToDevice); print *,'cpdelta:ierr',ierr
 #endif
    delta=delta_h
-   print *,'e'
 
    allocate(H2(3,3,1:nl))
    allocate(H3(3,3,3,1:nl))
@@ -85,7 +75,6 @@ subroutine hermite_polynomials()
          enddo
       enddo
    enddo
-   print *,'f'
 
    ! Compute third-order Hermite polynomials
 #ifdef _CUDA
@@ -103,7 +92,6 @@ subroutine hermite_polynomials()
          enddo
       enddo
    enddo
-   print *,'g'
 
 end subroutine
 end module

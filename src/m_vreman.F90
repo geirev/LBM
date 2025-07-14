@@ -34,7 +34,7 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
    attributes(device) :: alphamag
 #endif
 
-   integer, parameter :: icpu=13
+   integer, parameter :: icpu=6
    call cpustart()
 
    if (ivreman /= 1) then

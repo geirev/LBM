@@ -55,7 +55,7 @@ subroutine turbineforcing(df,rho,u,v,w)
    real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
-   integer, parameter :: icpu=5
+   integer, parameter :: icpu=2
    integer ierr
    call cpustart()
 
@@ -159,9 +159,6 @@ subroutine turbineforcing(df,rho,u,v,w)
             endif
          enddo
          enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! (10) Kupershtokh 2009
@@ -182,8 +179,8 @@ subroutine turbineforcing(df,rho,u,v,w)
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
-                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+!                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
+!                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
                   df(:,i,j,k,n)=df(:,i,j,k,n)-dfeq(:)
                enddo
             endif
@@ -206,8 +203,8 @@ subroutine turbineforcing(df,rho,u,v,w)
          do j=1,ny
             if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
                do i=-ieps,ieps
-                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+!                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
+!                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
                   df(:,i,j,k,n)= (df(:,i,j,k,n)-dfeq(:))
 
                   u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)

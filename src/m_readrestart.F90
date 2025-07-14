@@ -2,7 +2,7 @@ module m_readrestart
 contains
 subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
-   use m_readinfile, only : lturb,nturbines
+   use m_readinfile, only : inflowturbulence,nturbines
    integer, intent(in)  :: it
    real,    intent(out) :: theta
    real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
@@ -17,20 +17,26 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    attributes(device) :: ww
    attributes(device) :: rr
 #endif
-   real :: f_h(nl,0:nx+1,0:ny+1,0:nz+1)
-   real :: uu_h(ny,nz,0:nrturb)
-   real :: vv_h(ny,nz,0:nrturb)
-   real :: ww_h(ny,nz,0:nrturb)
-   real :: rr_h(ny,nz,0:nrturb)
+   real, allocatable  :: f_h(:,:,:,:)
+   real, allocatable  :: uu_h(:,:,:)
+   real, allocatable  :: vv_h(:,:,:)
+   real, allocatable  :: ww_h(:,:,:)
+   real, allocatable  :: rr_h(:,:,:)
 
    logical ex
    integer :: irec,i,j,k,l,n
    character(len=6) cit
 
+   allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
+   allocate(uu_h(ny,nz,0:nrturb)        )
+   allocate(vv_h(ny,nz,0:nrturb)        )
+   allocate(ww_h(ny,nz,0:nrturb)        )
+   allocate(rr_h(ny,nz,0:nrturb)        )
+
    write(cit,'(i6.6)')it
    print '(a,a)','readrestart:',cit
 
-   if (lturb) then
+   if (inflowturbulence) then
       print '(3a)','reading: turbulence'//cit//'.uf'
       inquire(file='turbulence'//cit//'.uf',exist=ex)
       if (ex) then
@@ -89,6 +95,11 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
       stop
    endif
+   deallocate(f_h)
+   deallocate(uu_h)
+   deallocate(vv_h)
+   deallocate(ww_h)
+   deallocate(rr_h)
    return
    998 stop 'readrestart: error during read of turbulence restart field'
    999 stop 'readrestart: error during read of restart file'

@@ -1,0 +1,47 @@
+module m_reg_2ord_kernel
+#ifdef _CUDA
+   use cudafor
+#endif
+   implicit none
+contains
+#ifdef _CUDA
+   attributes(global)&
+#endif
+   subroutine reg_2ord_kernel(f, A1_2, H2, nx, ny, nz, nl)
+   implicit none
+   integer, value    :: nx, ny, nz, nl
+   real, intent(out) :: f(nl,nx+2,ny+2,nz+2)
+   real, intent(in)  :: A1_2(3,3,nx,ny,nz)
+   real, intent(in)  :: H2(3,3,nl)
+   integer :: i, j, k, l, p, q
+#ifdef _CUDA
+   attributes(device) :: A1_2
+   attributes(device) :: H2
+   attributes(device) :: f
+   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
+   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
+   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
+   if (i > nx .or. j > ny .or. k > nz) return
+#else
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(f, H2, A1_2, nx, ny, nz, nl)
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
+#endif
+      do l=1,nl
+         f(l,i+1,j+1,k+1)=0.0
+         do q=1,3
+         do p=1,3
+            f(l,i+1,j+1,k+1)=f(l,i+1,j+1,k+1) + H2(p,q,l)*A1_2(p,q,i,j,k)
+         enddo
+         enddo
+      enddo
+#ifndef _CUDA
+   enddo
+   enddo
+   enddo
+!$OMP END PARALLEL DO
+#endif
+
+end subroutine
+end module

@@ -1,19 +1,21 @@
 module m_wtime
-   real xt0,xt1,wt0,wt1
+!@cuf use cudafor
+   real xt0,xt1,wt0,wt1,t0,t1
    integer, parameter :: nrtimes=16
    real :: walltime(1:nrtimes)=0.0
    real :: walltimeX(1:nrtimes)=0.0
+   real :: walltimelocal(1:100)=0.0
+   real, external :: wallclock
+   integer istat
 contains
 
 subroutine cpustart()
-   real wallclock
 !@cuf istat = cudaDeviceSynchronize()
    xt0 = wallclock()
    wt0= wtime()
 end
 
 subroutine cpufinish(icpu)
-   real wallclock
 !@cuf istat = cudaDeviceSynchronize()
    xt1 = wallclock();  walltime(icpu)=walltime(icpu)+xt1-xt0
    wt1=wtime();       walltimeX(icpu)=walltimeX(icpu)+wt1-wt0

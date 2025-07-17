@@ -1,17 +1,24 @@
 module m_fequil3
 contains
 
-subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
+subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile
    use m_wtime
+   use m_reg_cp_vel_kernel
+   use m_fequil3_A0_kernel
+   use m_fequil3_1ord_kernel
+   use m_fequil3_2ord_kernel
+   use m_fequil3_3ord_kernel
+   use m_reg_scalef_kernel
 
    implicit none
    real, intent(in)      :: rho(nx,ny,nz)
    real, intent(in)      :: u(nx,ny,nz)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
+   integer, intent(in)   :: it
    real, intent(out)     :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: rho
@@ -24,6 +31,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
    real, intent(out)   :: A0_2(3,3,nx,ny,nz)
    real, intent(out)   :: A0_3(3,3,3,nx,ny,nz)
    real, intent(out)   :: vel(3,nx,ny,nz)
+
 #ifdef _CUDA
    attributes(device) :: A0_2
    attributes(device) :: A0_3
@@ -37,160 +45,128 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=4
+   real tmp
+   integer :: tx, ty, tz, bx, by, bz
+
+
    call cpustart()
-
-!  Compute A0_2, A0_3, and vel
-! Loop over grid
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Copy u,v,w to vel(1:3)
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l,p,q,r)  SHARED(rho,u,v,w,vel,A0_2,A0_3)
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-
-            vel(1,i,j,k)=u(i,j,k)
-            vel(2,i,j,k)=v(i,j,k)
-            vel(3,i,j,k)=w(i,j,k)
-
-! A0_2 and A0_3 from \citet{fen21a} (following Eq. 32)
-            do q=1,3
-            do p=1,3
-               A0_2(p,q,i,j,k)=rho(i,j,k)*vel(p,i,j,k)*vel(q,i,j,k)
-            enddo
-            enddo
-
-            do r=1,3
-            do q=1,3
-            do p=1,3
-               A0_3(p,q,r,i,j,k)=rho(i,j,k)*vel(p,i,j,k)*vel(q,i,j,k)*vel(r,i,j,k)
-            enddo
-            enddo
-            enddo
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
-
-!  Compute 1st order eqilibrium distribution
+      call reg_cp_vel_kernel&
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(feq, rho, vel)
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
-            feq( 1,i,j,k) = rho(i,j,k) * (cs2                                                ) / cs2
-            feq( 2,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)                                ) / cs2
-            feq( 3,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)                                ) / cs2
-            feq( 4,i,j,k) = rho(i,j,k) * (cs2                  + vel(2,i,j,k)                ) / cs2
-            feq( 5,i,j,k) = rho(i,j,k) * (cs2                  - vel(2,i,j,k)                ) / cs2
-            feq( 6,i,j,k) = rho(i,j,k) * (cs2                                  - vel(3,i,j,k)) / cs2
-            feq( 7,i,j,k) = rho(i,j,k) * (cs2                                  + vel(3,i,j,k)) / cs2
-            feq( 8,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)  + vel(2,i,j,k)                ) / cs2
-            feq( 9,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)  - vel(2,i,j,k)                ) / cs2
-            feq(10,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)  - vel(2,i,j,k)                ) / cs2
-            feq(11,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)  + vel(2,i,j,k)                ) / cs2
-            feq(12,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)                  - vel(3,i,j,k)) / cs2
-            feq(13,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)                  + vel(3,i,j,k)) / cs2
-            feq(14,i,j,k) = rho(i,j,k) * (cs2                  + vel(2,i,j,k)  + vel(3,i,j,k)) / cs2
-            feq(15,i,j,k) = rho(i,j,k) * (cs2                  - vel(2,i,j,k)  - vel(3,i,j,k)) / cs2
-            feq(16,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)                  + vel(3,i,j,k)) / cs2
-            feq(17,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)                  - vel(3,i,j,k)) / cs2
-            feq(18,i,j,k) = rho(i,j,k) * (cs2                  - vel(2,i,j,k)  + vel(3,i,j,k)) / cs2
-            feq(19,i,j,k) = rho(i,j,k) * (cs2                  + vel(2,i,j,k)  - vel(3,i,j,k)) / cs2
-            feq(20,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)  + vel(2,i,j,k)  + vel(3,i,j,k)) / cs2
-            feq(21,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)  - vel(2,i,j,k)  - vel(3,i,j,k)) / cs2
-            feq(22,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)  - vel(2,i,j,k)  - vel(3,i,j,k)) / cs2
-            feq(23,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)  + vel(2,i,j,k)  + vel(3,i,j,k)) / cs2
-            feq(24,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)  + vel(2,i,j,k)  - vel(3,i,j,k)) / cs2
-            feq(25,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)  - vel(2,i,j,k)  + vel(3,i,j,k)) / cs2
-            feq(26,i,j,k) = rho(i,j,k) * (cs2  - vel(1,i,j,k)  + vel(2,i,j,k)  - vel(3,i,j,k)) / cs2
-            feq(27,i,j,k) = rho(i,j,k) * (cs2  + vel(1,i,j,k)  - vel(2,i,j,k)  + vel(3,i,j,k)) / cs2
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
+        &(vel, u, v, w, nx, ny, nz)
+!@cuf istat = cudaDeviceSynchronize()
+      t1 = wallclock(); walltimelocal(1)=walltimelocal(1)+t1-t0
 
-!  Compute 2st order eqilibrium distribution
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  Compute A0_2, A0_3
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(feq, H2, A0_2)
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-            do l=1,nl
-               do p=1,3
-               do q=1,3
-                  feq(l,i,j,k)=feq(l,i,j,k) + H2(p,q,l)*A0_2(p,q,i,j,k)*inv2cs4
-               enddo
-               enddo
-            enddo
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
+      call fequil3_A0_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
+        &(rho, A0_2, A0_3, vel, nx, ny, nz, inv2cs4, inv6cs6)
+!@cuf istat = cudaDeviceSynchronize()
+      t1 = wallclock(); walltimelocal(2)=walltimelocal(2)+t1-t0
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  1st order equilibrium distribution
+
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
+#ifdef _CUDA
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
+#endif
+      call fequil3_1ord_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(feq, rho, vel, nx, ny, nz, nl, cxs, cys, czs, cs2, inv1cs2)
+!@cuf istat = cudaDeviceSynchronize()
+      t1 = wallclock(); walltimelocal(3)=walltimelocal(3)+t1-t0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  2nd order equilibrium distribution
+
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
+#ifdef _CUDA
+      tx=8; bx=(nx+2+tx-1)/tx
+      ty=8; by=(ny+2+ty-1)/ty
+      tz=8; bz=(nz+2+tz-1)/tz
+#endif
+      call fequil3_2ord_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(feq, H2, A0_2, nx+2, ny+2, nz+2, nl)
+!@cuf istat = cudaDeviceSynchronize()
+      t1 = wallclock(); walltimelocal(4)=walltimelocal(4)+t1-t0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  3nd order equilibrium distribution
 !  the above identically recovers the BGK equilibrium, now we add third order contributions
    if (ibgk == 3) then
+
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l,p,q,r)  SHARED(feq,H3,A0_3)
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
-      do k=1,nz
-         do j=1,ny
-            do i=1,nx
-               do l=1,nl
-                  do p=1,3
-                  do q=1,3
-                  do r=1,3
-                     feq(l,i,j,k)=feq(l,i,j,k) + H3(p,q,r,l)*A0_3(p,q,r,i,j,k)*inv6cs6
-                  enddo
-                  enddo
-                  enddo
-               enddo
-            enddo
-         enddo
-      enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
+      call fequil3_3ord_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
+        &(feq, H3, A0_3, nx, ny, nz, nl)
+!@cuf istat = cudaDeviceSynchronize()
+      t1 = wallclock(); walltimelocal(5)=walltimelocal(5)+t1-t0
+
    endif
-
-!  Scale with the weights
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! scaling f by the weights
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(feq, weights)
+      tx=8; bx=(nx+2+tx-1)/tx
+      ty=8; by=(ny+2+ty-1)/ty
+      tz=8; bz=(nz+2+tz-1)/tz
 #endif
-      do k=1,nz
-         do j=1,ny
-            do i=1,nx
-               do l=1,nl
-                  feq(l,i,j,k)= weights(l)*feq(l,i,j,k)
-               enddo
-            enddo
-         enddo
-      enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
+      call reg_scalef_kernel&
+#ifdef _CUDA
+          &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
+          &(feq, weights, nx+2, ny+2, nz+2, nl)
+!@cuf istat = cudaDeviceSynchronize()
+   t1 = wallclock(); walltimelocal(6)=walltimelocal(6)+t1-t0
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpufinish(icpu)
+   if (it==999) then
+      do j=1,6
+         print '(a,i3,g13.5)','fequil3     :',j,walltimelocal(j)
+      enddo
+      print '(a,g13.5)',      'fequil3     :',sum(walltimelocal(1:6))
+   endif
 
 
 end subroutine
-
 end module

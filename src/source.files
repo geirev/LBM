@@ -11,15 +11,20 @@ F90SOURCE = \
 	m_boundarycond.F90\
 	m_city.F90\
 	m_collisions.F90\
+	m_collisions_kernel.F90\
 	m_cube.F90\
 	m_cylinder.F90\
 	m_density.F90\
 	m_diag.F90\
 	m_drift.F90\
+	m_drift_kernel.F90\
+	m_fequil3_1ord_kernel.F90\
+	m_fequil3_2ord_kernel.F90\
+	m_fequil3_3ord_kernel.F90\
+	m_fequil3_A0_kernel.F90\
 	m_fequil3.F90\
 	m_fequilscalar.F90\
 	m_fequilscal.F90\
-	m_fregularization.F90\
 	m_hermite_polynomials.F90\
 	m_inipert.F90\
 	m_initurbulence.F90\
@@ -33,6 +38,14 @@ F90SOURCE = \
 	m_pdfout.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
+	m_reg_2ord_kernel.F90\
+	m_reg_3ord_kernel.F90\
+	m_reg_A1_2_kernel.F90\
+	m_reg_A1_3_kernel.F90\
+	m_reg_cp_vel_kernel.F90\
+	m_reg_scaleA1_kernel.F90\
+	m_reg_scalef_kernel.F90\
+	m_reg_subtract_feq_kernel.F90\
 	m_regularization.F90\
 	m_rhotest.F90\
 	m_saverestart.F90\
@@ -50,6 +63,11 @@ F90SOURCE = \
 	m_uvelshear.F90\
 	m_velocity.F90\
 	m_vorticity.F90\
+	m_vreman_alpha_kernel.F90\
+	m_vreman_alphamag_kernel.F90\
+	m_vreman_Bbeta_kernel.F90\
+	m_vreman_beta_kernel.F90\
 	m_vreman.F90\
+	m_vreman_tau_kernel.F90\
 	m_wtime.F90
 

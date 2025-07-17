@@ -2,14 +2,20 @@ module m_vreman
 !  Vreman (2004) subgridscale turbulence model
 contains
 
-subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
+subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile, only : ivreman,kinevisc,p2l,smagorinsky,tauin
    use m_wtime
+   use m_vreman_alpha_kernel
+   use m_vreman_alphamag_kernel
+   use m_vreman_beta_kernel
+   use m_vreman_Bbeta_kernel
+   use m_vreman_tau_kernel
    implicit none
    real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input
    real, intent(out)     :: tau(nx,ny,nz)              ! Tau including subgrid scale mixing
+   integer, intent(in)   :: it
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: tau
@@ -35,11 +41,12 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
 #endif
 
    integer, parameter :: icpu=6
+   integer :: tx, ty, tz, bx, by, bz
    call cpustart()
 
    if (ivreman /= 1) then
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>> 
+!$cuf kernel do(3) <<<*,*>>>
 #else
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) SHARED(tau, kinevisc)
 #endif
@@ -56,141 +63,106 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
       return
    endif
 
-
    const=2.5*smagorinsky**2
    dx=p2l%length
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Loop over grid
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute alpha
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) &
-!$OMP&              SHARED(f, tau, weights, H2, tauin, kinevisc, const, eddyvisc, Bbeta, alpha, beta, alphamag)
+      tx=8; bx=(nx+2+tx-1)/tx
+      ty=8; by=(ny+2+ty-1)/ty
+      tz=8; bz=(nz+2+tz-1)/tz
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-
-! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
-            alpha(:,:,i,j,k)=0.0
-            do l=1,nl
-               do q=1,3
-               do p=1,3
-                  alpha(p,q,i,j,k) = alpha(p,q,i,j,k) + H2(p,q,l)*f(l,i,j,k)
-               enddo
-               enddo
-            enddo
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
-
-
-
+      call vreman_alpha_kernel&
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) &
-!$OMP&              SHARED(f, tau, weights, H2, tauin, kinevisc, const, eddyvisc, Bbeta, alpha, beta, alphamag)
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-!! alphamag
-            alphamag(i,j,k)=0.00001
-            do q=1,3
-            do p=1,3
-               alphamag(i,j,k)=alphamag(i,j,k)+alpha(p,q,i,j,k)*alpha(p,q,i,j,k)
-            enddo
-            enddo
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
+        &(f, H2, alpha, nx+2, ny+2, nz+2, nl)
+!@cuf istat = cudaDeviceSynchronize()
+   t1 = wallclock(); walltimelocal(41)=walltimelocal(41)+t1-t0
 
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute alphamag
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) &
-!$OMP&              SHARED(f, tau, weights, H2, tauin, kinevisc, const, eddyvisc, Bbeta, alpha, beta, alphamag)
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-!
-!! beta = del^2 * alpha' * alpha
-            beta(:,:,i,j,k)=0.00001
-            do q=1,3
-            do p=1,3
-               do m=1,3
-                  beta(p,q,i,j,k)=beta(p,q,i,j,k)+alpha(m,p,i,j,k)*alpha(m,q,i,j,k)
-               enddo
-            enddo
-            enddo
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
-
-
-
-!
-!! Vreman 2004 Eq (8)
+      call vreman_alphamag_kernel&
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) &
-!$OMP&              SHARED(f, tau, weights, H2, tauin, kinevisc, const, eddyvisc, Bbeta, alpha, beta, alphamag)
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
-            Bbeta(i,j,k)=beta(1,1,i,j,k)*beta(2,2,i,j,k) - beta(1,2,i,j,k)**2  &
-                 +beta(1,1,i,j,k)*beta(3,3,i,j,k) - beta(1,3,i,j,k)**2  &
-                 +beta(2,2,i,j,k)*beta(3,3,i,j,k) - beta(2,3,i,j,k)**2
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
+        &(alphamag, alpha, nx, ny, nz, nl)
+!@cuf istat = cudaDeviceSynchronize()
+   t1 = wallclock(); walltimelocal(42)=walltimelocal(42)+t1-t0
 
 
 
-
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute beta
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) &
-!$OMP&              SHARED(f, tau, weights, H2, tauin, kinevisc, const, eddyvisc, Bbeta, alpha, beta, alphamag)
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
-   do k=1,nz
-      do j=1,ny
-         do i=1,nx
+      call vreman_beta_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(beta, alpha, nx, ny, nz, nl)
+!@cuf istat = cudaDeviceSynchronize()
+   t1 = wallclock(); walltimelocal(43)=walltimelocal(43)+t1-t0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute Bbeta
+! Vreman 2004 Eq (8)
+
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
+#ifdef _CUDA
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
+#endif
+      call vreman_Bbeta_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(Bbeta, beta, nx, ny, nz, nl)
+!@cuf istat = cudaDeviceSynchronize()
+   t1 = wallclock(); walltimelocal(44)=walltimelocal(44)+t1-t0
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Vreman 2004 Eq (5)
-            eddyvisc(i,j,k)=const*sqrt(Bbeta(i,j,k)/alphamag(i,j,k))
-
-            tau(i,j,k) = 3.0*(kinevisc + eddyvisc(i,j,k)) + 0.5
-
-         enddo
-      enddo
-   enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
+#ifdef _CUDA
+      tx=8; bx=(nx+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
+      call vreman_tau_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(tau, eddyvisc, Bbeta, alphamag, kinevisc, const, nx, ny, nz)
+!@cuf istat = cudaDeviceSynchronize()
+   t1 = wallclock(); walltimelocal(45)=walltimelocal(45)+t1-t0
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpufinish(icpu)
+   if (it==999) then
+      do j=41,45
+         print '(a,i3,g13.5)','vreman      :',j,walltimelocal(j)
+      enddo
+      print '(a,g13.5)',      'vreman      :',sum(walltimelocal(41:45))
+   endif
 
 end subroutine
 end module

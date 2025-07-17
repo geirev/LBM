@@ -51,6 +51,8 @@ subroutine diag(it,rho,u,v,w,lblanking)
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt) then
 
+   print *,'A',it,iout,nt1,iprt
+
 
       if (.not.lprtmin) then
          call vorticity(u,v,w,vortx,vorty,vortz,vort,lblanking)
@@ -102,6 +104,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
          deallocate(rho_h)
          deallocate(lblanking_h)
       endif
+      print *,'B'
    endif
 
    call cpufinish(icpu)

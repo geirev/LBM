@@ -137,7 +137,6 @@ program LatticeBoltzmann
    integer i,j,k,l
    integer :: it
    integer ip,jp,kp
-   integer :: istat
 
    logical, parameter :: runtest=.false.
    logical, parameter :: debug=.false.
@@ -217,7 +216,7 @@ program LatticeBoltzmann
 
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
       call boundarycond(feq,rho,u,v,w,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -249,9 +248,9 @@ program LatticeBoltzmann
       call macrovars(rho,u,v,w,f,lblanking)
 
 ! To recover initial tau
-      call fequil3(feq,rho,u,v,w, A2, A3, vel)
-      call regularization(f, feq, u, v, w, A2, A3, vel)
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
+      call regularization(f, feq, u, v, w, A2, A3, vel,it)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -313,19 +312,19 @@ program LatticeBoltzmann
       endif
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
 
          if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call regularization(f, feq, u, v, w, A2, A3, vel)
+      call regularization(f, feq, u, v, w, A2, A3, vel,it)
 
 
 ! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
-      call collisions(f,feq,tau)
+      call collisions(f,feq,tau,it)
 
          if (debug) call rhotest(feq,rho,'collisions')
 
@@ -348,7 +347,7 @@ program LatticeBoltzmann
          if (debug) call rhotest(feq,rho,'boundarycond')
 
 ! Drift of feq returned in f
-      call drift(f,feq)
+      call drift(f,feq,it)
 
          if (debug) call rhotest(f,rho,'drift')
 

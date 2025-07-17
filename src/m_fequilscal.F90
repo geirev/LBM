@@ -76,8 +76,7 @@ subroutine fequilscal(feq,rho,u,v,w,weights,cxs,cys,czs,H2,H3)
 ! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
    do l=1,nl
       feq(l,j,k)=dens
-      !feq(l)=feq(l) + dens*( cc(1,l)*vel(1) + cc(2,l)*vel(2) + cc(3,l)*vel(3) )/cs2
-      feq(l,j,k)=feq(l,j,k) + dens*( (cxs(l))*vel(1) +(cys(l))*vel(2) + (czs(l))*vel(3) )/cs2
+      feq(l,j,k)=feq(l,j,k) + dens*( real(cxs(l))*vel(1) +real(cys(l))*vel(2) + real(czs(l))*vel(3) )/cs2
 
       do p=1,3
       do q=1,3

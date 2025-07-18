@@ -25,6 +25,21 @@ subroutine macrovars(rho,u,v,w,f,blanking)
    call cpustart()
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!@cuf istat = cudaDeviceSynchronize()
+      t0 = wallclock()
+!!  #ifdef _CUDA
+!!        tx=ntx; bx=(nx+tx-1)/tx
+!!        ty=nty; by=(ny+ty-1)/ty
+!!        tz=ntz; bz=(nz+tz-1)/tz
+!!  #endif
+!!        call reg_A1_2_kernel&
+!!  #ifdef _CUDA
+!!          &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+!!  #endif
+!!          &(A1_2, H2, f, nx, ny, nz, nl)
+!!  
+
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #else
@@ -103,6 +118,8 @@ subroutine macrovars(rho,u,v,w,f,blanking)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
+!@cuf istat = cudaDeviceSynchronize()
+      t1 = wallclock(); walltimelocal(61)=walltimelocal(61)+t1-t0
 
    call cpufinish(icpu)
 

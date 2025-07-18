@@ -28,9 +28,9 @@ subroutine collisions(f,feq,tau,it)
 !!  !@cuf istat = cudaDeviceSynchronize()
 !!     t0 = wallclock()
 !!  #ifdef _CUDA
-!!     tx=32; bx=(nx+2+tx-1)/tx
-!!     ty=4;  by=(ny+2+ty-1)/ty
-!!     tz=1;  bz=(nz+2+tz-1)/tz
+!!     tx=ntx; bx=(nx+2+tx-1)/tx
+!!     ty=nty;  by=(ny+2+ty-1)/ty
+!!     tz=ntz;  bz=(nz+2+tz-1)/tz
 !!  #endif
 !!     call collisions_kernel&
 !!  #ifdef _CUDA
@@ -64,7 +64,7 @@ subroutine collisions(f,feq,tau,it)
 
    if (it==999) then
       do j=31,31
-         print '(a,i3,g13.5)','collisions  :',j,walltimelocal(j)
+         print '(a24,i3,g13.5)','collisions:',j,walltimelocal(j)
       enddo
    endif
 

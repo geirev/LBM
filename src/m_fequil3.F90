@@ -55,9 +55,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_cp_vel_kernel&
 #ifdef _CUDA
@@ -72,9 +72,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call fequil3_A0_kernel&
 #ifdef _CUDA
@@ -90,9 +90,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call fequil3_1ord_kernel&
 #ifdef _CUDA
@@ -108,9 +108,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+2+tx-1)/tx
-      ty=8; by=(ny+2+ty-1)/ty
-      tz=8; bz=(nz+2+tz-1)/tz
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
       call fequil3_2ord_kernel&
 #ifdef _CUDA
@@ -128,9 +128,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call fequil3_3ord_kernel&
 #ifdef _CUDA
@@ -146,9 +146,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+2+tx-1)/tx
-      ty=8; by=(ny+2+ty-1)/ty
-      tz=8; bz=(nz+2+tz-1)/tz
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
       call reg_scalef_kernel&
 #ifdef _CUDA
@@ -162,9 +162,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
    call cpufinish(icpu)
    if (it==999) then
       do j=1,6
-         print '(a,i3,g13.5)','fequil3     :',j,walltimelocal(j)
+         print '(a24,i3,g13.5)','fequil3:',j,walltimelocal(j)
       enddo
-      print '(a,g13.5)',      'fequil3     :',sum(walltimelocal(1:6))
+      print '(a24,g13.5)',      'fequil3:',sum(walltimelocal(1:6))
    endif
 
 

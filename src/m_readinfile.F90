@@ -50,6 +50,7 @@ module m_readinfile
 
 contains
 subroutine readinfile()
+   use mod_dimensions
    implicit none
 
    character(len=3) ca
@@ -75,6 +76,7 @@ subroutine readinfile()
       endif
       read(10,'(1x,l1)')runexp     ; print '(a,tr7,l1)',  'runexp            = ',runexp
       read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
+      read(10,*)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
       read(10,*)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
       read(10,*)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
       read(10,*)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky

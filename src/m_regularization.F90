@@ -60,15 +60,15 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
    t0 = wallclock()
 #ifdef _CUDA
-   tx=8; bx=(nx+tx-1)/tx
-   ty=8; by=(ny+ty-1)/ty
-   tz=8; bz=(nz+tz-1)/tz
+   tx=ntx; bx=(nx+2+tx-1)/tx
+   ty=nty; by=(ny+2+ty-1)/ty
+   tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
    call reg_subtract_feq_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, feq, nx, ny, nz, nl)
+        &(f, feq, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
       t1 = wallclock(); walltimelocal(11)=walltimelocal(11)+t1-t0
 
@@ -81,9 +81,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_cp_vel_kernel&
 #ifdef _CUDA
@@ -101,9 +101,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_A1_2_kernel&
 #ifdef _CUDA
@@ -118,9 +118,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_A1_3_kernel&
 #ifdef _CUDA
@@ -135,9 +135,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_scaleA1_kernel&
 #ifdef _CUDA
@@ -155,9 +155,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_2ord_kernel&
 #ifdef _CUDA
@@ -171,9 +171,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call reg_3ord_kernel&
 #ifdef _CUDA
@@ -190,9 +190,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+2+tx-1)/tx
-      ty=8; by=(ny+2+ty-1)/ty
-      tz=8; bz=(nz+2+tz-1)/tz
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
       call reg_scalef_kernel&
 #ifdef _CUDA
@@ -208,9 +208,9 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
    if (it==999) then
       print *
       do j=11,18
-         print '(a,i3,g13.5)','regularizati:',j,walltimelocal(j)
+         print '(a24,i3,g13.5)','regularization:',j,walltimelocal(j)
       enddo
-      print '(a,g13.5)',      'regularizati:',sum(walltimelocal(11:18))
+      print '(a24,g13.5)',      'regularization:',sum(walltimelocal(11:18))
    endif
 
 end subroutine

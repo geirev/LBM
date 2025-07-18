@@ -126,10 +126,8 @@ program LatticeBoltzmann
 
 ! Turbine forcing
    real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
-   real, allocatable  :: turb_df(:,:,:)         ! Turbulence forcing
 #ifdef _CUDA
    attributes(device) :: df
-   attributes(device) :: turb_df
 #endif
 
    real, allocatable :: myturb(:,:,:)
@@ -155,7 +153,7 @@ program LatticeBoltzmann
    call readinfile()
 
    if (nturbines > 0)      allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
-   if (inflowturbulence)   allocate(turb_df(1:nl,1:ny,1:nz))
+   if (inflowturbulence)   call init_turbulenceforcing()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -268,6 +266,7 @@ program LatticeBoltzmann
    endif
    call cpufinish(1)
 
+   print *,'Start timestepping loop'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
@@ -301,20 +300,12 @@ program LatticeBoltzmann
 ! [u,v,w,df] = turbineforcing[rho,u,v,w]
       if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
 
-
 ! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence) then
-         call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
-!         allocate(myturb(nl,ny,nz))
-!         myturb=turb_df
-!         print '(a,10g13.5)','turb:',myturb(1:10,ny/2,nz/2)
-!         deallocate(myturb)
-      endif
+      if (inflowturbulence) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
-
-         if (debug) call rhotest(feq,rho,'fequil')
+      if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
       call regularization(f, feq, u, v, w, A2, A3, vel,it)
@@ -325,42 +316,35 @@ program LatticeBoltzmann
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau,it)
-
-         if (debug) call rhotest(feq,rho,'collisions')
+      if (debug) call rhotest(feq,rho,'collisions')
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
       if (nturbines > 0) call applyturbines(feq,df,tau)
 
 ! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
       if (inflowturbulence) call applyturbulence(feq,turb_df,tau)
-
-         if (debug) call rhotest(feq,rho,'applyturbulence')
+      if (debug) call rhotest(feq,rho,'applyturbulence')
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(feq,lblanking)
-
-         if (debug) call rhotest(feq,rho,'solids')
+      if (debug) call rhotest(feq,rho,'solids')
 
 ! General boundary conditions
       call boundarycond(feq,rho,u,v,w,uvel_d)
-
-         if (debug) call rhotest(feq,rho,'boundarycond')
+      if (debug) call rhotest(feq,rho,'boundarycond')
 
 ! Drift of feq returned in f
       call drift(f,feq,it)
-
-         if (debug) call rhotest(f,rho,'drift')
+      if (debug) call rhotest(f,rho,'drift')
 
 
 ! Compute updated macro variables
       call macrovars(rho,u,v,w,f,lblanking)
-
-         if (debug) call rhotest(f,rho,'macrovars')
+      if (debug) call rhotest(f,rho,'macrovars')
 
 ! Diagnostics
       call diag(it,rho,u,v,w,lblanking)
-
-         if (debug) call rhotest(f,rho,'diag')
+      if (debug) call rhotest(f,rho,'diag')
 
       call cpustart()
 ! Averaging for diagnostics

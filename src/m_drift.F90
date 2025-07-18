@@ -25,9 +25,9 @@ subroutine drift(f,feq,it)
 
 
 #ifdef _CUDA
-   tx=8; bx=(nx+2+tx-1)/tx
-   ty=8; by=(ny+2+ty-1)/ty
-   tz=8; bz=(nz+2+tz-1)/tz
+   tx=ntx; bx=(nx+2+tx-1)/tx
+   ty=nty; by=(ny+2+ty-1)/ty
+   tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
    call drift_kernel&
 #ifdef _CUDA
@@ -69,9 +69,8 @@ subroutine drift(f,feq,it)
 
    call cpufinish(icpu)
    if (it==999) then
-      print *
       do j=21,21
-         print '(a,i3,g13.5)','drift       :',j,walltimelocal(j)
+         print '(a24,i3,g13.5)','drift:',j,walltimelocal(j)
       enddo
    endif
 

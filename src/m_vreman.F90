@@ -70,9 +70,9 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+2+tx-1)/tx
-      ty=8; by=(ny+2+ty-1)/ty
-      tz=8; bz=(nz+2+tz-1)/tz
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
       call vreman_alpha_kernel&
 #ifdef _CUDA
@@ -87,9 +87,9 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call vreman_alphamag_kernel&
 #ifdef _CUDA
@@ -106,9 +106,9 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call vreman_beta_kernel&
 #ifdef _CUDA
@@ -125,9 +125,9 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call vreman_Bbeta_kernel&
 #ifdef _CUDA
@@ -143,9 +143,9 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=8; bx=(nx+tx-1)/tx
-      ty=8; by=(ny+ty-1)/ty
-      tz=8; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call vreman_tau_kernel&
 #ifdef _CUDA
@@ -159,9 +159,9 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
    call cpufinish(icpu)
    if (it==999) then
       do j=41,45
-         print '(a,i3,g13.5)','vreman      :',j,walltimelocal(j)
+         print '(a24,i3,g13.5)','vreman:',j,walltimelocal(j)
       enddo
-      print '(a,g13.5)',      'vreman      :',sum(walltimelocal(41:45))
+      print '(a24,g13.5)',      'vreman:',sum(walltimelocal(41:45))
    endif
 
 end subroutine

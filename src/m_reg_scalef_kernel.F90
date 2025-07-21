@@ -23,14 +23,13 @@ contains
    if (j < 2 .or. j > ny2-1) return
    if (k < 2 .or. k > nz2-1) return
 #else
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, l) SHARED(f, weights, nx, ny, nz, nl)
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, l) SHARED(f, weights, nx2, ny2, nz2, nl)
    do k=2,nz2-1
    do j=2,ny2-1
    do i=2,nx2-1
 #endif
       do l=1,nl
          f(l,i,j,k)= weights(l)*f(l,i,j,k)
-         !f(l,i+1,j+1,k+1)= weights(l)*f(l,i+1,j+1,k+1)
       enddo
 #ifndef _CUDA
    enddo

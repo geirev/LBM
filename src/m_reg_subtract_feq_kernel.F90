@@ -23,7 +23,7 @@ contains
    if (j < 2 .or. j > ny2-1) return
    if (k < 2 .or. k > nz2-1) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(feq, f, nx, ny, nz, nl)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(feq, f, nx2, ny2, nz2, nl)
    do k=2,nz2-1
    do j=2,ny2-1
    do i=2,nx2-1

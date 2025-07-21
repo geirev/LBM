@@ -27,7 +27,7 @@ contains
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
    if (i > nx .or. j > ny .or. k > nz) return
 #else
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(f, vel, A0_2, A0_3, nx, ny, nz)
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, p, q) SHARED(vel, rho, inv2cs4, inv6cs6, A0_2, A0_3, nx, ny, nz)
    do k=1,nz
    do j=1,ny
    do i=1,nx

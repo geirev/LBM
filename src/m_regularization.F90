@@ -1,7 +1,7 @@
 module m_regularization
 contains
 
-subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
+subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
@@ -27,6 +27,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
    real, intent(in)       :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    integer, intent(in)   :: it
+   integer, intent(in)   :: nt1
 #ifdef _CUDA
    attributes(device) :: u
    attributes(device) :: v
@@ -205,7 +206,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it)
    endif
 
    call cpufinish(icpu)
-   if (it==999) then
+   if (it==nt1) then
       print *
       do j=11,18
          print '(a24,i3,g13.5)','regularization:',j,walltimelocal(j)

@@ -13,7 +13,7 @@ contains
    integer, value      :: nx2, ny2, nz2, nl
    real, intent(in)    :: f(nl,nx2,ny2,nz2)
    real, intent(in)    :: H2(3,3,nl)
-   real, intent(in)    :: alpha(3,3,nx2-2,ny2-2,nz2-2)
+   real, intent(out)   :: alpha(3,3,nx2-2,ny2-2,nz2-2)
    integer :: i, j, k, l, q, p
 #ifdef _CUDA
    attributes(device) :: f
@@ -26,7 +26,7 @@ contains
    if (j < 2 .or. j > ny2-1) return
    if (k < 2 .or. k > nz2-1) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(f, H2, alpha)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(f, H2, alpha, nl, nx2, ny2, nz2)
    do k=2,nz2-1
    do j=2,ny2-1
    do i=2,nx2-1
@@ -54,4 +54,3 @@ contains
 
 end subroutine
 end module
-

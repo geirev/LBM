@@ -28,7 +28,7 @@ contains
    if (j < 2 .or. j > ny2-1) return
    if (k < 2 .or. k > nz2-1) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k,l) SHARED(f, feq, nx, ny, nz, nl)
+!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k,l) SHARED(f, feq, nx2, ny2, nz2, nl)
    do k=2,nz2-1
    do j=2,ny2-1
    do i=2,nx2-1
@@ -69,6 +69,24 @@ contains
    enddo
 !$OMP END PARALLEL DO
 #endif
+
+!!  #ifdef _CUDA
+!!  !$cuf kernel do(3) <<<*,*>>>
+!!  #else
+!!  !$OMP PARALLEL DO PRIVATE(i,j,k,l) SHARED(f, feq, cxs,cys,czs)
+!!  #endif
+!!     do k=1,nz
+!!     do j=1,ny
+!!     do i=1,nx
+!!        do l=1,nl
+!!           f(l,i,j,k) = feq(l,i-cxs(l),j-cys(l),k-czs(l))
+!!        enddo
+!!      enddo
+!!      enddo
+!!      enddo
+!!  #ifndef _CUDA
+!!  !$OMP END PARALLEL DO
+!!  #endif
 
 end subroutine
 end module

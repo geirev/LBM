@@ -2,7 +2,7 @@ module m_vreman
 !  Vreman (2004) subgridscale turbulence model
 contains
 
-subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
+subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile, only : ivreman,kinevisc,p2l,smagorinsky,tauin
@@ -16,6 +16,7 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
    real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input
    real, intent(out)     :: tau(nx,ny,nz)              ! Tau including subgrid scale mixing
    integer, intent(in)   :: it
+   integer, intent(in)   :: nt1
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: tau
@@ -157,7 +158,7 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpufinish(icpu)
-   if (it==999) then
+   if (it==nt1) then
       do j=41,45
          print '(a24,i3,g13.5)','vreman:',j,walltimelocal(j)
       enddo

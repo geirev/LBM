@@ -42,7 +42,7 @@ subroutine init_turbulenceforcing
 end subroutine init_turbulenceforcing
 
 
-subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
+subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it,nt1)
    use mod_dimensions
    use m_fequilscal
    use m_fequilscalar
@@ -61,6 +61,7 @@ subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
    real, intent(in)       :: vv(ny,nz,0:nrturb)
    real, intent(in)       :: ww(ny,nz,0:nrturb)
    integer, intent(in)    :: it
+   integer, intent(in)    :: nt1
 #ifdef _CUDA
    attributes(device) :: turb_df
    attributes(device) :: rho
@@ -200,7 +201,7 @@ subroutine turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
    t1 = wallclock(); walltimelocal(55)=walltimelocal(55)+t1-t0
 
    call cpufinish(icpu)
-   if (it==999) then
+   if (it==nt1) then
       do j=50,55
          print '(a24,i3,g13.5)','turbulenceforcing:',j,walltimelocal(j)
       enddo

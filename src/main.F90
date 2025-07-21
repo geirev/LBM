@@ -169,26 +169,29 @@ program LatticeBoltzmann
    end do
    allocate(lblanking_h(0:nx,0:ny,0:nz))
    select case(trim(experiment))
-   case('cube')
-!      call cube(lsolids,lblanking,nx/6,ny/2,nz/2,7)
-   case('sphere')
-!      call sphere(lsolids,lblanking,nx/2,ny/2,nz/2,10)
    case('city')
-!      call city(lsolids,lblanking)
+      call city(lsolids,lblanking)
    case('cylinder')
       call cylinder(lsolids,lblanking)
-      lblanking_h=lblanking
-      do j=1,ny
-      do i=1,nx
-         if (lblanking_h(i,j,1)) then
-            elevation(i,j)=nz
-         endif
-      enddo
-      enddo
-      call tecfld('elevation',nx,ny,1,elevation)
    case('airfoil')
 !      call airfoil(lsolids,lblanking)
+       stop 'needs fix airfoil routine for gpu'
    end select
+
+   lblanking_h=lblanking
+   do j=1,ny
+   do i=1,nx
+      do k=1,nz
+         if (lblanking_h(i,j,k)) then
+             elevation(i,j)=k
+         else
+             exit
+         endif
+      enddo
+   enddo
+   enddo
+   call tecfld('elevation',nx,ny,1,elevation)
+   deallocate(lblanking_h)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
@@ -214,7 +217,7 @@ program LatticeBoltzmann
 
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1)
       call boundarycond(feq,rho,u,v,w,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -246,9 +249,9 @@ program LatticeBoltzmann
       call macrovars(rho,u,v,w,f,lblanking)
 
 ! To recover initial tau
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
-      call regularization(f, feq, u, v, w, A2, A3, vel,it)
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it,nt1)
+      call regularization(f, feq, u, v, w, A2, A3, vel,it,nt1)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it,nt1)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -301,21 +304,21 @@ program LatticeBoltzmann
       if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
 
 ! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it)
+      if (inflowturbulence) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it,nt1)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1)
       if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call regularization(f, feq, u, v, w, A2, A3, vel,it)
+      call regularization(f, feq, u, v, w, A2, A3, vel,it, nt1)
 
 
 ! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
-      call collisions(f,feq,tau,it)
+      call collisions(f,feq,tau)
       if (debug) call rhotest(feq,rho,'collisions')
 
 ! [feq=f] = applyturbines(feq,df,tau)  f=f+df
@@ -334,7 +337,7 @@ program LatticeBoltzmann
       if (debug) call rhotest(feq,rho,'boundarycond')
 
 ! Drift of feq returned in f
-      call drift(f,feq,it)
+      call drift(f,feq)
       if (debug) call rhotest(f,rho,'drift')
 
 

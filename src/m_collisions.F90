@@ -1,6 +1,6 @@
 module m_collisions
 contains
-subroutine collisions(f,feq,tau,it)
+subroutine collisions(f,feq,tau)
 ! returns f in feq after collisions
 ! NOTE:  f^coll = f - (1/tau) * (f - f^eq)
 !               = f^eq + (f -f^eq) - (1/tau) * (f - f^eq)
@@ -13,7 +13,6 @@ subroutine collisions(f,feq,tau,it)
    real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)    ! non-equlibrium distribution R(fneq)
    real, intent(inout) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)  ! equilibrium distribution on input
    real, intent(in)    :: tau(nx,ny,nz)
-   integer, intent(in) :: it
 #ifdef _CUDA
    attributes(device) :: tau
    attributes(device) :: f
@@ -56,17 +55,7 @@ subroutine collisions(f,feq,tau,it)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-
-!@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(31)=walltimelocal(31)+t1-t0
-
    call cpufinish(icpu)
-
-   if (it==999) then
-      do j=31,31
-         print '(a24,i3,g13.5)','collisions:',j,walltimelocal(j)
-      enddo
-   endif
 
 end subroutine
 end module

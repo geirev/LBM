@@ -4,10 +4,15 @@ module mod_dimensions
 !   integer, parameter :: ny = 96           ! resolution y-dir (north)
 !   integer, parameter :: nz = 96           ! resolution z-dir (up)
 
-!cylinder
-   integer, parameter :: nx = 400          ! 928 resolution x-dir (east)
-   integer, parameter :: ny = 100          ! resolution y-dir (north)
-   integer, parameter :: nz = 5            ! resolution z-dir (up)
+!city
+   integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
+   integer, parameter :: ny = 96          ! resolution y-dir (north)
+   integer, parameter :: nz = 96            ! resolution z-dir (up)
+
+!cylinder and airfoil
+!  integer, parameter :: nx = 400          ! 928 resolution x-dir (east)
+!  integer, parameter :: ny = 100          ! resolution y-dir (north)
+!  integer, parameter :: nz = 5            ! resolution z-dir (up)
 
 ! Numbers of threads per block are read from infile.in
    integer :: ntx                          ! Number of threads per block in x-direction

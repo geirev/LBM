@@ -9,6 +9,22 @@ F90SOURCE = \
 	m_averaging.F90\
 	m_bilin.F90\
 	m_boundarycond.F90\
+	m_boundary_freeslipbb_j1_A.F90\
+	m_boundary_freeslipbb_j1_B.F90\
+	m_boundary_freeslipbb_jny_A.F90\
+	m_boundary_freeslipbb_jny_B.F90\
+	m_boundary_freeslipbb_k1_A.F90\
+	m_boundary_freeslipbb_k1_B.F90\
+	m_boundary_freeslipbb_knz_A.F90\
+	m_boundary_freeslipbb_knz_B.F90\
+	m_boundary_noslipbb_j1_A.F90\
+	m_boundary_noslipbb_j1_B.F90\
+	m_boundary_noslipbb_jny_A.F90\
+	m_boundary_noslipbb_jny_B.F90\
+	m_boundary_noslipbb_k1_A.F90\
+	m_boundary_noslipbb_k1_B.F90\
+	m_boundary_noslipbb_knz_A.F90\
+	m_boundary_noslipbb_knz_B.F90\
 	m_city.F90\
 	m_collisions.F90\
 	m_collisions_kernel.F90\

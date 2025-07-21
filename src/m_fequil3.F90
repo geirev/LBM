@@ -1,7 +1,7 @@
 module m_fequil3
 contains
 
-subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
+subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile
@@ -19,6 +19,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
    integer, intent(in)   :: it
+   integer, intent(in)   :: nt1
    real, intent(out)     :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: rho
@@ -128,15 +129,15 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
 #ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=ntz; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
       call fequil3_3ord_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(feq, H3, A0_3, nx, ny, nz, nl)
+        &(feq, H3, A0_3, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
       t1 = wallclock(); walltimelocal(5)=walltimelocal(5)+t1-t0
 
@@ -160,7 +161,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpufinish(icpu)
-   if (it==999) then
+   if (it==nt1) then
       do j=1,6
          print '(a24,i3,g13.5)','fequil3:',j,walltimelocal(j)
       enddo

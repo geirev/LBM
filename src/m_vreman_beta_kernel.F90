@@ -24,7 +24,7 @@ contains
    if (j > ny) return
    if (k > nz) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, p, q, m) SHARED(alpha,beta)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, p, q, m) SHARED(alpha, beta, nx, ny, nz)
    do k=1,nz
    do j=1,ny
    do i=1,nx

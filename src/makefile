@@ -88,8 +88,8 @@ $(TARGET): $(INCFILES) $(OBJECTS) libsampling.a timer.o
 install:
 	cp $(BUILD)/$(TARGET) $(BINDIR)
 
-veryclean:
-	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a
+clean:
+	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a *.bc
 
 new: source depend
 

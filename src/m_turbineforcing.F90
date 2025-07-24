@@ -1,48 +1,100 @@
 module m_turbineforcing
    integer, save :: iradius
    real, save :: theta=0.0
+
+   real, allocatable  :: turbine_df(:,:,:,:,:)      ! Turbine forcing
+   real, allocatable  :: turbine_dfeq1(:,:,:,:)
+   real, allocatable  :: turbine_dfeq2(:,:,:,:)
+   real, allocatable  :: turbine_force(:,:,:,:)     ! work array for computing the turbine force
+   real, allocatable  :: turbine_du(:,:,:)          ! turbine forced u velocity
+   real, allocatable  :: turbine_dv(:,:,:)          ! turbine forced v velocity
+   real, allocatable  :: turbine_dw(:,:,:)          ! turbine forced w velocity
+   real, allocatable  :: turbine_vel(:,:,:,:)
+   real, allocatable  :: turbine_rtmp(:,:,:)
+   real, allocatable  :: tcx(:), tcy(:), tcz(:)
+   real, allocatable  :: slice_u(:,:)
+   real, allocatable  :: slice_v(:,:)
+   real, allocatable  :: slice_w(:,:)
+   real, allocatable  :: slice_r(:,:)
+#ifdef _CUDA
+   attributes(device)  :: slice_u
+   attributes(device)  :: slice_v
+   attributes(device)  :: slice_w
+   attributes(device)  :: slice_r
+#endif
+
+
+#ifdef _CUDA
+   attributes(device) :: turbine_df
+   attributes(device) :: turbine_dfeq1
+   attributes(device) :: turbine_dfeq2
+   attributes(device) :: turbine_force
+   attributes(device) :: turbine_du
+   attributes(device) :: turbine_dv
+   attributes(device) :: turbine_dw
+   attributes(device) :: turbine_vel
+   attributes(device) :: turbine_rtmp
+   attributes(device) :: tcx, tcy, tcz
+#endif
+
 contains
-subroutine turbineforcing(df,rho,u,v,w)
+subroutine init_turbines
+   use mod_dimensions
+   use m_readinfile, only : nturbines
+   use mod_D3Q27setup
+   implicit none
+   integer l
+   if (.not. allocated(turbine_df))     allocate(turbine_df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
+   if (.not. allocated(turbine_dfeq1))  allocate(turbine_dfeq1(nl,-ieps:ieps,ny,nz)            )
+   if (.not. allocated(turbine_dfeq2))  allocate(turbine_dfeq2(nl,-ieps:ieps,ny,nz)            )
+   if (.not. allocated(turbine_force))  allocate(turbine_force(0:ieps,ny,nz,3))
+   if (.not. allocated(turbine_du))     allocate(turbine_du(-ieps:ieps,ny,nz) )
+   if (.not. allocated(turbine_dv))     allocate(turbine_dv(-ieps:ieps,ny,nz) )
+   if (.not. allocated(turbine_dw))     allocate(turbine_dw(-ieps:ieps,ny,nz) )
+   if (.not. allocated(turbine_vel))    allocate(turbine_vel(3,-ieps:ieps,ny,nz) )
+   if (.not. allocated(turbine_rtmp))   allocate(turbine_rtmp(-ieps:ieps,ny,nz) )
+   if (.not. allocated(tcx))            allocate(tcx(nl))
+   if (.not. allocated(tcy))            allocate(tcy(nl))
+   if (.not. allocated(tcz))            allocate(tcz(nl))
+   if (.not. allocated(slice_u))        allocate(slice_u(ny,nz))
+   if (.not. allocated(slice_v))        allocate(slice_v(ny,nz))
+   if (.not. allocated(slice_w))        allocate(slice_w(ny,nz))
+   if (.not. allocated(slice_r))        allocate(slice_r(ny,nz))
+
+   do l=1,nl
+     tcx(l)=real(cxs_h(l))
+     tcy(l)=real(cys_h(l))
+     tcz(l)=real(czs_h(l))
+   enddo
+end subroutine
+
+subroutine turbineforcing(rho,u,v,w,it,nt1)
 ! Returns the S_i stored in df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
    use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
    use m_fequilscalar
    use m_actuatorline
+   use m_turbineforcing_kupershtokh
 #ifdef _CUDA
    use cudafor
 #endif
    use m_wtime
-   real, intent(out)      :: df(nl,-ieps:ieps,ny,nz,nturbines) ! forcing distributions
-   real, intent(inout)    :: rho(nx,ny,nz)                     ! density
-   real, intent(inout)    :: u(nx,ny,nz)                       ! velocity
-   real, intent(inout)    :: v(nx,ny,nz)                       ! velocity
-   real, intent(inout)    :: w(nx,ny,nz)                       ! velocity
+   real, intent(inout) :: rho(nx,ny,nz)                     ! density
+   real, intent(inout) :: u(nx,ny,nz)                       ! velocity
+   real, intent(inout) :: v(nx,ny,nz)                       ! velocity
+   real, intent(inout) :: w(nx,ny,nz)                       ! velocity
 #ifdef _CUDA
-   attributes(device) :: df
-   attributes(device) :: rho
-   attributes(device) :: u
-   attributes(device) :: v
-   attributes(device) :: w
+   attributes(device)  :: rho
+   attributes(device)  :: u
+   attributes(device)  :: v
+   attributes(device)  :: w
 #endif
-
    real cx,cy,cz,cminx,cminy,cminz,cdotuu
-!  real cdotA(nl),udotA,cdotu(nl)
 
-   real :: dfeq(nl)
-   real :: force(0:ieps,ny,nz,3)         ! work array for computing the turbine force
-   real :: du(-ieps:ieps,ny,nz)          ! turbine forced u velocity
-   real :: dv(-ieps:ieps,ny,nz)          ! turbine forced v velocity
-   real :: dw(-ieps:ieps,ny,nz)          ! turbine forced w velocity
-#ifdef _CUDA
-   attributes(device) :: dfeq
-   attributes(device) :: force
-   attributes(device) :: du
-   attributes(device) :: dv
-   attributes(device) :: dw
-#endif
    real :: force_h(0:ieps,ny,nz,3)        ! work array for computing the turbine force
 
+   integer :: it,nt1
    integer i,n,j,k,l,ip,jp,kp
    real :: u_h(ny, nz)
    real :: v_h(ny, nz)
@@ -57,6 +109,7 @@ subroutine turbineforcing(df,rho,u,v,w)
    real, parameter :: rad120=pi2*120.0/360.0
    integer, parameter :: icpu=2
    integer ierr
+   real :: dff(1:nl)
    call cpustart()
 
 ! Rotations per timestep
@@ -68,7 +121,11 @@ subroutine turbineforcing(df,rho,u,v,w)
 
 
    theta=theta+dtheta
-   df(:,:,:,:,:)=0.0
+
+   turbine_df(:,:,:,:,:)=0.0
+   turbine_du(:,:,:)=0.0
+   turbine_dv(:,:,:)=0.0
+   turbine_dw(:,:,:)=0.0
 
 
    do n=1,nturbines
@@ -79,34 +136,41 @@ subroutine turbineforcing(df,rho,u,v,w)
 ! My implementation of the actuator line method by Sørensen 2002 computing the force from all the turbines
       force_h=0.0
 
-! Copy device  u(ip,:,:) into u_h(:,:) etc
 #ifdef _CUDA
-      ierr = cudaMemcpy2D( u_h, ny*sz, u(ip,1,1), ny*sz, ny*sz, nz, cudaMemcpyDeviceToHost )
-      ierr = cudaMemcpy2D( v_h, ny*sz, v(ip,1,1), ny*sz, ny*sz, nz, cudaMemcpyDeviceToHost )
-      ierr = cudaMemcpy2D( w_h, ny*sz, w(ip,1,1), ny*sz, ny*sz, nz, cudaMemcpyDeviceToHost )
-      ierr = cudaMemcpy2D( r_h, ny*sz, rho(ip,1,1), ny*sz, ny*sz, nz, cudaMemcpyDeviceToHost )
-#else
-      u_h(:,:)=u(ip,:,:)
-      v_h(:,:)=v(ip,:,:)
-      w_h(:,:)=w(ip,:,:)
-      r_h(:,:)=rho(ip,:,:)
+!$cuf kernel do(2) <<<*,*>>>
 #endif
+      do k = 1, nz
+        do j = 1, ny
+          slice_u(j,k) = u(ip,j,k)
+          slice_v(j,k) = v(ip,j,k)
+          slice_w(j,k) = w(ip,j,k)
+          slice_r(j,k) = rho(ip,j,k)
+        end do
+      end do
+
+      u_h = slice_u
+      v_h = slice_v
+      w_h = slice_w
+      r_h = slice_r
+      !ierr = cudaMemcpy(u_h, slice, ny*nz*8, cudaMemcpyDeviceToHost)
+
       call actuatorline(force_h,ny,nz,jp,kp,theta,iradius,u_h,v_h,w_h,r_h,ieps)
-      force=force_h
+      turbine_force(0:ieps,1:ny,1:nz,1:3)=force_h(0:ieps,1:ny,1:nz,1:3)
+
 
 ! Computing the force induced velocity increments in the circular 3D rotor plane (F/rho)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(du, dv, dw, force, rho, ip, jp, kp, iradius)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(tubine_du, tubine_dv, tubine_dw, tubine_force, rho, ip, jp, kp, iradius)
 #endif
       do k=1,nz
       do j=1,ny
          if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
             do i=-ieps,ieps
-               du(i,j,k)=-force(abs(i),j,k,1)/rho(ip+i,j,k)
-               dv(i,j,k)=-force(abs(i),j,k,2)/rho(ip+i,j,k)
-               dw(i,j,k)=-force(abs(i),j,k,3)/rho(ip+i,j,k)
+               turbine_du(i,j,k)=-turbine_force(abs(i),j,k,1)/rho(ip+i,j,k)
+               turbine_dv(i,j,k)=-turbine_force(abs(i),j,k,2)/rho(ip+i,j,k)
+               turbine_dw(i,j,k)=-turbine_force(abs(i),j,k,3)/rho(ip+i,j,k)
             enddo
          endif
       enddo
@@ -115,6 +179,10 @@ subroutine turbineforcing(df,rho,u,v,w)
 !$OMP END PARALLEL DO
 #endif
 
+! (10) Kupershtokh 2009
+         call  turbineforcing_kupershtokh(turbine_df,turbine_du,turbine_dv,turbine_dw,&
+                                      turbine_vel,turbine_rtmp,&
+                                      rho,u,v,w,turbine_dfeq1,turbine_dfeq2,ip,jp,kp,iradius,tcx,tcy,tcz,nturbines,n,it,nt1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! (8) Guo 2002
@@ -123,105 +191,79 @@ subroutine turbineforcing(df,rho,u,v,w)
 !        S= Rho.*W’.*(Cdot(A)- sum(A.*(U+du),1))./ Cs2 *(1-1/(2*tau))
 !        S=S+Rho.*W’.*(Cdot(A) .* Cdot(U+du) )./ Cs2^2*(1-1/(2*tau))
 !     end
-      if (iforce==8) then
-#ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#endif
-         do k=1,nz
-         do j=1,ny
-            if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
-               do i=-ieps,ieps
-                  ! updating the forced equilibrium velocities ueq=u + F/(2rho)
-                  u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
-                  v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
-                  w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
-
-                  ! Computing the S_i term returned in df
-!                  cdota(:)=real(cxs(:))*du(i,j,k) + real(cys(:))*dv(i,j,k) + real(czs(:))*dw(i,j,k)
-!                  cdotu(:)=real(cxs(:))*u(ip+i,j,k) + real(cys(:))*v(ip+i,j,k) + real(czs(:))*w(ip+i,j,k)
-!                  udota   =u(ip+i,j,k)*du(i,j,k) + v(ip+i,j,k)*dv(i,j,k) + w(ip+i,j,k)*dw(i,j,k)
-!
-!                  df(i,j,k,:,n)= rho(ip+i,j,k) * weights(:) * ( (cdota(:) - udota)/cs2   + (cdota(:) * cdotu(:) )/cs4 )
-
-                  do l=1,nl
-                     cdotuu=(real(cxs(l))*u(ip+i,j,k) + real(cys(l))*v(ip+i,j,k) + real(czs(l))*w(ip+i,j,k))/cs4
-                     cminx=(real(cxs(l))-u(ip+i,j,k))/cs2
-                     cminy=(real(cys(l))-v(ip+i,j,k))/cs2
-                     cminz=(real(czs(l))-w(ip+i,j,k))/cs2
-
-                     cx=(cminx + cdotuu*real(cxs(l)))*du(i,j,k)
-                     cy=(cminy + cdotuu*real(cys(l)))*dv(i,j,k)
-                     cz=(cminz + cdotuu*real(czs(l)))*dw(i,j,k)
-
-                     df(l,i,j,k,n)= rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
-                  enddo
-               enddo
-            endif
-         enddo
-         enddo
-
+!!        if (iforce==8) then
+!!  #ifdef _CUDA
+!!  !$cuf kernel do(2) <<<*,*>>>
+!!  #endif
+!!           do k=1,nz
+!!           do j=1,ny
+!!              if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
+!!                 do i=-ieps,ieps
+!!                    ! updating the forced equilibrium velocities ueq=u + F/(2rho)
+!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*turbine_du(i,j,k)
+!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*turbine_dv(i,j,k)
+!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*turbine_dw(i,j,k)
+!!  
+!!                    ! Computing the S_i term returned in df
+!!  !                  cdota(:)=real(cxs(:))*du(i,j,k) + real(cys(:))*dv(i,j,k) + real(czs(:))*dw(i,j,k)
+!!  !                  cdotu(:)=real(cxs(:))*u(ip+i,j,k) + real(cys(:))*v(ip+i,j,k) + real(czs(:))*w(ip+i,j,k)
+!!  !                  udota   =u(ip+i,j,k)*du(i,j,k) + v(ip+i,j,k)*dv(i,j,k) + w(ip+i,j,k)*dw(i,j,k)
+!!  !
+!!  !                  df(i,j,k,:,n)= rho(ip+i,j,k) * weights(:) * ( (cdota(:) - udota)/cs2   + (cdota(:) * cdotu(:) )/cs4 )
+!!  
+!!                    do l=1,nl
+!!                       cdotuu=(real(cxs(l))*u(ip+i,j,k) + real(cys(l))*v(ip+i,j,k) + real(czs(l))*w(ip+i,j,k))/cs4
+!!                       cminx=(real(cxs(l))-u(ip+i,j,k))/cs2
+!!                       cminy=(real(cys(l))-v(ip+i,j,k))/cs2
+!!                       cminz=(real(czs(l))-w(ip+i,j,k))/cs2
+!!  
+!!                       cx=(cminx + cdotuu*real(cxs(l)))*turbine_du(i,j,k)
+!!                       cy=(cminy + cdotuu*real(cys(l)))*turbine_dv(i,j,k)
+!!                       cz=(cminz + cdotuu*real(czs(l)))*turbine_dw(i,j,k)
+!!  
+!!                       turbine_df(l,i,j,k,n)= rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
+!!                    enddo
+!!                 enddo
+!!              endif
+!!           enddo
+!!           enddo
+!!  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! (10) Kupershtokh 2009
-!     function [U,S]=SchemeIX(A,dt,tau,f,Rho,U)
-!        U= U +  0.0
-!        S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt
-!     end
-      elseif (iforce==10) then
-      ! No update of equilibrium velocities
+!!      elseif (iforce==10) then
 
-      ! Computing the S_i term returned in df
-#ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#else
-!$OMP PARALLEL DO PRIVATE(i,j,k,dfeq) SHARED(df, rho, u, v, w, jp, kp, iradius )
-#endif
-         do k=1,nz
-         do j=1,ny
-            if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
-               do i=-ieps,ieps
-!                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-!                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
-                  df(:,i,j,k,n)=df(:,i,j,k,n)-dfeq(:)
-               enddo
-            endif
-         enddo
-         enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
-
-!(12) Khazaeli et al. 2019
-!     function [U,S]=SchemeXI(A,dt,tau,f,Rho,U)
-!        S=(1-1/(2*tau))*( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt
-!        U= U +  dt*A./2
-!     end
-      elseif (iforce==12) then
-#ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
-#endif
-         do k=1,nz
-         do j=1,ny
-            if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
-               do i=-ieps,ieps
-!                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
-!                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
-                  df(:,i,j,k,n)= (df(:,i,j,k,n)-dfeq(:))
-
-                  u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
-                  v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
-                  w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
-               enddo
-            endif
-         enddo
-         enddo
-
-
-      else
-         stop 'turbine forcing uses invalid forcing model iforce'
-      endif
+!!        elseif (iforce==12) then       
+!!  !(12) Khazaeli et al. 2019
+!!  !     function [U,S]=SchemeXI(A,dt,tau,f,Rho,U)
+!!  !        S=(1-1/(2*tau))*( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt
+!!  !        U= U +  dt*A./2
+!!  !     end
+!!  #ifdef _CUDA
+!!  !$cuf kernel do(2) <<<*,*>>>
+!!  #endif
+!!           do k=1,nz
+!!           do j=1,ny
+!!              if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
+!!                 do i=-ieps,ieps
+!!  !                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
+!!  !                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
+!!                    turbine_df(:,i,j,k,n)= (turbine_df(:,i,j,k,n)-turbine_dfeq(:))
+!!  
+!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*turbine_du(i,j,k)
+!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*turbine_dv(i,j,k)
+!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*turbine_dw(i,j,k)
+!!                 enddo
+!!              endif
+!!           enddo
+!!           enddo
+!!  
+!!  
+!!        else
+!!           stop 'turbine forcing uses invalid forcing model iforce'
+!!        endif
 
    enddo
    call cpufinish(icpu)
+
 
 end subroutine
 end module

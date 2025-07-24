@@ -12,6 +12,7 @@ module m_readinfile
    integer  kbnd           ! Type of bondary condition in k direction
    logical  linipert       ! Add smooth pseudo-random peturbations to initial fields
    logical  inflowturbulence          ! Add smooth pseudo-random peturbations for turbulent inflow
+   real     turbulence_ampl! strength of inflow turbulence
    real     uini           ! Initial absolute velocity
    real     udir           ! Initial velocity direction in degrees
    real     rho0           ! Average density
@@ -109,8 +110,8 @@ subroutine readinfile()
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
       read(10,'(1x,l1)')linipert   ; print '(a,tr7,l1)',  'linipert          = ',linipert
-      read(10,'(1x,l1)')inflowturbulence      ; print '(a,tr7,l1)',  'inflowturbulence             = ',inflowturbulence
-!      read(10,*)tauin              ; print '(a,f8.3,a)',  'tauin             = ',tauin,      ' [] '
+      read(10,*)inflowturbulence,turbulence_ampl
+                         ; print '(a,tr7,l1,tr2,g13.5)',  'inflowturbulence  = ',inflowturbulence,turbulence_ampl
       read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
       read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
       read(10,*)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'

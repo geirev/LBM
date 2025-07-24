@@ -124,11 +124,6 @@ program LatticeBoltzmann
    attributes(device) :: rr
 #endif
 
-! Turbine forcing
-   real, allocatable  :: df(:,:,:,:,:)              ! Turbine forcing
-#ifdef _CUDA
-   attributes(device) :: df
-#endif
 
    real, allocatable :: myturb(:,:,:)
    real :: elevation(nx,ny)=0.0
@@ -152,7 +147,7 @@ program LatticeBoltzmann
 ! Reading all input parameters
    call readinfile()
 
-   if (nturbines > 0)      allocate(df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
+   if (nturbines > 0)      call init_turbines()
    if (inflowturbulence)   call init_turbulenceforcing()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -289,26 +284,19 @@ program LatticeBoltzmann
 !                                                            ' rinave:',tmprho,                    &
                                                              !' tau:'   ,tmptau
           !deallocate(work_h)
-!         do l=1,nl
-!            write(*,'(a)',advance='no')'.'
-!            call shfilt3D(nshapiro,sh,nshapiro,f(l,:,:,:),nx+2,ny+2,nz+2)
-!         enddo
-!         write(*,'(a)')'filtered'
-         !write(*,'(a)')'.'
       endif
 
 ! start with f,rho,u,v,w
 
 
-! [u,v,w,df] = turbineforcing[rho,u,v,w]
-      if (nturbines > 0) call turbineforcing(df,rho,u,v,w)
+! [u,v,w,turbine_df] = turbineforcing[rho,u,v,w]
+      if (nturbines > 0)      call turbineforcing(rho,u,v,w,it,nt1)
 
 ! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence) call turbulenceforcing(turb_df,rho,u,v,w,uu,vv,ww,it,nt1)
+      if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1)
-      if (debug) call rhotest(feq,rho,'fequil')
+      call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1);               if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
       call regularization(f, feq, u, v, w, A2, A3, vel,it, nt1)
@@ -318,36 +306,29 @@ program LatticeBoltzmann
       call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
-      call collisions(f,feq,tau)
-      if (debug) call rhotest(feq,rho,'collisions')
+      call collisions(f,feq,tau);                                     if (debug) call rhotest(feq,rho,'collisions')
 
-! [feq=f] = applyturbines(feq,df,tau)  f=f+df
-      if (nturbines > 0) call applyturbines(feq,df,tau)
+! [feq=f] = applyturbines(feq,turbine_df,tau)  f=f+turbine_df
+      if (nturbines > 0)      call applyturbines(feq,turbine_df,tau)
 
 ! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
-      if (inflowturbulence) call applyturbulence(feq,turb_df,tau)
-      if (debug) call rhotest(feq,rho,'applyturbulence')
+      if (inflowturbulence)   call applyturbulence(feq,turb_df,tau);  if (debug) call rhotest(feq,rho,'applyturbulence')
 
 ! Bounce back boundary on fixed walls within the fluid
-      if (lsolids) call solids(feq,lblanking)
-      if (debug) call rhotest(feq,rho,'solids')
+      if (lsolids) call solids(feq,lblanking);                        if (debug) call rhotest(feq,rho,'solids')
 
 ! General boundary conditions
-      call boundarycond(feq,rho,u,v,w,uvel_d)
-      if (debug) call rhotest(feq,rho,'boundarycond')
+      call boundarycond(feq,rho,u,v,w,uvel_d);                        if (debug) call rhotest(feq,rho,'boundarycond')
 
 ! Drift of feq returned in f
-      call drift(f,feq)
-      if (debug) call rhotest(f,rho,'drift')
+      call drift(f,feq);                                              if (debug) call rhotest(f,rho,'drift')
 
 
 ! Compute updated macro variables
-      call macrovars(rho,u,v,w,f,lblanking)
-      if (debug) call rhotest(f,rho,'macrovars')
+      call macrovars(rho,u,v,w,f,lblanking);                          if (debug) call rhotest(f,rho,'macrovars')
 
 ! Diagnostics
-      call diag(it,rho,u,v,w,lblanking)
-      if (debug) call rhotest(f,rho,'diag')
+      call diag(it,rho,u,v,w,lblanking);                              if (debug) call rhotest(f,rho,'diag')
 
       call cpustart()
 ! Averaging for diagnostics
@@ -361,7 +342,6 @@ program LatticeBoltzmann
       endif
 
 ! Save restart file
-      if (debug) call rhotest(f,rho,'saverestart')
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
       call cpufinish(15)
 
@@ -371,9 +351,6 @@ program LatticeBoltzmann
    call cpustart()
    call saverestart(it-1,f,theta,uu,vv,ww,rr)
    call cpufinish(16)
-
-   if (allocated(df)) deallocate(df)
-
    call cpuprint()
 
 end program LatticeBoltzmann

@@ -26,8 +26,6 @@ subroutine macrovars(rho,u,v,w,f,blanking)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
 !!  #ifdef _CUDA
 !!        tx=ntx; bx=(nx+tx-1)/tx
 !!        ty=nty; by=(ny+ty-1)/ty
@@ -118,8 +116,6 @@ subroutine macrovars(rho,u,v,w,f,blanking)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-!@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(61)=walltimelocal(61)+t1-t0
 
    call cpufinish(icpu)
 

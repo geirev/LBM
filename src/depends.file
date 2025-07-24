@@ -294,6 +294,13 @@ m_tecout.o:      m_tecplot.o
 m_tecplot.o:      makefile
 m_tecplot.o:      MODEL.CPP
 m_tecplot.o:      m_string.o
+m_turbineforcing_kupershtokh.o:      makefile
+m_turbineforcing_kupershtokh.o:      m_fequilscalar.o
+m_turbineforcing_kupershtokh.o:      m_fequilscal.o
+m_turbineforcing_kupershtokh.o:      mod_D3Q27setup.o
+m_turbineforcing_kupershtokh.o:      mod_dimensions.o
+m_turbineforcing_kupershtokh.o:      MODEL.CPP
+m_turbineforcing_kupershtokh.o:      m_wtime.o
 m_turbineforcing.o:      m_actuatorline.o
 m_turbineforcing.o:      makefile
 m_turbineforcing.o:      m_fequilscalar.o
@@ -301,6 +308,7 @@ m_turbineforcing.o:      mod_D3Q27setup.o
 m_turbineforcing.o:      mod_dimensions.o
 m_turbineforcing.o:      MODEL.CPP
 m_turbineforcing.o:      m_readinfile.o
+m_turbineforcing.o:      m_turbineforcing_kupershtokh.o
 m_turbineforcing.o:      m_wtime.o
 m_turbulenceforcing.o:      makefile
 m_turbulenceforcing.o:      m_fequilscalar.o

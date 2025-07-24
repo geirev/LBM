@@ -13,7 +13,7 @@ subroutine applyturbines(f,df,tau)
    attributes(device) :: df
    attributes(device) :: tau
 #endif
-
+   real :: dff(1:nl)
    integer n,ip,i,j,k,ii
    integer, parameter :: icpu=8
    call cpustart()
@@ -32,16 +32,22 @@ subroutine applyturbines(f,df,tau)
          enddo
       enddo
    else
+      do n=1,nturbines
+         ip=ipos(n)
+        ! dff(1:10)=df(1:10,ip,ny/2,nz/2,n)
+        ! print '(10g13.5)',dff(1:10)
 #ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
+!$cuf kernel do(2) <<<*,*>>>
 #endif
-      do k=1,nz
-      do j=1,ny
-      do ii=-ieps,ieps
-         i=ip+ii
-         f(1:nl,i,j,k) = f(1:nl,i,j,k) + df(1:nl,ii,j,k)
-      enddo
-      enddo
+         do k=1,nz
+         do j=1,ny
+         do ii=-ieps,ieps
+            i=ip+ii
+            !print '(4i4,10g13.4)',k,j,ii,i,df(1:10,ii,j,k,n)
+            f(1:nl,i,j,k) = f(1:nl,i,j,k) + df(1:nl,ii,j,k,n)
+         enddo
+         enddo
+         enddo
       enddo
    endif
    call cpufinish(icpu)

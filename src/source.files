@@ -75,6 +75,7 @@ F90SOURCE = \
 	m_tecout.F90\
 	m_tecplot.F90\
 	m_turbineforcing.F90\
+	m_turbineforcing_kupershtokh.F90\
 	m_turbulenceforcing.F90\
 	m_uvelshear.F90\
 	m_velocity.F90\

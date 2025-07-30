@@ -25,7 +25,7 @@ subroutine collisions(f,feq,tau)
 
    call cpustart()
 !!  !@cuf istat = cudaDeviceSynchronize()
-!!     t0 = wallclock()
+!!     t0 = wtime()
 !!  #ifdef _CUDA
 !!     tx=ntx; bx=(nx+2+tx-1)/tx
 !!     ty=nty;  by=(ny+2+ty-1)/ty

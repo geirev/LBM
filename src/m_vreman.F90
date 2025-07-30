@@ -24,6 +24,8 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 
    real          :: dx              ! length scale lattice to physical
    real          :: const           ! c in Vreman 2004 Eq (5)
+   real :: tmp
+   real tau_h,eddyvisc_h,Bbeta_h,alphamag_h
 
 
    integer :: i, j, k, l, m, p, q
@@ -69,7 +71,7 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute alpha
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
@@ -81,12 +83,12 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 #endif
         &(f, H2, alpha, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(41)=walltimelocal(41)+t1-t0
+   t1 = wtime(); walltimelocal(41)=walltimelocal(41)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute alphamag
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -98,14 +100,14 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 #endif
         &(alphamag, alpha, nx, ny, nz, nl)
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(42)=walltimelocal(42)+t1-t0
+   t1 = wtime(); walltimelocal(42)=walltimelocal(42)+t1-t0
 
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute beta
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -117,14 +119,14 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 #endif
         &(beta, alpha, nx, ny, nz, nl)
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(43)=walltimelocal(43)+t1-t0
+   t1 = wtime(); walltimelocal(43)=walltimelocal(43)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute Bbeta
 ! Vreman 2004 Eq (8)
 
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -136,13 +138,13 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 #endif
         &(Bbeta, beta, nx, ny, nz, nl)
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(44)=walltimelocal(44)+t1-t0
+   t1 = wtime(); walltimelocal(44)=walltimelocal(44)+t1-t0
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Vreman 2004 Eq (5)
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -154,7 +156,7 @@ subroutine vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
 #endif
         &(tau, eddyvisc, Bbeta, alphamag, kinevisc, const, nx, ny, nz)
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(45)=walltimelocal(45)+t1-t0
+   t1 = wtime(); walltimelocal(45)=walltimelocal(45)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpufinish(icpu)

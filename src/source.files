@@ -49,7 +49,6 @@ F90SOURCE = \
 	m_fequil3.F90\
 	m_fequilscalar.F90\
 	m_fequilscal.F90\
-	m_hermite_polynomials.F90\
 	m_inipert.F90\
 	m_initurbulence.F90\
 	m_macrovars.F90\
@@ -57,9 +56,11 @@ F90SOURCE = \
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
+	mod_fftw3.F90\
 	mod_nrel5mw.F90\
 	mod_shapiro.F90\
 	m_pdfout.F90\
+	m_pseudo2D.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
 	m_reg_2ord_kernel.F90\

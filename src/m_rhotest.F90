@@ -40,6 +40,10 @@ subroutine rhotest(f,rho,string)
    do k=1,nz
    do j=1,ny
    do i=1,nx
+      if (.not. ( (rho_h(i,j,k)==rho_h(i,j,k)) .and. (abs(rho_h(i,j,k) < huge(x))) ) ) then
+         print *, "Bad value at", i,j,k,rho_h(i,j,k)
+         stop
+      endif
       if (rho_h(i,j,k) < 0.0) then
          print '(2a,3I4,g13.5)',trim(string),', rho at:',i,j,k,rho_h(i,j,k)
          stop

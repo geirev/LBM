@@ -81,7 +81,7 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 ! copy macro velocities and density to rtmp and vel
 
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -101,13 +101,13 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(61)=walltimelocal(61)+t1-t0
+   t1 = wtime(); walltimelocal(61)=walltimelocal(61)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute equilibrium distribution for the turbine grid points
 
 !@cuf istat = cudaDeviceSynchronize()
-   t0 = wallclock()
+   t0 = wtime()
 #ifdef _CUDA
    call fequilscal<<<grid, tBlock>>>(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
 #else
@@ -124,13 +124,13 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 !@cuf istat = cudaDeviceSynchronize()
-    t1 = wallclock(); walltimelocal(62)=walltimelocal(62)+t1-t0
+    t1 = wtime(); walltimelocal(62)=walltimelocal(62)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! copy macro velocities plus actuator line forcing and density to vel and rtmp
 
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -150,14 +150,14 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(63)=walltimelocal(63)+t1-t0
+   t1 = wtime(); walltimelocal(63)=walltimelocal(63)+t1-t0
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute equilibrium distribution for the turbine grid points with du forcing added
 
 !@cuf istat = cudaDeviceSynchronize()
-   t0 = wallclock()
+   t0 = wtime()
 #ifdef _CUDA
    call fequilscal<<<grid, tBlock>>>(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
 #else
@@ -174,13 +174,13 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 !@cuf istat = cudaDeviceSynchronize()
-    t1 = wallclock(); walltimelocal(64)=walltimelocal(64)+t1-t0
+    t1 = wtime(); walltimelocal(64)=walltimelocal(64)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute final turbine_df to be used in applyturbines
 
 !@cuf istat = cudaDeviceSynchronize()
-   t0 = wallclock()
+   t0 = wtime()
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -201,7 +201,7 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !@cuf istat = cudaDeviceSynchronize()
-    t1 = wallclock(); walltimelocal(65)=walltimelocal(65)+t1-t0
+    t1 = wtime(); walltimelocal(65)=walltimelocal(65)+t1-t0
     if (it==nt1) then
        do j=61,65
          print '(a24,i3,g13.5)','kuper:',j,walltimelocal(j)

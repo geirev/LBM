@@ -224,10 +224,6 @@ m_fequilscalar.o:      MODEL.CPP
 m_fequilscal.o:      makefile
 m_fequilscal.o:      mod_dimensions.o
 m_fequilscal.o:      MODEL.CPP
-m_hermite_polynomials.o:      makefile
-m_hermite_polynomials.o:      mod_D3Q27setup.o
-m_hermite_polynomials.o:      mod_dimensions.o
-m_hermite_polynomials.o:      MODEL.CPP
 m_inipert.o:      makefile
 m_inipert.o:      mod_dimensions.o
 m_inipert.o:      MODEL.CPP
@@ -251,6 +247,8 @@ mod_D3Q27setup.o:      mod_dimensions.o
 mod_D3Q27setup.o:      MODEL.CPP
 mod_dimensions.o:      makefile
 mod_dimensions.o:      MODEL.CPP
+mod_fftw3.o:      makefile
+mod_fftw3.o:      MODEL.CPP
 mod_nrel5mw.o:      makefile
 mod_nrel5mw.o:      MODEL.CPP
 mod_shapiro.o:      makefile
@@ -259,6 +257,9 @@ m_pdfout.o:      makefile
 m_pdfout.o:      mod_dimensions.o
 m_pdfout.o:      MODEL.CPP
 m_pdfout.o:      m_tecplot.o
+m_pseudo2D.o:      makefile
+m_pseudo2D.o:      MODEL.CPP
+m_pseudo2D.o:      mod_fftw3.o
 m_readinfile.o:      makefile
 m_readinfile.o:      mod_dimensions.o
 m_readinfile.o:      MODEL.CPP

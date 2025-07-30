@@ -3,7 +3,8 @@ module m_readinfile
    integer  nt0            ! First timestep
    integer  nt1            ! Last timestep
    integer  iout           ! number of steps between outputs 0, 0+iout, ...
-   integer  iprt           ! Output every time steps of it <= iprt
+   integer  iprt1          ! Output every time steps of it <= iprt
+   integer  iprt2          ! Output every time steps of it <= iprt
    logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
    integer  irestart       ! number of steps between restart files
    integer  ifout          ! number of steps between outputs 0, 0+iout, ...
@@ -100,7 +101,7 @@ subroutine readinfile()
       if (nt1 .le. nt0) stop 'readinfile: nt1 <= nt0'
       read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout
       read(10,*)irestart           ; print '(a,i8)',      'irestart          = ',irestart
-      read(10,*)iprt               ; print '(a,i8)',      'iprt              = ',iprt
+      read(10,*)iprt1,iprt2        ; print '(a,2i8)',     'iprt1 and iprt2   = ',iprt1,iprt2
       read(10,*)lprtmin            ; print '(a,tr7,l1)',  'lprtmin           = ',lprtmin
       read(10,*)ifout              ; print '(a,i8)',      'ifout             = ',ifout
       read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd

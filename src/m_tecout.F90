@@ -39,6 +39,17 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    real, save :: blanking(nx,ny,nz)=0.0
 
 
+!   do k=1,nz
+!   do j=1,ny
+!   do i=1,nx
+!      if (.not. ( (rho(i,j,k)==rho(i,j,k)) .and. (abs(rho(i,j,k) < huge(x))) ) ) then
+!         print *, "Bad value at", i,j,k,rho(i,j,k)
+!         stop
+!      endif
+!   enddo
+!   enddo
+!   enddo
+
    physics_time=real(it)
    print *,'tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
 

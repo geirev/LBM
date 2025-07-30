@@ -59,7 +59,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
 !@cuf istat = cudaDeviceSynchronize()
-   t0 = wallclock()
+   t0 = wtime()
 #ifdef _CUDA
    tx=ntx; bx=(nx+2+tx-1)/tx
    ty=nty; by=(ny+2+ty-1)/ty
@@ -71,7 +71,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(f, feq, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(11)=walltimelocal(11)+t1-t0
+      t1 = wtime(); walltimelocal(11)=walltimelocal(11)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! projecting non-equilibrium distribution on the Hermitian polynomials for regularization
@@ -80,7 +80,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Copy u,v,w to vel(1:3)
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -92,7 +92,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(vel, u, v, w, nx, ny, nz)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(12)=walltimelocal(12)+t1-t0
+      t1 = wtime(); walltimelocal(12)=walltimelocal(12)+t1-t0
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -100,7 +100,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 !! Used for regularization and turbulence calculation
 !              call dgemv('n', 9,27,1.0,H2, 9,f(1,i,j,k),1,0.0,A1_2,1)
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -112,12 +112,12 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(A1_2, H2, f, nx, ny, nz, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(13)=walltimelocal(13)+t1-t0
+      t1 = wtime(); walltimelocal(13)=walltimelocal(13)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! A1_3(HRR) from \citet{fen21a}, as defined after Eq. (34). Proof by Malaspinas 2015, Appendix B
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -129,12 +129,12 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(A1_2, A1_3, vel, nx, ny, nz)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(14)=walltimelocal(14)+t1-t0
+      t1 = wtime(); walltimelocal(14)=walltimelocal(14)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! scale A1_2 and A1_3 to save flops
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -146,7 +146,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(A1_2, A1_3, nx, ny, nz, inv2cs4, inv6cs6)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(15)=walltimelocal(15)+t1-t0
+      t1 = wtime(); walltimelocal(15)=walltimelocal(15)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Rfneq from \citet{fen21a}, as defined in Eq. (34)
@@ -154,7 +154,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 !              call dgemv('t',27,27,inv6cs6,H3,27,A1_3,1,1.0,f(1,i,j,k),1)
 !              f(:,i,j,k)=weights(:)*f(:,i,j,k)
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -166,11 +166,11 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(f, A1_2, H2, nx, ny, nz, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(16)=walltimelocal(16)+t1-t0
+      t1 = wtime(); walltimelocal(16)=walltimelocal(16)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -182,14 +182,14 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(f, A1_3, H3, nx, ny, nz, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(17)=walltimelocal(17)+t1-t0
+      t1 = wtime(); walltimelocal(17)=walltimelocal(17)+t1-t0
 
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! scaling f by the weights
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
@@ -201,7 +201,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 #endif
         &(f, weights, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(18)=walltimelocal(18)+t1-t0
+      t1 = wtime(); walltimelocal(18)=walltimelocal(18)+t1-t0
 
    endif
 

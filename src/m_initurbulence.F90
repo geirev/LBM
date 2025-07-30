@@ -2,7 +2,6 @@ module m_initurbulence
 contains
 subroutine initurbulence(uu,vv,ww,rr,lfirst)
    use mod_dimensions
-!   use m_set_random_seed3
    use m_pseudo2D
    implicit none
    real, intent(inout)  :: uu(ny,nz,0:nrturb)
@@ -29,10 +28,6 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    real varu,varv,varw,varr
 
    real :: timecor=0.98
-
-! New seed
-!   call system('rm seed.dat')
-!   call set_random_seed3
 
 ! Simulating a time series of inflow boundary perturbations for u
    print '(a)','initurbulence: Simulating inflow turbulence forcing'

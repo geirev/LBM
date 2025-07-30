@@ -54,7 +54,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Copy u,v,w to vel(1:3)
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -66,12 +66,12 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
         &(vel, u, v, w, nx, ny, nz)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(1)=walltimelocal(1)+t1-t0
+      t1 = wtime(); walltimelocal(1)=walltimelocal(1)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  Compute A0_2, A0_3
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -83,13 +83,13 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
         &(rho, A0_2, A0_3, vel, nx, ny, nz, inv2cs4, inv6cs6)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(2)=walltimelocal(2)+t1-t0
+      t1 = wtime(); walltimelocal(2)=walltimelocal(2)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  1st order equilibrium distribution
 
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
@@ -101,13 +101,13 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
         &(feq, rho, vel, nx, ny, nz, nl, cxs, cys, czs, cs2, inv1cs2)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(3)=walltimelocal(3)+t1-t0
+      t1 = wtime(); walltimelocal(3)=walltimelocal(3)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  2nd order equilibrium distribution
 
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
@@ -119,7 +119,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
         &(feq, H2, A0_2, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(4)=walltimelocal(4)+t1-t0
+      t1 = wtime(); walltimelocal(4)=walltimelocal(4)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  3nd order equilibrium distribution
@@ -127,7 +127,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
    if (ibgk == 3) then
 
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
@@ -139,13 +139,13 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
         &(feq, H3, A0_3, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
-      t1 = wallclock(); walltimelocal(5)=walltimelocal(5)+t1-t0
+      t1 = wtime(); walltimelocal(5)=walltimelocal(5)+t1-t0
 
    endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! scaling f by the weights
 !@cuf istat = cudaDeviceSynchronize()
-      t0 = wallclock()
+      t0 = wtime()
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
@@ -157,7 +157,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
           &(feq, weights, nx+2, ny+2, nz+2, nl)
 !@cuf istat = cudaDeviceSynchronize()
-   t1 = wallclock(); walltimelocal(6)=walltimelocal(6)+t1-t0
+   t1 = wtime(); walltimelocal(6)=walltimelocal(6)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpufinish(icpu)

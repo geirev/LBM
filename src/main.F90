@@ -7,7 +7,6 @@ program LatticeBoltzmann
    use mod_D3Q27setup
    use mod_shapiro
    use m_readinfile
-!   use m_hermite_polynomials
    use m_assigncvel
    use m_diag
    use m_averaging
@@ -131,7 +130,6 @@ program LatticeBoltzmann
    integer :: it
    integer ip,jp,kp
 
-   logical, parameter :: runtest=.false.
    logical, parameter :: debug=.false.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -268,7 +266,6 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop
    do it = nt0+1, nt1
-      if (it>=25000) iout=2
       if ((mod(it, 10) == 0) .or. it == nt1) then
 !          istat=cudaMemcpy(tmptau, tau(nx/2,ny/2,nz/2), 8, cudaMemcpyDeviceToHost)
 !         print '(a)','x'

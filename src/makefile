@@ -12,17 +12,25 @@ LD = pgf90   #gfortran
 F90 = pgf90   #gfortran
 F77 = pgf90   #gfortran
 
-
-FFLAGS = -c -r8 -O2 -g -lineinfo -gpu=lineinfo \
+FFLAGS = -c -O2 -g -lineinfo -gpu=lineinfo \
       -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
       -Mlarge_arrays -traceback -Ktrap=fp \
       -gpu=ccall
 
+LINKFLAGS =
+
+ifdef DP
+FFLAGS+= -DDOUBLE_PRECISION -r8
+endif
+
 ifdef CUDA
 FFLAGS+= -cuda
+LINKFLAGS+= -cuda
 endif
+
 ifdef MP
 FFLAGS+= -mp
+LINKFLAGS+= -fopenmp
 endif
 
 # gfortran flags
@@ -30,15 +38,15 @@ endif
 #          -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
 #          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast -fopenmp
 
-
 F77FLG =
 F90FLG =
-LINKFLAGS = -fopenmp
-ifdef CUDA
-LINKFLAGS+= -cuda
-endif
 
-LIBS =  ./libsampling.a ./libpreplot.a  -lblas -lfftw3 -llapack
+LIBS =  ./libpreplot.a  -lblas -llapack
+ifdef DP
+LIBS+= -lfftw3
+else
+LIBS+= -lfftw3f
+endif
 
 BINDIR = $(HOME)/bin
 
@@ -69,12 +77,12 @@ F77FILES =$(F77SOURCE:.F=.f)
 OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
 
-all: touch libsampling.a libpreplot.a new $(TARGET) install
+all: touch libpreplot.a new $(TARGET) install
 
-libs: libsampling.a libenkfanalysis.a libpreplot.a -lcuda -lcublas
+libs: libenkfanalysis.a libpreplot.a -lcuda -lcublas
 
-libsampling.a:
-	cd ../../EnKF_sampling/lib; make -B -f makefile.cuda  BUILD=../../LBM/build
+#libsampling.a:
+#	cd ../../EnKF_sampling/lib; make -B -f makefile.cuda  BUILD=../../LBM/build
 
 libenkfanalysis.a:
 	cd ../../EnKF_analysis/lib; make BUILD=../../LBM/build
@@ -82,7 +90,8 @@ libenkfanalysis.a:
 libpreplot.a: all.compile
 	cp $(HOME)/Dropbox/Progs/tecplot-binary-files/libpreplot.a $(HOME)/Dropbox/Progs/LBM/build
 
-$(TARGET): $(INCFILES) $(OBJECTS) libsampling.a timer.o
+#$(TARGET): $(INCFILES) $(OBJECTS) libsampling.a timer.o
+$(TARGET): $(INCFILES) $(OBJECTS)  timer.o
 	@mkdir -p $(BUILD)
 	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) timer.o $(LIBDIR) $(LIBS)
 

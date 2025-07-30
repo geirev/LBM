@@ -6,7 +6,7 @@ module mod_dimensions
 
 !city
    integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
-   integer, parameter :: ny = 96          ! resolution y-dir (north)
+   integer, parameter :: ny = 96           ! resolution y-dir (north)
    integer, parameter :: nz = 96            ! resolution z-dir (up)
 
 !cylinder and airfoil

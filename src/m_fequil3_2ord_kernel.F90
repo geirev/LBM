@@ -17,12 +17,11 @@ contains
    integer :: i, j, k, l, q, p
 #ifdef _CUDA
    attributes(device) :: feq
-   attributes(device) :: H2
+   attributes(constant) :: H2
    attributes(device) :: A0_2
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
-   !if (i > nx .or. j > ny .or. k > nz) return
    if (i < 2 .or. i > nx2-1) return
    if (j < 2 .or. j > ny2-1) return
    if (k < 2 .or. k > nz2-1) return
@@ -35,7 +34,6 @@ contains
       do l=1,nl
          do q=1,3
          do p=1,3
-            !feq(l,i+1,j+1,k+1)=feq(l,i+1,j+1,k+1) + H2(p,q,l)*A0_2(p,q,i,j,k)
             feq(l,i,j,k)=feq(l,i,j,k) + H2(p,q,l)*A0_2(p,q,i-1,j-1,k-1)
          enddo
          enddo

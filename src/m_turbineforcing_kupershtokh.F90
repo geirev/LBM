@@ -1,8 +1,7 @@
 module m_turbineforcing_kupershtokh
 contains
 
-subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
-                                      vel,rtmp,&
+subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
                                       rho,u,v,w,dfeq1,dfeq2,ip,jp,kp,iradius,cx,cy,cz,nturbines,n,it,nt1)
 !     function [U,S]=SchemeIX(A,dt,tau,f,Rho,U)
 !        U= U +  0.0
@@ -58,12 +57,12 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
 #endif
 
    integer i,j,k,ii
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! setting up kernel variables
 #ifdef _CUDA
    type(dim3) :: grid,tblock
-#endif
-   real :: dff(1:nl)
 
-#ifdef _CUDA
    ii = 2*ieps+1
 
    tBlock%x = 1   ! for i
@@ -74,6 +73,12 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
    grid%y = (ny + tBlock%y - 1) / tBlock%y
    grid%z = (nz + tBlock%z - 1) / tBlock%z
 #endif
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! copy macro velocities and density to rtmp and vel
 
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
@@ -98,6 +103,9 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
 !@cuf istat = cudaDeviceSynchronize()
    t1 = wallclock(); walltimelocal(61)=walltimelocal(61)+t1-t0
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute equilibrium distribution for the turbine grid points
+
 !@cuf istat = cudaDeviceSynchronize()
    t0 = wallclock()
 #ifdef _CUDA
@@ -117,6 +125,9 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
 #endif
 !@cuf istat = cudaDeviceSynchronize()
     t1 = wallclock(); walltimelocal(62)=walltimelocal(62)+t1-t0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! copy macro velocities plus actuator line forcing and density to vel and rtmp
 
 !@cuf istat = cudaDeviceSynchronize()
       t0 = wallclock()
@@ -142,6 +153,9 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
    t1 = wallclock(); walltimelocal(63)=walltimelocal(63)+t1-t0
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute equilibrium distribution for the turbine grid points with du forcing added
+
 !@cuf istat = cudaDeviceSynchronize()
    t0 = wallclock()
 #ifdef _CUDA
@@ -162,8 +176,8 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
 !@cuf istat = cudaDeviceSynchronize()
     t1 = wallclock(); walltimelocal(64)=walltimelocal(64)+t1-t0
 
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute final turbine_df to be used in applyturbines
 
 !@cuf istat = cudaDeviceSynchronize()
    t0 = wallclock()
@@ -184,20 +198,16 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,&
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-        ! dff(1:10)=dfeq1(1:10,0,55,48)
-        ! print '(a,10g13.5)','dfeq1 :',dff(1:10)
-        ! dff(1:10)=dfeq2(1:10,0,55,48)
-        ! print '(a,10g13.5)','dfeq2 :',dff(1:10)
-        ! dff(1:10)=df(1:10,0,55,48,n)
-        ! print '(a,10g13.5)','df    :',dff(1:10)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !@cuf istat = cudaDeviceSynchronize()
     t1 = wallclock(); walltimelocal(65)=walltimelocal(65)+t1-t0
-   if (it==nt1) then
-      do j=61,65
+    if (it==nt1) then
+       do j=61,65
          print '(a24,i3,g13.5)','kuper:',j,walltimelocal(j)
-      enddo
-      print '(a24,g13.5)',      'kuper:',sum(walltimelocal(61:65))
-   endif
+       enddo
+       print '(a24,g13.5)',      'kuper:',sum(walltimelocal(61:65))
+    endif
 
 end subroutine
 end module

@@ -15,6 +15,12 @@ boundary_freeslipbb_k1_A	m_boundary_freeslipbb_k1_A.F90	/^module
 boundary_freeslipbb_k1_B	m_boundary_freeslipbb_k1_B.F90	/^module
 boundary_freeslipbb_knz_A	m_boundary_freeslipbb_knz_A.F90	/^module
 boundary_freeslipbb_knz_B	m_boundary_freeslipbb_knz_B.F90	/^module
+boundary_freeslip_edges	m_boundary_freeslip_edges.F90	/^module
+boundary_iinflow	m_boundary_iinflow.F90	/^module
+boundary_iinflow_edges	m_boundary_iinflow_edges.F90	/^module
+boundary_iperiodic	m_boundary_iperiodic.F90	/^module
+boundary_jperiodic	m_boundary_jperiodic.F90	/^module
+boundary_kperiodic	m_boundary_kperiodic.F90	/^module
 boundary_noslipbb_j1_A	m_boundary_noslipbb_j1_A.F90	/^module
 boundary_noslipbb_j1_B	m_boundary_noslipbb_j1_B.F90	/^module
 boundary_noslipbb_jny_A	m_boundary_noslipbb_jny_A.F90	/^module
@@ -23,6 +29,8 @@ boundary_noslipbb_k1_A	m_boundary_noslipbb_k1_A.F90	/^module
 boundary_noslipbb_k1_B	m_boundary_noslipbb_k1_B.F90	/^module
 boundary_noslipbb_knz_A	m_boundary_noslipbb_knz_A.F90	/^module
 boundary_noslipbb_knz_B	m_boundary_noslipbb_knz_B.F90	/^module
+boundary_noslip_edges	m_boundary_noslip_edges.F90	/^module
+boundary_noslip_edgesA	m_boundary_noslip_edgesA.F90	/^module
 city	m_city.F90	/^module
 collisions	m_collisions.F90	/^module
 collisions_kernel	m_collisions_kernel.F90	/^module
@@ -66,6 +74,12 @@ m_boundary_freeslipbb_k1_A	m_boundary_freeslipbb_k1_A.F90	/^module
 m_boundary_freeslipbb_k1_B	m_boundary_freeslipbb_k1_B.F90	/^module
 m_boundary_freeslipbb_knz_A	m_boundary_freeslipbb_knz_A.F90	/^module
 m_boundary_freeslipbb_knz_B	m_boundary_freeslipbb_knz_B.F90	/^module
+m_boundary_freeslip_edges	m_boundary_freeslip_edges.F90	/^module
+m_boundary_iinflow	m_boundary_iinflow.F90	/^module
+m_boundary_iinflow_edges	m_boundary_iinflow_edges.F90	/^module
+m_boundary_iperiodic	m_boundary_iperiodic.F90	/^module
+m_boundary_jperiodic	m_boundary_jperiodic.F90	/^module
+m_boundary_kperiodic	m_boundary_kperiodic.F90	/^module
 m_boundary_noslipbb_j1_A	m_boundary_noslipbb_j1_A.F90	/^module
 m_boundary_noslipbb_j1_B	m_boundary_noslipbb_j1_B.F90	/^module
 m_boundary_noslipbb_jny_A	m_boundary_noslipbb_jny_A.F90	/^module
@@ -74,6 +88,8 @@ m_boundary_noslipbb_k1_A	m_boundary_noslipbb_k1_A.F90	/^module
 m_boundary_noslipbb_k1_B	m_boundary_noslipbb_k1_B.F90	/^module
 m_boundary_noslipbb_knz_A	m_boundary_noslipbb_knz_A.F90	/^module
 m_boundary_noslipbb_knz_B	m_boundary_noslipbb_knz_B.F90	/^module
+m_boundary_noslip_edges	m_boundary_noslip_edges.F90	/^module
+m_boundary_noslip_edgesA	m_boundary_noslip_edgesA.F90	/^module
 m_city	m_city.F90	/^module
 m_collisions	m_collisions.F90	/^module
 m_collisions_kernel	m_collisions_kernel.F90	/^module

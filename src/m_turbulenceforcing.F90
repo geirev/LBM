@@ -1,18 +1,18 @@
 module m_turbulenceforcing
-   integer, parameter     :: iturb_pos=10
-   integer, parameter     :: iturb_radius=2
+   integer, parameter, public :: iturb_pos=10
+   integer, parameter, public :: iturb_radius=2
+   real, allocatable,  public :: turbulence_df(:,:,:)
 
- ! Persistent device arrays
-   real, allocatable :: turbulence_vel(:,:,:,:), turbulence_rtmp(:,:,:)
-   real, allocatable :: dfeq1(:,:,:,:), dfeq2(:,:,:,:)
-   real, private, allocatable :: cx(:), cy(:), cz(:)
-   real, allocatable :: turb_df(:,:,:)
+! Persistent local device arrays
+   real, allocatable, private :: vel(:,:,:,:), rtmp(:,:,:)
+   real, allocatable, private :: dfeq1(:,:,:,:), dfeq2(:,:,:,:)
+   real, allocatable, private :: cx(:), cy(:), cz(:)
 
 #ifdef _CUDA
-   attributes(device) :: turbulence_vel, turbulence_rtmp
+   attributes(device) :: turbulence_df
+   attributes(device) :: vel, rtmp
    attributes(device) :: dfeq1, dfeq2
    attributes(device) :: cx, cy, cz
-   attributes(device) :: turb_df
 #endif
 
 contains
@@ -23,14 +23,14 @@ subroutine init_turbulenceforcing
    implicit none
    integer l
 
-   if (.not. allocated(turb_df)) allocate(turb_df(1:nl,1:ny,1:nz))
-   if (.not. allocated(turbulence_vel))     allocate(turbulence_vel(3,1,ny,nz))
-   if (.not. allocated(turbulence_rtmp))    allocate(turbulence_rtmp(1,ny,nz))
-   if (.not. allocated(dfeq1))   allocate(dfeq1(nl,1,ny,nz))
-   if (.not. allocated(dfeq2))   allocate(dfeq2(nl,1,ny,nz))
-   if (.not. allocated(cx))      allocate(cx(nl))
-   if (.not. allocated(cy))      allocate(cy(nl))
-   if (.not. allocated(cz))      allocate(cz(nl))
+   if (.not. allocated(turbulence_df)) allocate(turbulence_df(1:nl,1:ny,1:nz))
+   if (.not. allocated(vel))           allocate(vel(3,1,ny,nz))
+   if (.not. allocated(rtmp))          allocate(rtmp(1,ny,nz))
+   if (.not. allocated(dfeq1))         allocate(dfeq1(nl,1,ny,nz))
+   if (.not. allocated(dfeq2))         allocate(dfeq2(nl,1,ny,nz))
+   if (.not. allocated(cx))            allocate(cx(nl))
+   if (.not. allocated(cy))            allocate(cy(nl))
+   if (.not. allocated(cz))            allocate(cz(nl))
 
    do l=1,nl
      cx(l)=real(cxs_h(l))
@@ -40,7 +40,7 @@ subroutine init_turbulenceforcing
 end subroutine init_turbulenceforcing
 
 
-subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
+subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    use mod_dimensions
    use m_fequilscal
    use m_fequilscalar
@@ -59,7 +59,7 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
    real, intent(in)       :: ww(ny,nz,0:nrturb)
    integer, intent(in)    :: it
    integer, intent(in)    :: nt1
-   real, intent(in)       :: turbulence_ampl
+   real, intent(in)       :: ampl
 #ifdef _CUDA
    attributes(device) :: rho
    attributes(device) :: u
@@ -107,14 +107,14 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(rho, u, v, w, ip, turbulence_rtmp, turbulence_vel)
+!$OMP PARALLEL DO PRIVATE(j,k) SHARED(rho, u, v, w, ip, rtmp, vel)
 #endif
    do k=1,nz
    do j=1,ny
-      turbulence_rtmp(1,j,k)=rho(ip,j,k)
-      turbulence_vel(1,1,j,k)=u(ip,j,k)
-      turbulence_vel(2,1,j,k)=v(ip,j,k)
-      turbulence_vel(3,1,j,k)=w(ip,j,k)
+      rtmp(1,j,k)=rho(ip,j,k)
+      vel(1,1,j,k)=u(ip,j,k)
+      vel(2,1,j,k)=v(ip,j,k)
+      vel(3,1,j,k)=w(ip,j,k)
    enddo
    enddo
 #ifndef _CUDA
@@ -127,13 +127,12 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 !@cuf istat = cudaDeviceSynchronize()
    t0 = wallclock()
 #ifdef _CUDA
-   call fequilscal<<<grid,tBlock>>>(dfeq1, turbulence_rtmp, turbulence_vel, weights, cx, cy, cz, H2, H3, ii)
+   call fequilscal<<<grid,tBlock>>>(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
 #else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(dfeq1, turbulence_rtmp, turbulence_vel, weights, cx, cy, cz, H2, H3 )
+!$OMP PARALLEL DO PRIVATE(j,k) SHARED(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3 )
    do k=1,nz
    do j=1,ny
-      dfeq1(:,1,j,k)=fequilscalar(turbulence_rtmp(1,j,k),turbulence_vel(1,1,j,k), turbulence_vel(2,1,j,k), turbulence_vel(3,1,j,k),&
-                     weights, cx, cy, cz, H2, H3)
+      dfeq1(:,1,j,k)=fequilscalar(rtmp(1,j,k),vel(1,1,j,k), vel(2,1,j,k), vel(3,1,j,k), weights, cx, cy, cz, H2, H3)
    enddo
    enddo
 !$OMP END PARALLEL DO
@@ -150,14 +149,14 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(rho, u, v, w, ip, turbulence_rtmp, turbulence_vel,  uu, vv, ww, lit)
+!$OMP PARALLEL DO PRIVATE(j,k) SHARED(rho, u, v, w, ip, rtmp, vel,  uu, vv, ww, lit)
 #endif
    do k=1,nz
    do j=1,ny
-      turbulence_rtmp(1,j,k)=rho(ip,j,k)
-      turbulence_vel(1,1,j,k)=turbulence_vel(1,1,j,k)+turbulence_ampl*uu(j,k,lit)
-      turbulence_vel(2,1,j,k)=turbulence_vel(2,1,j,k)+turbulence_ampl*vv(j,k,lit)
-      turbulence_vel(3,1,j,k)=turbulence_vel(3,1,j,k)+turbulence_ampl*ww(j,k,lit)
+      rtmp(1,j,k)=rho(ip,j,k)
+      vel(1,1,j,k)=vel(1,1,j,k)+ampl*uu(j,k,lit)
+      vel(2,1,j,k)=vel(2,1,j,k)+ampl*vv(j,k,lit)
+      vel(3,1,j,k)=vel(3,1,j,k)+ampl*ww(j,k,lit)
    enddo
    enddo
 #ifndef _CUDA
@@ -170,12 +169,12 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 !@cuf istat = cudaDeviceSynchronize()
    t0 = wallclock()
 #ifdef _CUDA
-   call fequilscal<<<grid,tBlock>>>(dfeq2, turbulence_rtmp, turbulence_vel, weights, cx, cy, cz, H2, H3, ii)
+   call fequilscal<<<grid,tBlock>>>(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
 #else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(dfeq2, turbulence_rtmp, turbulence_vel, weights, cx, cy, cz, H2, H3 )
+!$OMP PARALLEL DO PRIVATE(j,k) SHARED(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3 )
    do k=1,nz
    do j=1,ny
-      dfeq2(:,1,j,k)=fequilscalar(turbulence_rtmp(1,j,k),turbulence_vel(1,1,j,k), turbulence_vel(2,1,j,k), turbulence_vel(3,1,j,k),&
+      dfeq2(:,1,j,k)=fequilscalar(rtmp(1,j,k),vel(1,1,j,k), vel(2,1,j,k), vel(3,1,j,k),&
                      weights, cx, cy, cz, H2, H3)
    enddo
    enddo
@@ -193,20 +192,18 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(j,k,l) SHARED(turb_df, dfeq1,dfeq2)
+!$OMP PARALLEL DO PRIVATE(j,k,l) SHARED(turbulence_df, dfeq1,dfeq2)
 #endif
    do k=1,nz
    do j=1,ny
       do l=1,nl
-         turb_df(l,j,k)=dfeq2(l,1,j,k)-dfeq1(l,1,j,k)
+         turbulence_df(l,j,k)=dfeq2(l,1,j,k)-dfeq1(l,1,j,k)
       enddo
    enddo
    enddo
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-!   dff(1:10)=turb_df(1:10,48,48)
-!   print '(a,10g13.5)','turb_df        :',dff(1:10)
 !@cuf istat = cudaDeviceSynchronize()
    t1 = wallclock(); walltimelocal(55)=walltimelocal(55)+t1-t0
 

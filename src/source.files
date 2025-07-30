@@ -17,6 +17,12 @@ F90SOURCE = \
 	m_boundary_freeslipbb_k1_B.F90\
 	m_boundary_freeslipbb_knz_A.F90\
 	m_boundary_freeslipbb_knz_B.F90\
+	m_boundary_freeslip_edges.F90\
+	m_boundary_iinflow_edges.F90\
+	m_boundary_iinflow.F90\
+	m_boundary_iperiodic.F90\
+	m_boundary_jperiodic.F90\
+	m_boundary_kperiodic.F90\
 	m_boundary_noslipbb_j1_A.F90\
 	m_boundary_noslipbb_j1_B.F90\
 	m_boundary_noslipbb_jny_A.F90\
@@ -25,6 +31,8 @@ F90SOURCE = \
 	m_boundary_noslipbb_k1_B.F90\
 	m_boundary_noslipbb_knz_A.F90\
 	m_boundary_noslipbb_knz_B.F90\
+	m_boundary_noslip_edgesA.F90\
+	m_boundary_noslip_edges.F90\
 	m_city.F90\
 	m_collisions.F90\
 	m_collisions_kernel.F90\

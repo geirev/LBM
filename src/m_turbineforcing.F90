@@ -2,39 +2,35 @@ module m_turbineforcing
    integer, save :: iradius
    real, save :: theta=0.0
 
-   real, allocatable  :: turbine_df(:,:,:,:,:)      ! Turbine forcing
-   real, allocatable  :: turbine_dfeq1(:,:,:,:)
-   real, allocatable  :: turbine_dfeq2(:,:,:,:)
-   real, allocatable  :: turbine_force(:,:,:,:)     ! work array for computing the turbine force
-   real, allocatable  :: turbine_du(:,:,:)          ! turbine forced u velocity
-   real, allocatable  :: turbine_dv(:,:,:)          ! turbine forced v velocity
-   real, allocatable  :: turbine_dw(:,:,:)          ! turbine forced w velocity
-   real, allocatable  :: turbine_vel(:,:,:,:)
-   real, allocatable  :: turbine_rtmp(:,:,:)
-   real, allocatable  :: tcx(:), tcy(:), tcz(:)
-   real, allocatable  :: slice_u(:,:)
-   real, allocatable  :: slice_v(:,:)
-   real, allocatable  :: slice_w(:,:)
-   real, allocatable  :: slice_r(:,:)
-#ifdef _CUDA
-   attributes(device)  :: slice_u
-   attributes(device)  :: slice_v
-   attributes(device)  :: slice_w
-   attributes(device)  :: slice_r
-#endif
-
-
+   real, allocatable, public   :: turbine_df(:,:,:,:,:)      ! Turbine forcing used in applyturbines
+   real, allocatable, private  :: dfeq1(:,:,:,:)
+   real, allocatable, private  :: dfeq2(:,:,:,:)
+   real, allocatable, private  :: force(:,:,:,:)     ! work array for computing the turbine force
+   real, allocatable, private  :: du(:,:,:)          ! turbine forced u velocity
+   real, allocatable, private  :: dv(:,:,:)          ! turbine forced v velocity
+   real, allocatable, private  :: dw(:,:,:)          ! turbine forced w velocity
+   real, allocatable, private  :: vel(:,:,:,:)
+   real, allocatable, private  :: rtmp(:,:,:)
+   real, allocatable, private  :: cx(:), cy(:), cz(:)
+   real, allocatable, private  :: slice_u(:,:)
+   real, allocatable, private  :: slice_v(:,:)
+   real, allocatable, private  :: slice_w(:,:)
+   real, allocatable, private  :: slice_r(:,:)
 #ifdef _CUDA
    attributes(device) :: turbine_df
-   attributes(device) :: turbine_dfeq1
-   attributes(device) :: turbine_dfeq2
-   attributes(device) :: turbine_force
-   attributes(device) :: turbine_du
-   attributes(device) :: turbine_dv
-   attributes(device) :: turbine_dw
-   attributes(device) :: turbine_vel
-   attributes(device) :: turbine_rtmp
-   attributes(device) :: tcx, tcy, tcz
+   attributes(device) :: dfeq1
+   attributes(device) :: dfeq2
+   attributes(device) :: force
+   attributes(device) :: du
+   attributes(device) :: dv
+   attributes(device) :: dw
+   attributes(device) :: vel
+   attributes(device) :: rtmp
+   attributes(device) :: cx, cy, cz
+   attributes(device) :: slice_u
+   attributes(device) :: slice_v
+   attributes(device) :: slice_w
+   attributes(device) :: slice_r
 #endif
 
 contains
@@ -44,32 +40,32 @@ subroutine init_turbines
    use mod_D3Q27setup
    implicit none
    integer l
-   if (.not. allocated(turbine_df))     allocate(turbine_df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
-   if (.not. allocated(turbine_dfeq1))  allocate(turbine_dfeq1(nl,-ieps:ieps,ny,nz)            )
-   if (.not. allocated(turbine_dfeq2))  allocate(turbine_dfeq2(nl,-ieps:ieps,ny,nz)            )
-   if (.not. allocated(turbine_force))  allocate(turbine_force(0:ieps,ny,nz,3))
-   if (.not. allocated(turbine_du))     allocate(turbine_du(-ieps:ieps,ny,nz) )
-   if (.not. allocated(turbine_dv))     allocate(turbine_dv(-ieps:ieps,ny,nz) )
-   if (.not. allocated(turbine_dw))     allocate(turbine_dw(-ieps:ieps,ny,nz) )
-   if (.not. allocated(turbine_vel))    allocate(turbine_vel(3,-ieps:ieps,ny,nz) )
-   if (.not. allocated(turbine_rtmp))   allocate(turbine_rtmp(-ieps:ieps,ny,nz) )
-   if (.not. allocated(tcx))            allocate(tcx(nl))
-   if (.not. allocated(tcy))            allocate(tcy(nl))
-   if (.not. allocated(tcz))            allocate(tcz(nl))
-   if (.not. allocated(slice_u))        allocate(slice_u(ny,nz))
-   if (.not. allocated(slice_v))        allocate(slice_v(ny,nz))
-   if (.not. allocated(slice_w))        allocate(slice_w(ny,nz))
-   if (.not. allocated(slice_r))        allocate(slice_r(ny,nz))
+   if (.not. allocated(turbine_df))  allocate(turbine_df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
+   if (.not. allocated(dfeq1))       allocate(dfeq1(nl,-ieps:ieps,ny,nz)            )
+   if (.not. allocated(dfeq2))       allocate(dfeq2(nl,-ieps:ieps,ny,nz)            )
+   if (.not. allocated(force))       allocate(force(0:ieps,ny,nz,3))
+   if (.not. allocated(du))          allocate(du(-ieps:ieps,ny,nz) )
+   if (.not. allocated(dv))          allocate(dv(-ieps:ieps,ny,nz) )
+   if (.not. allocated(dw))          allocate(dw(-ieps:ieps,ny,nz) )
+   if (.not. allocated(vel))         allocate(vel(3,-ieps:ieps,ny,nz) )
+   if (.not. allocated(rtmp))        allocate(rtmp(-ieps:ieps,ny,nz) )
+   if (.not. allocated(cx))          allocate(cx(nl))
+   if (.not. allocated(cy))          allocate(cy(nl))
+   if (.not. allocated(cz))          allocate(cz(nl))
+   if (.not. allocated(slice_u))     allocate(slice_u(ny,nz))
+   if (.not. allocated(slice_v))     allocate(slice_v(ny,nz))
+   if (.not. allocated(slice_w))     allocate(slice_w(ny,nz))
+   if (.not. allocated(slice_r))     allocate(slice_r(ny,nz))
 
    do l=1,nl
-     tcx(l)=real(cxs_h(l))
-     tcy(l)=real(cys_h(l))
-     tcz(l)=real(czs_h(l))
+     cx(l)=real(cxs_h(l))
+     cy(l)=real(cys_h(l))
+     cz(l)=real(czs_h(l))
    enddo
 end subroutine
 
 subroutine turbineforcing(rho,u,v,w,it,nt1)
-! Returns the S_i stored in df and possibly updated velocities
+! Returns the S_i stored in turbine_df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
    use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
@@ -90,7 +86,7 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
    attributes(device)  :: v
    attributes(device)  :: w
 #endif
-   real cx,cy,cz,cminx,cminy,cminz,cdotuu
+   !!!!real cminx,cminy,cminz,cdotuu
 
    real :: force_h(0:ieps,ny,nz,3)        ! work array for computing the turbine force
 
@@ -123,9 +119,9 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
    theta=theta+dtheta
 
    turbine_df(:,:,:,:,:)=0.0
-   turbine_du(:,:,:)=0.0
-   turbine_dv(:,:,:)=0.0
-   turbine_dw(:,:,:)=0.0
+   du(:,:,:)=0.0
+   dv(:,:,:)=0.0
+   dw(:,:,:)=0.0
 
 
    do n=1,nturbines
@@ -152,10 +148,10 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
       v_h = slice_v
       w_h = slice_w
       r_h = slice_r
-      !ierr = cudaMemcpy(u_h, slice, ny*nz*8, cudaMemcpyDeviceToHost)
 
       call actuatorline(force_h,ny,nz,jp,kp,theta,iradius,u_h,v_h,w_h,r_h,ieps)
-      turbine_force(0:ieps,1:ny,1:nz,1:3)=force_h(0:ieps,1:ny,1:nz,1:3)
+
+      force(0:ieps,1:ny,1:nz,1:3)=force_h(0:ieps,1:ny,1:nz,1:3)
 
 
 ! Computing the force induced velocity increments in the circular 3D rotor plane (F/rho)
@@ -168,9 +164,9 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
       do j=1,ny
          if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
             do i=-ieps,ieps
-               turbine_du(i,j,k)=-turbine_force(abs(i),j,k,1)/rho(ip+i,j,k)
-               turbine_dv(i,j,k)=-turbine_force(abs(i),j,k,2)/rho(ip+i,j,k)
-               turbine_dw(i,j,k)=-turbine_force(abs(i),j,k,3)/rho(ip+i,j,k)
+               du(i,j,k)=-force(abs(i),j,k,1)/rho(ip+i,j,k)
+               dv(i,j,k)=-force(abs(i),j,k,2)/rho(ip+i,j,k)
+               dw(i,j,k)=-force(abs(i),j,k,3)/rho(ip+i,j,k)
             enddo
          endif
       enddo
@@ -180,9 +176,8 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
 #endif
 
 ! (10) Kupershtokh 2009
-         call  turbineforcing_kupershtokh(turbine_df,turbine_du,turbine_dv,turbine_dw,&
-                                      turbine_vel,turbine_rtmp,&
-                                      rho,u,v,w,turbine_dfeq1,turbine_dfeq2,ip,jp,kp,iradius,tcx,tcy,tcz,nturbines,n,it,nt1)
+      call  turbineforcing_kupershtokh(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
+                                       ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! (8) Guo 2002
@@ -200,9 +195,9 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
 !!              if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
 !!                 do i=-ieps,ieps
 !!                    ! updating the forced equilibrium velocities ueq=u + F/(2rho)
-!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*turbine_du(i,j,k)
-!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*turbine_dv(i,j,k)
-!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*turbine_dw(i,j,k)
+!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
+!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
+!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
 !!  
 !!                    ! Computing the S_i term returned in df
 !!  !                  cdota(:)=real(cxs(:))*du(i,j,k) + real(cys(:))*dv(i,j,k) + real(czs(:))*dw(i,j,k)
@@ -217,11 +212,11 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
 !!                       cminy=(real(cys(l))-v(ip+i,j,k))/cs2
 !!                       cminz=(real(czs(l))-w(ip+i,j,k))/cs2
 !!  
-!!                       cx=(cminx + cdotuu*real(cxs(l)))*turbine_du(i,j,k)
-!!                       cy=(cminy + cdotuu*real(cys(l)))*turbine_dv(i,j,k)
-!!                       cz=(cminz + cdotuu*real(czs(l)))*turbine_dw(i,j,k)
+!!                       cx=(cminx + cdotuu*real(cxs(l)))*du(i,j,k)
+!!                       cy=(cminy + cdotuu*real(cys(l)))*dv(i,j,k)
+!!                       cz=(cminz + cdotuu*real(czs(l)))*dw(i,j,k)
 !!  
-!!                       turbine_df(l,i,j,k,n)= rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
+!!                       df(l,i,j,k,n)= rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
 !!                    enddo
 !!                 enddo
 !!              endif
@@ -246,11 +241,11 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
 !!                 do i=-ieps,ieps
 !!  !                  dfeq(:)      =fequilscalar(rho(ip+i,j,k), u(ip+i,j,k),           v(ip+i,j,k),           w(ip+i,j,k))
 !!  !                  df(:,i,j,k,n)=fequilscalar(rho(ip+i,j,k), u(ip+i,j,k)+du(i,j,k), v(ip+i,j,k)+dv(i,j,k), w(ip+i,j,k)+dw(i,j,k))
-!!                    turbine_df(:,i,j,k,n)= (turbine_df(:,i,j,k,n)-turbine_dfeq(:))
+!!                    df(:,i,j,k,n)= (df(:,i,j,k,n)-dfeq(:))
 !!  
-!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*turbine_du(i,j,k)
-!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*turbine_dv(i,j,k)
-!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*turbine_dw(i,j,k)
+!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
+!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
+!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
 !!                 enddo
 !!              endif
 !!           enddo

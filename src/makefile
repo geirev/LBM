@@ -13,18 +13,19 @@ F90 = pgf90   #gfortran
 F77 = pgf90   #gfortran
 
 
-#FFLAGS = -c -r8 -Mpreprocess -O2 -Mcache_align -Mlfs -mcmodel=medium
-
-FFLAGS = -c -r8 -Mpreprocess -mp=gpu -O2 -Mcache_align -Mlfs -mcmodel=medium\
-         -g -lineinfo -gpu=lineinfo -Minfo=accel\
-         -Mstack_arrays -Mlarge_arrays\
-         -gpu=ccall,maxregcount:255\
-         -traceback -Ktrap=fp
+FFLAGS = -c -r8 -O2 -g -lineinfo -gpu=lineinfo \
+      -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
+      -Mlarge_arrays -traceback -Ktrap=fp \
+      -gpu=ccall
 
 ifdef CUDA
 FFLAGS+= -cuda
 endif
+ifdef MP
+FFLAGS+= -mp
+endif
 
+# gfortran flags
 #FFLAGS = -c -fdefault-real-8 -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
 #          -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
 #          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast -fopenmp

@@ -7,7 +7,7 @@ program LatticeBoltzmann
    use mod_D3Q27setup
    use mod_shapiro
    use m_readinfile
-   use m_hermite_polynomials
+!   use m_hermite_polynomials
    use m_assigncvel
    use m_diag
    use m_averaging
@@ -213,7 +213,7 @@ program LatticeBoltzmann
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1)
-      call boundarycond(feq,rho,u,v,w,uvel_d)
+      call boundarycond(feq,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #endif
@@ -292,7 +292,7 @@ program LatticeBoltzmann
 ! [u,v,w,turbine_df] = turbineforcing[rho,u,v,w]
       if (nturbines > 0)      call turbineforcing(rho,u,v,w,it,nt1)
 
-! [u,v,w,turb_df] = turbulenceforcing[rho,u,v,w]
+! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
       if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
@@ -311,14 +311,14 @@ program LatticeBoltzmann
 ! [feq=f] = applyturbines(feq,turbine_df,tau)  f=f+turbine_df
       if (nturbines > 0)      call applyturbines(feq,turbine_df,tau)
 
-! [feq=f] = applyturbulence(feq,turb_df,tau)  f=f+turb_df
-      if (inflowturbulence)   call applyturbulence(feq,turb_df,tau);  if (debug) call rhotest(feq,rho,'applyturbulence')
+! [feq=f] = applyturbulence(feq,turbulence_df,tau)  f=f+turb_df
+      if (inflowturbulence)   call applyturbulence(feq,turbulence_df,tau);  if (debug) call rhotest(feq,rho,'applyturbulence')
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(feq,lblanking);                        if (debug) call rhotest(feq,rho,'solids')
 
 ! General boundary conditions
-      call boundarycond(feq,rho,u,v,w,uvel_d);                        if (debug) call rhotest(feq,rho,'boundarycond')
+      call boundarycond(feq,uvel_d);                                  if (debug) call rhotest(feq,rho,'boundarycond')
 
 ! Drift of feq returned in f
       call drift(f,feq);                                              if (debug) call rhotest(f,rho,'drift')

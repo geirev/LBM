@@ -10,7 +10,7 @@
  100              ! nt1   : Final timestep
  1000             ! iout  : Number of steps between outputs
  1000             ! irestarts: Number of steps between restart outputs
- 0                ! iprt  : Output every timestep for it <= iprt (for initial high-time-res animation)
+ 0 20000          ! iprt  : Output every timestep for it <= iprt1 and it >= iprt2
  T                ! lprtmin : Minimalistic output to save disk space by 50%
  1000000          ! ifout : Number of steps between f-outputs
  1                ! ibnd  : 0-periodic, 1 in/out flow,

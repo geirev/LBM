@@ -12,10 +12,9 @@ LD = pgf90   #gfortran
 F90 = pgf90   #gfortran
 F77 = pgf90   #gfortran
 
-FFLAGS = -c -O2 -g -lineinfo -gpu=lineinfo \
+FFLAGS = -c -O2 -g -lineinfo \
       -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
-      -Mlarge_arrays -traceback -Ktrap=fp \
-      -gpu=ccall
+      -Mlarge_arrays -traceback -Ktrap=fp
 
 LINKFLAGS =
 
@@ -24,7 +23,7 @@ FFLAGS+= -DDOUBLE_PRECISION -r8
 endif
 
 ifdef CUDA
-FFLAGS+= -cuda
+FFLAGS+=  -gpu=lineinfo  -gpu=ccall -cuda
 LINKFLAGS+= -cuda
 endif
 
@@ -41,7 +40,7 @@ endif
 F77FLG =
 F90FLG =
 
-LIBS =  ./libpreplot.a  -lblas -llapack
+LIBS =  -lblas -llapack
 ifdef DP
 LIBS+= -lfftw3
 else
@@ -77,20 +76,14 @@ F77FILES =$(F77SOURCE:.F=.f)
 OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
 
-all: touch libpreplot.a new $(TARGET) install
+all: new $(TARGET) install
 
-libs: libenkfanalysis.a libpreplot.a -lcuda -lcublas
+libs: libenkfanalysis.a -lcuda -lcublas
 
-#libsampling.a:
-#	cd ../../EnKF_sampling/lib; make -B -f makefile.cuda  BUILD=../../LBM/build
 
 libenkfanalysis.a:
 	cd ../../EnKF_analysis/lib; make BUILD=../../LBM/build
 
-libpreplot.a: all.compile
-	cp $(HOME)/Dropbox/Progs/tecplot-binary-files/libpreplot.a $(HOME)/Dropbox/Progs/LBM/build
-
-#$(TARGET): $(INCFILES) $(OBJECTS) libsampling.a timer.o
 $(TARGET): $(INCFILES) $(OBJECTS)  timer.o
 	@mkdir -p $(BUILD)
 	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) timer.o $(LIBDIR) $(LIBS)
@@ -106,9 +99,6 @@ new: source depend
 timer.o: timer.c
 	cd ./$(BUILD)
 	gcc -c ../src/timer.c -o ./$(BUILD)/timer.o
-
-touch:
-	touch all.compile
 
 source:
 	../bin/mksource.sh > source.files

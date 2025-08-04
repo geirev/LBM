@@ -37,7 +37,7 @@ contains
    if (k > nz) return
 #else
    eps = sqrt(tiny(1.0))
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) SHARED(tau, eddyvisc, Bbeta, alphamag, kinevisc, const, nx, ny, nz)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, tmp) SHARED(tau, eps, eddyvisc, Bbeta, alphamag, kinevisc, const, nx, ny, nz)
    do k=1,nz
    do j=1,ny
    do i=1,nx

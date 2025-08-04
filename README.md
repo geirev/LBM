@@ -117,23 +117,18 @@ CUDA GPU compilation
 make CUDA=1
 ```
 
-For double precision code (-r8) add the flag
-
-CUDA GPU compilation
+Double preceision CUDA GPU compilation
 ```bash
 make CUDA=1 DP=1
 ```
 
-To compile from scratch add a -B flag. (Necessary if you change in between parallelization settings like CUDA or OPEN-MP or none of these).
+To compile from scratch add a -B flag. (Necessary if you change in between parallelization settings like CUDA or OPEN-MP).
 
 
 
 
 
-## 6. Run the code
-
-### Linux
-
+## 4. Run the code
 
 Start by defining the required dimensions in the  mod_dimensions.F90 file, and compile.
 
@@ -150,31 +145,15 @@ boltzmann
 ```
 
 
-# Plotting
+## 5. Plotting
 
-## Tecplot
-If you have tecplot (tec360) there are `.lay` and `.mcr` files in the `run2` directory.
+The current code version outputs Tecplot plt files read by tec360.
 
-
----
-
-# Setting up an experiment
-
-The following explains how to set up and configure your simulations.
-
-Compile the code after setting the the number of countries you will include in (nc=1 in mod_dimensions.F90).
-
-Make a directory where you will run the code.
-
-Initially you only need the file
-
-```bash
-run2/infile.in
-```
+If you are not using Tecplot you can chose another output format by replacing the call to the tecout routine in m_diag.F90 to your choice.
 
 ---
 
-# Code standards
+## 6. Code standards
 
 If you plan to change the code note the following:
 
@@ -211,7 +190,7 @@ For this to work install the scripts in the ./bin in your path and install ctags
 
 ---
 
-# Git instructions
+## 7. Git instructions
 
 When working with git repositories other than the ones you own, and when you expect to contribute to the code,
 a good way got organize your git project is described in https://opensource.com/article/19/7/create-pull-request-github
@@ -315,44 +294,4 @@ parse_git_branch() {
 }
 export PS1="\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[1;31m\]\w\[\033[0;93m\]\$(parse_git_branch)\[\033[0;97m\]\$ "
 ```
-
 ---
-
-# Definition of time
-
-The model uses the following definitions for time:
-
-"Startdate" e.g., 01/03-2020 denote that the model runs from 00:00am 01/03-2020, and this time is
-set to t=0.0. (see the table below)
-
-The system integreates the ensemble of models forward one day at the time, starting from 00:00 to
-24:00 and thus outputs the solutions at midnight end of the day. Thus, the output files will
-contain entries like
-
-```
- model time                                                         Output date
- 0.00000E+00  Corresponds to 00:00 in the morning of the start day  (29/02-2020)
- 0.10000E+01  Corresponds to 24:00 in the night of the start day    (01/03-2020)
- 0.20000E+01  Corresponds to 24:00 in the night of day 2            (02/03-2020)
- 0.30000E+01  Corresponds to 24:00 in the night of day 3            (03/03-2020)
- 0.40000E+01  Corresponds to 24:00 in the night of day 4            (04/03-2020)
- 0.50000E+01  Corresponds to 24:00 in the night of day 5            (05/03-2020)
-```
-
-## Intervention times:
-
-If an intevention time is defined as 15/03-2020 the intervention is avtive (through values of R)
-from the morning on the 15/03 at 00:00am, which corresponds to model time t>14.0. This means that
-R(t) switches from R1 to R2 from the morning of 15/03. Accordingly ir swiches from 1 to 2 for using
-the correct Rmat(ir).
-
-## Measurement times
-
-A measurement for a particular day is located at midnight that day. Thus, given a measurement from
-corona.in, e.g.,
-
-```bash
- 03/03-2020    7   154   2206
-```
-
-will be located at the same time as the output of day 3, i.e., the end of the day.

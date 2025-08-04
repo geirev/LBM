@@ -25,9 +25,12 @@ Inflow turbulence is mimiked or introduced at a section inside the inflow bounda
   <a href="https://github.com/geirev/LBM/blob/master/LICENSE">License</a>
 </p>
 
+<p align="center">
+<img src="example/windturbine.png" width="300">
+</p>
 
 <p align="center">
-<img src="docs/cyl.png" width="300">
+<img src="example/city.png" width="300">
 </p>
 
 ---

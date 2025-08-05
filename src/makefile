@@ -32,7 +32,7 @@ LINKFLAGS+= -cuda
 endif
 
 ifdef MP
-FFLAGS+= -mp
+FFLAGS+= -mp  -DOPEN_MP
 LINKFLAGS+= -fopenmp
 endif
 

@@ -1,14 +1,13 @@
 module m_vreman_tau_kernel
 ! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine vreman_tau_kernel(tau, eddyvisc, Bbeta, alphamag, kinevisc, const, nx, ny, nz)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx, ny, nz
    real, intent(out)   :: tau(nx,ny,nz)

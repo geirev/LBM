@@ -1,14 +1,12 @@
 module m_drift_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine drift_kernel(f,feq, nx2, ny2, nz2, nl, cxs, cys, czs)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value    :: nx2, ny2, nz2, nl
    real, intent(out) :: f(nl,nx2,ny2,nz2)

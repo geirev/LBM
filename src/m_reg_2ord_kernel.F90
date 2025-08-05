@@ -1,13 +1,12 @@
 module m_reg_2ord_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine reg_2ord_kernel(f, A1_2, H2, nx, ny, nz, nl)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value    :: nx, ny, nz, nl
    real, intent(out) :: f(nl,nx+2,ny+2,nz+2)

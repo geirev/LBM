@@ -2,6 +2,7 @@ module m_seedmanagement
 contains
 subroutine seedmanagement(nt0)
    use m_set_random_seed3
+   implicit none
    integer, intent(in) :: nt0
    logical ex
 

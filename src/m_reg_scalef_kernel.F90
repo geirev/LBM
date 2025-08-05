@@ -1,13 +1,12 @@
 module m_reg_scalef_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine reg_scalef_kernel(f, weights, nx2, ny2, nz2, nl)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx2, ny2, nz2, nl
    real, intent(inout) :: f(nl,1:nx2,1:ny2,1:nz2)

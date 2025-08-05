@@ -22,7 +22,6 @@ subroutine boundarycond(f,uvel)
    use m_boundary_noslipbb_knz_A
    use m_boundary_noslipbb_knz_B
    use m_boundary_noslip_edges
-   use m_boundary_noslip_edgesA
 
    use m_boundary_freeslipbb_j1_A
    use m_boundary_freeslipbb_j1_B
@@ -220,7 +219,7 @@ subroutine boundarycond(f,uvel)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Bounce-back edges in case of closed boundaries in both y and z directions and when at least one direction has no slip boundaries
    if ((jbnd == 11 .and. kbnd > 10) .or. (jbnd > 10 .and. kbnd == 11)) then
-      call boundary_noslip_edgesA(f)
+      call boundary_noslip_edges(f)
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

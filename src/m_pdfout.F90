@@ -1,10 +1,10 @@
 module m_pdfout
-implicit none
 
 contains
 subroutine pdfout(filename,variables_string,num_of_variables,lblanking,f)
    use mod_dimensions
    use m_tecplot
+   implicit none
    character(len=*), intent(in) :: filename
    character(len=*), intent(in) :: variables_string
    integer, intent(in) :: num_of_variables

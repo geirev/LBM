@@ -31,7 +31,6 @@ F90SOURCE = \
 	m_boundary_noslipbb_k1_B.F90\
 	m_boundary_noslipbb_knz_A.F90\
 	m_boundary_noslipbb_knz_B.F90\
-	m_boundary_noslip_edgesA.F90\
 	m_boundary_noslip_edges.F90\
 	m_city.F90\
 	m_collisions.F90\
@@ -52,6 +51,7 @@ F90SOURCE = \
 	m_inipert.F90\
 	m_initurbulence.F90\
 	m_macrovars.F90\
+	m_macrovars_kernel.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\

@@ -1,14 +1,13 @@
 ! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
 module m_fequil3_3ord_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine fequil3_3ord_kernel(feq, H3, A0_3, nx2, ny2, nz2, nl)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx2, ny2, nz2, nl
    real, intent(inout) :: feq(nl,nx2,ny2,nz2)

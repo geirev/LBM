@@ -18,6 +18,10 @@ FFLAGS = -c -O2 -g -lineinfo \
 
 LINKFLAGS =
 
+ifdef D3Q19
+FFLAGS+= -DD3Q19
+endif
+
 ifdef DP
 FFLAGS+= -DDOUBLE_PRECISION -r8
 endif

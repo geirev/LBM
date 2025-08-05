@@ -1,13 +1,12 @@
 module m_collisions_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine collisions_kernel(feq, f, tau, nx2, ny2, nz2, nl)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx2, ny2, nz2, nl
    real, intent(inout) :: feq(nl,nx2,ny2,nz2)

@@ -239,7 +239,7 @@ program LatticeBoltzmann
    else
 ! Restart from restart file
       call readrestart(nt0,f,theta,uu,vv,ww,rr)
-      call macrovars(rho,u,v,w,f,lblanking)
+      call macrovars(rho,u,v,w,f)
 
 ! To recover initial tau
       call fequil3(feq,rho,u,v,w, A2, A3, vel,it,nt1)
@@ -322,7 +322,7 @@ program LatticeBoltzmann
 
 
 ! Compute updated macro variables
-      call macrovars(rho,u,v,w,f,lblanking);                          if (debug) call rhotest(f,rho,'macrovars')
+      call macrovars(rho,u,v,w,f);                                    if (debug) call rhotest(f,rho,'macrovars')
 
 ! Diagnostics
       call diag(it,rho,u,v,w,lblanking);                              if (debug) call rhotest(f,rho,'diag')

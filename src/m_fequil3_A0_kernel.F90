@@ -1,13 +1,12 @@
 module m_fequil3_A0_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine fequil3_A0_kernel(rho, A0_2, A0_3, vel, nx, ny, nz, inv2cs4, inv6cs6)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value :: nx, ny, nz, nl
    real, intent(in)  :: rho(nx,ny,nz)

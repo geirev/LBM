@@ -2,6 +2,7 @@ module m_vorticity
 contains
 subroutine vorticity(u,v,w,vortx,vorty,vortz,vort,blanking)
    use mod_dimensions
+   implicit none
    real,    intent(in)  :: u(nx,ny,nz)
    real,    intent(in)  :: v(nx,ny,nz)
    real,    intent(in)  :: w(nx,ny,nz)

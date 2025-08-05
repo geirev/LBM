@@ -1,13 +1,12 @@
 module m_boundary_noslipbb_k1_B
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine boundary_noslipbb_k1_B(f,nx2,ny2,nz2,nl,cxs,cys,czs)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx2, ny2, nz2, nl
    integer             :: cxs(nl),cys(nl),czs(nl)

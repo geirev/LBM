@@ -1,13 +1,12 @@
 module m_reg_cp_vel_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine reg_cp_vel_kernel(vel, u, v, w, nx, ny, nz)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value :: nx, ny, nz
    real, intent(in) :: u(nx, ny, nz)

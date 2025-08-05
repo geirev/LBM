@@ -93,7 +93,6 @@ m_boundarycond.o:      m_boundary_noslipbb_k1_A.o
 m_boundarycond.o:      m_boundary_noslipbb_k1_B.o
 m_boundarycond.o:      m_boundary_noslipbb_knz_A.o
 m_boundarycond.o:      m_boundary_noslipbb_knz_B.o
-m_boundarycond.o:      m_boundary_noslip_edgesA.o
 m_boundarycond.o:      m_boundary_noslip_edges.o
 m_boundarycond.o:      mod_D3Q27setup.o
 m_boundarycond.o:      mod_dimensions.o
@@ -153,10 +152,6 @@ m_boundary_noslipbb_knz_A.o:      makefile
 m_boundary_noslipbb_knz_A.o:      MODEL.CPP
 m_boundary_noslipbb_knz_B.o:      makefile
 m_boundary_noslipbb_knz_B.o:      MODEL.CPP
-m_boundary_noslip_edgesA.o:      makefile
-m_boundary_noslip_edgesA.o:      mod_D3Q27setup.o
-m_boundary_noslip_edgesA.o:      mod_dimensions.o
-m_boundary_noslip_edgesA.o:      MODEL.CPP
 m_boundary_noslip_edges.o:      makefile
 m_boundary_noslip_edges.o:      mod_D3Q27setup.o
 m_boundary_noslip_edges.o:      mod_dimensions.o
@@ -232,7 +227,11 @@ m_initurbulence.o:      makefile
 m_initurbulence.o:      mod_dimensions.o
 m_initurbulence.o:      MODEL.CPP
 m_initurbulence.o:      m_pseudo2D.o
+m_macrovars_kernel.o:      makefile
+m_macrovars_kernel.o:      MODEL.CPP
 m_macrovars.o:      makefile
+m_macrovars.o:      m_macrovars_kernel.o
+m_macrovars.o:      mod_D3Q27setup.o
 m_macrovars.o:      mod_dimensions.o
 m_macrovars.o:      MODEL.CPP
 m_macrovars.o:      m_wtime.o

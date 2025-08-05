@@ -5,6 +5,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
    use m_readinfile, only : ipos,jpos,kpos,uini,p2l
    use mod_nrel5mw, only : rotorradius,hubradius
    use m_tecfldsec
+   implicit none
    real, intent(in)    :: u(nx,ny,nz)        ! x component of fluid velocity
    real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
    real, intent(in)    :: w(nx,ny,nz)        ! z component of fluid velocity

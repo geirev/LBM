@@ -3,6 +3,7 @@ contains
 subroutine cylinder(lsolids,blanking)
    use mod_dimensions
    use m_tecfld
+   implicit none
    logical, intent(out)   :: lsolids
    logical, intent(inout) :: blanking(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA

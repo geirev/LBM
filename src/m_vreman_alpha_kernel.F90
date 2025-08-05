@@ -1,14 +1,13 @@
 module m_vreman_alpha_kernel
 ! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine vreman_alpha_kernel(f, H2, alpha, nx2, ny2, nz2, nl)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx2, ny2, nz2, nl
    real, intent(in)    :: f(nl,nx2,ny2,nz2)

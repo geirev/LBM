@@ -1,19 +1,24 @@
 # Lattice-Boltzmann-Model
-This repository contains a 3D-implementation of a Lattice-Boltzmann-Model on a D3Q27 lattice for high Reynolds number flow.
-The code is NVIDIA's CUDA Fortran and it runs on either single core, OPEN-MP multicore, or GPU.
-The collision operator is a single relaxation time third order expansion with regularization similar to [Jacob et al (2018)](https://hal.science/hal-02114308)
-and [Feng et al, (2018)](https://doi.org/10.1029/2020MS002107),
-but with out the hybrid regularization, which I have not yet needed.
-The turbulence closure scheme is the one of [Vreman (2004)](https://doi.org/10.1063/1.1785131).
+This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
-The model boundary conditions are periodic or inflow-outflow in the i-direction, periodic or closed no-slip or free-slip two timestep bounceback in the j- and k- direction.
+The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP multicore, or a GPU, with optimization primarily for the GPU.
 
-The code allows for inserting solid bodies within the model domain to simulated. e.g. flow around an airfoil or a cylinder.
+The code runs in single precision as default but a flag copiles a double precision version.
 
-Additionally, there is a complete implementation of an actuator line model for the NREL-5Mw wind turbine, and it is possible to include multiple turbines at any location of the model domain.
+The collision operator is a single relaxation time third-order expansion with regularization similar to [Jacob et al (2018)](https://hal.science/hal-02114308)
+and [Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization, which I have not yet needed. It is also possible to use it for viscous flow without regularization and turbulence closure, and using a second-order BGK expansion.
 
-Inflow turbulence is mimiked or introduced at a section inside the inflow boundary at i=1, (typically at the slice i=10) by applying a smooth in space and time pseudo random force on the fluid.
+The turbulence closure scheme is the one described by [Vreman (2004)](https://doi.org/10.1063/1.1785131).
 
+The model boundary conditions are periodic or inflow-outflow in the i-direction, periodic or closed no-slip or free-slip two-timestep bounceback in the j- and k- directions.
+
+The code allows for inserting solid bodies within the model domain to simulate, e.g., flow around an airfoil or a cylinder.
+
+Additionally, there is a complete implementation of an actuator line model for the NREL-5Mw wind turbine, and it is possible to include multiple
+turbines at any location of the model domain.
+
+Inflow turbulence is mimicked or introduced at a section inside the inflow boundary at i=1 (typically at the slice i=10) by applying a smooth in space
+and time, pseudo-random force on the fluid.
 
 
 <p align="center">
@@ -59,14 +64,14 @@ you need to replace <userid> with your github userid
 ```bash
 git clone git@github.com:<userid>/LBM.git
 pushd LBM
-git remote add upstream https://github.com/geirev/LBM
+git remote add upstream git://github.com:geirev/LBM
+popd
 ```
-or, if you have set up git-ssh
+or, if you have not set up git-ssh
 ```bash
 git clone git@github.com:<userid>/LBM.git
 pushd LBM
-git remote add upstream git://github.com:geirev/LBM
-popd
+git remote add upstream https://github.com/geirev/LBM
 ```
 
 If you are new to Git, read the section <a href="#git-instructions">Git instructions</a>
@@ -77,19 +82,15 @@ If you are new to Git, read the section <a href="#git-instructions">Git instruct
 
 ```bash
 sudo apt-get -y update
-sudo apt-get -y install libblas-dev liblapack-dev libfftw3-dev gfortran
-sudo apt-get -y install gnuplot  # Needed if you want to use the gnuplot plotting macro
+sudo apt-get -y install libfftw3-dev               # fft library used when sampling pseudo-random fields
 
-
+# nvidia Cuda fortran compiler and utilities installation (get the latest version, nvhpc-25-7 is just for illustration).
 curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
 echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
 sudo apt-get update -y
 sudo apt-get install -y nvhpc-25-7
 sudo apt install nvidia-cuda-toolkit
 ```
-gfortran allows for single core or OPEN-MP parallelization, but if you plan to run on GPU you should install the nvidia toolkit instead.
-Currently only the libfftw3-dev library is linked.
-
 
 ## 3. Compile the `LBM` code
 
@@ -102,30 +103,37 @@ cd LBM/src
 then compile and install the executable in the target directory, defaulting to
 `$HOME/bin`:
 
-Single core compilation
+Default is single core compilation on D3Q27 lattice in single precision.
 ```bash
-make
+make -B
+```
+
+Single core compilation on D3Q19 lattice
+```bash D3Q19=1
+make -B
 ```
 
 OPEN-MP compilation
 ```bash
-make MP=1
+make -B MP=1
 ```
 
-CUDA GPU compilation
+CUDA GPU compilation (with default single precision and D3Q27 lattice)
 ```bash
-make CUDA=1
+make -B CUDA=1
 ```
 
-Double preceision CUDA GPU compilation
+Double preceision compilation
 ```bash
-make CUDA=1 DP=1
+make -B DP=1
 ```
 
-To compile from scratch add a -B flag. (Necessary if you change in between parallelization settings like CUDA or OPEN-MP).
+To recompile from scratch add a -B flag. (Necessary if you change in between parallelization settings like CUDA or OPEN-MP).
 
-
-
+E.g., recomile for GPU in double precision using D3Q19 lattice
+```bash
+make -B CUDA=1 DP=1 D3Q19=1
+```
 
 
 ## 4. Run the code
@@ -144,8 +152,16 @@ To execute the code run:
 boltzmann
 ```
 
+## 5. Code profiling
+To profile the code run
+```bash
+nvprof boltzmann
+```
+which gives a detailed listing of the CPU time used by each kernel.
+It is clear that the third order expansion and the regularization are by far the most expensive computations in the code.
 
-## 5. Plotting
+
+## 6. Plotting
 
 The current code version outputs Tecplot plt files read by tec360.
 
@@ -153,7 +169,7 @@ If you are not using Tecplot you can chose another output format by replacing th
 
 ---
 
-## 6. Code standards
+## 7. Code standards
 
 If you plan to change the code note the following:
 

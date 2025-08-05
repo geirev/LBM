@@ -3,6 +3,7 @@ contains
 subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
    use m_readinfile, only : inflowturbulence,nturbines
+   implicit none
    integer, intent(in)  :: it
    real,    intent(out) :: theta
    real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)

@@ -1,9 +1,8 @@
 module m_wtime
 !@cuf use cudafor
-   real(kind(1.0D+00)) :: xt0,xt1,wt0,wt1,t0,t1
+   real(kind(1.0D+00)) :: xt0,xt1
    integer, parameter  :: nrtimes=16
    real(kind(1.0D+00)) :: walltime(1:nrtimes)=0.0
-   real(kind(1.0D+00)) :: walltimelocal(1:100)=0.0
    integer istat
 contains
 

@@ -1,13 +1,12 @@
 module m_reg_scaleA1_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine reg_scaleA1_kernel(A1_2, A1_3, nx, ny, nz, inv2cs4, inv6cs6)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value      :: nx, ny, nz
    real, intent(inout) :: A1_2(3,3,nx,ny,nz)

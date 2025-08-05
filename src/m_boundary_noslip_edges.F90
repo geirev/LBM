@@ -2,7 +2,7 @@ module m_boundary_noslip_edges
 contains
 subroutine boundary_noslip_edges(f)
    use mod_dimensions
-   use mod_D3Q27setup, only : cxs,cys,czs,bounce
+   use mod_D3Q27setup, only : cxs,cys,czs
    implicit none
    real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
@@ -18,8 +18,12 @@ subroutine boundary_noslip_edges(f)
    do i=1,nx
       do l=1,nl
          if ((cys(l) < 0) .and. (czs(l) < 0)) then
-            m = bounce(l)
-            f(m,i,0,0)=f(l,i,0,0)
+            do m=1,nl
+               if (cxs(m) == -cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f(m,i,0,0)=f(l,i,0,0)
+                  exit
+               endif
+            enddo
          endif
       enddo
    enddo
@@ -45,8 +49,12 @@ subroutine boundary_noslip_edges(f)
    do i=1,nx
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) < 0) then
-            m = bounce(l)
-            f(m,i,ny+1,0)=f(l,i,ny+1,0)
+            do m=1,nl
+               if (cxs(m) == -cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f(m,i,ny+1,0)=f(l,i,ny+1,0)
+                  exit
+               endif
+            enddo
          endif
       enddo
    enddo
@@ -71,8 +79,12 @@ subroutine boundary_noslip_edges(f)
    do i=1,nx
       do l=1,nl
          if (cys(l) < 0 .and. czs(l) > 0) then
-            m = bounce(l)
-            f(m,i,0,nz+1)=f(l,i,0,nz+1)
+            do m=1,nl
+               if (cxs(m) == -cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f(m,i,0,nz+1)=f(l,i,0,nz+1)
+                  exit
+               endif
+            enddo
          endif
       enddo
    enddo
@@ -97,8 +109,12 @@ subroutine boundary_noslip_edges(f)
    do i=1,nx
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) > 0) then
-            m = bounce(l)
-            f(m,i,ny+1,nz+1)=f(l,i,ny+1,nz+1)
+            do m=1,nl
+               if (cxs(m) == -cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f(m,i,ny+1,nz+1)=f(l,i,ny+1,nz+1)
+                  exit
+               endif
+            enddo
          endif
       enddo
    enddo

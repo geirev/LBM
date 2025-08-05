@@ -2,6 +2,7 @@ module m_cube
 contains
 subroutine cube(lsolids,blanking,ipos,jpos,kpos,radius)
    use mod_dimensions
+   implicit none
    logical, intent(inout) :: blanking(0:nx+1,0:ny+1,0:nz+1)
    integer, intent(in)    :: ipos
    integer, intent(in)    :: jpos

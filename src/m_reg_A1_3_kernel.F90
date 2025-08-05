@@ -1,13 +1,12 @@
 module m_reg_A1_3_kernel
-#ifdef _CUDA
-   use cudafor
-#endif
-   implicit none
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
    subroutine reg_A1_3_kernel(A1_2, A1_3, vel, nx, ny, nz)
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    integer, value :: nx, ny, nz
    real, intent(in) :: A1_2(3,3,nx,ny,nz)

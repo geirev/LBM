@@ -79,8 +79,6 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    real :: dff(1:nl)
    call cpustart()
 
-!@cuf istat = cudaDeviceSynchronize()
-   t0 = wtime()
 
    ip=iturb_pos
    lit=mod(it,nrturb)
@@ -97,13 +95,9 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    grid%y = (ny + tBlock%y - 1) / tBlock%y
    grid%z = (nz + tBlock%z - 1) / tBlock%z
 #endif
-!@cuf istat = cudaDeviceSynchronize()
-   t1 = wtime(); walltimelocal(50)=walltimelocal(50)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing the S_i term returned in df
-!@cuf istat = cudaDeviceSynchronize()
-      t0 = wtime()
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -120,12 +114,8 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-!@cuf istat = cudaDeviceSynchronize()
-   t1 = wtime(); walltimelocal(51)=walltimelocal(51)+t1-t0
 
 
-!@cuf istat = cudaDeviceSynchronize()
-   t0 = wtime()
 #ifdef _CUDA
    call fequilscal<<<grid,tBlock>>>(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
 #else
@@ -139,13 +129,9 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
 #endif
 !   dff(1:10)=dfeq1(1:10,1,48,48)
 !   print '(a,10g13.5)','dfeq1          :',dff(1:10)
-!@cuf istat = cudaDeviceSynchronize()
-    t1 = wtime(); walltimelocal(52)=walltimelocal(52)+t1-t0
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!@cuf istat = cudaDeviceSynchronize()
-   t0 = wtime()
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -162,12 +148,8 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-!@cuf istat = cudaDeviceSynchronize()
-   t1 = wtime(); walltimelocal(53)=walltimelocal(53)+t1-t0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!@cuf istat = cudaDeviceSynchronize()
-   t0 = wtime()
 #ifdef _CUDA
    call fequilscal<<<grid,tBlock>>>(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
 #else
@@ -180,15 +162,9 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    enddo
 !$OMP END PARALLEL DO
 #endif
-!   dff(1:10)=dfeq2(1:10,1,48,48)
-!   print '(a,10g13.5)','dfeq2          :',dff(1:10)
-!@cuf istat = cudaDeviceSynchronize()
-   t1 = wtime(); walltimelocal(54)=walltimelocal(54)+t1-t0
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!@cuf istat = cudaDeviceSynchronize()
-   t0 = wtime()
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -204,16 +180,8 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-!@cuf istat = cudaDeviceSynchronize()
-   t1 = wtime(); walltimelocal(55)=walltimelocal(55)+t1-t0
 
    call cpufinish(icpu)
-   if (it==nt1) then
-      do j=50,55
-         print '(a24,i3,g13.5)','turbulenceforcing:',j,walltimelocal(j)
-      enddo
-      print '(a24,g13.5)',      'turbulenceforcing:',sum(walltimelocal(50:55))
-   endif
 
 end subroutine
 end module

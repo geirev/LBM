@@ -146,15 +146,15 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=ntz; bz=(nz+tz-1)/tz
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
       call reg_3ord_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, A1_3, H3, nx, ny, nz, nl)
+        &(f, A1_3, H3, nx+2, ny+2, nz+2, nl)
 
 
 

@@ -103,29 +103,29 @@ cd LBM/src
 then compile and install the executable in the target directory, defaulting to
 `$HOME/bin`:
 
-Default is single core compilation on D3Q27 lattice in single precision.
+Default is compilation for single core in single precision on D3Q27 lattice.
 ```bash
 make -B
 ```
 
-Single core compilation on D3Q19 lattice
-```bash D3Q19=1
-make -B
+Compilation for single core in single precision on D3Q19 lattice
+```bash
+make -B D3Q19=1
 ```
 
-OPEN-MP compilation
+Compilation for OPEN-MP in single precision on D3Q27 lattice
 ```bash
 make -B MP=1
 ```
 
-CUDA GPU compilation (with default single precision and D3Q27 lattice)
+Compilation for CUDA GPU in single precision and D3Q27 lattice
 ```bash
 make -B CUDA=1
 ```
 
-Double preceision compilation
+Compilation for CUDA GPU in double precision and D3Q27 lattice
 ```bash
-make -B DP=1
+make -B DP=1 CUDA=1
 ```
 
 To recompile from scratch add a -B flag. (Necessary if you change in between parallelization settings like CUDA or OPEN-MP).
@@ -135,6 +135,8 @@ E.g., recomile for GPU in double precision using D3Q19 lattice
 make -B CUDA=1 DP=1 D3Q19=1
 ```
 
+Running in single precision is about twice as fast as using double precision.
+Running on the D3Q19 lattice reduces the CPU time with around 40 %
 
 ## 4. Run the code
 

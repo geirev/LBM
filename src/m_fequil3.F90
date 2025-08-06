@@ -7,7 +7,8 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
    use m_readinfile
    use m_wtime
    use m_reg_cp_vel_kernel
-   use m_fequil3_A0_kernel
+   use m_fequil3_A02_kernel
+   use m_fequil3_A03_kernel
    use m_fequil3_1ord_kernel
    use m_fequil3_2ord_kernel
    use m_fequil3_3ord_kernel
@@ -65,17 +66,17 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
         &(vel, u, v, w, nx, ny, nz)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!  Compute A0_2, A0_3
+!  Compute A0_2
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
       tz=ntz; bz=(nz+tz-1)/tz
 #endif
-      call fequil3_A0_kernel&
+      call fequil3_A02_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(rho, A0_2, A0_3, vel, nx, ny, nz, inv2cs4, inv6cs6)
+        &(rho, A0_2, vel, nx, ny, nz, inv2cs4)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  1st order equilibrium distribution
@@ -109,7 +110,20 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 !  3nd order equilibrium distribution
 !  the above identically recovers the BGK equilibrium, now we add third order contributions
    if (ibgk == 3) then
+!  Compute A0_3
+#ifdef _CUDA
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
+#endif
+      call fequil3_A03_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(rho, A0_2, A0_3, vel, nx, ny, nz, inv2cs4, inv6cs6)
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty

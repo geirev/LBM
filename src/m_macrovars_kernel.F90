@@ -43,6 +43,7 @@ contains
    do j=1,ny2-2
    do i=1,nx2-2
 #endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       rho(i,j,k)=f(1,i+1,j+1,k+1)
       u(i,j,k)=0.0
       v(i,j,k)=0.0
@@ -62,6 +63,8 @@ contains
     enddo
 !$OMP END PARALLEL DO
 #endif
+
+
 
 end subroutine
 end module

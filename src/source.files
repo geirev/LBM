@@ -44,7 +44,8 @@ F90SOURCE = \
 	m_fequil3_1ord_kernel.F90\
 	m_fequil3_2ord_kernel.F90\
 	m_fequil3_3ord_kernel.F90\
-	m_fequil3_A0_kernel.F90\
+	m_fequil3_A02_kernel.F90\
+	m_fequil3_A03_kernel.F90\
 	m_fequil3.F90\
 	m_fequilscalar.F90\
 	m_fequilscal.F90\

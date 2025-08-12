@@ -61,7 +61,7 @@ subroutine macrovars(rho,u,v,w,f)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          v(i,j,k) = f( 4,i,j,k)
          v(i,j,k) = v(i,j,k) - f( 5,i,j,k) + f( 8,i,j,k) - f( 9,i,j,k) - f(10,i,j,k) + f(11,i,j,k) + f(14,i,j,k) &
-                             - f(15,i,j,k) - f(18,i,j,k) + f(19,i,j,k) 
+                             - f(15,i,j,k) - f(18,i,j,k) + f(19,i,j,k)
 #ifndef D3Q19
          v(i,j,k) = v(i,j,k) + f(20,i,j,k) - f(21,i,j,k) - f(22,i,j,k) + f(23,i,j,k) + f(24,i,j,k) - f(25,i,j,k) &
                              + f(26,i,j,k) - f(27,i,j,k)
@@ -71,7 +71,7 @@ subroutine macrovars(rho,u,v,w,f)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          w(i,j,k) = -f( 6,i,j,k)
          w(i,j,k) = w(i,j,k) + f( 7,i,j,k) - f(12,i,j,k) + f(13,i,j,k) + f(14,i,j,k) - f(15,i,j,k) + f(16,i,j,k) &
-                             - f(17,i,j,k) + f(18,i,j,k) - f(19,i,j,k) 
+                             - f(17,i,j,k) + f(18,i,j,k) - f(19,i,j,k)
 #ifndef D3Q19
          w(i,j,k) = w(i,j,k) + f(20,i,j,k) - f(21,i,j,k) - f(22,i,j,k) + f(23,i,j,k) - f(24,i,j,k) + f(25,i,j,k) &
                              - f(26,i,j,k) + f(27,i,j,k)

@@ -65,7 +65,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    endif
 
    if (nturbines > 0) then
-      print '(3a)','reading: theta'//cit//'.uf'
+      print '(3a)','reading: theta'//cit//'.dat'
       inquire(file='theta'//cit//'.dat',exist=ex)
       if (ex) then
          open(10,file='theta'//cit//'.dat')

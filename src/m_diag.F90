@@ -2,7 +2,7 @@ module m_diag
 contains
 subroutine diag(it,rho,u,v,w,lblanking)
    use mod_dimensions
-   use m_readinfile, only : iout, iprt1, iprt2, lprtmin,  nt1
+   use m_readinfile, only : iout, iprt1, iprt2, dprt, lprtmin,  nt1
    use m_vorticity
    use m_tecout
    use m_pdfout
@@ -49,7 +49,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
    real tmp,minrho
    integer i,j,k
    call cpustart()
-   if ((mod(it, iout) == 0) .or. it == nt1 .or. it <= iprt1 .or. it >= iprt2) then
+   if ((mod(it, iout) == 0) .or. it == nt1 .or. ((it <= iprt1 .or. it >= iprt2).and. mod(it,dprt) == 0)) then
 
 
 

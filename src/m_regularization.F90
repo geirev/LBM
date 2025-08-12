@@ -1,7 +1,7 @@
 module m_regularization
 contains
 
-subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
+subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
@@ -26,8 +26,6 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
    real, intent(in)       :: w(nx,ny,nz)
    real, intent(in)       :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
-   integer, intent(in)   :: it
-   integer, intent(in)   :: nt1
 #ifdef _CUDA
    attributes(device) :: u
    attributes(device) :: v
@@ -51,6 +49,7 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=5
+   logical :: lblas=.false.
 
 ! Define your dimensions
    integer :: tx, ty, tz, bx, by, bz
@@ -130,31 +129,44 @@ subroutine regularization(f, feq, u, v, w, A1_2, A1_3, vel, it, nt1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Rfneq from \citet{fen21a}, as defined in Eq. (34)
-!              call dgemv('t', 9,27,inv2cs4,H2, 9,A1_2,1,0.0,f(1,i,j,k),1)
-!              call dgemv('t',27,27,inv6cs6,H3,27,A1_3,1,1.0,f(1,i,j,k),1)
-!              f(:,i,j,k)=weights(:)*f(:,i,j,k)
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=ntz; bz=(nz+tz-1)/tz
+      if (lblas) then
+         do k=1,nz
+         do j=1,ny
+         do i=1,nx
+#ifdef DOUBLE_PRECISION
+            call dgemv('t', 9,27,inv2cs4,H2, 9,A1_2,1,0.0,f(1,i,j,k),1)
+            call dgemv('t',27,27,inv6cs6,H3,27,A1_3,1,1.0,f(1,i,j,k),1)
+#else
+            call sgemv('t', 9,27,inv2cs4,H2, 9,A1_2,1,0.0,f(1,i,j,k),1)
+            call sgemv('t',27,27,inv6cs6,H3,27,A1_3,1,1.0,f(1,i,j,k),1)
 #endif
-      call reg_2ord_kernel&
-#ifdef _CUDA
-        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-        &(f, A1_2, H2, nx, ny, nz, nl)
+         enddo
+         enddo
+         enddo
+      else
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
-      tx=ntx; bx=(nx+2+tx-1)/tx
-      ty=nty; by=(ny+2+ty-1)/ty
-      tz=ntz; bz=(nz+2+tz-1)/tz
+         tx=ntx; bx=(nx+tx-1)/tx
+         ty=nty; by=(ny+ty-1)/ty
+         tz=ntz; bz=(nz+tz-1)/tz
 #endif
-      call reg_3ord_kernel&
+         call reg_2ord_kernel&
 #ifdef _CUDA
-        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, A1_3, H3, nx+2, ny+2, nz+2, nl)
+           &(f, A1_2, H2, nx, ny, nz, nl)
+
+#ifdef _CUDA
+         tx=ntx; bx=(nx+2+tx-1)/tx
+         ty=nty; by=(ny+2+ty-1)/ty
+         tz=ntz; bz=(nz+2+tz-1)/tz
+#endif
+         call reg_3ord_kernel&
+#ifdef _CUDA
+           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+           &(f, A1_3, H3, nx+2, ny+2, nz+2, nl)
+      endif
 
 
 

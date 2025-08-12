@@ -222,6 +222,8 @@ m_fequilscalar.o:      MODEL.CPP
 m_fequilscal.o:      makefile
 m_fequilscal.o:      mod_dimensions.o
 m_fequilscal.o:      MODEL.CPP
+m_gpu_meminfo.o:      makefile
+m_gpu_meminfo.o:      MODEL.CPP
 m_inipert.o:      makefile
 m_inipert.o:      mod_dimensions.o
 m_inipert.o:      MODEL.CPP

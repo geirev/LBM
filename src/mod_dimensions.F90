@@ -6,9 +6,9 @@ module mod_dimensions
 #endif
 
 !windfarm
-!   integer, parameter :: nx = 928          ! 928 resolution x-dir (east)
-!   integer, parameter :: ny = 96           ! resolution y-dir (north)
-!   integer, parameter :: nz = 96           ! resolution z-dir (up)
+ !  integer, parameter :: nx = 600         !928          ! 928 resolution x-dir (east)
+ !  integer, parameter :: ny = 96          ! resolution y-dir (north)
+ !  integer, parameter :: nz = 96          ! resolution z-dir (up)
 
 !city
    integer, parameter :: nx = 200          ! 928 resolution x-dir (east)

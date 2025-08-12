@@ -49,6 +49,7 @@ F90SOURCE = \
 	m_fequil3.F90\
 	m_fequilscalar.F90\
 	m_fequilscal.F90\
+	m_gpu_meminfo.F90\
 	m_inipert.F90\
 	m_initurbulence.F90\
 	m_macrovars.F90\

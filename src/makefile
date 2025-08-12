@@ -44,7 +44,12 @@ endif
 F77FLG =
 F90FLG =
 
-LIBS =  -lblas -llapack
+ifdef CUDA
+LIBS =  -lcublas
+else
+LIBS =  -lblas
+endif
+
 ifdef DP
 LIBS+= -lfftw3
 else

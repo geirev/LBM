@@ -1,6 +1,7 @@
 program LatticeBoltzmann
 #ifdef _CUDA
    use cudafor
+   use m_gpu_meminfo
 #endif
    use m_rhotest
    use mod_dimensions
@@ -131,6 +132,9 @@ program LatticeBoltzmann
    integer ip,jp,kp
 
    logical, parameter :: debug=.false.
+#ifdef _CUDA
+   integer(c_size_t) :: free_mem, total_mem
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
@@ -153,8 +157,10 @@ program LatticeBoltzmann
    print*, "Single precision code"
 #endif
 
+#ifdef _CUDA
+   call gpu_meminfo('ini')
+#endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
    call cpustart()
    call hermite_polynomials()
 
@@ -227,7 +233,7 @@ program LatticeBoltzmann
 
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel)
       call boundarycond(feq,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -257,11 +263,11 @@ program LatticeBoltzmann
 ! Restart from restart file
       call readrestart(nt0,f,theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,f)
-
 ! To recover initial tau
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it,nt1)
-      call regularization(f, feq, u, v, w, A2, A3, vel,it,nt1)
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it,nt1)
+      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+      call boundarycond(feq,uvel_d)
+      call regularization(f, feq, u, v, w, A2, A3, vel)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -269,9 +275,7 @@ program LatticeBoltzmann
       do k=0,nz+1
       do j=0,ny+1
       do i=0,nx+1
-         do l=1,nl
-            f(:,i,j,k)=feq(:,i,j,k)+f(:,i,j,k)
-         enddo
+         f(:,i,j,k)=feq(:,i,j,k)+f(:,i,j,k)
       enddo
       enddo
       enddo
@@ -284,20 +288,8 @@ program LatticeBoltzmann
 ! Simulation Main Loop
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) then
-!          istat=cudaMemcpy(tmptau, tau(nx/2,ny/2,nz/2), 8, cudaMemcpyDeviceToHost)
-!         print '(a)','x'
-!          tmptau = work_h(nx/2,ny/2,nz/2)
-!         print '(a)','Y'
-!         work_h=u;   tmpu   = sum(work_h(1,:,:))/real(ny*nz)
-!         print '(a)','Z'
-!         work_h=rho; tmprho = sum(work_h(1,:,:))/real(ny*nz)
-!         print '(a)','A'
          write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='yes')'Iteration:', it,                     &
                                                             ' Time:'  ,real(it)*p2l%time,' s.'
-!                                                            ' uinave:',tmpu,                      &
-!                                                            ' rinave:',tmprho,                    &
-                                                             !' tau:'   ,tmptau
-          !deallocate(work_h)
       endif
 
 ! start with f,rho,u,v,w
@@ -310,14 +302,14 @@ program LatticeBoltzmann
       if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w, A2, A3, vel,it, nt1);               if (debug) call rhotest(feq,rho,'fequil')
+      call fequil3(feq,rho,u,v,w, A2, A3, vel);               if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call regularization(f, feq, u, v, w, A2, A3, vel,it, nt1)
+      call regularization(f, feq, u, v, w, A2, A3, vel)
 
 
 ! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta, it, nt1)
+      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau);                                     if (debug) call rhotest(feq,rho,'collisions')

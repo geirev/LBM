@@ -1,7 +1,7 @@
 module m_fequil3
 contains
 
-subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
+subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile
@@ -19,8 +19,6 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
    real, intent(in)      :: u(nx,ny,nz)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
-   integer, intent(in)   :: it
-   integer, intent(in)   :: nt1
    real, intent(out)     :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: rho
@@ -94,6 +92,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  2nd order equilibrium distribution
+!!!            call dgemv('n', 27,9,inv2cs4,H2, 27,A0_2,1,1.0,feq(1,i,j,k),1)
 
 #ifdef _CUDA
       tx=ntx; bx=(nx+2+tx-1)/tx
@@ -105,6 +104,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
         &(feq, H2, A0_2, nx+2, ny+2, nz+2, nl)
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  3nd order equilibrium distribution
@@ -135,6 +135,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel, it, nt1)
 #endif
         &(feq, H3, A0_3, nx+2, ny+2, nz+2, nl)
 
+!!!!  call dgemv('n',27,27,inv6cs6,H3,27,A0_3,1,1.0,feq(1,i,j,k),1)
    endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! scaling f by the weights

@@ -23,9 +23,9 @@ contains
    if (i > nx2-2 .or. j > ny2-2 .or. k > nz2-2) return
 #else
 !$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, l, p, q, r) SHARED(f, H3, A1_3, nx2, ny2, nz2, nl)
-   do k=1,nz-2
-   do j=1,ny-2
-   do i=1,nx-2
+   do k=1,nz2-2
+   do j=1,ny2-2
+   do i=1,nx2-2
 #endif
       do l=2,nl
          do r=1,3

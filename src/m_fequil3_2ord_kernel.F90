@@ -4,15 +4,15 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine fequil3_2ord_kernel(feq, H2, A0_2, nx2, ny2, nz2, nl)
+   subroutine fequil3_2ord_kernel(feq, H2, A0_2, nx, ny, nz, nl)
 #ifdef _CUDA
    use cudafor
 #endif
    implicit none
-   integer, value      :: nx2, ny2, nz2, nl
-   real, intent(inout) :: feq(nl,nx2,ny2,nz2)
+   integer, value      :: nx, ny, nz, nl
+   real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)
    real, intent(in)    :: H2(3,3,nl)
-   real, intent(in)    :: A0_2(3,3,nx2-2,ny2-2,nz2-2)
+   real, intent(in)    :: A0_2(3,3,nx,ny,nz)
    integer :: i, j, k, l, q, p
 #ifdef _CUDA
    attributes(device) :: feq
@@ -21,19 +21,19 @@ contains
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
-   if (i < 2 .or. i > nx2-1) return
-   if (j < 2 .or. j > ny2-1) return
-   if (k < 2 .or. k > nz2-1) return
+   if (i > nx) return
+   if (j > ny) return
+   if (k > nz) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(feq, H2, A0_2, nx2, ny2, nz2, nl)
-   do k=2,nz2-1
-   do j=2,ny2-1
-   do i=2,nx2-1
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q) SHARED(feq, H2, A0_2, nx, ny, nz, nl)
+   do k=1,nz
+   do j=1,ny
+   do i=1,nz
 #endif
       do l=1,nl
          do q=1,3
          do p=1,3
-            feq(l,i,j,k)=feq(l,i,j,k) + H2(p,q,l)*A0_2(p,q,i-1,j-1,k-1)
+            feq(l,i+1,j+1,k+1)=feq(l,i+1,j+1,k+1) + H2(p,q,l)*A0_2(p,q,i,j,k)
          enddo
          enddo
       enddo

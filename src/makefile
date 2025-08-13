@@ -27,7 +27,8 @@ FFLAGS+= -DDOUBLE_PRECISION -r8
 endif
 
 ifdef CUDA
-FFLAGS+=  -gpu=lineinfo  -gpu=ccall -cuda
+FFLAGS+=  -gpu=lineinfo  -gpu=cc75,unroll -Minfo=accel -cuda
+#FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -cuda
 LINKFLAGS+= -cuda
 endif
 

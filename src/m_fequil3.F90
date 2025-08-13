@@ -95,15 +95,15 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
 !!!            call dgemv('n', 27,9,inv2cs4,H2, 27,A0_2,1,1.0,feq(1,i,j,k),1)
 
 #ifdef _CUDA
-      tx=ntx; bx=(nx+2+tx-1)/tx
-      ty=nty; by=(ny+2+ty-1)/ty
-      tz=ntz; bz=(nz+2+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call fequil3_2ord_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(feq, H2, A0_2, nx+2, ny+2, nz+2, nl)
+        &(feq, H2, A0_2, nx, ny, nz, nl)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -125,9 +125,9 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
-      tx=ntx; bx=(nx+2+tx-1)/tx
-      ty=nty; by=(ny+2+ty-1)/ty
-      tz=ntz; bz=(nz+2+tz-1)/tz
+      tx=ntx; bx=(nx+tx-1)/tx
+      ty=nty; by=(ny+ty-1)/ty
+      tz=ntz; bz=(nz+tz-1)/tz
 #endif
       call fequil3_3ord_kernel&
 #ifdef _CUDA

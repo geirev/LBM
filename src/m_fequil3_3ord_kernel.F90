@@ -18,9 +18,9 @@ contains
    attributes(device) :: feq
    attributes(device) :: H3
    attributes(device) :: A0_3
-   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
-   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
-   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
+   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x +1
+   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y +1
+   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z +1
    if (i < 2 .or. i > nx2-1) return
    if (j < 2 .or. j > ny2-1) return
    if (k < 2 .or. k > nz2-1) return
@@ -30,7 +30,10 @@ contains
    do j=2,ny2-1
    do i=2,nx2-1
 #endif
+!! !$CUF UNROLL
+!dir$ unroll
       do l=2,nl
+!dir$ unroll
          do r=1,3
          do q=1,3
          do p=1,3

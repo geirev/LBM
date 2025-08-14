@@ -20,15 +20,15 @@ subroutine drift(f,feq)
    call cpustart()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
-   tx=ntx; bx=(nx+2+tx-1)/tx
-   ty=nty; by=(ny+2+ty-1)/ty
-   tz=ntz; bz=(nz+2+tz-1)/tz
+   tx=ntx; bx=(nx+tx-1)/tx
+   ty=nty; by=(ny+ty-1)/ty
+   tz=ntz; bz=(nz+tz-1)/tz
 #endif
    call drift_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f,feq, nx+2, ny+2, nz+2, nl, cxs, cys, czs)
+        &(f,feq, nx, ny, nz, nl, cxs, cys, czs)
 !@cuf istat = cudaDeviceSynchronize()
    call cpufinish(icpu)
 

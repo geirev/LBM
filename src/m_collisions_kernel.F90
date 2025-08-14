@@ -3,32 +3,32 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine collisions_kernel(feq, f, tau, nx2, ny2, nz2, nl)
+   subroutine collisions_kernel(feq, f, tau, nx, ny, nz, nl)
 #ifdef _CUDA
    use cudafor
 #endif
    implicit none
-   integer, value      :: nx2, ny2, nz2, nl
-   real, intent(inout) :: feq(nl,nx2,ny2,nz2)
-   real, intent(in)    :: f(nl,nx2,ny2,nz2)
-   real, intent(in)    :: tau(nx2-2,ny2-2,nz2-2)
+   integer, value      :: nx, ny, nz, nl
+   real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)
+   real, intent(in)    :: f(nl,nx+2,ny+2,nz+2)
+   real, intent(in)    :: tau(nx,ny,nz)
    integer :: i, j, k, l
    real fac
 #ifdef _CUDA
    attributes(device) :: feq
    attributes(device) :: f
    attributes(device) :: tau
-   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
-   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
-   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
-   if (i < 2 .or. i > nx2-1) return
-   if (j < 2 .or. j > ny2-1) return
-   if (k < 2 .or. k > nz2-1) return
+   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x + 1
+   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y + 1
+   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z + 1
+   if (i > nx+1) return
+   if (j > ny+1) return
+   if (k > nz+1) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k,fac) SHARED(f, feq, tau, nx2, ny2, nz2, nl)
-   do k=2,nz2-1
-   do j=2,ny2-1
-   do i=2,nx2-1
+!$OMP PARALLEL DO PRIVATE(i,j,k,fac) SHARED(f, feq, tau, nx, ny, nz, nl)
+   do k=2,nz+1
+   do j=2,ny+1
+   do i=2,nx+1
 #endif
       fac=1.0-1.0/tau(i-1,j-1,k-1)
 !      do l=1,nl

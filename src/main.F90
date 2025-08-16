@@ -1,8 +1,8 @@
 program LatticeBoltzmann
 #ifdef _CUDA
    use cudafor
-   use m_gpu_meminfo
 #endif
+   use m_gpu_meminfo
    use m_rhotest
    use mod_dimensions
    use mod_D3Q27setup

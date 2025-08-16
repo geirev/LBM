@@ -9,8 +9,8 @@ contains
 #endif
    implicit none
    integer, value :: nx2, ny2, nz2, nl
-   real, device, contiguous, intent(inout) :: f(nl, nx2, ny2, nz2)
-   real, device, contiguous, intent(in)    :: feq(nl, nx2, ny2, nz2)
+   real, contiguous, intent(inout) :: f(nl, nx2, ny2, nz2)
+   real, contiguous, intent(in)    :: feq(nl, nx2, ny2, nz2)
    integer :: i, j, k, l
 #ifdef _CUDA
    attributes(device) :: f

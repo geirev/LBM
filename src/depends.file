@@ -22,6 +22,7 @@ main.o:      m_density.o
 main.o:      m_diag.o
 main.o:      m_drift.o
 main.o:      m_fequil3.o
+main.o:      m_gpu_meminfo.o
 main.o:      m_inipert.o
 main.o:      m_initurbulence.o
 main.o:      m_macrovars.o

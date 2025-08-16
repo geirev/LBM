@@ -103,7 +103,7 @@ subroutine fequil3(feq, rho, u, v, w, A0_2, A0_3, vel)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(feq, H2, A0_2, nx, ny, nz, nl)
+        &(feq, H2, A0_2, nx+2, ny+2, nz+2, nl)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

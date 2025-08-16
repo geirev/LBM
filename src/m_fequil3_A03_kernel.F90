@@ -27,15 +27,15 @@ contains
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
    if (i > nx .or. j > ny .or. k > nz) return
+   ratio = inv6cs6 / inv2cs4
 #else
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, p, q) SHARED(vel, rho, inv6cs6, A0_3, nx, ny, nz)
+   ratio = inv6cs6 / inv2cs4
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, p, q, vratio)&
+!$OMP                         SHARED(vel, rho, inv2cs4, inv6cs6, ratio, A0_2, A0_3, nx, ny, nz)
    do k=1,nz
    do j=1,ny
    do i=1,nx
 #endif
-      ! compute ratio once (per call; constant) - compiler may hoist it, but explicit is clear
-      ratio = inv6cs6 / inv2cs4
-
       ! compute A0_3 using A0_2 to save arithmetic
       do r=1,3
       vratio = vel(r,i,j,k) * ratio        ! combine vel(r) with ratio to 1 value

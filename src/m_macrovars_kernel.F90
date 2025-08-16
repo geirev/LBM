@@ -38,7 +38,7 @@ contains
    if (j > ny2-2) return
    if (k > nz2-2) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f, cxs, cys, czs, nz2, ny2, nx2, nl )
    do k=1,nz2-2
    do j=1,ny2-2
    do i=1,nx2-2

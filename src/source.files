@@ -90,11 +90,7 @@ F90SOURCE = \
 	m_uvelshear.F90\
 	m_velocity.F90\
 	m_vorticity.F90\
-	m_vreman_alpha_kernel.F90\
-	m_vreman_alphamag_kernel.F90\
-	m_vreman_Bbeta_kernel.F90\
-	m_vreman_beta_kernel.F90\
 	m_vreman.F90\
-	m_vreman_tau_kernel.F90\
+	m_vreman_kernel.F90\
 	m_wtime.F90
 

@@ -12,10 +12,9 @@ LD = pgf90   #gfortran
 F90 = pgf90   #gfortran
 F77 = pgf90   #gfortran
 
-FFLAGS = -c -O2 -g -lineinfo \
+FFLAGS = -c -O2 -g -C -ffpe-trap=invalid -lineinfo \
       -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
       -Mlarge_arrays -traceback -Ktrap=fp
-
 LINKFLAGS =
 
 ifdef D3Q19

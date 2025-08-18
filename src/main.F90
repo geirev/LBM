@@ -95,20 +95,6 @@ program LatticeBoltzmann
    attributes(device) :: A3
 #endif
 
-! Vreman arrays
-   real eddyvisc(nx,ny,nz)
-   real Bbeta(nx,ny,nz)
-   real alphamag(nx,ny,nz)
-   real alpha(3,3,nx,ny,nz)
-   real beta(3,3,nx,ny,nz)
-#ifdef _CUDA
-   attributes(device) :: alpha
-   attributes(device) :: beta
-   attributes(device) :: eddyvisc
-   attributes(device) :: Bbeta
-   attributes(device) :: alphamag
-#endif
-
 ! Stochastic input field on inflow boundary
    real uu(ny,nz,0:nrturb)
    real vv(ny,nz,0:nrturb)
@@ -264,7 +250,7 @@ program LatticeBoltzmann
       call fequil3(feq,rho,u,v,w, A2, A3, vel)
       call boundarycond(feq,uvel_d)
       call regularization(f, feq, u, v, w, A2, A3, vel)
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
+      call vreman(f, tau)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -306,7 +292,7 @@ program LatticeBoltzmann
 
 
 ! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f, tau, eddyvisc ,Bbeta ,alphamag ,alpha ,beta)
+      call vreman(f, tau)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau);                                     if (debug) call rhotest(feq,rho,'collisions')

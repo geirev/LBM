@@ -3,7 +3,6 @@ actuatorline	m_actuatorline.F90	/^module
 airfoil	m_airfoil.F90	/^module
 applyturbines	m_applyturbines.F90	/^module
 applyturbulence	m_applyturbulence.F90	/^module
-assigncvel	m_assigncvel.F90	/^module
 averaging	m_averaging.F90	/^module
 bilin	m_bilin.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
@@ -65,7 +64,6 @@ m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_applyturbines	m_applyturbines.F90	/^module
 m_applyturbulence	m_applyturbulence.F90	/^module
-m_assigncvel	m_assigncvel.F90	/^module
 m_averaging	m_averaging.F90	/^module
 m_bilin	m_bilin.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
@@ -147,11 +145,7 @@ m_uvelshear	m_uvelshear.F90	/^module
 m_velocity	m_velocity.F90	/^module
 m_vorticity	m_vorticity.F90	/^module
 m_vreman	m_vreman.F90	/^module
-m_vreman_alphamag_kernel	m_vreman_alphamag_kernel.F90	/^module
-m_vreman_alpha_kernel	m_vreman_alpha_kernel.F90	/^module
-m_vreman_Bbeta_kernel	m_vreman_Bbeta_kernel.F90	/^module
-m_vreman_beta_kernel	m_vreman_beta_kernel.F90	/^module
-m_vreman_tau_kernel	m_vreman_tau_kernel.F90	/^module
+m_vreman_kernel	m_vreman_kernel.F90	/^module
 m_wtime	m_wtime.F90	/^module
 nrel5mw	mod_nrel5mw.F90	/^module
 nrelliftdrag	m_nrelliftdrag.F90	/^module
@@ -188,9 +182,5 @@ uvelshear	m_uvelshear.F90	/^module
 velocity	m_velocity.F90	/^module
 vorticity	m_vorticity.F90	/^module
 vreman	m_vreman.F90	/^module
-vreman_alphamag_kernel	m_vreman_alphamag_kernel.F90	/^module
-vreman_alpha_kernel	m_vreman_alpha_kernel.F90	/^module
-vreman_Bbeta_kernel	m_vreman_Bbeta_kernel.F90	/^module
-vreman_beta_kernel	m_vreman_beta_kernel.F90	/^module
-vreman_tau_kernel	m_vreman_tau_kernel.F90	/^module
+vreman_kernel	m_vreman_kernel.F90	/^module
 wtime	m_wtime.F90	/^module

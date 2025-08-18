@@ -40,11 +40,6 @@ F90SOURCE = \
 	m_diag.F90\
 	m_drift.F90\
 	m_drift_kernel.F90\
-	m_fequil3_1ord_kernel.F90\
-	m_fequil3_2ord_kernel.F90\
-	m_fequil3_3ord_kernel.F90\
-	m_fequil3_A02_kernel.F90\
-	m_fequil3_A03_kernel.F90\
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\
 	m_fequilscalar.F90\
@@ -65,15 +60,8 @@ F90SOURCE = \
 	m_pseudo2D.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
-	m_reg_2ord_kernel.F90\
-	m_reg_3ord_kernel.F90\
-	m_reg_A1_2_kernel.F90\
-	m_reg_A1_3_kernel.F90\
-	m_reg_cp_vel_kernel.F90\
-	m_reg_scaleA1_kernel.F90\
-	m_reg_scalef_kernel.F90\
-	m_reg_subtract_feq_kernel.F90\
 	m_regularization.F90\
+	m_regularization_kernel.F90\
 	m_rhotest.F90\
 	m_saverestart.F90\
 	m_seedmanagement.F90\

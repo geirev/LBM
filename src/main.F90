@@ -85,16 +85,6 @@ program LatticeBoltzmann
    attributes(device) :: rho
 #endif
 
-! Hermite coefficients fequil and regularization
-   real :: vel(3,nx,ny,nz)
-   real :: A2(3,3,nx,ny,nz)
-   real :: A3(3,3,3,nx,ny,nz)
-#ifdef _CUDA
-   attributes(device) :: vel
-   attributes(device) :: A2
-   attributes(device) :: A3
-#endif
-
 ! Stochastic input field on inflow boundary
    real uu(ny,nz,0:nrturb)
    real vv(ny,nz,0:nrturb)
@@ -249,7 +239,7 @@ program LatticeBoltzmann
 ! To recover initial tau
       call fequil3(feq,rho,u,v,w)
       call boundarycond(feq,uvel_d)
-      call regularization(f, feq, u, v, w, A2, A3, vel)
+      call regularization(f, feq, u, v, w)
       call vreman(f, tau)
 
 #ifdef _CUDA
@@ -288,7 +278,7 @@ program LatticeBoltzmann
       call fequil3(feq,rho,u,v,w);               if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call regularization(f, feq, u, v, w, A2, A3, vel)
+      call regularization(f, feq, u, v, w)
 
 
 ! [tau] = vreman[f] [f=Rneqf]

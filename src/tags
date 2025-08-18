@@ -41,11 +41,6 @@ dimensions	mod_dimensions.F90	/^module
 drift	m_drift.F90	/^module
 drift_kernel	m_drift_kernel.F90	/^module
 fequil3	m_fequil3.F90	/^module
-fequil3_1ord_kernel	m_fequil3_1ord_kernel.F90	/^module
-fequil3_2ord_kernel	m_fequil3_2ord_kernel.F90	/^module
-fequil3_3ord_kernel	m_fequil3_3ord_kernel.F90	/^module
-fequil3_A02_kernel	m_fequil3_A02_kernel.F90	/^module
-fequil3_A03_kernel	m_fequil3_A03_kernel.F90	/^module
 fequil3_kernel	m_fequil3_kernel.F90	/^module
 fequilscal	m_fequilscal.F90	/^module
 fequilscalar	m_fequilscalar.F90	/^module
@@ -101,11 +96,6 @@ m_diag	m_diag.F90	/^module
 m_drift	m_drift.F90	/^module
 m_drift_kernel	m_drift_kernel.F90	/^module
 m_fequil3	m_fequil3.F90	/^module
-m_fequil3_1ord_kernel	m_fequil3_1ord_kernel.F90	/^module
-m_fequil3_2ord_kernel	m_fequil3_2ord_kernel.F90	/^module
-m_fequil3_3ord_kernel	m_fequil3_3ord_kernel.F90	/^module
-m_fequil3_A02_kernel	m_fequil3_A02_kernel.F90	/^module
-m_fequil3_A03_kernel	m_fequil3_A03_kernel.F90	/^module
 m_fequil3_kernel	m_fequil3_kernel.F90	/^module
 m_fequilscal	m_fequilscal.F90	/^module
 m_fequilscalar	m_fequilscalar.F90	/^module
@@ -121,6 +111,7 @@ m_pseudo2D	m_pseudo2D.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
 m_regularization	m_regularization.F90	/^module
+m_regularization_kernel	m_regularization_kernel.F90	/^module
 m_reg_2ord_kernel	m_reg_2ord_kernel.F90	/^module
 m_reg_3ord_kernel	m_reg_3ord_kernel.F90	/^module
 m_reg_A1_2_kernel	m_reg_A1_2_kernel.F90	/^module
@@ -157,6 +148,7 @@ pseudo2D	m_pseudo2D.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module
 regularization	m_regularization.F90	/^module
+regularization_kernel	m_regularization_kernel.F90	/^module
 reg_2ord_kernel	m_reg_2ord_kernel.F90	/^module
 reg_3ord_kernel	m_reg_3ord_kernel.F90	/^module
 reg_A1_2_kernel	m_reg_A1_2_kernel.F90	/^module

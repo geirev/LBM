@@ -5,7 +5,6 @@ F90SOURCE = \
 	m_airfoil.F90\
 	m_applyturbines.F90\
 	m_applyturbulence.F90\
-	m_assigncvel.F90\
 	m_averaging.F90\
 	m_bilin.F90\
 	m_boundarycond.F90\

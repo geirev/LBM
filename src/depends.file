@@ -11,7 +11,6 @@ main.o:      m_airfoil.o
 main.o:      makefile
 main.o:      m_applyturbines.o
 main.o:      m_applyturbulence.o
-main.o:      m_assigncvel.o
 main.o:      m_averaging.o
 main.o:      m_boundarycond.o
 main.o:      m_city.o
@@ -61,8 +60,6 @@ m_applyturbulence.o:      MODEL.CPP
 m_applyturbulence.o:      m_readinfile.o
 m_applyturbulence.o:      m_turbulenceforcing.o
 m_applyturbulence.o:      m_wtime.o
-m_assigncvel.o:      makefile
-m_assigncvel.o:      MODEL.CPP
 m_averaging.o:      makefile
 m_averaging.o:      mod_dimensions.o
 m_averaging.o:      MODEL.CPP

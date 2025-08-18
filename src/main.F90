@@ -8,7 +8,6 @@ program LatticeBoltzmann
    use mod_D3Q27setup
    use mod_shapiro
    use m_readinfile
-   use m_assigncvel
    use m_diag
    use m_averaging
    use m_airfoil
@@ -54,7 +53,7 @@ program LatticeBoltzmann
    attributes(device) :: feq
 #endif
 
-   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)       ! blanking boundary and object grid points
+   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)       ! blanking solids grid points
 #ifdef _CUDA
    attributes(device) :: lblanking
 #endif
@@ -73,8 +72,6 @@ program LatticeBoltzmann
 #ifdef _CUDA
    attributes(device) :: tau
 #endif
-   real, allocatable :: work_h(:,:,:)
-   real tmptau,tmpu,tmprho
 
 ! Fluid variables
    real    :: u(nx,ny,nz)                           ! x component of fluid velocity

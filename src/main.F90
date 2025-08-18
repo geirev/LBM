@@ -216,7 +216,7 @@ program LatticeBoltzmann
 
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+      call fequil3(feq,rho,u,v,w)
       call boundarycond(feq,uvel_d)
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -247,7 +247,7 @@ program LatticeBoltzmann
       call readrestart(nt0,f,theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,f)
 ! To recover initial tau
-      call fequil3(feq,rho,u,v,w, A2, A3, vel)
+      call fequil3(feq,rho,u,v,w)
       call boundarycond(feq,uvel_d)
       call regularization(f, feq, u, v, w, A2, A3, vel)
       call vreman(f, tau)
@@ -285,7 +285,7 @@ program LatticeBoltzmann
       if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w, A2, A3, vel);               if (debug) call rhotest(feq,rho,'fequil')
+      call fequil3(feq,rho,u,v,w);               if (debug) call rhotest(feq,rho,'fequil')
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
       call regularization(f, feq, u, v, w, A2, A3, vel)

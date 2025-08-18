@@ -201,12 +201,15 @@ m_fequil3_A02_kernel.o:      makefile
 m_fequil3_A02_kernel.o:      MODEL.CPP
 m_fequil3_A03_kernel.o:      makefile
 m_fequil3_A03_kernel.o:      MODEL.CPP
+m_fequil3_kernel.o:      makefile
+m_fequil3_kernel.o:      MODEL.CPP
 m_fequil3.o:      makefile
 m_fequil3.o:      m_fequil3_1ord_kernel.o
 m_fequil3.o:      m_fequil3_2ord_kernel.o
 m_fequil3.o:      m_fequil3_3ord_kernel.o
 m_fequil3.o:      m_fequil3_A02_kernel.o
 m_fequil3.o:      m_fequil3_A03_kernel.o
+m_fequil3.o:      m_fequil3_kernel.o
 m_fequil3.o:      mod_D3Q27setup.o
 m_fequil3.o:      mod_dimensions.o
 m_fequil3.o:      MODEL.CPP

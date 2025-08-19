@@ -39,8 +39,8 @@ contains
    !eps = sqrt(tiny(1.0))
 #else
    !eps = sqrt(tiny(1.0))
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q, alpha, alphamag, beta, Bbeta, kinevisc, eddyvisc, tmp, eps)&
-!$OMP                           SHARED(f, H2, nl, nx, ny, nz)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, p, q, alpha, alphamag, beta, Bbeta, eddyvisc, tmp)&
+!$OMP                           SHARED(f, H2, nl, nx, ny, nz, const, kinevisc, tau, eps)
    do k=1,nz
    do j=1,ny
    do i=1,nx

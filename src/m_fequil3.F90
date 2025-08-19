@@ -7,13 +7,6 @@ subroutine fequil3(feq, rho, u, v, w)
    use m_readinfile
    use m_wtime
    use m_fequil3_kernel
-   use m_reg_cp_vel_kernel
-   use m_fequil3_A02_kernel
-   use m_fequil3_A03_kernel
-   use m_fequil3_1ord_kernel
-   use m_fequil3_2ord_kernel
-   use m_fequil3_3ord_kernel
-   use m_reg_scalef_kernel
 
    implicit none
    real, intent(in)      :: rho(nx,ny,nz)
@@ -27,17 +20,15 @@ subroutine fequil3(feq, rho, u, v, w)
    attributes(device) :: v
    attributes(device) :: w
    attributes(device) :: feq
+   integer :: tx, ty, tz, bx, by, bz
 #endif
 
-   integer :: i, j, k, l, p, q, r, ia
 
    real, parameter :: inv1cs2 = 1.0/(cs2)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=4
-   real tmp
-   integer :: tx, ty, tz, bx, by, bz
 
 
    call cpustart()

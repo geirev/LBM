@@ -40,9 +40,11 @@ subroutine boundarycond(f,uvel)
    attributes(device) :: f
    attributes(device) :: uvel
 #endif
-   integer i,j,k,l,m,ka,ip,ix,jy,kz
+   !integer i,j,k,l,m
    integer, parameter :: icpu=11
+#ifdef _CUDA
    integer :: tx, ty, tz, bx, by, bz
+#endif
 
    call cpustart()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -72,7 +74,7 @@ subroutine boundarycond(f,uvel)
    if ((ibnd==11).or.(ibnd==12)) then
       stop 'No-slip bounce-back condition for i=1 not implemented'
    elseif ((ibnd==11).or.(ibnd==21)) then
-      stop' No-slip bounce-back condition for i=nx not implemented'
+      stop 'No-slip bounce-back condition for i=nx not implemented'
    elseif ((ibnd==22).or.(ibnd==21)) then
       stop 'Free-slip bounce-back condition for i=1 not implemented'
    elseif ((ibnd==22).or.(ibnd==12)) then

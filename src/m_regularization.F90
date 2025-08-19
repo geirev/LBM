@@ -17,7 +17,7 @@ subroutine regularization(f, feq, u, v, w)
    real, intent(in)       :: u(nx,ny,nz)
    real, intent(in)       :: v(nx,ny,nz)
    real, intent(in)       :: w(nx,ny,nz)
-   real, intent(in)       :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: u
@@ -25,18 +25,15 @@ subroutine regularization(f, feq, u, v, w)
    attributes(device) :: w
    attributes(device) :: f
    attributes(device) :: feq
+   integer :: tx, ty, tz, bx, by, bz
 #endif
 
-   integer :: i, j, k, l, p, q, r
 
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=5
-   logical :: lblas=.false.
 
-! Define your dimensions
-   integer :: tx, ty, tz, bx, by, bz
 
    call cpustart()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

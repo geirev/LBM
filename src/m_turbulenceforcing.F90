@@ -70,13 +70,12 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    attributes(device) :: ww
 #endif
 
-   integer lit,i,j,k,ip,l,i1,i2
+   integer lit,j,k,ip,l
 #ifdef _CUDA
    type(dim3) :: grid,tblock
 #endif
 
    integer, parameter :: icpu=3
-   real :: dff(1:nl)
    call cpustart()
 
 
@@ -127,8 +126,6 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    enddo
 !$OMP END PARALLEL DO
 #endif
-!   dff(1:10)=dfeq1(1:10,1,48,48)
-!   print '(a,10g13.5)','dfeq1          :',dff(1:10)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

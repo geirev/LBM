@@ -62,7 +62,7 @@ subroutine hermite_polynomials()
    use cudafor
 #endif
    implicit none
-   integer :: l, p, q, r,ierr
+   integer :: l, p, q, r
    real :: c_h(3,nl)
    real :: delta_h(3,3)
 

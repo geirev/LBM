@@ -14,15 +14,14 @@ subroutine vreman(f, tau)
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: tau
+   integer :: tx, ty, tz, bx, by, bz
 #endif
 
    real :: const           ! c in Vreman 2004 Eq (5)
-   real :: tmp
    real :: eps
-   integer :: i, j, k, l, m, p, q
+   integer :: i, j, k
 
    integer, parameter :: icpu=6
-   integer :: tx, ty, tz, bx, by, bz
    call cpustart()
 
    if (ivreman /= 1) then

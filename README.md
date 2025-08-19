@@ -108,6 +108,16 @@ Default is compilation for single core in single precision on D3Q27 lattice.
 make -B
 ```
 
+Default is compilation for single core in single precision on D3Q27 lattice using gfortran.
+```bash
+make -B GFORTRAN=1
+```
+
+Default is compilation for OPEN-MP in single precision on D3Q27 lattice using gfortran.
+```bash
+make -B GFORTRAN=1 MP=1
+```
+
 Compilation for single core in single precision on D3Q19 lattice
 ```bash
 make -B D3Q19=1
@@ -136,7 +146,21 @@ make -B CUDA=1 DP=1 D3Q19=1
 ```
 
 Running in single precision is about twice as fast as using double precision.
-Running on the D3Q19 lattice reduces the CPU time with around 40 %
+
+Running on the D3Q19 lattice reduces the CPU time with around 40 % but seems to introduce more noise.
+
+A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain of 96x96x200 gave the following wall times:
+
+```bash
+single-core     (gfortran)  : 440 s   (make -B GFORTRAN=1)
+single-core     (nvfortran) : 315 s   (make -B)
+
+open-mp 6 cores (nvfortran) : 142 s   (make -B MP=1)
+GPU             (nvfortran) :  30 s   (make -B CUDA=1)
+```
+The simulations were run on a Lenovo ThinkPad X1 with a simple gpu card "GeForce GTX 1650 Ti Mobile".
+
+
 
 ## 4. Run the code
 

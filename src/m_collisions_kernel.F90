@@ -12,7 +12,7 @@ contains
    real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)
    real, intent(in)    :: f(nl,nx+2,ny+2,nz+2)
    real, intent(in)    :: tau(nx,ny,nz)
-   integer :: i, j, k, l
+   integer :: i, j, k !, l
    real fac
 #ifdef _CUDA
    attributes(device) :: feq

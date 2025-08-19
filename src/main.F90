@@ -41,8 +41,8 @@ program LatticeBoltzmann
    use, intrinsic :: omp_lib
    implicit none
 
-   integer, parameter :: nshapiro=4
-   real sh(0:nshapiro)
+!   integer, parameter :: nshapiro=4
+!   real sh(0:nshapiro)
 
 
 ! Main variables
@@ -98,11 +98,9 @@ program LatticeBoltzmann
 #endif
 
 
-   real, allocatable :: myturb(:,:,:)
    real :: elevation(nx,ny)=0.0
    integer i,j,k,l
    integer :: it
-   integer ip,jp,kp
 
    logical, parameter :: debug=.false.
 #ifdef _CUDA

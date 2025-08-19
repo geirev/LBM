@@ -25,7 +25,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
 
 !   character(len=200)::tecplot_fvars='i,j,k,blanking,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27'
    integer, parameter :: num_of_fvars=31
-   character(len=200) :: tecplot_maxvar='i,j,k,x,y,z,blanking,rho,u,v,w,vel,vortx,vorty,vortz,vort'
+!   character(len=200) :: tecplot_maxvar='i,j,k,x,y,z,blanking,rho,u,v,w,vel,vortx,vorty,vortz,vort'
    character(len=200) :: tecplot_minvar='i,j,k,blanking,rho,u,v,w'
    real    :: speed(nx,ny,nz)           ! absolute velocity
    real    :: vortx(nx,ny,nz)           ! fluid vorticity x-component
@@ -46,7 +46,7 @@ subroutine diag(it,rho,u,v,w,lblanking)
    logical, allocatable :: lblanking_h(:,:,:)
    integer, parameter :: icpu=14
    integer num_of_vars
-   real tmp,minrho
+   real tmp
    integer i,j,k
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. ((it <= iprt1 .or. it >= iprt2).and. mod(it,dprt) == 0)) then

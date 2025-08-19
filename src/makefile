@@ -7,14 +7,26 @@ HOME = /home/AD.NORCERESEARCH.NO/geev
 .SUFFIXES: .o .F90 .f90 .F .f .c
 
 
+ifdef GFORTRAN
+LD = gfortran
+F90 = gfortran
+F77 = gfortran
+else
+LD = pgf90
+F90 = pgf90
+F77 = pgf90
+endif
 
-LD = pgf90   #gfortran
-F90 = pgf90   #gfortran
-F77 = pgf90   #gfortran
-
-FFLAGS = -c -O2 -g -C -ffpe-trap=invalid -lineinfo \
+ifdef GFORTRAN
+# gfortran flags
+FFLAGS = -c -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
+          -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
+          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast
+else
+FFLAGS = -c -O2 -g -ffpe-trap=invalid -lineinfo \
       -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
       -Mlarge_arrays -traceback -Ktrap=fp
+endif
 LINKFLAGS =
 
 ifdef D3Q19
@@ -22,24 +34,28 @@ FFLAGS+= -DD3Q19
 endif
 
 ifdef DP
+ifdef GFORTRAN
+FFLAGS+= -DDOUBLE_PRECISION -fdefault-real-8 
+else
 FFLAGS+= -DDOUBLE_PRECISION -r8
+endif
 endif
 
 ifdef CUDA
 FFLAGS+=  -gpu=lineinfo  -gpu=cc75,unroll -Minfo=accel -cuda
-#FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -cuda
+#FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -Minfo=accel -cuda
 LINKFLAGS+= -cuda
 endif
 
 ifdef MP
+ifdef GFORTRAN
+FFLAGS+= -fopenmp -DOPEN_MP
+else
 FFLAGS+= -mp  -DOPEN_MP
 LINKFLAGS+= -fopenmp
 endif
+endif
 
-# gfortran flags
-#FFLAGS = -c -fdefault-real-8 -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
-#          -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
-#          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast -fopenmp
 
 F77FLG =
 F90FLG =

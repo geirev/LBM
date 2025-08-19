@@ -15,7 +15,7 @@ subroutine applyturbulence(f,turbulence_df,tau)
    attributes(device) :: tau
 #endif
    real tmp
-   integer ip,i,j,k,l,ii
+   integer ip,i,j,k,l
    integer, parameter :: icpu=9
    call cpustart()
    ip=iturb_pos

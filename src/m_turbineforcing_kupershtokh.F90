@@ -38,7 +38,7 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 
    integer, intent(in) :: ip, jp, kp, iradius, n
    real,    intent(in) :: cx(nl), cy(nl), cz(nl)
-   integer :: it,nt1,i1,i2
+   integer :: it,nt1
 
 #ifdef _CUDA
    attributes(device)  :: df
@@ -56,11 +56,12 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
    attributes(device)  :: cx,cy,cz
 #endif
 
-   integer i,j,k,ii
+   integer i,j,k
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting up kernel variables
 #ifdef _CUDA
+   integer ii
    type(dim3) :: grid,tblock
 
    ii = 2*ieps+1

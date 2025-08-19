@@ -15,7 +15,6 @@ contains
 
 subroutine cpustart()
    implicit none
-   integer :: loc_istat
    tstart = wtime()
 end subroutine
 
@@ -24,7 +23,6 @@ subroutine cpufinish(icpu)
    integer, intent(in) :: icpu
    real(kind(1.0D+00)) :: tend
    real(kind(1.0D+00)) :: elapsed
-   integer :: loc_istat
 
    if (icpu < 1 .or. icpu > nrtimes) then
       print *, "Error: Invalid timer index icpu = ", icpu
@@ -65,8 +63,8 @@ function wtime()
    implicit none
    integer, parameter :: rk = kind(1.0D+00)
    real(kind=rk) :: wtime
-   integer loc_istat
 #ifdef _CUDA
+   integer loc_istat
    loc_istat = cudaDeviceSynchronize()
 #endif
    call system_clock(clock_reading, clock_rate, clock_max)

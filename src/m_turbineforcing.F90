@@ -68,7 +68,7 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
 ! Returns the S_i stored in turbine_df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz,ieps
    use mod_D3Q27setup
-   use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
+   use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines
    use m_fequilscalar
    use m_actuatorline
    use m_turbineforcing_kupershtokh
@@ -91,7 +91,7 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
    real :: force_h(0:ieps,ny,nz,3)        ! work array for computing the turbine force
 
    integer :: it,nt1
-   integer i,n,j,k,l,ip,jp,kp
+   integer i,n,j,k,ip,jp,kp
    real :: u_h(ny, nz)
    real :: v_h(ny, nz)
    real :: w_h(ny, nz)
@@ -104,8 +104,6 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
    integer, parameter :: icpu=2
-   integer ierr
-   real :: dff(1:nl)
    call cpustart()
 
 ! Rotations per timestep

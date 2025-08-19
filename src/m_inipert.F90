@@ -2,7 +2,7 @@ module m_inipert
 contains
 subroutine inipert(rho,u,v,w,uvel)
    use mod_dimensions
-   use m_readinfile, only : rho0,linipert,udir
+   use m_readinfile, only : rho0,udir
    implicit none
    real, intent(inout)  :: rho(nx,ny,nz)
    real, intent(inout)  :: u(nx,ny,nz)

@@ -17,9 +17,8 @@ subroutine collisions(f,feq,tau)
    attributes(device) :: tau
    attributes(device) :: f
    attributes(device) :: feq
-#endif
-   integer i,j,k
    integer :: tx, ty, tz, bx, by, bz
+#endif
    integer, parameter :: icpu=7
 
 

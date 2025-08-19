@@ -11,8 +11,9 @@ contains
    integer, value      :: nx2, ny2, nz2, nl
    integer             :: cxs(nl),cys(nl),czs(nl)
    real, intent(inout) :: f(nl,nx2,ny2,nz2)
-   integer :: i, j, k, l, m
+   integer :: i, k, l, m
 #ifdef _CUDA
+   integer j
    attributes(device) :: f
    attributes(device) :: cxs,cys,czs
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
@@ -21,8 +22,8 @@ contains
    if (i < 2 .or. i > nx2-1) return
    if (k < 2 .or. k > nz2-1) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k, l, m) SHARED(f, cxs, cys, czs, nx2, ny2, nz2, nl)
-   do j=2,ny2-1
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, k, l, m) SHARED(f, cxs, cys, czs, nx2, ny2, nz2, nl)
+   do k=2,nz2-1
    do i=2,nx2-1
 #endif
       do l = 1, nl

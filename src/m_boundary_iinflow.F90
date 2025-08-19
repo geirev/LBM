@@ -12,7 +12,7 @@ subroutine boundary_iinflow(f,uvel)
    attributes(device) :: f
    attributes(device) :: uvel
 #endif
-   integer i,j,k,l,ka
+   integer j,k,l,ka
    real, parameter :: pi=3.1415927410125732
    real tmp
 

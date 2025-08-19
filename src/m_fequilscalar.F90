@@ -38,7 +38,6 @@ function fequilscalar(rho,u,v,w,weights,cxs,cys,czs,H2,H3) result(feq)
    real :: vel(3)
 
    real dens
-   real tmp
 
    integer l, p, q, r
 
@@ -85,7 +84,7 @@ function fequilscalar(rho,u,v,w,weights,cxs,cys,czs,H2,H3) result(feq)
       do p=1,3
       do q=1,3
       do r=1,3
-         feq(l)=feq(l) + H3(l,p,q,r)*A0_3(p,q,r)*inv6cs6
+         feq(l)=feq(l) + H3(p,q,r,l)*A0_3(p,q,r)*inv6cs6
       enddo
       enddo
       enddo

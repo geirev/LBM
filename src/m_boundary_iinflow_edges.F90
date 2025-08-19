@@ -7,7 +7,7 @@ subroutine boundary_iinflow_edges(f)
 #ifdef _CUDA
    attributes(device) :: f
 #endif
-   integer j,k,l
+   integer j,k
 
 !inflow
 #ifdef _CUDA

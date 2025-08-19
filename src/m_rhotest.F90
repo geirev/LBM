@@ -8,6 +8,7 @@ subroutine rhotest(f,rho,string)
    character(len=*),   intent(in)   :: string
    real, allocatable   :: rho_h(:,:,:)
    integer i,j,k,l
+   real x
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: rho
@@ -40,7 +41,7 @@ subroutine rhotest(f,rho,string)
    do k=1,nz
    do j=1,ny
    do i=1,nx
-      if (.not. ( (rho_h(i,j,k)==rho_h(i,j,k)) .and. (abs(rho_h(i,j,k) < huge(x))) ) ) then
+      if (.not. ( (rho_h(i,j,k)==rho_h(i,j,k)) .and. (abs(rho_h(i,j,k)) < huge(x)) )) then
          print *, "Bad value at", i,j,k,rho_h(i,j,k)
          stop
       endif

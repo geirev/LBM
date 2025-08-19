@@ -14,7 +14,7 @@ contains
    integer, intent(in) :: cxs(nl)
    integer, intent(in) :: cys(nl)
    integer, intent(in) :: czs(nl)
-   integer :: i, j, k, l
+   integer :: i, j, k
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: feq
@@ -26,7 +26,7 @@ contains
    if (j > ny+1) return
    if (k > nz+1) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k,l) SHARED(f, feq, nx, ny, nz, nl)
+!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k) SHARED(f, feq, nx, ny, nz, nl)
    do k=2,nz+1
    do j=2,ny+1
    do i=2,nx+1

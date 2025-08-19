@@ -82,7 +82,7 @@ subroutine fequilscal(feq,rho,vel,weights,cxs,cys,czs,H2,H3,ii)
       do p=1,3
       do q=1,3
       do r=1,3
-         feq(l,i,j,k)=feq(l,i,j,k) + H3(l,p,q,r)*A0_3(p,q,r)*inv6cs6
+         feq(l,i,j,k)=feq(l,i,j,k) + H3(p,q,r,l)*A0_3(p,q,r)*inv6cs6
       enddo
       enddo
       enddo

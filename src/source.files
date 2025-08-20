@@ -3,8 +3,6 @@ F90SOURCE = \
 	m_actuatorline.F90\
 	main.F90\
 	m_airfoil.F90\
-	m_applyturbines.F90\
-	m_applyturbulence.F90\
 	m_averaging.F90\
 	m_bilin.F90\
 	m_boundarycond.F90\
@@ -45,8 +43,11 @@ F90SOURCE = \
 	m_fequilscalar.F90\
 	m_fequilscal.F90\
 	m_gpu_meminfo.F90\
+	m_inflow_turbulence_apply.F90\
+	m_inflow_turbulence_compute.F90\
+	m_inflow_turbulence_forcing.F90\
+	m_inflow_turbulence_init.F90\
 	m_inipert.F90\
-	m_initurbulence.F90\
 	m_macrovars.F90\
 	m_macrovars_kernel.F90\
 	m_nrelliftdrag.F90\
@@ -73,9 +74,10 @@ F90SOURCE = \
 	m_tecfldsec.F90\
 	m_tecout.F90\
 	m_tecplot.F90\
-	m_turbineforcing.F90\
-	m_turbineforcing_kupershtokh.F90\
-	m_turbulenceforcing.F90\
+	m_turbines_apply.F90\
+	m_turbines_forcing.F90\
+	m_turbines_forcing_kupershtokh.F90\
+	m_turbines_init.F90\
 	m_uvelshear.F90\
 	m_velocity.F90\
 	m_vorticity.F90\

@@ -1,7 +1,7 @@
-module m_applyturbulence
+module m_inflow_turbulence_apply
 contains
-subroutine applyturbulence(f,turbulence_df,tau)
-   use m_turbulenceforcing, only : iturb_pos, iturb_radius
+subroutine inflow_turbulence_apply(f,turbulence_df,tau)
+   use m_inflow_turbulence_init, only : iturb_pos, iturb_radius
    use m_readinfile, only : iforce
    use mod_dimensions
    use m_wtime

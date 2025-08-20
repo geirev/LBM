@@ -1,8 +1,9 @@
-module m_applyturbines
+module m_turbines_apply
 contains
-subroutine applyturbines(f,df,tau)
+subroutine turbines_apply(f,df,tau)
    use mod_dimensions
-   use m_readinfile, only : ipos,nturbines,iforce
+   use m_turbines_init, only : ieps
+   use m_readinfile   , only : ipos,nturbines,iforce
    use m_wtime
    implicit none
    real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution

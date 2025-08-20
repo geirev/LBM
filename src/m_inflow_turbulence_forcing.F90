@@ -1,47 +1,8 @@
-module m_turbulenceforcing
-   integer, parameter, public :: iturb_pos=10
-   integer, parameter, public :: iturb_radius=2
-   real, allocatable,  public :: turbulence_df(:,:,:)
-
-! Persistent local device arrays
-   real, allocatable, private :: vel(:,:,:,:), rtmp(:,:,:)
-   real, allocatable, private :: dfeq1(:,:,:,:), dfeq2(:,:,:,:)
-   real, allocatable, private :: cx(:), cy(:), cz(:)
-
-#ifdef _CUDA
-   attributes(device) :: turbulence_df
-   attributes(device) :: vel, rtmp
-   attributes(device) :: dfeq1, dfeq2
-   attributes(device) :: cx, cy, cz
-#endif
-
+module m_inflow_turbulence_forcing
 contains
-
-subroutine init_turbulenceforcing
+subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    use mod_dimensions
-   use mod_D3Q27setup
-   implicit none
-   integer l
-
-   if (.not. allocated(turbulence_df)) allocate(turbulence_df(1:nl,1:ny,1:nz))
-   if (.not. allocated(vel))           allocate(vel(3,1,ny,nz))
-   if (.not. allocated(rtmp))          allocate(rtmp(1,ny,nz))
-   if (.not. allocated(dfeq1))         allocate(dfeq1(nl,1,ny,nz))
-   if (.not. allocated(dfeq2))         allocate(dfeq2(nl,1,ny,nz))
-   if (.not. allocated(cx))            allocate(cx(nl))
-   if (.not. allocated(cy))            allocate(cy(nl))
-   if (.not. allocated(cz))            allocate(cz(nl))
-
-   do l=1,nl
-     cx(l)=real(cxs_h(l))
-     cy(l)=real(cys_h(l))
-     cz(l)=real(czs_h(l))
-   enddo
-end subroutine init_turbulenceforcing
-
-
-subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nrturb)
-   use mod_dimensions
+   use m_inflow_turbulence_init
    use m_fequilscal
    use m_fequilscalar
 #ifdef _CUDA
@@ -55,9 +16,9 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nrturb)
    real, intent(inout)    :: u(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: v(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: w(nx,ny,nz)                       ! velocity
-   real, intent(in)       :: uu(ny,nz,0:nrturb)
-   real, intent(in)       :: vv(ny,nz,0:nrturb)
-   real, intent(in)       :: ww(ny,nz,0:nrturb)
+!   real, intent(in)       :: uu(ny,nz,0:nrturb)
+!   real, intent(in)       :: vv(ny,nz,0:nrturb)
+!   real, intent(in)       :: ww(ny,nz,0:nrturb)
    integer, intent(in)    :: it
    real, intent(in)       :: ampl
 #ifdef _CUDA
@@ -65,9 +26,9 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nrturb)
    attributes(device) :: u
    attributes(device) :: v
    attributes(device) :: w
-   attributes(device) :: uu
-   attributes(device) :: vv
-   attributes(device) :: ww
+   !attributes(device) :: uu
+   !attributes(device) :: vv
+   !attributes(device) :: ww
 #endif
 
    integer lit,j,k,ip,l

@@ -1,77 +1,14 @@
-module m_turbineforcing
-   integer, save :: iradius
-   real, save :: theta=0.0      ! start angle for turbine rotation
-
-   real, allocatable, public   :: turbine_df(:,:,:,:,:)      ! Turbine forcing used in applyturbines
-   real, allocatable, private  :: dfeq1(:,:,:,:)
-   real, allocatable, private  :: dfeq2(:,:,:,:)
-   real, allocatable, private  :: force(:,:,:,:)     ! work array for computing the turbine force
-   real, allocatable, private  :: du(:,:,:)          ! turbine forced u velocity
-   real, allocatable, private  :: dv(:,:,:)          ! turbine forced v velocity
-   real, allocatable, private  :: dw(:,:,:)          ! turbine forced w velocity
-   real, allocatable, private  :: vel(:,:,:,:)
-   real, allocatable, private  :: rtmp(:,:,:)
-   real, allocatable, private  :: cx(:), cy(:), cz(:)
-   real, allocatable, private  :: slice_u(:,:)
-   real, allocatable, private  :: slice_v(:,:)
-   real, allocatable, private  :: slice_w(:,:)
-   real, allocatable, private  :: slice_r(:,:)
-#ifdef _CUDA
-   attributes(device) :: turbine_df
-   attributes(device) :: dfeq1
-   attributes(device) :: dfeq2
-   attributes(device) :: force
-   attributes(device) :: du
-   attributes(device) :: dv
-   attributes(device) :: dw
-   attributes(device) :: vel
-   attributes(device) :: rtmp
-   attributes(device) :: cx, cy, cz
-   attributes(device) :: slice_u
-   attributes(device) :: slice_v
-   attributes(device) :: slice_w
-   attributes(device) :: slice_r
-#endif
-
+module m_turbines_forcing
 contains
-subroutine init_turbines
-   use mod_dimensions
-   use m_readinfile, only : nturbines
-   use mod_D3Q27setup
-   implicit none
-   integer l
-   if (.not. allocated(turbine_df))  allocate(turbine_df(1:nl,-ieps:ieps,1:ny,1:nz,nturbines))
-   if (.not. allocated(dfeq1))       allocate(dfeq1(nl,-ieps:ieps,ny,nz)            )
-   if (.not. allocated(dfeq2))       allocate(dfeq2(nl,-ieps:ieps,ny,nz)            )
-   if (.not. allocated(force))       allocate(force(0:ieps,ny,nz,3))
-   if (.not. allocated(du))          allocate(du(-ieps:ieps,ny,nz) )
-   if (.not. allocated(dv))          allocate(dv(-ieps:ieps,ny,nz) )
-   if (.not. allocated(dw))          allocate(dw(-ieps:ieps,ny,nz) )
-   if (.not. allocated(vel))         allocate(vel(3,-ieps:ieps,ny,nz) )
-   if (.not. allocated(rtmp))        allocate(rtmp(-ieps:ieps,ny,nz) )
-   if (.not. allocated(cx))          allocate(cx(nl))
-   if (.not. allocated(cy))          allocate(cy(nl))
-   if (.not. allocated(cz))          allocate(cz(nl))
-   if (.not. allocated(slice_u))     allocate(slice_u(ny,nz))
-   if (.not. allocated(slice_v))     allocate(slice_v(ny,nz))
-   if (.not. allocated(slice_w))     allocate(slice_w(ny,nz))
-   if (.not. allocated(slice_r))     allocate(slice_r(ny,nz))
-
-   do l=1,nl
-     cx(l)=real(cxs_h(l))
-     cy(l)=real(cys_h(l))
-     cz(l)=real(czs_h(l))
-   enddo
-end subroutine
-
-subroutine turbineforcing(rho,u,v,w,it,nt1)
+subroutine turbines_forcing(rho,u,v,w,it,nt1)
 ! Returns the S_i stored in turbine_df and possibly updated velocities
-   use mod_dimensions, only : nx,ny,nz,ieps
+   use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup
    use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines
    use m_fequilscalar
    use m_actuatorline
-   use m_turbineforcing_kupershtokh
+   use m_turbines_init
+   use m_turbines_forcing_kupershtokh
 #ifdef _CUDA
    use cudafor
 #endif
@@ -174,7 +111,7 @@ subroutine turbineforcing(rho,u,v,w,it,nt1)
 #endif
 
 ! (10) Kupershtokh 2009
-      call  turbineforcing_kupershtokh(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
+      call  turbines_forcing_kupershtokh(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
                                        ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

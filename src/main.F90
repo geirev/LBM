@@ -22,11 +22,13 @@ program LatticeBoltzmann
    use m_density
    use m_velocity
    use m_solids
-   use m_turbineforcing
-   use m_applyturbulence
-   use m_initurbulence
-   use m_turbulenceforcing
-   use m_applyturbines
+   use m_turbines_init
+   use m_turbines_forcing
+   use m_turbines_apply
+   use m_inflow_turbulence_init
+   use m_inflow_turbulence_compute
+   use m_inflow_turbulence_forcing
+   use m_inflow_turbulence_apply
    use m_collisions
    use m_drift
    use m_fequil3
@@ -85,18 +87,6 @@ program LatticeBoltzmann
    attributes(device) :: rho
 #endif
 
-! Stochastic input field on inflow boundary
-   real, allocatable :: uu(:,:,:) 
-   real, allocatable :: vv(:,:,:) 
-   real, allocatable :: ww(:,:,:) 
-   real, allocatable :: rr(:,:,:) 
-#ifdef _CUDA
-   attributes(device) :: uu
-   attributes(device) :: vv
-   attributes(device) :: ww
-   attributes(device) :: rr
-#endif
-
 
    real :: elevation(nx,ny)=0.0
    integer i,j,k,l
@@ -134,13 +124,6 @@ program LatticeBoltzmann
 ! Reading all input parameters
    call readinfile()
 
-   if (inflowturbulence) then
-      allocate(uu(ny,nz,0:nrturb))
-      allocate(vv(ny,nz,0:nrturb))
-      allocate(ww(ny,nz,0:nrturb))
-      allocate(rr(ny,nz,0:nrturb))
-   endif
-
 #ifdef _CUDA
    call gpu_meminfo('ini')
 #endif
@@ -148,8 +131,8 @@ program LatticeBoltzmann
    call hermite_polynomials()
 
 
-   if (nturbines > 0)      call init_turbines()
-   if (inflowturbulence)   call init_turbulenceforcing()
+   if (nturbines > 0)      call turbines_init()
+   if (inflowturbulence)   call inflow_turbulence_init()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -211,7 +194,7 @@ program LatticeBoltzmann
       call inipert(rho,u,v,w,uvel_d)
 
 ! Generate trubulence forcing fields
-      if (inflowturbulence) call initurbulence(uu,vv,ww,rr,.true.,nrturb)
+      if (inflowturbulence) call inflow_turbulence_compute(uu,vv,ww,rr,.true.,nrturb)
 
 ! Initial diagnostics
       call diag(0,rho,u,v,w,lblanking)
@@ -280,11 +263,11 @@ program LatticeBoltzmann
 ! start with f,rho,u,v,w
 
 
-! [u,v,w,turbine_df] = turbineforcing[rho,u,v,w]
-      if (nturbines > 0)      call turbineforcing(rho,u,v,w,it,nt1)
+! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
+      if (nturbines > 0)      call turbines_forcing(rho,u,v,w,it,nt1)
 
 ! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nrturb)
+      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w);               if (debug) call rhotest(feq,rho,'fequil')
@@ -299,11 +282,11 @@ program LatticeBoltzmann
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau);                                     if (debug) call rhotest(feq,rho,'collisions')
 
-! [feq=f] = applyturbines(feq,turbine_df,tau)  f=f+turbine_df
-      if (nturbines > 0)      call applyturbines(feq,turbine_df,tau)
+! [feq=f] = turbines_apply(feq,turbine_df,tau)  f=f+turbine_df
+      if (nturbines > 0)      call turbines_apply(feq,turbine_df,tau)
 
-! [feq=f] = applyturbulence(feq,turbulence_df,tau)  f=f+turb_df
-      if (inflowturbulence)   call applyturbulence(feq,turbulence_df,tau);  if (debug) call rhotest(feq,rho,'applyturbulence')
+! [feq=f] = inflow_turbulence_apply(feq,turbulence_df,tau)  f=f+turb_df
+      if (inflowturbulence)   call inflow_turbulence_apply(feq,turbulence_df,tau)
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(feq,lblanking);                        if (debug) call rhotest(feq,rho,'solids')
@@ -329,7 +312,7 @@ program LatticeBoltzmann
 ! Updating input turbulence matrix
       if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence .and. ibnd==1) then
          print '(a,i6)','Recomputing inflow noise: it=',it
-         call initurbulence(uu,vv,ww,rr,.false.,nrturb)
+         call inflow_turbulence_compute(uu,vv,ww,rr,.false.,nrturb)
       endif
 
 ! Save restart file

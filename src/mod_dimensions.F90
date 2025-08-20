@@ -6,10 +6,10 @@ module mod_dimensions
 #endif
 
 
-!windfarm big D=31.5
-   integer, parameter :: nx = 913          ! 29D resolution x-dir (east)
-   integer, parameter :: ny = 126          ! 4D  resolution y-dir (north)
-   integer, parameter :: nz = 126          ! 4D  resolution z-dir (up)
+!windfarm big D=32
+   integer, parameter :: nx = 928          ! 29D resolution x-dir (east)
+   integer, parameter :: ny = 130          ! 4D  resolution y-dir (north)
+   integer, parameter :: nz = 130          ! 4D  resolution z-dir (up)
 
 !windfarm
 !  integer, parameter :: nx = 928          ! 928 resolution x-dir (east)
@@ -106,6 +106,6 @@ module mod_dimensions
 
 
 !   integer, parameter :: sz=8                ! size of a real
-   integer, parameter :: ieps = 5            ! number of gridcells for smoothing actuatorline forcing in i-dir
+   !integer, parameter :: ieps = 5            ! number of gridcells for smoothing actuatorline forcing in i-dir
 !! read from infile  integer, parameter :: nrturb = 1000       ! number of precomputed batches if inflow turbulence for u,v,w, and rho
 end module

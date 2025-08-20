@@ -1,7 +1,7 @@
-module m_turbineforcing_kupershtokh
+module m_turbines_forcing_kupershtokh
 contains
 
-subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
+subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
                                       rho,u,v,w,dfeq1,dfeq2,ip,jp,kp,iradius,cx,cy,cz,nturbines,n,it,nt1)
 !     function [U,S]=SchemeIX(A,dt,tau,f,Rho,U)
 !        U= U +  0.0
@@ -9,6 +9,7 @@ subroutine turbineforcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !     end
 !     No update of equilibrium velocities
    use mod_dimensions
+   use m_turbines_init, only : ieps
    use m_wtime
    use mod_D3Q27setup
    use m_fequilscal

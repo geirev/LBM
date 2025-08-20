@@ -1,6 +1,6 @@
-module m_initurbulence
+module m_inflow_turbulence_compute
 contains
-subroutine initurbulence(uu,vv,ww,rr,lfirst,nrturb)
+subroutine inflow_turbulence_compute(uu,vv,ww,rr,lfirst,nrturb)
    use mod_dimensions
    use m_pseudo2D
    implicit none
@@ -36,15 +36,13 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst,nrturb)
    allocate( rr_h(ny,nz,0:nrturb) )
 
 ! Simulating a time series of inflow boundary perturbations for u
-   print '(a)','initurbulence: Simulating inflow turbulence forcing'
+   print '(a)','turbulence_compute: Simulating inflow turbulence forcing'
    if (lfirst) then
-!      print '(a,l1)','initurbulence: lfirst=',lfirst
       uu_h(:,:,0)=0.0
       vv_h(:,:,0)=0.0
       ww_h(:,:,0)=0.0
       rr_h(:,:,0)=0.0
    else
-!      print '(a,l1)','initurbulence: lfirst=',lfirst
       uu_h(:,:,0)=uu(:,:,nrturb)
       vv_h(:,:,0)=vv(:,:,nrturb)
       ww_h(:,:,0)=ww(:,:,nrturb)

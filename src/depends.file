@@ -109,6 +109,7 @@ m_boundary_freeslip_edges.o:      mod_D3Q27setup.o
 m_boundary_freeslip_edges.o:      mod_dimensions.o
 m_boundary_freeslip_edges.o:      MODEL.CPP
 m_boundary_iinflow_edges.o:      makefile
+m_boundary_iinflow_edges.o:      mod_D3Q27setup.o
 m_boundary_iinflow_edges.o:      mod_dimensions.o
 m_boundary_iinflow_edges.o:      MODEL.CPP
 m_boundary_iinflow.o:      makefile
@@ -117,12 +118,15 @@ m_boundary_iinflow.o:      mod_dimensions.o
 m_boundary_iinflow.o:      MODEL.CPP
 m_boundary_iinflow.o:      m_readinfile.o
 m_boundary_iperiodic.o:      makefile
+m_boundary_iperiodic.o:      mod_D3Q27setup.o
 m_boundary_iperiodic.o:      mod_dimensions.o
 m_boundary_iperiodic.o:      MODEL.CPP
 m_boundary_jperiodic.o:      makefile
+m_boundary_jperiodic.o:      mod_D3Q27setup.o
 m_boundary_jperiodic.o:      mod_dimensions.o
 m_boundary_jperiodic.o:      MODEL.CPP
 m_boundary_kperiodic.o:      makefile
+m_boundary_kperiodic.o:      mod_D3Q27setup.o
 m_boundary_kperiodic.o:      mod_dimensions.o
 m_boundary_kperiodic.o:      MODEL.CPP
 m_boundary_noslipbb_j1_A.o:      makefile
@@ -152,8 +156,10 @@ m_collisions_kernel.o:      makefile
 m_collisions_kernel.o:      MODEL.CPP
 m_collisions.o:      makefile
 m_collisions.o:      m_collisions_kernel.o
+m_collisions.o:      mod_D3Q27setup.o
 m_collisions.o:      mod_dimensions.o
 m_collisions.o:      MODEL.CPP
+m_collisions.o:      m_readinfile.o
 m_collisions.o:      m_wtime.o
 m_cube.o:      makefile
 m_cube.o:      mod_dimensions.o
@@ -163,6 +169,7 @@ m_cylinder.o:      mod_dimensions.o
 m_cylinder.o:      MODEL.CPP
 m_cylinder.o:      m_tecfld.o
 m_density.o:      makefile
+m_density.o:      mod_D3Q27setup.o
 m_density.o:      mod_dimensions.o
 m_density.o:      MODEL.CPP
 m_density.o:      m_wtime.o
@@ -181,6 +188,7 @@ m_drift.o:      m_drift_kernel.o
 m_drift.o:      mod_D3Q27setup.o
 m_drift.o:      mod_dimensions.o
 m_drift.o:      MODEL.CPP
+m_drift.o:      m_readinfile.o
 m_drift.o:      m_wtime.o
 m_fequil3_kernel.o:      makefile
 m_fequil3_kernel.o:      MODEL.CPP
@@ -192,15 +200,18 @@ m_fequil3.o:      MODEL.CPP
 m_fequil3.o:      m_readinfile.o
 m_fequil3.o:      m_wtime.o
 m_fequilscalar.o:      makefile
+m_fequilscalar.o:      mod_D3Q27setup.o
 m_fequilscalar.o:      mod_dimensions.o
 m_fequilscalar.o:      MODEL.CPP
 m_fequilscal.o:      makefile
+m_fequilscal.o:      mod_D3Q27setup.o
 m_fequilscal.o:      mod_dimensions.o
 m_fequilscal.o:      MODEL.CPP
 m_gpu_meminfo.o:      makefile
 m_gpu_meminfo.o:      MODEL.CPP
 m_inflow_turbulence_apply.o:      makefile
 m_inflow_turbulence_apply.o:      m_inflow_turbulence_init.o
+m_inflow_turbulence_apply.o:      mod_D3Q27setup.o
 m_inflow_turbulence_apply.o:      mod_dimensions.o
 m_inflow_turbulence_apply.o:      MODEL.CPP
 m_inflow_turbulence_apply.o:      m_readinfile.o
@@ -233,6 +244,7 @@ m_macrovars.o:      m_macrovars_kernel.o
 m_macrovars.o:      mod_D3Q27setup.o
 m_macrovars.o:      mod_dimensions.o
 m_macrovars.o:      MODEL.CPP
+m_macrovars.o:      m_readinfile.o
 m_macrovars.o:      m_wtime.o
 m_nrelliftdrag.o:      makefile
 m_nrelliftdrag.o:      MODEL.CPP
@@ -241,7 +253,6 @@ m_nrelreadfoil.o:      makefile
 m_nrelreadfoil.o:      MODEL.CPP
 m_nrelreadfoil.o:      mod_nrel5mw.o
 mod_D3Q27setup.o:      makefile
-mod_D3Q27setup.o:      mod_dimensions.o
 mod_D3Q27setup.o:      MODEL.CPP
 mod_dimensions.o:      makefile
 mod_dimensions.o:      MODEL.CPP
@@ -252,6 +263,7 @@ mod_nrel5mw.o:      MODEL.CPP
 mod_shapiro.o:      makefile
 mod_shapiro.o:      MODEL.CPP
 m_pdfout.o:      makefile
+m_pdfout.o:      mod_D3Q27setup.o
 m_pdfout.o:      mod_dimensions.o
 m_pdfout.o:      MODEL.CPP
 m_pdfout.o:      m_tecplot.o
@@ -262,6 +274,7 @@ m_readinfile.o:      makefile
 m_readinfile.o:      mod_dimensions.o
 m_readinfile.o:      MODEL.CPP
 m_readrestart.o:      makefile
+m_readrestart.o:      mod_D3Q27setup.o
 m_readrestart.o:      mod_dimensions.o
 m_readrestart.o:      MODEL.CPP
 m_readrestart.o:      m_readinfile.o
@@ -276,9 +289,11 @@ m_regularization.o:      m_readinfile.o
 m_regularization.o:      m_regularization_kernel.o
 m_regularization.o:      m_wtime.o
 m_rhotest.o:      makefile
+m_rhotest.o:      mod_D3Q27setup.o
 m_rhotest.o:      mod_dimensions.o
 m_rhotest.o:      MODEL.CPP
 m_saverestart.o:      makefile
+m_saverestart.o:      mod_D3Q27setup.o
 m_saverestart.o:      mod_dimensions.o
 m_saverestart.o:      MODEL.CPP
 m_saverestart.o:      m_readinfile.o
@@ -288,6 +303,7 @@ m_seedmanagement.o:      m_set_random_seed3.o
 m_set_random_seed3.o:      makefile
 m_set_random_seed3.o:      MODEL.CPP
 m_solids.o:      makefile
+m_solids.o:      mod_D3Q27setup.o
 m_solids.o:      mod_dimensions.o
 m_solids.o:      MODEL.CPP
 m_solids.o:      m_wtime.o
@@ -309,6 +325,7 @@ m_tecplot.o:      makefile
 m_tecplot.o:      MODEL.CPP
 m_tecplot.o:      m_string.o
 m_turbines_apply.o:      makefile
+m_turbines_apply.o:      mod_D3Q27setup.o
 m_turbines_apply.o:      mod_dimensions.o
 m_turbines_apply.o:      MODEL.CPP
 m_turbines_apply.o:      m_readinfile.o
@@ -342,6 +359,7 @@ m_uvelshear.o:      mod_dimensions.o
 m_uvelshear.o:      MODEL.CPP
 m_uvelshear.o:      m_readinfile.o
 m_velocity.o:      makefile
+m_velocity.o:      mod_D3Q27setup.o
 m_velocity.o:      mod_dimensions.o
 m_velocity.o:      MODEL.CPP
 m_velocity.o:      m_wtime.o

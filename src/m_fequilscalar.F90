@@ -6,6 +6,7 @@ contains
 function fequilscalar(rho,u,v,w,weights,cxs,cys,czs,H2,H3) result(feq)
 !function fequilscalar(rho, u, v, w) result(feq)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    implicit none
    real,    intent(in) :: rho
    real,    intent(in) :: u

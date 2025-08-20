@@ -2,6 +2,7 @@ module m_rhotest
 contains
 subroutine rhotest(f,rho,string)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    implicit none
    real,   intent(in)  :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,   intent(out) :: rho(nx,ny,nz)

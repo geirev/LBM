@@ -2,7 +2,7 @@ module m_boundary_noslip_edges
 contains
 subroutine boundary_noslip_edges(f)
    use mod_dimensions
-   use mod_D3Q27setup, only : cxs,cys,czs
+   use mod_D3Q27setup, only : cxs,cys,czs,nl
    implicit none
    real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA

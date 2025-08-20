@@ -251,6 +251,9 @@ program LatticeBoltzmann
    endif
    call cpufinish(1)
 
+#ifdef _CUDA
+   call gpu_meminfo('time stepping')
+#endif
    print *,'Start timestepping loop'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Simulation Main Loop

@@ -1,9 +1,15 @@
 module mod_D3Q27setup
-   use mod_dimensions
 #ifdef _CUDA
    use cudafor
 #endif
    implicit none
+
+#ifdef D3Q19
+   integer, parameter :: nl = 19             ! number of components of D3Q19
+#else
+   integer, parameter :: nl = 27             ! number of components of D3Q27
+#endif
+
 
    real, parameter :: cs2=1/3.0
    real, parameter :: cs4=1/9.0

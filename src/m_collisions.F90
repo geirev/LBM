@@ -8,6 +8,8 @@ subroutine collisions(f,feq,tau)
 !               ~ f^eq + (1-1/tau) * R(f^neq)
    use mod_dimensions
    use m_wtime
+   use m_readinfile,   only : ntx,nty,ntz
+   use mod_D3Q27setup, only : nl
    use m_collisions_kernel
    implicit none
    real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)    ! non-equlibrium distribution R(fneq)

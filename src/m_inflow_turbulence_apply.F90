@@ -4,6 +4,7 @@ subroutine inflow_turbulence_apply(f,turbulence_df,tau)
    use m_inflow_turbulence_init, only : iturb_pos, iturb_radius
    use m_readinfile, only : iforce
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    use m_wtime
    implicit none
    real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution

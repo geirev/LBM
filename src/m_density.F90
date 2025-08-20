@@ -3,6 +3,7 @@ module m_density
 contains
 function density(f,blanking) result(dens)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    use m_wtime
    implicit none
    real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)

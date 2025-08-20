@@ -5,7 +5,7 @@ contains
 subroutine vreman(f, tau)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile, only : ivreman,kinevisc,smagorinsky
+   use m_readinfile, only : ivreman,kinevisc,smagorinsky,ntx,nty,ntz
    use m_wtime
    use m_vreman_kernel
    implicit none

@@ -3,6 +3,7 @@ module m_pdfout
 contains
 subroutine pdfout(filename,variables_string,num_of_variables,lblanking,f)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    use m_tecplot
    implicit none
    character(len=*), intent(in) :: filename

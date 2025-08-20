@@ -2,7 +2,7 @@ module m_solids
 contains
 subroutine solids(f,blanking)
    use mod_dimensions
-!   use m_readinfile,   only : kbndbb
+   use mod_D3Q27setup, only : nl
    use m_wtime
    implicit none
    logical, intent(in)    :: blanking(0:nx+1,0:ny+1,0:nz+1)

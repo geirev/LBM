@@ -2,6 +2,7 @@ module m_readrestart
 contains
 subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb
    implicit none
    integer, intent(in)  :: it

@@ -5,6 +5,7 @@ attributes(global) &
 #endif
 subroutine fequilscal(feq,rho,vel,weights,cxs,cys,czs,H2,H3,ii)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
 #ifdef _CUDA
    use cudafor
 #endif

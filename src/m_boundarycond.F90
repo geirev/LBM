@@ -2,8 +2,8 @@ module m_boundarycond
 contains
 subroutine boundarycond(f,uvel)
    use mod_dimensions
-   use mod_D3Q27setup, only : cxs,cys,czs
-   use m_readinfile,   only : ibnd,jbnd,kbnd
+   use mod_D3Q27setup, only : cxs,cys,czs,nl
+   use m_readinfile,   only : ibnd,jbnd,kbnd,ntx,nty,ntz
    use m_wtime
 
    use m_boundary_iinflow

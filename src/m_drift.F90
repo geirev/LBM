@@ -5,6 +5,7 @@ subroutine drift(f,feq)
 ! f is returned in f
    use mod_dimensions
    use mod_D3Q27setup
+   use m_readinfile,   only : ntx,nty,ntz
    use m_wtime
    use m_drift_kernel
    implicit none

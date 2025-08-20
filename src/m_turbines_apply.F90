@@ -2,6 +2,7 @@ module m_turbines_apply
 contains
 subroutine turbines_apply(f,df,tau)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    use m_turbines_init, only : ieps
    use m_readinfile   , only : ipos,nturbines,iforce
    use m_wtime

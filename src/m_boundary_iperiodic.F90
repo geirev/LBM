@@ -2,6 +2,7 @@ module m_boundary_iperiodic
 contains
 subroutine boundary_iperiodic(f)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
 
    implicit none
    real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)

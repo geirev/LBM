@@ -26,6 +26,9 @@ module m_readinfile
    integer avestart        ! Iteration number for starting to compute section averages
    integer avesave         ! Iteration number for saving section averages
    integer itiploss        ! Tiploss(0-none, 1-Prandl, 2-Shen)
+   integer :: ntx          ! Number of threads per block in x-direction
+   integer :: nty          ! Number of threads per block in y-direction
+   integer :: ntz          ! Number of threads per block in z-direction
 
    type physconv
       real rho

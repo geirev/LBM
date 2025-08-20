@@ -6,6 +6,7 @@ module m_gpu_meminfo
 contains
 #ifdef _CUDA
     subroutine gpu_meminfo(msg)
+    use mod_dimensions
     implicit none
     character(len=*), intent(in) :: msg
     integer(8) :: free_mem, total_mem
@@ -19,10 +20,11 @@ contains
     used_gb = total_gb - free_gb
 
     print *, "-------------------------------"
-    print *, "GPU Memory Info - ", trim(msg)
-    print *, "Total GPU Memory (GB): ", total_gb
-    print *, "Used  GPU Memory (GB): ", used_gb
-    print *, "Free  GPU Memory (GB): ", free_gb
+    print '(a,a)',          "GPU Memory Info - ", trim(msg)
+    print '(a,f8.2)',       "Total GPU Memory (GB): ", total_gb
+    print '(a,f8.2)',       "Used  GPU Memory (GB): ", used_gb
+    print '(a,f8.2)',       "Free  GPU Memory (GB): ", free_gb
+    print '(a,3i5,f8.2,a)', "Number of cells      : ", nx,ny,nz,real(nx*ny*nz)/1000000.0,' Million'
     print *, "-------------------------------"
   end subroutine
 #endif

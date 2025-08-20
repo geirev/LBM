@@ -1,6 +1,6 @@
 module m_turbineforcing
    integer, save :: iradius
-   real, save :: theta=0.0
+   real, save :: theta=0.0      ! start angle for turbine rotation
 
    real, allocatable, public   :: turbine_df(:,:,:,:,:)      ! Turbine forcing used in applyturbines
    real, allocatable, private  :: dfeq1(:,:,:,:)

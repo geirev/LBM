@@ -5,15 +5,21 @@ module mod_dimensions
    integer, parameter :: nl = 27             ! number of components of D3Q27
 #endif
 
+
+!windfarm big D=31.5
+   integer, parameter :: nx = 913          ! 29D resolution x-dir (east)
+   integer, parameter :: ny = 126          ! 4D  resolution y-dir (north)
+   integer, parameter :: nz = 126          ! 4D  resolution z-dir (up)
+
 !windfarm
- !  integer, parameter :: nx = 600         !928          ! 928 resolution x-dir (east)
- !  integer, parameter :: ny = 96          ! resolution y-dir (north)
- !  integer, parameter :: nz = 96          ! resolution z-dir (up)
+!  integer, parameter :: nx = 928          ! 928 resolution x-dir (east)
+!  integer, parameter :: ny = 96          ! resolution y-dir (north)
+!  integer, parameter :: nz = 96          ! resolution z-dir (up)
 
 !city
-   integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
-   integer, parameter :: ny = 96           ! resolution y-dir (north)
-   integer, parameter :: nz = 96            ! resolution z-dir (up)
+!   integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
+!   integer, parameter :: ny = 96           ! resolution y-dir (north)
+!   integer, parameter :: nz = 96            ! resolution z-dir (up)
 
 !cylinder and airfoil
 !  integer, parameter :: nx = 400          ! 928 resolution x-dir (east)
@@ -99,7 +105,7 @@ module mod_dimensions
 
 
 
-   integer, parameter :: sz=8                ! size of a real
+!   integer, parameter :: sz=8                ! size of a real
    integer, parameter :: ieps = 5            ! number of gridcells for smoothing actuatorline forcing in i-dir
-   integer, parameter :: nrturb = 1000       ! number of precomputed batches if inflow turbulence for u,v,w, and rho
+!! read from infile  integer, parameter :: nrturb = 1000       ! number of precomputed batches if inflow turbulence for u,v,w, and rho
 end module

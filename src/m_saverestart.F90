@@ -2,7 +2,7 @@ module m_saverestart
 contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
-   use m_readinfile, only : inflowturbulence,nturbines
+   use m_readinfile, only : inflowturbulence,nturbines,nrturb
    implicit none
    integer, intent(in) :: it
    real,    intent(in) :: theta

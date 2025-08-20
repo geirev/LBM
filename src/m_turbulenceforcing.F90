@@ -40,7 +40,7 @@ subroutine init_turbulenceforcing
 end subroutine init_turbulenceforcing
 
 
-subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
+subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nrturb)
    use mod_dimensions
    use m_fequilscal
    use m_fequilscalar
@@ -50,6 +50,7 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    use mod_D3Q27setup
    use m_wtime
 
+   integer, intent(in)    :: nrturb
    real, intent(inout)    :: rho(nx,ny,nz)                     ! density
    real, intent(inout)    :: u(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: v(nx,ny,nz)                       ! velocity
@@ -58,7 +59,6 @@ subroutine turbulenceforcing(rho,u,v,w,uu,vv,ww,ampl,it,nt1)
    real, intent(in)       :: vv(ny,nz,0:nrturb)
    real, intent(in)       :: ww(ny,nz,0:nrturb)
    integer, intent(in)    :: it
-   integer, intent(in)    :: nt1
    real, intent(in)       :: ampl
 #ifdef _CUDA
    attributes(device) :: rho

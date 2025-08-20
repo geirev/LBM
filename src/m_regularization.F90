@@ -34,8 +34,8 @@ subroutine regularization(f, feq, u, v, w)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    integer, parameter :: icpu=5
 
-
    call cpustart()
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
 #ifdef _CUDA

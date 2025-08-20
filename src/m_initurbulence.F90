@@ -1,9 +1,10 @@
 module m_initurbulence
 contains
-subroutine initurbulence(uu,vv,ww,rr,lfirst)
+subroutine initurbulence(uu,vv,ww,rr,lfirst,nrturb)
    use mod_dimensions
    use m_pseudo2D
    implicit none
+   integer, intent(in)  :: nrturb
    real, intent(inout)  :: uu(ny,nz,0:nrturb)
    real, intent(inout)  :: vv(ny,nz,0:nrturb)
    real, intent(inout)  :: ww(ny,nz,0:nrturb)
@@ -14,10 +15,10 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    attributes(device) :: ww
    attributes(device) :: rr
 #endif
-   real   :: uu_h(ny,nz,0:nrturb)
-   real   :: vv_h(ny,nz,0:nrturb)
-   real   :: ww_h(ny,nz,0:nrturb)
-   real   :: rr_h(ny,nz,0:nrturb)
+   real, allocatable, dimension(:,:,:) :: uu_h
+   real, allocatable, dimension(:,:,:) :: vv_h
+   real, allocatable, dimension(:,:,:) :: ww_h
+   real, allocatable, dimension(:,:,:) :: rr_h
    logical, intent(in)  :: lfirst
 
    real cor1,cor2,dx,dy,dir
@@ -29,20 +30,25 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
 
    real :: timecor=0.98
 
+   allocate( uu_h(ny,nz,0:nrturb) )
+   allocate( vv_h(ny,nz,0:nrturb) )
+   allocate( ww_h(ny,nz,0:nrturb) )
+   allocate( rr_h(ny,nz,0:nrturb) )
+
 ! Simulating a time series of inflow boundary perturbations for u
    print '(a)','initurbulence: Simulating inflow turbulence forcing'
    if (lfirst) then
-      print '(a,l1)','initurbulence: lfirst=',lfirst
+!      print '(a,l1)','initurbulence: lfirst=',lfirst
       uu_h(:,:,0)=0.0
       vv_h(:,:,0)=0.0
       ww_h(:,:,0)=0.0
       rr_h(:,:,0)=0.0
    else
-      print '(a,l1)','initurbulence: lfirst=',lfirst
-      uu_h(:,:,0)=uu_h(:,:,nrturb)
-      vv_h(:,:,0)=vv_h(:,:,nrturb)
-      ww_h(:,:,0)=ww_h(:,:,nrturb)
-      rr_h(:,:,0)=rr_h(:,:,nrturb)
+!      print '(a,l1)','initurbulence: lfirst=',lfirst
+      uu_h(:,:,0)=uu(:,:,nrturb)
+      vv_h(:,:,0)=vv(:,:,nrturb)
+      ww_h(:,:,0)=ww(:,:,nrturb)
+      rr_h(:,:,0)=rr(:,:,nrturb)
    endif
 
    cor1=10.0/sqrt(3.0)
@@ -66,7 +72,7 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
    enddo
 
 ! Ensure zero mean and variance equal to one
-   print *,'removing nonzero average and scaling variance'
+!   print *,'removing nonzero average and scaling variance'
    do i=1,nrturb
       aveu=0.0
       avev=0.0
@@ -112,11 +118,22 @@ subroutine initurbulence(uu,vv,ww,rr,lfirst)
 
    enddo
 
+!   print *,' copy to device '
+
 ! Copy to device
    uu=uu_h
    vv=vv_h
    ww=ww_h
    rr=rr_h
+
+!   print *,' copied to device '
+
+   if (allocated(uu_h)) deallocate(uu_h)
+   if (allocated(vv_h)) deallocate(vv_h)
+   if (allocated(ww_h)) deallocate(ww_h)
+   if (allocated(rr_h)) deallocate(rr_h)
+
+!   print *,' deallocated '
 
 end subroutine
 end module

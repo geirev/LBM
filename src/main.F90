@@ -53,14 +53,14 @@ program LatticeBoltzmann
    attributes(device) :: feq
 #endif
 
-   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1)       ! blanking solids grid points
+   logical, dimension(:,:,:), allocatable :: lblanking_h ! Host blanking variable
+   logical, dimension(:,:,:), allocatable :: lblanking   ! blanking solids grid points
 #ifdef _CUDA
    attributes(device) :: lblanking
 #endif
-   logical, dimension(:,:,:), allocatable :: lblanking_h ! Host blanking variable
 
    real uvel(nz)
-   real, dimension(:), allocatable :: uvel_d        ! vertical u-velocity profile host version
+   real, dimension(:), allocatable :: uvel_d        ! vertical u-velocity profile device version
 #ifdef _CUDA
    attributes(device) :: uvel_d
 #endif
@@ -86,10 +86,10 @@ program LatticeBoltzmann
 #endif
 
 ! Stochastic input field on inflow boundary
-   real uu(ny,nz,0:nrturb)
-   real vv(ny,nz,0:nrturb)
-   real ww(ny,nz,0:nrturb)
-   real rr(ny,nz,0:nrturb)
+   real, allocatable :: uu(:,:,:) 
+   real, allocatable :: vv(:,:,:) 
+   real, allocatable :: ww(:,:,:) 
+   real, allocatable :: rr(:,:,:) 
 #ifdef _CUDA
    attributes(device) :: uu
    attributes(device) :: vv
@@ -128,57 +128,71 @@ program LatticeBoltzmann
    print*, "Single precision code"
 #endif
 
-#ifdef _CUDA
-   call gpu_meminfo('ini')
-#endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call cpustart()
-   call hermite_polynomials()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
+
+   if (inflowturbulence) then
+      allocate(uu(ny,nz,0:nrturb))
+      allocate(vv(ny,nz,0:nrturb))
+      allocate(ww(ny,nz,0:nrturb))
+      allocate(rr(ny,nz,0:nrturb))
+   endif
+
+#ifdef _CUDA
+   call gpu_meminfo('ini')
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call hermite_polynomials()
+
 
    if (nturbines > 0)      call init_turbines()
    if (inflowturbulence)   call init_turbulenceforcing()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+      allocate(lblanking(0:nx+1,0:ny+1,0:nz+1))
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #endif
-   do k = 0, nz+1
-   do j = 0, ny+1
-   do i = 0, nx+1
-      lblanking(i,j,k) = .false.
-   end do
-   end do
-   end do
-   allocate(lblanking_h(0:nx,0:ny,0:nz))
-   select case(trim(experiment))
-   case('city')
-      call city(lsolids,lblanking)
-   case('cylinder')
-      call cylinder(lsolids,lblanking)
-   case('airfoil')
-!      call airfoil(lsolids,lblanking)
-       stop 'needs fix airfoil routine for gpu'
-   end select
+      do k = 0, nz+1
+      do j = 0, ny+1
+      do i = 0, nx+1
+         lblanking(i,j,k) = .false.
+      end do
+      end do
+      end do
 
-   lblanking_h=lblanking
-   do j=1,ny
-   do i=1,nx
-      do k=1,nz
-         if (lblanking_h(i,j,k)) then
-             elevation(i,j)=k
-         else
-             exit
-         endif
+
+      select case(trim(experiment))
+      case('city')
+         call city(lsolids,lblanking)
+      case('cylinder')
+         call cylinder(lsolids,lblanking)
+      case('airfoil')
+   !      call airfoil(lsolids,lblanking)
+          stop 'needs fix airfoil routine for gpu'
+      end select
+
+   if (lsolids) then
+      allocate(lblanking_h(0:nx,0:ny,0:nz))
+      lblanking_h=lblanking
+      do j=1,ny
+      do i=1,nx
+         do k=1,nz
+            if (lblanking_h(i,j,k)) then
+                elevation(i,j)=k
+            else
+                exit
+            endif
+         enddo
       enddo
-   enddo
-   enddo
-   call tecfld('elevation',nx,ny,1,elevation)
-   deallocate(lblanking_h)
+      enddo
+      call tecfld('elevation',nx,ny,1,elevation)
+      deallocate(lblanking_h)
+   endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
@@ -197,7 +211,7 @@ program LatticeBoltzmann
       call inipert(rho,u,v,w,uvel_d)
 
 ! Generate trubulence forcing fields
-      if (inflowturbulence) call initurbulence(uu,vv,ww,rr,.true.)
+      if (inflowturbulence) call initurbulence(uu,vv,ww,rr,.true.,nrturb)
 
 ! Initial diagnostics
       call diag(0,rho,u,v,w,lblanking)
@@ -270,7 +284,7 @@ program LatticeBoltzmann
       if (nturbines > 0)      call turbineforcing(rho,u,v,w,it,nt1)
 
 ! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nt1)
+      if (inflowturbulence)   call turbulenceforcing(rho,u,v,w,uu,vv,ww,turbulence_ampl,it,nrturb)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w);               if (debug) call rhotest(feq,rho,'fequil')
@@ -315,7 +329,7 @@ program LatticeBoltzmann
 ! Updating input turbulence matrix
       if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence .and. ibnd==1) then
          print '(a,i6)','Recomputing inflow noise: it=',it
-         call initurbulence(uu,vv,ww,rr,.false.)
+         call initurbulence(uu,vv,ww,rr,.false.,nrturb)
       endif
 
 ! Save restart file
@@ -329,5 +343,12 @@ program LatticeBoltzmann
    call saverestart(it-1,f,theta,uu,vv,ww,rr)
    call cpufinish(16)
    call cpuprint()
+
+   if (allocated(uu))        deallocate(uu)
+   if (allocated(vv))        deallocate(vv)
+   if (allocated(ww))        deallocate(ww)
+   if (allocated(rr))        deallocate(rr)
+   if (allocated(lblanking)) deallocate(lblanking)
+   if (allocated(uvel_d))    deallocate(uvel_d)
 
 end program LatticeBoltzmann

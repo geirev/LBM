@@ -5,7 +5,10 @@ subroutine fequil3(feq, rho, u, v, w)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile
-   use m_readinfile,   only : ntx,nty,ntz,ibgk
+   use m_readinfile, only : ibgk
+#ifdef _CUDA
+   use m_readinfile, only : ntx,nty,ntz
+#endif
    use m_wtime
    use m_fequil3_kernel
 

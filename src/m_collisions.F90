@@ -8,9 +8,14 @@ subroutine collisions(f,feq,tau)
 !               ~ f^eq + (1-1/tau) * R(f^neq)
    use mod_dimensions
    use m_wtime
-   use m_readinfile,   only : ntx,nty,ntz
+#ifdef _CUDA
+   use m_readinfile, only : ntx,nty,ntz
+#endif
    use mod_D3Q27setup, only : nl
    use m_collisions_kernel
+#ifdef _CUDA
+   use cudafor
+#endif
    implicit none
    real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)    ! non-equlibrium distribution R(fneq)
    real, intent(inout) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)  ! equilibrium distribution on input

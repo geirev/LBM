@@ -5,7 +5,10 @@ subroutine regularization(f, feq, u, v, w)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
-   use m_readinfile,   only : ntx,nty,ntz,ihrr
+   use m_readinfile, only : ihrr
+#ifdef _CUDA
+   use m_readinfile, only : ntx,nty,ntz
+#endif
    use m_wtime
 
 #ifdef _CUDA

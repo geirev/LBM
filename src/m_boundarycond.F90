@@ -3,7 +3,10 @@ contains
 subroutine boundarycond(f,uvel)
    use mod_dimensions
    use mod_D3Q27setup, only : cxs,cys,czs,nl
-   use m_readinfile,   only : ibnd,jbnd,kbnd,ntx,nty,ntz
+   use m_readinfile,   only : ibnd,jbnd,kbnd
+#ifdef _CUDA
+   use m_readinfile, only : ntx,nty,ntz
+#endif
    use m_wtime
 
    use m_boundary_iinflow

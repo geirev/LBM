@@ -5,7 +5,10 @@ contains
 subroutine vreman(f, tau)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile, only : ivreman,kinevisc,smagorinsky,ntx,nty,ntz
+   use m_readinfile, only : ivreman,kinevisc,smagorinsky
+#ifdef _CUDA
+   use m_readinfile, only : ntx,nty,ntz
+#endif
    use m_wtime
    use m_vreman_kernel
    implicit none

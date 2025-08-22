@@ -4,7 +4,9 @@ contains
 subroutine macrovars(rho,u,v,w,f)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile,   only : ntx,nty,ntz
+#ifdef _CUDA
+   use m_readinfile, only : ntx,nty,ntz
+#endif
    use m_wtime
    use m_macrovars_kernel
    implicit none

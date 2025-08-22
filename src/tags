@@ -2,6 +2,10 @@ ablim	m_ablim.F90	/^module
 actuatorline	m_actuatorline.F90	/^module
 airfoil	m_airfoil.F90	/^module
 averaging	m_averaging.F90	/^module
+averaging_kernel1	m_averaging_kernel1.F90	/^module
+averaging_kernel2	m_averaging_kernel2.F90	/^module
+averaging_kernelfin1	m_averaging_kernelfin1.F90	/^module
+averaging_kernelfin2	m_averaging_kernelfin2.F90	/^module
 bilin	m_bilin.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
 boundary_freeslipbb_j1_A	m_boundary_freeslipbb_j1_A.F90	/^module
@@ -60,6 +64,10 @@ m_ablim	m_ablim.F90	/^module
 m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_averaging	m_averaging.F90	/^module
+m_averaging_kernel1	m_averaging_kernel1.F90	/^module
+m_averaging_kernel2	m_averaging_kernel2.F90	/^module
+m_averaging_kernelfin1	m_averaging_kernelfin1.F90	/^module
+m_averaging_kernelfin2	m_averaging_kernelfin2.F90	/^module
 m_bilin	m_bilin.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
 m_boundary_freeslipbb_j1_A	m_boundary_freeslipbb_j1_A.F90	/^module

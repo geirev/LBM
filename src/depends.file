@@ -51,7 +51,19 @@ m_airfoil.o:      makefile
 m_airfoil.o:      mod_dimensions.o
 m_airfoil.o:      MODEL.CPP
 m_airfoil.o:      m_tecfld.o
+m_averaging_kernel1.o:      makefile
+m_averaging_kernel1.o:      MODEL.CPP
+m_averaging_kernel2.o:      makefile
+m_averaging_kernel2.o:      MODEL.CPP
+m_averaging_kernelfin1.o:      makefile
+m_averaging_kernelfin1.o:      MODEL.CPP
+m_averaging_kernelfin2.o:      makefile
+m_averaging_kernelfin2.o:      MODEL.CPP
 m_averaging.o:      makefile
+m_averaging.o:      m_averaging_kernel1.o
+m_averaging.o:      m_averaging_kernel2.o
+m_averaging.o:      m_averaging_kernelfin1.o
+m_averaging.o:      m_averaging_kernelfin2.o
 m_averaging.o:      mod_dimensions.o
 m_averaging.o:      MODEL.CPP
 m_averaging.o:      mod_nrel5mw.o
@@ -159,7 +171,6 @@ m_collisions.o:      m_collisions_kernel.o
 m_collisions.o:      mod_D3Q27setup.o
 m_collisions.o:      mod_dimensions.o
 m_collisions.o:      MODEL.CPP
-m_collisions.o:      m_readinfile.o
 m_collisions.o:      m_wtime.o
 m_cube.o:      makefile
 m_cube.o:      mod_dimensions.o
@@ -188,7 +199,6 @@ m_drift.o:      m_drift_kernel.o
 m_drift.o:      mod_D3Q27setup.o
 m_drift.o:      mod_dimensions.o
 m_drift.o:      MODEL.CPP
-m_drift.o:      m_readinfile.o
 m_drift.o:      m_wtime.o
 m_fequil3_kernel.o:      makefile
 m_fequil3_kernel.o:      MODEL.CPP
@@ -244,7 +254,6 @@ m_macrovars.o:      m_macrovars_kernel.o
 m_macrovars.o:      mod_D3Q27setup.o
 m_macrovars.o:      mod_dimensions.o
 m_macrovars.o:      MODEL.CPP
-m_macrovars.o:      m_readinfile.o
 m_macrovars.o:      m_wtime.o
 m_nrelliftdrag.o:      makefile
 m_nrelliftdrag.o:      MODEL.CPP

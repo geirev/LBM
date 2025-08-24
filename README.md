@@ -27,7 +27,7 @@ and time, pseudo-random force on the fluid.
   <a href="#setting-up-an-experiment">Experiment setup</a> *
   <a href="#plotting">Plotting</a> *
   <a href="#git-instructions">Git instructions</a> *
-  <a href="https://github.com/geirev/LBM/blob/master/LICENSE">License</a>
+  <a href="https://github.com/geirev/LBM/blob/main/LICENSE">License</a>
 </p>
 
 <p align="center">
@@ -236,7 +236,7 @@ For this to work install the scripts in the ./bin in your path and install ctags
 
 When working with git repositories other than the ones you own, and when you expect to contribute to the code,
 a good way got organize your git project is described in https://opensource.com/article/19/7/create-pull-request-github
-This link is also a good read: <a href="https://dev.to/valeriavg/master-git-in-7-minutes-gai">Git tutorial</a>
+This link is also a good read: <a href="https://dev.to/valeriavg/main-git-in-7-minutes-gai">Git tutorial</a>
 
 This organization will allow you to make changes and suggest them to be taken into the original code through a pull request.
 
@@ -251,18 +251,18 @@ git remote add origin git@github.com:<YourUserName>/EnKF_seir
 git remote -v                   #   should list both your local and remote repository
 ```
 
-To keep your local master branch up to date with the upstream code (my original repository)
+To keep your local main branch up to date with the upstream code (my original repository)
 
 ```bash
-git checkout master             #   unless you are not already there
+git switch main             #   unless you are not already there
 git fetch upstream              #   get info about upstream repo
-git merge upstream/master       #   merges upstream master with your local master
+git merge upstream/main       #   merges upstream main with your local main
 ```
 
 If you want to make changes to the code:
 
 ```bash
-git checkout -b branchname      #   Makes a new branch and moves to it
+git switch -c branchname      #   Makes a new branch and moves to it
 ```
 
 Make your changes
@@ -292,14 +292,14 @@ git commit --amend              #   Add changes to prevous commit
 git push --force                #   If using --amend and previous commit was pushed
 ```
 
-2. Update the branch where you are working to be consistent with the upstream master
+2. Update the branch where you are working to be consistent with the upstream main
 
 ```bash
-git checkout master             #   unless you are not already there
+git switch main             #   unless you are not already there
 git fetch upstream              #   get info about upstream repo
-git merge upstream/master       #   merges upstream master with your local master
-git checkout brancname          #   back to your local branch
-git rebase master               #   your branch is updated by adding your local changes to the updated master
+git merge upstream/main       #   merges upstream main with your local main
+git switch brancname          #   back to your local branch
+git rebase main               #   your branch is updated by adding your local changes to the updated main
 ```
 
 3. squash commits into one (if you have many commits)

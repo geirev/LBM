@@ -2,8 +2,7 @@ module m_tecout
 implicit none
 
 contains
-subroutine tecout(filename,it,variables_string,num_of_variables,&
-                  lblanking,rho,u,v,w,speed,vortx,vorty,vortz,vort)
+subroutine tecout(filename,it,variables_string,num_of_variables,lblanking,rho,u,v,w,Ti)
    use mod_dimensions
    use m_tecplot
    use m_readinfile
@@ -13,16 +12,12 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    character(len=*), intent(in) :: variables_string ! Variables to print separated by ,
    integer,          intent(in) :: num_of_variables ! Number of vaiables to print
 
-   logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking boundary
    real,     intent(in)             :: rho(nx,ny,nz)       ! fluid density
    real,     intent(in)             :: u(nx,ny,nz)         ! x component of fluid velocity
    real,     intent(in)             :: v(nx,ny,nz)         ! y component of fluid velocity
    real,     intent(in)             :: w(nx,ny,nz)         ! z component of fluid velocity
-   real,     intent(in), optional   :: speed(nx,ny,nz)     ! absolute velocity
-   real,     intent(in), optional   :: vortx(nx,ny,nz)     ! fluid vorticity x-component
-   real,     intent(in), optional   :: vorty(nx,ny,nz)     ! fluid vorticity y-component
-   real,     intent(in), optional   :: vortz(nx,ny,nz)     ! fluid vorticity z-component
-   real,     intent(in), optional   :: vort(nx,ny,nz)      ! absolute value of vorticity
+   logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
+   real,     intent(in), optional   :: Ti(nx,ny,nz)        ! Turbulent kinetic enery
 
 
    ! define a tecplot object
@@ -35,34 +30,20 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    real(kind=4) :: physics_time
    real :: xyz(3)
    integer dd
-   logical, save :: lfirst=.true.
-   real, save :: blanking(nx,ny,nz)=0.0
-
-
-!   do k=1,nz
-!   do j=1,ny
-!   do i=1,nx
-!      if (.not. ( (rho(i,j,k)==rho(i,j,k)) .and. (abs(rho(i,j,k) < huge(x))) ) ) then
-!         print *, "Bad value at", i,j,k,rho(i,j,k)
-!         stop
-!      endif
-!   enddo
-!   enddo
-!   enddo
+   real, allocatable :: blanking(:,:,:)
 
    physics_time=real(it)
-   print *,'tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
+   print '(5a,f10.2)','tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
 
-   if (lfirst) then
-      lfirst=.false.
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         if (lblanking(i,j,k)) blanking(i,j,k)=1.0
-      enddo
-      enddo
-      enddo
-   endif
+   allocate(blanking(nx,ny,nz))
+   blanking=0.0
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
+      if (lblanking(i,j,k)) blanking(i,j,k)=1.0
+   enddo
+   enddo
+   enddo
 
    allocate(your_datas(nx,ny,nz,num_of_variables))
    allocate(locations(num_of_variables))
@@ -97,30 +78,33 @@ subroutine tecout(filename,it,variables_string,num_of_variables,&
    end do
    dd=3
 
-   if (num_of_variables == 16) then
-      your_datas(:,:,:,4) = your_datas(:,:,:,1)*p2l%length
-      your_datas(:,:,:,5) = your_datas(:,:,:,2)*p2l%length
-      your_datas(:,:,:,6) = your_datas(:,:,:,3)*p2l%length
-      dd=6
-   endif
+!   if (num_of_variables == 16) then
+!      dd=dd+1; your_datas(:,:,:,dd) = your_datas(:,:,:,1)*p2l%length
+!      dd=dd+1; your_datas(:,:,:,dd) = your_datas(:,:,:,2)*p2l%length
+!      dd=dd+1; your_datas(:,:,:,dd) = your_datas(:,:,:,3)*p2l%length
+!   endif
 
-   your_datas(:,:,:,dd+1)  = blanking(:,:,:)
-   your_datas(:,:,:,dd+2)  = rho(:,:,:)
-   your_datas(:,:,:,dd+3)  = u(:,:,:)
-   your_datas(:,:,:,dd+4)  = v(:,:,:)
-   your_datas(:,:,:,dd+5)  = w(:,:,:)
-   if (num_of_variables == 16) then
-      your_datas(:,:,:,dd+6)  = speed(:,:,:)
-      your_datas(:,:,:,dd+7)  = vortx(:,:,:)
-      your_datas(:,:,:,dd+8)  = vorty(:,:,:)
-      your_datas(:,:,:,dd+9)  = vortz(:,:,:)
-      your_datas(:,:,:,dd+10) = vort(:,:,:)
+   dd=dd+1; your_datas(:,:,:,dd)  = blanking(:,:,:)
+   dd=dd+1; your_datas(:,:,:,dd)  = rho(:,:,:)
+   dd=dd+1; your_datas(:,:,:,dd)  = u(:,:,:)
+   dd=dd+1; your_datas(:,:,:,dd)  = v(:,:,:)
+   dd=dd+1; your_datas(:,:,:,dd)  = w(:,:,:)
+   if (present(Ti)) then
+      dd=dd+1; your_datas(:,:,:,dd)  = Ti(:,:,:)
    endif
+!   if (num_of_variables == 16) then
+!      your_datas(:,:,:,dd+6)  = speed(:,:,:)
+!      your_datas(:,:,:,dd+7)  = vortx(:,:,:)
+!      your_datas(:,:,:,dd+8)  = vorty(:,:,:)
+!      your_datas(:,:,:,dd+9)  = vortz(:,:,:)
+!      your_datas(:,:,:,dd+10) = vort(:,:,:)
+!   endif
 
    call plt_file%write_zone_data(type_list, shared_list, your_datas)
 
    ! before exit, you must call complete subroutine
    call plt_file%complete
+   if (allocated(blanking)) deallocate(blanking)
 
 end subroutine
 

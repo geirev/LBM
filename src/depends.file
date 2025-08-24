@@ -9,6 +9,7 @@ m_actuatorline.o:      mod_nrel5mw.o
 m_actuatorline.o:      m_readinfile.o
 main.o:      m_airfoil.o
 main.o:      makefile
+main.o:      m_averaging_full.o
 main.o:      m_averaging.o
 main.o:      m_boundarycond.o
 main.o:      m_city.o
@@ -51,6 +52,17 @@ m_airfoil.o:      makefile
 m_airfoil.o:      mod_dimensions.o
 m_airfoil.o:      MODEL.CPP
 m_airfoil.o:      m_tecfld.o
+m_averaging_full_kernelfin.o:      makefile
+m_averaging_full_kernelfin.o:      MODEL.CPP
+m_averaging_full_kernel.o:      makefile
+m_averaging_full_kernel.o:      MODEL.CPP
+m_averaging_full.o:      makefile
+m_averaging_full.o:      m_averaging_full_kernelfin.o
+m_averaging_full.o:      m_averaging_full_kernel.o
+m_averaging_full.o:      m_diag.o
+m_averaging_full.o:      mod_dimensions.o
+m_averaging_full.o:      MODEL.CPP
+m_averaging_full.o:      m_readinfile.o
 m_averaging_kernel1.o:      makefile
 m_averaging_kernel1.o:      MODEL.CPP
 m_averaging_kernel2.o:      makefile

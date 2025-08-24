@@ -36,7 +36,7 @@ subroutine inflow_turbulence_compute(uu,vv,ww,rr,lfirst,nrturb)
    allocate( rr_h(ny,nz,0:nrturb) )
 
 ! Simulating a time series of inflow boundary perturbations for u
-   print '(a)','turbulence_compute: Simulating inflow turbulence forcing'
+   print '(a)','inflow_turbulence_compute: Simulating inflow turbulence forcing'
    if (lfirst) then
       uu_h(:,:,0)=0.0
       vv_h(:,:,0)=0.0

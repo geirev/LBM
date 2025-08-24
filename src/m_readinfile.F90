@@ -23,8 +23,10 @@ module m_readinfile
    real     tauin          ! Collision timescale
    real     kinevisc       ! Kinematic viscosity (nondimensional used in fequil)
    character(len=20) experiment ! experiment name
-   integer avestart        ! Iteration number for starting to compute section averages
-   integer avesave         ! Iteration number for saving section averages
+   logical laveraging      ! Computes full averages ower the whole grid (memory demanding)
+   logical laveturb        ! Computes  section averages with wind turbine according to Ashmut
+   integer avestart        ! Iteration number for starting to compute averages
+   integer avesave         ! Iteration number for ending averaging and saving averages
    integer itiploss        ! Tiploss(0-none, 1-Prandl, 2-Shen)
    integer :: ntx          ! Number of threads per block in x-direction
    integer :: nty          ! Number of threads per block in y-direction
@@ -123,6 +125,7 @@ subroutine readinfile()
       read(10,*)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
       read(10,*)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
       uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
+      read(10,'(1x,l1,1x,l1)')laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
       read(10,*)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
       read(10,*)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
 

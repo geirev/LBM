@@ -10,6 +10,7 @@ program LatticeBoltzmann
    use m_readinfile
    use m_diag
    use m_averaging
+   use m_averaging_full
    use m_airfoil
    use m_city
    use m_cube
@@ -133,6 +134,9 @@ program LatticeBoltzmann
 
    if (nturbines > 0)      call turbines_init()
    if (inflowturbulence)   call inflow_turbulence_init()
+#ifdef _CUDA
+   call gpu_meminfo('turb')
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -149,15 +153,15 @@ program LatticeBoltzmann
       end do
 
 
-      select case(trim(experiment))
-      case('city')
-         call city(lsolids,lblanking)
-      case('cylinder')
-         call cylinder(lsolids,lblanking)
-      case('airfoil')
-   !      call airfoil(lsolids,lblanking)
-          stop 'needs fix airfoil routine for gpu'
-      end select
+   select case(trim(experiment))
+   case('city')
+      call city(lsolids,lblanking)
+   case('cylinder')
+      call cylinder(lsolids,lblanking)
+   case('airfoil')
+!      call airfoil(lsolids,lblanking)
+       stop 'needs fix airfoil routine for gpu'
+   end select
 
    if (lsolids) then
       allocate(lblanking_h(0:nx,0:ny,0:nz))
@@ -308,13 +312,19 @@ program LatticeBoltzmann
       call diag(it,rho,u,v,w,lblanking);                              if (debug) call rhotest(f,rho,'diag')
 
       call cpustart()
+! Averaging for diagnostics similar to Asmuth paper for wind turbines
+      if (laveturb .and. nturbines > 0) then
+         if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
+         if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
+      endif
 ! Averaging for diagnostics
-      if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
-      if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
+      if (laveraging) then
+         if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,lblanking,.false.)
+         if (it == avesave)                    call averaging_full(u,v,w,rho,lblanking,.true.)
+      endif
 
 ! Updating input turbulence matrix
       if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence .and. ibnd==1) then
-         print '(a,i6)','Recomputing inflow noise: it=',it
          call inflow_turbulence_compute(uu,vv,ww,rr,.false.,nrturb)
       endif
 

@@ -4,6 +4,9 @@ F90SOURCE = \
 	main.F90\
 	m_airfoil.F90\
 	m_averaging.F90\
+	m_averaging_full.F90\
+	m_averaging_full_kernel.F90\
+	m_averaging_full_kernelfin.F90\
 	m_averaging_kernel1.F90\
 	m_averaging_kernel2.F90\
 	m_averaging_kernelfin1.F90\

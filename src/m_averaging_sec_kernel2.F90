@@ -1,9 +1,9 @@
-module m_averaging_kernel2
+module m_averaging_sec_kernel2
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine averaging_kernel2(u, v, w, nx, ny, nz, uxave, vxave, wxave, uxave2, vxave2, wxave2, kpos )
+   subroutine averaging_sec_kernel2(u, v, w, nx, ny, nz, uxave, vxave, wxave, uxave2, vxave2, wxave2, kpos )
 #ifdef _CUDA
    use cudafor
 #endif

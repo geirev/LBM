@@ -1,7 +1,7 @@
 module m_averaging_full
-   real,    dimension(:,:,:), allocatable :: uave, vave, wave
-   real,    dimension(:,:,:), allocatable :: uave2, vave2, wave2
-   real,    dimension(:,:,:), allocatable :: Ti
+   real,    dimension(:,:,:), allocatable, private, save :: uave, vave, wave
+   real,    dimension(:,:,:), allocatable, private, save :: uave2, vave2, wave2
+   real,    dimension(:,:,:), allocatable, private, save :: Ti
 
 
 #ifdef _CUDA
@@ -90,7 +90,7 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
 #endif
           &(nx, ny, nz, uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
 
-      call diag(0,rho,uave,vave,wave,lblanking,Ti)
+      call diag(2,0,rho,uave,vave,wave,lblanking,Ti)
 
       deallocate( uave , vave , wave , uave2 , vave2 , wave2 , Ti)
       print '(a)','Done with averaging.'

@@ -9,7 +9,7 @@ program LatticeBoltzmann
    use mod_shapiro
    use m_readinfile
    use m_diag
-   use m_averaging
+   use m_averaging_sec
    use m_averaging_full
    use m_airfoil
    use m_city
@@ -201,8 +201,7 @@ program LatticeBoltzmann
       if (inflowturbulence) call inflow_turbulence_compute(uu,vv,ww,rr,.true.,nrturb)
 
 ! Initial diagnostics
-      call diag(0,rho,u,v,w,lblanking)
-
+      call diag(2,0,rho,u,v,w,lblanking) ! Save initial condidion
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w)
@@ -253,6 +252,7 @@ program LatticeBoltzmann
       enddo
 
    endif
+   call diag(1,0,rho,u,v,w,lblanking) ! Save geometry
    call cpufinish(1)
 
 #ifdef _CUDA
@@ -277,7 +277,7 @@ program LatticeBoltzmann
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w);               if (debug) call rhotest(feq,rho,'fequil')
+      call fequil3(feq,rho,u,v,w)
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
       call regularization(f, feq, u, v, w)
@@ -287,7 +287,7 @@ program LatticeBoltzmann
       call vreman(f, tau)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
-      call collisions(f,feq,tau);                                     if (debug) call rhotest(feq,rho,'collisions')
+      call collisions(f,feq,tau)
 
 ! [feq=f] = turbines_apply(feq,turbine_df,tau)  f=f+turbine_df
       if (nturbines > 0)      call turbines_apply(feq,turbine_df,tau)
@@ -296,26 +296,26 @@ program LatticeBoltzmann
       if (inflowturbulence)   call inflow_turbulence_apply(feq,turbulence_df,tau)
 
 ! Bounce back boundary on fixed walls within the fluid
-      if (lsolids) call solids(feq,lblanking);                        if (debug) call rhotest(feq,rho,'solids')
+      if (lsolids) call solids(feq,lblanking)
 
 ! General boundary conditions
-      call boundarycond(feq,uvel_d);                                  if (debug) call rhotest(feq,rho,'boundarycond')
+      call boundarycond(feq,uvel_d)
 
 ! Drift of feq returned in f
-      call drift(f,feq);                                              if (debug) call rhotest(f,rho,'drift')
+      call drift(f,feq)
 
 
 ! Compute updated macro variables
-      call macrovars(rho,u,v,w,f);                                    if (debug) call rhotest(f,rho,'macrovars')
+      call macrovars(rho,u,v,w,f)
 
 ! Diagnostics
-      call diag(it,rho,u,v,w,lblanking);                              if (debug) call rhotest(f,rho,'diag')
+      call diag(2,it,rho,u,v,w,lblanking)
 
       call cpustart()
 ! Averaging for diagnostics similar to Asmuth paper for wind turbines
       if (laveturb .and. nturbines > 0) then
-         if (avestart < it .and. it < avesave) call averaging(u,v,w,.false.,iradius)
-         if (it == avesave)                    call averaging(u,v,w,.true.,iradius)
+         if (avestart < it .and. it < avesave) call averaging_sec(u,v,w,.false.,iradius)
+         if (it == avesave)                    call averaging_sec(u,v,w,.true.,iradius)
       endif
 ! Averaging for diagnostics
       if (laveraging) then

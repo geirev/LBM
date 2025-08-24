@@ -93,12 +93,18 @@ subroutine readinfile()
       select case (iforce)
       case(1)
          print '(a)','  Shan and Chen (1993)'
+         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
+         iforce=10
       case(8)
          print '(a)','  Guo (2002)'
+         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
+         iforce=10
       case(10)
          print '(a)','  Kupershtokh (2009)'
       case(12)
          print '(a)','  Khazaeli et al. 2019'
+         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
+         iforce=10
       case default
          print '(a)','  invalid forcing schemme (1,8,10,12)'
          stop

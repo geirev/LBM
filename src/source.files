@@ -3,14 +3,14 @@ F90SOURCE = \
 	m_actuatorline.F90\
 	main.F90\
 	m_airfoil.F90\
-	m_averaging.F90\
 	m_averaging_full.F90\
 	m_averaging_full_kernel.F90\
 	m_averaging_full_kernelfin.F90\
-	m_averaging_kernel1.F90\
-	m_averaging_kernel2.F90\
-	m_averaging_kernelfin1.F90\
-	m_averaging_kernelfin2.F90\
+	m_averaging_sec.F90\
+	m_averaging_sec_kernel1.F90\
+	m_averaging_sec_kernel2.F90\
+	m_averaging_sec_kernelfin1.F90\
+	m_averaging_sec_kernelfin2.F90\
 	m_bilin.F90\
 	m_boundarycond.F90\
 	m_boundary_freeslipbb_j1_A.F90\
@@ -64,7 +64,6 @@ F90SOURCE = \
 	mod_fftw3.F90\
 	mod_nrel5mw.F90\
 	mod_shapiro.F90\
-	m_pdfout.F90\
 	m_pseudo2D.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\

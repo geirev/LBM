@@ -45,11 +45,11 @@ contains
       wave2(i,j,k)=wave2(i,j,k)/real(iave)
 
       Ti(i,j,k)=uave2(i,j,k)-uave(i,j,k)**2 + vave2(i,j,k)-vave(i,j,k)**2 + wave2(i,j,k)-wave(i,j,k)**2
-      Ti(i,j,k)=sqrt(Ti(i,j,k)/3.0)/uini
+      Ti(i,j,k)=sqrt(Ti(i,j,k)/3.0)  !/uini
 
-      uave(i,j,k)=uave(i,j,k)/uini
-      vave(i,j,k)=vave(i,j,k)/uini
-      wave(i,j,k)=wave(i,j,k)/uini
+      !uave(i,j,k)=uave(i,j,k)/uini
+      !vave(i,j,k)=vave(i,j,k)/uini
+      !wave(i,j,k)=wave(i,j,k)/uini
 #ifndef _CUDA
     enddo
     enddo

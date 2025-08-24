@@ -54,12 +54,13 @@ contains
    findunit=iunit
    end function findunit
 
-   subroutine plt_init_sb(this, fname, nnx, nny, nnz, title, variables)
+   subroutine plt_init_sb(this, fname, nnx, nny, nnz, ifirst, title, filetype, variables)
    implicit none
    class(tecplot_time_file)     :: this
    character(len=*), intent(in) :: fname
-   integer,          intent(in) :: nnx,nny,nnz
+   integer,          intent(in) :: nnx,nny,nnz,ifirst
    character(len=*), intent(in) :: title
+   integer, intent(in)          :: filetype
    character(len=*), intent(in) :: variables
 
    if(this%isInitialized) then
@@ -71,13 +72,16 @@ contains
    this%max_J = nny
    this%max_K = nnz
 
-   this%fid=findunit()
-   open(unit=this%fid, file=fname, status='replace', form='unformatted', access='stream')
 
-   this%sfid=findunit()
-   open(unit=this%sfid, status='scratch', form='unformatted', access='stream')
+!   this%fid=findunit()
+!   open(unit=this%fid, file=fname, status='replace', form='unformatted', access='stream')
+   open(newunit=this%fid, file=fname, status='replace', form='unformatted', access='stream')
 
-   call this%write_header(nnx,nny,nnz,title,variables)
+!   this%sfid=findunit()
+!   open(unit=this%sfid, status='scratch', form='unformatted', access='stream')
+   open(newunit=this%sfid, status='scratch', form='unformatted', access='stream')
+
+   call this%write_header(nnx,nny,nnz,ifirst,title,filetype, variables)
    this%isInitialized = .true.
    this%n_zone_header = 0
    this%n_zone_data = 0
@@ -150,17 +154,17 @@ contains
    this%n_zone_data = 0
    end subroutine plt_complete_sb
 
-   subroutine plt_write_header_sb(this,nnx,nny,nnz,title,variables)
+   subroutine plt_write_header_sb(this,nnx,nny,nnz,ifirst,title,filetype,variables)
    use m_string
    implicit none
    class(tecplot_file) :: this
    integer(kind=1) :: temp_int_1
-   integer,intent(in) :: nnx,nny,nnz
+   integer,intent(in) :: nnx,nny,nnz,ifirst
    character(len=*),intent(in) :: title
+   integer, intent(in) :: filetype
    character(len=*),intent(in) :: variables
    type(string_splitter) :: splitter
    integer :: i
-
 
    if(this%headerWrote)then
       write(*,*) 'Tecplot, ERROR : plt file header already wrote.'
@@ -175,7 +179,7 @@ contains
    write(this%fid) temp_int_1
    write(this%fid) temp_int_1
    write(this%fid) temp_int_1
-   write(this%fid) 0
+   write(this%fid) filetype
 
    call this%write_str(title)
 

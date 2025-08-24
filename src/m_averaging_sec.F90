@@ -1,13 +1,13 @@
-module m_averaging
-   real,    dimension(:,:,:), allocatable :: uave, vave, wave
-   real,    dimension(:,:,:), allocatable :: uave2, vave2, wave2
-   real,    dimension(:,:,:), allocatable :: Ti
+module m_averaging_sec
+   real,    dimension(:,:,:), allocatable, private, save :: uave, vave, wave
+   real,    dimension(:,:,:), allocatable, private, save :: uave2, vave2, wave2
+   real,    dimension(:,:,:), allocatable, private, save :: Ti
 
-   real,    dimension(:,:)  , allocatable :: uxave, vxave, wxave
-   real,    dimension(:,:)  , allocatable :: uxave2, vxave2, wxave2
-   real,    dimension(:,:)  , allocatable :: Tix
+   real,    dimension(:,:)  , allocatable, private, save :: uxave, vxave, wxave
+   real,    dimension(:,:)  , allocatable, private, save :: uxave2, vxave2, wxave2
+   real,    dimension(:,:)  , allocatable, private, save :: Tix
 
-   integer, allocatable                   :: iseci(:)
+   integer, allocatable, private, save                   :: iseci(:)
 
 #ifdef _CUDA
    attributes(device) uave, vave, wave
@@ -20,7 +20,7 @@ module m_averaging
 #endif
 
 contains
-subroutine averaging(u,v,w,lfinal,iradius)
+subroutine averaging_sec(u,v,w,lfinal,iradius)
    use mod_dimensions
    use m_readinfile, only : ipos,jpos,kpos,uini,p2l
 #ifdef _CUDA
@@ -28,10 +28,10 @@ subroutine averaging(u,v,w,lfinal,iradius)
 #endif
    use mod_nrel5mw,  only : rotorradius,hubradius
    use m_tecfldsec
-   use m_averaging_kernel1
-   use m_averaging_kernel2
-   use m_averaging_kernelfin1
-   use m_averaging_kernelfin2
+   use m_averaging_sec_kernel1
+   use m_averaging_sec_kernel2
+   use m_averaging_sec_kernelfin1
+   use m_averaging_sec_kernelfin2
 #ifdef _CUDA
    use cudafor
 #endif
@@ -128,7 +128,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
    ty=nty; by=(jdim +ty-1)/ty
    tz=ntz; bz=(kdim +tz-1)/tz
 #endif
-   call averaging_kernel1&
+   call averaging_sec_kernel1&
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
@@ -141,7 +141,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
    ty=nty; by=(ny+ty-1)/ty
    tz=1; bz=1
 #endif
-   call averaging_kernel2&
+   call averaging_sec_kernel2&
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
@@ -157,7 +157,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
    ty=nty; by=(jdim+ty-1)/ty
    tz=ntz; bz=(kdim+tz-1)/tz
 #endif
-   call averaging_kernelfin1&
+   call averaging_sec_kernelfin1&
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
@@ -170,7 +170,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
    ty=nty; by=(ny+ty-1)/ty
    tz=1; bz=1
 #endif
-   call averaging_kernelfin2&
+   call averaging_sec_kernelfin2&
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
@@ -261,7 +261,7 @@ subroutine averaging(u,v,w,lfinal,iradius)
       deallocate(uxave_h, vxave_h, wxave_h)
       deallocate(Tix_h)
 
-      print '(a)','Done with averaging.'
+      print '(a)','Done with averaging_sec.'
    endif
 
 end subroutine

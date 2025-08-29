@@ -164,9 +164,11 @@ The simulations were run on a Lenovo ThinkPad X1 with a simple gpu card "GeForce
 
 ## 4. Run the code
 
-Start by defining the required dimensions in the  mod_dimensions.F90 file, and compile.
+Start by defining the required dimensions in the src/mod_dimensions.F90 file, and compile.
 
 Create a separate catalog preferably on a large scratch disk or work area, and copy the example/infile.in to this catalog.
+The example infile.in corresponds to the cylinder case, and the program should run without any other input files. Just choose 
+the cylinder case in mod_dimensions.F90
 
 The example/run.sh script may be required for large open-mp simulations, as it sets ulimit -s unlimited and defines the number of cores.
 
@@ -190,6 +192,15 @@ It is clear that the third order expansion and the regularization are by far the
 ## 6. Plotting
 
 The current code version outputs Tecplot plt files read by tec360.
+
+The plotting routine is m_diag.F90 that dumpis a file tecGRID.plt containing the grid layout, i.e., the i, j, and k indices and the blanking variable.
+For each solution time the routine saves the density and three velocity components in each grid point.
+When using Tecplot one must load the tecGRID.plt file as the first file and add any number of solution files.
+Thus, the diagnostic saved is minimal, and we compute absolute velocity and vorticity, and Q-criterion diagnostics within Tecplot using the loaded velocity
+fields.
+
+Additionally, it is possible to compute the averages over any number of time-steps and these are then saved to tecAVERAGE.plt. This file also contains the
+turbulent kinetic energy.
 
 If you are not using Tecplot you can chose another output format by replacing the call to the tecout routine in m_diag.F90 to your choice.
 

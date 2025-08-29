@@ -16,7 +16,7 @@ subroutine cylinder(lsolids,blanking)
 
    lsolids=.true.
 
-   radius=5
+   radius=7
    ipos=50
    jpos=ny/2
 

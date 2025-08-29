@@ -1,19 +1,24 @@
 module mod_dimensions
+
+!windfarm big D=32
+   integer, parameter :: nx = 928          ! 29D resolution x-dir (east)
+   integer, parameter :: ny = 121          ! 3D  resolution y-dir (north)
+   integer, parameter :: nz = 121          ! 3D  resolution z-dir (up)
+
 !windfarm
-!   integer, parameter :: nx = 928          ! 928 resolution x-dir (east)
+!  integer, parameter :: nx = 928          ! 928 resolution x-dir (east)
+!  integer, parameter :: ny = 96          ! resolution y-dir (north)
+!  integer, parameter :: nz = 96          ! resolution z-dir (up)
+
+!city
+!   integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
 !   integer, parameter :: ny = 96           ! resolution y-dir (north)
-!   integer, parameter :: nz = 96           ! resolution z-dir (up)
+!   integer, parameter :: nz = 96            ! resolution z-dir (up)
 
-!cylinder
-   integer, parameter :: nx = 400          ! 928 resolution x-dir (east)
-   integer, parameter :: ny = 100          ! resolution y-dir (north)
-   integer, parameter :: nz = 5            ! resolution z-dir (up)
-
-
+!cylinder and airfoil
+!  integer, parameter :: nx = 400          ! resolution x-dir (east)
+!  integer, parameter :: ny = 100          ! resolution y-dir (north)
+!  integer, parameter :: nz = 5            ! resolution z-dir (up)
 
 
-
-   integer, parameter :: nl = 27           ! number of componets of D3Q27
-   integer, parameter :: ieps = 5          ! number of gridcells for smoothing actuatorline forcing in i-dir
-   integer, parameter :: nrturb = 1000       ! number of precomputed batches if inflow turbulence for u,v,w, and rho
 end module

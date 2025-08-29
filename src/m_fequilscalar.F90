@@ -1,62 +1,52 @@
 module m_fequilscalar
 contains
-function fequilscalar(rho, u, v, w) result(feq)
+#ifdef _CUDA
+!attributes(device) &
+#endif
+function fequilscalar(rho,u,v,w,weights,cxs,cys,czs,H2,H3) result(feq)
+!function fequilscalar(rho, u, v, w) result(feq)
    use mod_dimensions
-   use mod_D3Q27setup
-   use m_readinfile, only : ibgk
+   use mod_D3Q27setup, only : nl
    implicit none
    real,    intent(in) :: rho
    real,    intent(in) :: u
    real,    intent(in) :: v
    real,    intent(in) :: w
-   real feq(nl)
 
+   real, intent(in) :: cxs(nl)
+   real, intent(in) :: cys(nl)
+   real, intent(in) :: czs(nl)
+   real,    intent(in) :: weights(nl)
+   real,    intent(in) :: H2(3,3,nl)
+   real,    intent(in) :: H3(3,3,3,nl)
+#ifdef _CUDA
+   attributes(device) :: rho
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: cxs
+   attributes(device) :: cys
+   attributes(device) :: czs
+   attributes(device) :: weights
+   attributes(device) :: H2
+   attributes(device) :: H3
+#endif
 
-   real, save            :: H2(3,3,27)      ! Second order Hermite polynomial
-   real, save            :: H3(3,3,3,27)    ! Third order Hermite polynomial
-   real, save            :: c(3,nl)         ! Array storage of cxs, cys, and czs
-   real                  :: A0_2(3,3)
-   real                  :: A0_3(3,3,3)
-   real                  :: delta(1:3, 1:3) = reshape([1.0, 0.0, 0.0, &
-                                                       0.0, 1.0, 0.0, &
-                                                       0.0, 0.0, 1.0], [3, 3])
-   real                  :: vel(1:3),dens
+   real :: feq(nl)
 
-   logical, save         :: lfirst=.true.
+   real :: A0_2(3,3)
+   real :: A0_3(3,3,3)
+   real :: vel(3)
+
+   real dens
+
    integer l, p, q, r
 
+   real, parameter :: cs2=1/3.0
+   real, parameter :: cs4=1/9.0
+   real, parameter :: cs6=1/27.0
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
 
-
-
-   if (lfirst) then
-      c(1,:)=real(cxs(:))
-      c(2,:)=real(cys(:))
-      c(3,:)=real(czs(:))
-
-! Hermitian polynomials of 2nd order H2
-      do l=1,nl
-         do q=1,3
-         do p=1,3
-            H2(p,q,l)=c(p,l)*c(q,l) - cs2*delta(p,q)
-         enddo
-         enddo
-      enddo
-
-! Hermitian polynomials of 3nd order H3 with
-! [c_\alpha \delta]_{ijk} = c_{\alpha,i} \delta_{jk} + c_{\alpha,j} \delta_{ik} +c_{\alpha,k} \delta_{ij}
-      do l=1,nl
-         do r=1,3
-         do q=1,3
-         do p=1,3
-            H3(p,q,r,l)=c(p,l)*c(q,l)*c(r,l) - cs2*(c(p,l)*delta(q,r) + c(q,l)*delta(p,r) +  c(r,l)*delta(p,q))
-         enddo
-         enddo
-         enddo
-      enddo
-
-      lfirst=.false.
-   endif
 
    vel(1)=u
    vel(2)=v
@@ -78,32 +68,32 @@ function fequilscalar(rho, u, v, w) result(feq)
    enddo
    enddo
 
-
+#ifndef _CUDA
 ! Equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
    do l=1,nl
       feq(l)=dens
-
-      feq(l)=feq(l) + dens*( c(1,l)*vel(1) + c(2,l)*vel(2) + c(3,l)*vel(3) )/cs2
+      !feq(l)=feq(l) + dens*( cc(1,l)*vel(1) + cc(2,l)*vel(2) + cc(3,l)*vel(3) )/cs2
+      feq(l)=feq(l) + dens*( cxs(l)*vel(1) +cys(l)*vel(2) + czs(l)*vel(3) )/cs2
 
       do p=1,3
       do q=1,3
          feq(l)=feq(l) + H2(p,q,l)*A0_2(p,q)/(2.0*cs4)
       enddo
       enddo
+
       ! the above identically recovers the BGK equilibrium, below we add third order contributions
-      if (ibgk == 3) then
-         do p=1,3
-         do q=1,3
-         do r=1,3
-            feq(l)=feq(l) + H3(l,p,q,r)*A0_3(p,q,r)*inv6cs6
-         enddo
-         enddo
-         enddo
-      endif
+      do p=1,3
+      do q=1,3
+      do r=1,3
+         feq(l)=feq(l) + H3(p,q,r,l)*A0_3(p,q,r)*inv6cs6
+      enddo
+      enddo
+      enddo
 
       feq(l)= weights(l)*feq(l)
 
    enddo
+#endif
 
 end function
 end module

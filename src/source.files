@@ -3,39 +3,76 @@ F90SOURCE = \
 	m_actuatorline.F90\
 	main.F90\
 	m_airfoil.F90\
-	m_applyturbines.F90\
-	m_applyturbulence.F90\
-	m_assigncvel.F90\
-	m_averaging.F90\
+	m_averaging_full.F90\
+	m_averaging_full_kernel.F90\
+	m_averaging_full_kernelfin.F90\
+	m_averaging_sec.F90\
+	m_averaging_sec_kernel1.F90\
+	m_averaging_sec_kernel2.F90\
+	m_averaging_sec_kernelfin1.F90\
+	m_averaging_sec_kernelfin2.F90\
 	m_bilin.F90\
-	m_bndpressure.F90\
 	m_boundarycond.F90\
-	m_channeldiag.F90\
+	m_boundary_freeslipbb_j1_A.F90\
+	m_boundary_freeslipbb_j1_B.F90\
+	m_boundary_freeslipbb_jny_A.F90\
+	m_boundary_freeslipbb_jny_B.F90\
+	m_boundary_freeslipbb_k1_A.F90\
+	m_boundary_freeslipbb_k1_B.F90\
+	m_boundary_freeslipbb_knz_A.F90\
+	m_boundary_freeslipbb_knz_B.F90\
+	m_boundary_freeslip_edges.F90\
+	m_boundary_iinflow_edges.F90\
+	m_boundary_iinflow.F90\
+	m_boundary_iperiodic.F90\
+	m_boundary_jperiodic.F90\
+	m_boundary_kperiodic.F90\
+	m_boundary_noslipbb_j1_A.F90\
+	m_boundary_noslipbb_j1_B.F90\
+	m_boundary_noslipbb_jny_A.F90\
+	m_boundary_noslipbb_jny_B.F90\
+	m_boundary_noslipbb_k1_A.F90\
+	m_boundary_noslipbb_k1_B.F90\
+	m_boundary_noslipbb_knz_A.F90\
+	m_boundary_noslipbb_knz_B.F90\
+	m_boundary_noslip_edges.F90\
 	m_city.F90\
 	m_collisions.F90\
+	m_collisions_kernel.F90\
 	m_cube.F90\
 	m_cylinder.F90\
 	m_density.F90\
 	m_diag.F90\
 	m_drift.F90\
+	m_drift_kernel.F90\
 	m_fequil3.F90\
+	m_fequil3_kernel.F90\
 	m_fequilscalar.F90\
-	m_fregularization.F90\
+	m_fequilscal.F90\
+	m_gpu_meminfo.F90\
+	m_inflow_turbulence_apply.F90\
+	m_inflow_turbulence_compute.F90\
+	m_inflow_turbulence_forcing.F90\
+	m_inflow_turbulence_init.F90\
 	m_inipert.F90\
-	m_initurbulence.F90\
 	m_macrovars.F90\
+	m_macrovars_kernel.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
+	mod_fftw3.F90\
 	mod_nrel5mw.F90\
 	mod_shapiro.F90\
-	m_pdfout.F90\
+	m_pseudo2D.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
+	m_regularization.F90\
+	m_regularization_kernel.F90\
+	m_rhotest.F90\
 	m_saverestart.F90\
 	m_seedmanagement.F90\
-	m_set_random_seed2.F90\
+	m_set_random_seed3.F90\
 	m_solids.F90\
 	m_sphere.F90\
 	m_string.F90\
@@ -43,11 +80,14 @@ F90SOURCE = \
 	m_tecfldsec.F90\
 	m_tecout.F90\
 	m_tecplot.F90\
-	m_turbineforcing.F90\
-	m_turbulenceforcing.F90\
+	m_turbines_apply.F90\
+	m_turbines_forcing.F90\
+	m_turbines_forcing_kupershtokh.F90\
+	m_turbines_init.F90\
 	m_uvelshear.F90\
 	m_velocity.F90\
 	m_vorticity.F90\
 	m_vreman.F90\
+	m_vreman_kernel.F90\
 	m_wtime.F90
 

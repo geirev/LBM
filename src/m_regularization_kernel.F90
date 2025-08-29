@@ -1,0 +1,129 @@
+module m_regularization_kernel
+contains
+#ifdef _CUDA
+   attributes(global)&
+#endif
+   subroutine regularization_kernel(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6, ihrr)
+#ifdef _CUDA
+   use cudafor
+#endif
+   implicit none
+   integer, value      :: nx, ny, nz, nl
+   real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
+   real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)
+   real, intent(in)    :: u(nx,ny,nz)
+   real, intent(in)    :: v(nx,ny,nz)
+   real, intent(in)    :: w(nx,ny,nz)
+   real, intent(in)    :: h2(3,3,nl)
+   real, intent(in)    :: h3(3,3,3,nl)
+   real, intent(in)    :: weights(nl)
+   real, value         :: inv2cs4
+   real, value         :: inv6cs6
+   integer, value      :: ihrr
+
+
+   real :: vel(3)
+   real :: a1_2(3,3)
+   real :: a1_3(3,3,3)
+   real :: tmp
+
+   integer :: i, j, k, l, p, q, r, i1, j1, k1
+#ifdef _CUDA
+   attributes(device) :: f
+   attributes(device) :: feq
+   attributes(device) :: h2
+   attributes(device) :: h3
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: weights
+   i = threadidx%x + (blockidx%x - 1) * blockdim%x
+   j = threadidx%y + (blockidx%y - 1) * blockdim%y
+   k = threadidx%z + (blockidx%z - 1) * blockdim%z
+   if (i > nx .or. j > ny .or. k > nz) return
+#else
+!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(none) PRIVATE(i, j, k, l, p, q, r, i1, j1, k1, vel, a1_2, a1_3, tmp)&
+!$OMP             & SHARED(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6, ihrr)
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
+#endif
+      i1=i+1
+      j1=j+1
+      k1=k+1
+
+      do l=1,nl
+          f(l, i1, j1, k1) = f(l, i1, j1, k1) - feq(l, i1, j1, k1)
+      enddo
+
+      if (ihrr == 1) then
+! copy u,v,w to vel(1:3)
+         vel(1)=u(i,j,k)
+         vel(2)=v(i,j,k)
+         vel(3)=w(i,j,k)
+
+! computing a1_2
+         a1_2(:,:)=0.0
+         do l=1,nl
+            do q=1,3
+            do p=1,3
+               a1_2(p,q) = a1_2(p,q) + h2(p,q,l)*f(l,i1,j1,k1)
+            enddo
+            enddo
+         enddo
+
+
+! computing a1_3
+         do r=1,3
+         do q=1,3
+         do p=1,3
+            a1_3(p,q,r)=vel(p)*a1_2(q,r) + vel(q)*a1_2(r,p) +  vel(r)*a1_2(p,q)
+         enddo
+         enddo
+         enddo
+
+
+! scale a1_2 and a1_3
+         do q=1,3
+         do p=1,3
+            a1_2(p,q) = a1_2(p,q)*inv2cs4
+         enddo
+         enddo
+
+         do r=1,3
+         do q=1,3
+         do p=1,3
+            a1_3(p,q,r) = a1_3(p,q,r)*inv6cs6
+         enddo
+         enddo
+         enddo
+
+
+         do l=1,nl
+            tmp = 0.0
+            do q=1,3
+            do p=1,3
+               tmp = tmp + h2(p,q,l)*a1_2(p,q)
+            end do
+            end do
+
+            do r=1,3
+            do q=1,3
+            do p=1,3
+               tmp = tmp + h3(p,q,r,l)*a1_3(p,q,r)
+            end do
+            end do
+            end do
+
+            f(l,i1,j1,k1) = weights(l) * tmp
+         end do
+      endif
+#ifndef _CUDA
+   enddo
+   enddo
+   enddo
+!$OMP END PARALLEL DO
+#endif
+
+end subroutine
+end module

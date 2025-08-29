@@ -3,7 +3,9 @@ module m_velocity
 contains
 function velocity(f,rho,cs,blanking) result(vel)
    use mod_dimensions
+   use mod_D3Q27setup, only : nl
    use m_wtime
+   implicit none
    real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in) :: rho(nx,ny,nz)
    integer, intent(in) :: cs(nl)

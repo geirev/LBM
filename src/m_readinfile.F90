@@ -3,7 +3,9 @@ module m_readinfile
    integer  nt0            ! First timestep
    integer  nt1            ! Last timestep
    integer  iout           ! number of steps between outputs 0, 0+iout, ...
-   integer  iprt           ! Output every time steps of it <= iprt
+   integer  iprt1          ! Output every dprt time steps of it <= iprt
+   integer  iprt2          ! Output every dprt time steps of it <= iprt
+   integer  dprt           ! delta high frequency output 
    logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
    integer  irestart       ! number of steps between restart files
    integer  ifout          ! number of steps between outputs 0, 0+iout, ...
@@ -11,7 +13,9 @@ module m_readinfile
    integer  jbnd           ! Type of bondary condition in i direction
    integer  kbnd           ! Type of bondary condition in k direction
    logical  linipert       ! Add smooth pseudo-random peturbations to initial fields
-   logical  lturb          ! Add smooth pseudo-random peturbations for turbulent inflow
+   logical  inflowturbulence          ! Add smooth pseudo-random peturbations for turbulent inflow
+   integer  nrturb         ! Number of precomputed batches of inflow turbulence for u,v,w, and rho
+   real     turbulence_ampl! strength of inflow turbulence
    real     uini           ! Initial absolute velocity
    real     udir           ! Initial velocity direction in degrees
    real     rho0           ! Average density
@@ -19,9 +23,14 @@ module m_readinfile
    real     tauin          ! Collision timescale
    real     kinevisc       ! Kinematic viscosity (nondimensional used in fequil)
    character(len=20) experiment ! experiment name
-   integer avestart        ! Iteration number for starting to compute section averages
-   integer avesave         ! Iteration number for saving section averages
+   logical laveraging      ! Computes full averages ower the whole grid (memory demanding)
+   logical laveturb        ! Computes  section averages with wind turbine according to Ashmut
+   integer avestart        ! Iteration number for starting to compute averages
+   integer avesave         ! Iteration number for ending averaging and saving averages
    integer itiploss        ! Tiploss(0-none, 1-Prandl, 2-Shen)
+   integer :: ntx          ! Number of threads per block in x-direction
+   integer :: nty          ! Number of threads per block in y-direction
+   integer :: ntz          ! Number of threads per block in z-direction
 
    type physconv
       real rho
@@ -50,6 +59,7 @@ module m_readinfile
 
 contains
 subroutine readinfile()
+   use mod_dimensions
    implicit none
 
    character(len=3) ca
@@ -75,6 +85,7 @@ subroutine readinfile()
       endif
       read(10,'(1x,l1)')runexp     ; print '(a,tr7,l1)',  'runexp            = ',runexp
       read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
+      read(10,*)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
       read(10,*)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
       read(10,*)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
       read(10,*)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
@@ -82,12 +93,18 @@ subroutine readinfile()
       select case (iforce)
       case(1)
          print '(a)','  Shan and Chen (1993)'
+         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
+         iforce=10
       case(8)
          print '(a)','  Guo (2002)'
+         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
+         iforce=10
       case(10)
          print '(a)','  Kupershtokh (2009)'
       case(12)
          print '(a)','  Khazaeli et al. 2019'
+         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
+         iforce=10
       case default
          print '(a)','  invalid forcing schemme (1,8,10,12)'
          stop
@@ -97,7 +114,7 @@ subroutine readinfile()
       if (nt1 .le. nt0) stop 'readinfile: nt1 <= nt0'
       read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout
       read(10,*)irestart           ; print '(a,i8)',      'irestart          = ',irestart
-      read(10,*)iprt               ; print '(a,i8)',      'iprt              = ',iprt
+      read(10,*)iprt1,iprt2,dprt   ; print '(a,3i8)',     'iprt1, iprt2, dprt= ',iprt1,iprt2,dprt
       read(10,*)lprtmin            ; print '(a,tr7,l1)',  'lprtmin           = ',lprtmin
       read(10,*)ifout              ; print '(a,i8)',      'ifout             = ',ifout
       read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
@@ -107,13 +124,14 @@ subroutine readinfile()
       read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
       read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
       read(10,'(1x,l1)')linipert   ; print '(a,tr7,l1)',  'linipert          = ',linipert
-      read(10,'(1x,l1)')lturb      ; print '(a,tr7,l1)',  'lturb             = ',lturb
-!      read(10,*)tauin              ; print '(a,f8.3,a)',  'tauin             = ',tauin,      ' [] '
+      read(10,*)inflowturbulence,turbulence_ampl,nrturb
+                  ; print '(a,tr7,l1,tr2,g13.5,tr2,i5)',  'inflowturbulence  = ',inflowturbulence,turbulence_ampl,nrturb
       read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
       read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
       read(10,*)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
       read(10,*)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
       uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
+      read(10,'(1x,l1,1x,l1)')laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
       read(10,*)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
       read(10,*)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
 

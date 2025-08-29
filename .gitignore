@@ -1,8 +1,11 @@
 build
+gpublocks
 animations
+kerneltest
 F90-bgk
 latticeboltzmann-python
 run*
+src2d
 src/old
 src/actuator
 src/actuatorline

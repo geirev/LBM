@@ -1,43 +1,45 @@
 #1.0 Version of infile.in ---------------------------------------------------------------------------------------
  T                ! runexp (true or false)
- city               ! experiment: cylinder, airfoil etc
+ city             ! experiment: cylinder, airfoil etc
+ 512   1   1           ! number of threads per block in x, y, and z direction
  3                ! BGK order, ibgk=2 standard second order, ibgk=3 gives third order BGK
  1                ! Collision operator ihrr=1 includes regularization
  1 0.15           ! Vreman subgridscale mixing (1) with Smagorinsky constant (0.15)
  10               ! iforce: Forcing scheme: 8-Guo (2002); 10-Kupershtokh (2009); 12-Khazaeli et al. 2019
  00000            ! nt0   : First timestep
- 100              ! nt1   : Final timestep
- 1000             ! iout  : Number of steps between outputs
+ 00200            ! nt1   : Final timestep
+ 200              ! iout  : Number of steps between outputs
  1000             ! irestarts: Number of steps between restart outputs
- 0                ! iprt  : Output every timestep for it <= iprt (for initial high-time-res animation)
+ 00 22000 1       ! iprt  : Output every timestep for it <= iprt1 and it >= iprt2
  T                ! lprtmin : Minimalistic output to save disk space by 50%
  1000000          ! ifout : Number of steps between f-outputs
  1                ! ibnd  : 0-periodic, 1 in/out flow,
  0                ! jbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for j=1 and j=ny
  12               ! kbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for k=1 and k=nz
- 6.0              ! 11.4               ! uini  : Inflow wind velocity [m/s]
+ 6.0 0.0          ! 11.4 ! uini, udir : Inflow wind velocity [m/s], durection in degrees (-45:45)
  1.0              ! rho0  : Non-dimensional average (initial) density []
  0.0005           ! rhoa  : Relative pressure gradient for ibnd=2 (over 1:nx) NOT USED
  T                ! linipert: Add pseudorandom field to initial macro variables (must be true)
- T                ! lturb   : Add turbulence forcing on inflow
+ T 0.00001  100  ! lturb   : Add turbulence forcing on inflow, amplitude, number of prestored time steps
  0.0000178        ! visckin : Dimensional kinematic viscosity
  1.225            ! C_rho - Density of air at surface 15C and  101.325 kPa  [kg/m^3] Eq. (7.12)
  4.0              ! C_l   - Length of a lattice cell in meters [m]
  75.0             ! C_u   - Wind velocity conversion [m/s]   -> C_t=C_l/C_u
- 80000            ! Iteration to start computing section averages
- 100000            ! Iteration to save section averages
+ T F              ! Switch on/off full averaging and turbine section averaging
+ 40000            ! Iteration to start computing section averages
+ 40100            ! Iteration to save section averages
 #-Turbine-definitions
  0                ! Number of turbines
  0.0              ! Imposed pitchangle (0 until u=11.4, see table 7.1 in NREL doc).
  8.95             9.22             8.95         12.06         ! Turbine RPM for actuator line model (max 12.1 RPM)
  0.0              7.55             ! Tipspeed ratio (if given will override the given turbine RPM)
  0                ! Tiploss(0-none, 1-Prandl, 2-Shen)
+ 96               ! ipos
+ 61               ! jpos
+ 61               ! kpos
  64               ! ipos
- 48               ! jpos
+ 75               ! jpos
  48               ! kpos
- 100              ! ipos
- 50               ! jpos
- 30               ! kpos
 
 
  kinematic viscosity of air is 1.78E-5

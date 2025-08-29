@@ -4,52 +4,92 @@ HOME = /home/geev/
 HOME = /home/AD.NORCERESEARCH.NO/geev
 
 .SUFFIXES:
-.SUFFIXES: .o .F90 .f90 .F .f .H .h
+.SUFFIXES: .o .F90 .f90 .F .f .c
 
 
-
+ifdef GFORTRAN
 LD = gfortran
-CF90 = gfortran
-CF77 = gfortran
+F90 = gfortran
+F77 = gfortran
+else
+LD = pgf90
+F90 = pgf90
+F77 = pgf90
+endif
 
-FFLAGS = -c -fdefault-real-8 -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
+ifdef GFORTRAN
+# gfortran flags
+FFLAGS = -c -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
-          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast -fopenmp
+          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast
+else
+FFLAGS = -c -O3 -g -ffpe-trap=invalid -lineinfo \
+      -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
+      -Mlarge_arrays -traceback -Ktrap=fp
+endif
+LINKFLAGS =
+
+ifdef D3Q19
+FFLAGS+= -DD3Q19
+endif
+
+ifdef DP
+ifdef GFORTRAN
+FFLAGS+= -DDOUBLE_PRECISION -fdefault-real-8 
+else
+FFLAGS+= -DDOUBLE_PRECISION -r8
+endif
+endif
+
+ifdef CUDA
+FFLAGS+=  -gpu=lineinfo  -gpu=cc75,unroll -Minfo=accel -cuda
+#FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -Minfo=accel -cuda
+LINKFLAGS+= -cuda
+endif
+
+ifdef MP
+ifdef GFORTRAN
+FFLAGS+= -fopenmp -DOPEN_MP
+else
+FFLAGS+= -mp  -DOPEN_MP
+LINKFLAGS+= -fopenmp
+endif
+endif
+
 
 F77FLG =
 F90FLG =
-LINKFLAGS =
-LINKFLAGS = -fopenmp
-CPPARCH =
-CPPMODEL  =
 
-CPPFLAGS = -traditional -P $(CPPARCH) $(CPPMODEL)
+ifdef CUDA
+LIBS =  -lcublas
+else
+LIBS =  -lblas
+endif
 
-LIBS =  ./libsampling.a ./libpreplot.a  -lblas -lfftw3 -llapack
+ifdef DP
+LIBS+= -lfftw3
+else
+LIBS+= -lfftw3f
+endif
 
 BINDIR = $(HOME)/bin
 
-CPP = /usr/bin/cpp
 
 # Rules for running cpp and updating files in $(BUILD) directory
-.H.h:
-	@mkdir -p $(BUILD)
-	@rm -f ./$(BUILD)/$*.h
-	cat MODEL.CPP $*.H | $(CPP) $(CPPFLAGS) > ./$(BUILD)/$*.h
-
-
 .F90.o:
 	@mkdir -p $(BUILD)
-	@rm -f ./$(BUILD)/$*.f90
-	@cat MODEL.CPP $*.F90 | $(CPP) $(CPPFLAGS) > ./$(BUILD)/$*.f90
-	cd $(BUILD) ; $(CF90) $(FFLAGS) $(F90FLG) -o $*.o $*.f90
+	@rm -f ./$(BUILD)/$*.*
+	cd $(BUILD) ; $(F90) $(FFLAGS) $(F90FLG) -o $*.o ../src/$*.F90
 
 .F.o:
 	@mkdir -p $(BUILD)
-	@rm -f ./$(BUILD)/$*.f
-	@cat MODEL.CPP $*.F | $(CPP) $(CPPFLAGS) > ./$(BUILD)/$*.f
-	cd $(BUILD) ; $(CF77) $(FFLAGS) $(F77FLG) -o $*.o $*.f
+	@rm -f ./$(BUILD)/$*.*
+	cd $(BUILD) ; $(F77) $(FFLAGS) $(F77FLG) -o $*.o ../src/$*.F
 
+.c.o:
+	@mkdir -p $(BUILD)
+	@rm -f ./$(BUILD)/$*.*
+	cd $(BUILD) ; gcc -c ../src/$*.c
 
 
 include source.files
@@ -63,36 +103,39 @@ OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
 all: new $(TARGET) install
 
-libs: libsampling.a libenkfanalysis.a libpreplot.a
+libs: libenkfanalysis.a -lcuda -lcublas
 
-libsampling.a:
-	cd ../../EnKF_sampling/lib; make BUILD=../../LBM/build
 
 libenkfanalysis.a:
 	cd ../../EnKF_analysis/lib; make BUILD=../../LBM/build
 
-libpreplot.a:
-	cp $(HOME)/Dropbox/Programs/tecplot-binary-files/libpreplot.a $(HOME)/Dropbox/Programs/LBM/build
-
-$(TARGET): $(INCFILES) $(OBJECTS)
+$(TARGET): $(INCFILES) $(OBJECTS)  timer.o
 	@mkdir -p $(BUILD)
-	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) $(LIBDIR) $(LIBS)
+	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) timer.o $(LIBDIR) $(LIBS)
 
 install:
 	cp $(BUILD)/$(TARGET) $(BINDIR)
 
-veryclean:
-	cd $(BUILD) ; rm -rf *.o *.mod *.f90 rii_files lib*.a
+clean:
+	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a *.bc
 
 new: source depend
 
+timer.o: timer.c
+	cd ./$(BUILD)
+	gcc -c ../src/timer.c -o ./$(BUILD)/timer.o
+
 source:
 	../bin/mksource.sh > source.files
+	sed -i '/ cudafor/d' source.files
+	sed -i '/ cublas/d' source.files
 
 depend:
 	../bin/mkdepend_linux.pl | sort -u > depends.file
+	sed -i '/ cudafor/d' depends.file
+	sed -i '/ cublas/d'  depends.file
 
-tags: $(F90FILES) $(F77FILES) $(INCFILES)
+tags: source.files
 	tags.sh
 	#ctags *.F90
 	#f90tags.sh

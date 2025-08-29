@@ -2,6 +2,7 @@ module m_vorticity
 contains
 subroutine vorticity(u,v,w,vortx,vorty,vortz,vort,blanking)
    use mod_dimensions
+   implicit none
    real,    intent(in)  :: u(nx,ny,nz)
    real,    intent(in)  :: v(nx,ny,nz)
    real,    intent(in)  :: w(nx,ny,nz)
@@ -10,52 +11,86 @@ subroutine vorticity(u,v,w,vortx,vorty,vortz,vort,blanking)
    real,    intent(out) :: vortz(nx,ny,nz)
    real,    intent(out) :: vort(nx,ny,nz)
    logical, intent(in)  :: blanking(nx,ny,nz)
+#ifdef _CUDA
+   attributes(device) :: u
+   attributes(device) :: v
+   attributes(device) :: w
+   attributes(device) :: vortx
+   attributes(device) :: vortz
+   attributes(device) :: vorty
+   attributes(device) :: vort
+   attributes(device) :: blanking
+#endif
    integer i,j,k,ia,ib,ja,jb,ka,kb
 
 !   vortx = (cshift(w,1,2) - cshift(w,-1,2)) - (cshift(v,1,3) - cshift(v,-1,3))
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
 !$OMP PARALLEL DO PRIVATE(i,j,k,ia,ib,ja,jb,ka,kb) SHARED(u,v,w)
+#endif
       do k=1,nz
+      do j=1,ny
+      do i=1,nx
          ka=mod(nz+k-1-1,nz)+1
          kb=mod(nz+k-1+1,nz)+1
-         do j=1,ny
-            ja=mod(ny+j-1-1,ny)+1
-            jb=mod(ny+j-1+1,ny)+1
-            vortx(:,j,k) = (w(:,jb,k) - w(:,ja,k))   -   (v(:,j,kb) - v(:,j,ka))
-         enddo
-       enddo
+         ja=mod(ny+j-1-1,ny)+1
+         jb=mod(ny+j-1+1,ny)+1
+         vortx(:,j,k) = (w(:,jb,k) - w(:,ja,k))   -   (v(:,j,kb) - v(:,j,ka))
+      enddo
+      enddo
+      enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
 !   vorty = (cshift(u,1,3) - cshift(u,-1,3)) - (cshift(w,1,1) - cshift(w,-1,1))
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
 !$OMP PARALLEL DO PRIVATE(i,j,k,ia,ib,ja,jb,ka,kb) SHARED(u,v,w)
+#endif
        do k=1,nz
-          ka=mod(nz+k-1-1,nz)+1
-          kb=mod(nz+k-1+1,nz)+1
           do j=1,ny
              do i=1,nx
+                ka=mod(nz+k-1-1,nz)+1
+                kb=mod(nz+k-1+1,nz)+1
                 ia=mod(nx+i-1-1,nx)+1
                 ib=mod(nx+i-1+1,nx)+1
                 vorty(i,j,k) = (u(i,j,kb) - u(i,j,ka))   -   (w(ib,j,k) - w(ia,j,k))
              enddo
           enddo
        enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
 !   vortz = (cshift(v,1,1) - cshift(v,-1,1)) - (cshift(u,1,2) - cshift(u,-1,2))
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
 !$OMP PARALLEL DO PRIVATE(i,j,k,ia,ib,ja,jb,ka,kb) SHARED(u,v,w)
+#endif
        do k=1,nz
           do j=1,ny
-             ja=mod(ny+j-1-1,ny)+1
-             jb=mod(ny+j-1+1,ny)+1
              do i=1,nx
+                ja=mod(ny+j-1-1,ny)+1
+                jb=mod(ny+j-1+1,ny)+1
                 ia=mod(nx+i-1-1,nx)+1
                 ib=mod(nx+i-1+1,nx)+1
                 vortz(i,j,k) = (v(ib,j,k) - v(ia,j,k))   -   (u(i,jb,k) - u(i,ja,k))
              enddo
           enddo
        enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
+#ifdef _CUDA
+!$cuf kernel do(3) <<<*,*>>>
+#else
 !$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(vortx,vorty,vortz)
+#endif
       do k=1,nz
          do j=1,ny
             do i=1,nx
@@ -67,9 +102,15 @@ subroutine vorticity(u,v,w,vortx,vorty,vortz,vort,blanking)
             enddo
          enddo
        enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
+#ifdef _CUDA
+!$cuf kernel do(2) <<<*,*>>>
+#else
 !$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(vort,vortx,vorty,vortz)
+#endif
       do k=1,nz
          do j=1,ny
             do i=1,nx
@@ -77,7 +118,9 @@ subroutine vorticity(u,v,w,vortx,vorty,vortz,vort,blanking)
             enddo
          enddo
        enddo
+#ifndef _CUDA
 !$OMP END PARALLEL DO
+#endif
 
 end subroutine
 end module

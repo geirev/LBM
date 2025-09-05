@@ -9,6 +9,7 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
    use m_actuatorline
    use m_turbines_init
    use m_turbines_forcing_kupershtokh
+   use m_turbines_forcing_guo
 #ifdef _CUDA
    use cudafor
 #endif
@@ -111,55 +112,20 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
 #endif
 
 ! (10) Kupershtokh 2009
-      call  turbines_forcing_kupershtokh(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
-                                       ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
+      select case (iforce)
+      case(10)
+         call  turbines_forcing_kupershtokh(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
+                                             ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! (8) Guo 2002
-!     function [U,S]=SchemeVII(A,dt,tau,f,Rho,U)
-!        U= U +  dt*A./2
-!        S= Rho.*W’.*(Cdot(A)- sum(A.*(U+du),1))./ Cs2 *(1-1/(2*tau))
-!        S=S+Rho.*W’.*(Cdot(A) .* Cdot(U+du) )./ Cs2^2*(1-1/(2*tau))
-!     end
-!!        if (iforce==8) then
-!!  #ifdef _CUDA
-!!  !$cuf kernel do(2) <<<*,*>>>
-!!  #endif
-!!           do k=1,nz
-!!           do j=1,ny
-!!              if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
-!!                 do i=-ieps,ieps
-!!                    ! updating the forced equilibrium velocities ueq=u + F/(2rho)
-!!                    u(ip+i,j,k)=u(ip+i,j,k)+0.5*du(i,j,k)
-!!                    v(ip+i,j,k)=v(ip+i,j,k)+0.5*dv(i,j,k)
-!!                    w(ip+i,j,k)=w(ip+i,j,k)+0.5*dw(i,j,k)
-!!  
-!!                    ! Computing the S_i term returned in df
-!!  !                  cdota(:)=real(cxs(:))*du(i,j,k) + real(cys(:))*dv(i,j,k) + real(czs(:))*dw(i,j,k)
-!!  !                  cdotu(:)=real(cxs(:))*u(ip+i,j,k) + real(cys(:))*v(ip+i,j,k) + real(czs(:))*w(ip+i,j,k)
-!!  !                  udota   =u(ip+i,j,k)*du(i,j,k) + v(ip+i,j,k)*dv(i,j,k) + w(ip+i,j,k)*dw(i,j,k)
-!!  !
-!!  !                  df(i,j,k,:,n)= rho(ip+i,j,k) * weights(:) * ( (cdota(:) - udota)/cs2   + (cdota(:) * cdotu(:) )/cs4 )
-!!  
-!!                    do l=1,nl
-!!                       cdotuu=(real(cxs(l))*u(ip+i,j,k) + real(cys(l))*v(ip+i,j,k) + real(czs(l))*w(ip+i,j,k))/cs4
-!!                       cminx=(real(cxs(l))-u(ip+i,j,k))/cs2
-!!                       cminy=(real(cys(l))-v(ip+i,j,k))/cs2
-!!                       cminz=(real(czs(l))-w(ip+i,j,k))/cs2
-!!  
-!!                       cx=(cminx + cdotuu*real(cxs(l)))*du(i,j,k)
-!!                       cy=(cminy + cdotuu*real(cys(l)))*dv(i,j,k)
-!!                       cz=(cminz + cdotuu*real(czs(l)))*dw(i,j,k)
-!!  
-!!                       df(l,i,j,k,n)= rho(ip+i,j,k) * weights(l) * (cx + cy + cz)
-!!                    enddo
-!!                 enddo
-!!              endif
-!!           enddo
-!!           enddo
-!!  
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!      elseif (iforce==10) then
+      case(8)
+         call  turbines_forcing_guo(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
+                                             ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
+
+
+      case default
+         print '(a)','  invalid forcing schemme (1,8,10,12)'
+         stop 'turbines_forcing'
+      end select
 
 !!        elseif (iforce==12) then       
 !!  !(12) Khazaeli et al. 2019

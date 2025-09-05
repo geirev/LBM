@@ -13,10 +13,12 @@ program LatticeBoltzmann
    use m_averaging_full
    use m_airfoil
    use m_city
+   use m_city2
    use m_cube
    use m_cylinder
    use m_sphere
    use m_uvelshear
+   use m_predicted_measurements
    use m_boundarycond
    use m_inipert
    use m_macrovars
@@ -156,6 +158,8 @@ program LatticeBoltzmann
    select case(trim(experiment))
    case('city')
       call city(lsolids,lblanking)
+   case('city2')
+      call city2(lsolids,lblanking)
    case('cylinder')
       call cylinder(lsolids,lblanking)
    case('airfoil')
@@ -331,6 +335,8 @@ program LatticeBoltzmann
 ! Save restart file
       if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
       call cpufinish(15)
+
+      if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
 
    enddo
 

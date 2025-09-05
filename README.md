@@ -94,7 +94,10 @@ sudo apt install nvidia-cuda-toolkit
 
 ## 3. Compile the `LBM` code
 
-Navigate to the `src` folder:
+For gpu compilation run 'nvidia-smi' or 'lshw -C display' to find you gpu-card.
+The check the compute capability of your gpu in the table https://developer.nvidia.com/cuda-gpus.
+Navigate to the `src` folder and open the makefile and specify the correct -gpu=ccXX flag.
+
 
 ```bash
 cd LBM/src

@@ -9,7 +9,7 @@ foreach $file (<*.F *.F90>) {
 
 
   # Module dependencies
-  open PIPE,"cat MODEL.CPP $file | /usr/bin/cpp -P 2>/dev/null |" or die "Cannot open pipe \n";
+  open PIPE,"cat $file | /usr/bin/cpp -P 2>/dev/null |" or die "Cannot open pipe \n";
   while (<PIPE>) {
      chop;
      if (/^[ ]*use /i) {
@@ -52,8 +52,8 @@ foreach $file (<*.F *.F90>) {
 
 
   # MODEL.CPP dependencies
-  if ( $found==1 ) { print "$objfile:      MODEL.CPP\n";
-  }
+#  if ( $found==1 ) { print "$objfile:      MODEL.CPP\n";
+#  }
 
   #makefile dependencies (all files)
   print "$objfile:      makefile\n";

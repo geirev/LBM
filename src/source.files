@@ -25,8 +25,11 @@ F90SOURCE = \
 	m_boundary_iinflow_edges.F90\
 	m_boundary_iinflow.F90\
 	m_boundary_iperiodic.F90\
+	m_boundary_iperiodic_kernel.F90\
 	m_boundary_jperiodic.F90\
+	m_boundary_jperiodic_kernel.F90\
 	m_boundary_kperiodic.F90\
+	m_boundary_kperiodic_kernel.F90\
 	m_boundary_noslipbb_j1_A.F90\
 	m_boundary_noslipbb_j1_B.F90\
 	m_boundary_noslipbb_jny_A.F90\
@@ -36,6 +39,7 @@ F90SOURCE = \
 	m_boundary_noslipbb_knz_A.F90\
 	m_boundary_noslipbb_knz_B.F90\
 	m_boundary_noslip_edges.F90\
+	m_city2.F90\
 	m_city.F90\
 	m_collisions.F90\
 	m_collisions_kernel.F90\
@@ -64,6 +68,7 @@ F90SOURCE = \
 	mod_fftw3.F90\
 	mod_nrel5mw.F90\
 	mod_shapiro.F90\
+	m_predicted_measurements.F90\
 	m_pseudo2D.F90\
 	m_readinfile.F90\
 	m_readrestart.F90\
@@ -82,6 +87,7 @@ F90SOURCE = \
 	m_tecplot.F90\
 	m_turbines_apply.F90\
 	m_turbines_forcing.F90\
+	m_turbines_forcing_guo.F90\
 	m_turbines_forcing_kupershtokh.F90\
 	m_turbines_init.F90\
 	m_uvelshear.F90\

@@ -23,8 +23,11 @@ boundary_freeslip_edges	m_boundary_freeslip_edges.F90	/^module
 boundary_iinflow	m_boundary_iinflow.F90	/^module
 boundary_iinflow_edges	m_boundary_iinflow_edges.F90	/^module
 boundary_iperiodic	m_boundary_iperiodic.F90	/^module
+boundary_iperiodic_kernel	m_boundary_iperiodic_kernel.F90	/^module
 boundary_jperiodic	m_boundary_jperiodic.F90	/^module
+boundary_jperiodic_kernel	m_boundary_jperiodic_kernel.F90	/^module
 boundary_kperiodic	m_boundary_kperiodic.F90	/^module
+boundary_kperiodic_kernel	m_boundary_kperiodic_kernel.F90	/^module
 boundary_noslipbb_j1_A	m_boundary_noslipbb_j1_A.F90	/^module
 boundary_noslipbb_j1_B	m_boundary_noslipbb_j1_B.F90	/^module
 boundary_noslipbb_jny_A	m_boundary_noslipbb_jny_A.F90	/^module
@@ -35,6 +38,7 @@ boundary_noslipbb_knz_A	m_boundary_noslipbb_knz_A.F90	/^module
 boundary_noslipbb_knz_B	m_boundary_noslipbb_knz_B.F90	/^module
 boundary_noslip_edges	m_boundary_noslip_edges.F90	/^module
 city	m_city.F90	/^module
+city2	m_city2.F90	/^module
 collisions	m_collisions.F90	/^module
 collisions_kernel	m_collisions_kernel.F90	/^module
 cube	m_cube.F90	/^module
@@ -88,8 +92,11 @@ m_boundary_freeslip_edges	m_boundary_freeslip_edges.F90	/^module
 m_boundary_iinflow	m_boundary_iinflow.F90	/^module
 m_boundary_iinflow_edges	m_boundary_iinflow_edges.F90	/^module
 m_boundary_iperiodic	m_boundary_iperiodic.F90	/^module
+m_boundary_iperiodic_kernel	m_boundary_iperiodic_kernel.F90	/^module
 m_boundary_jperiodic	m_boundary_jperiodic.F90	/^module
+m_boundary_jperiodic_kernel	m_boundary_jperiodic_kernel.F90	/^module
 m_boundary_kperiodic	m_boundary_kperiodic.F90	/^module
+m_boundary_kperiodic_kernel	m_boundary_kperiodic_kernel.F90	/^module
 m_boundary_noslipbb_j1_A	m_boundary_noslipbb_j1_A.F90	/^module
 m_boundary_noslipbb_j1_B	m_boundary_noslipbb_j1_B.F90	/^module
 m_boundary_noslipbb_jny_A	m_boundary_noslipbb_jny_A.F90	/^module
@@ -100,6 +107,7 @@ m_boundary_noslipbb_knz_A	m_boundary_noslipbb_knz_A.F90	/^module
 m_boundary_noslipbb_knz_B	m_boundary_noslipbb_knz_B.F90	/^module
 m_boundary_noslip_edges	m_boundary_noslip_edges.F90	/^module
 m_city	m_city.F90	/^module
+m_city2	m_city2.F90	/^module
 m_collisions	m_collisions.F90	/^module
 m_collisions_kernel	m_collisions_kernel.F90	/^module
 m_cube	m_cube.F90	/^module
@@ -122,6 +130,7 @@ m_macrovars	m_macrovars.F90	/^module
 m_macrovars_kernel	m_macrovars_kernel.F90	/^module
 m_nrelliftdrag	m_nrelliftdrag.F90	/^module
 m_nrelreadfoil	m_nrelreadfoil.F90	/^module
+m_predicted_measurements	m_predicted_measurements.F90	/^module
 m_pseudo2D	m_pseudo2D.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
@@ -140,6 +149,7 @@ m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
 m_turbines_apply	m_turbines_apply.F90	/^module
 m_turbines_forcing	m_turbines_forcing.F90	/^module
+m_turbines_forcing_guo	m_turbines_forcing_guo.F90	/^module
 m_turbines_forcing_kupershtokh	m_turbines_forcing_kupershtokh.F90	/^module
 m_turbines_init	m_turbines_init.F90	/^module
 m_uvelshear	m_uvelshear.F90	/^module
@@ -151,6 +161,7 @@ m_wtime	m_wtime.F90	/^module
 nrel5mw	mod_nrel5mw.F90	/^module
 nrelliftdrag	m_nrelliftdrag.F90	/^module
 nrelreadfoil	m_nrelreadfoil.F90	/^module
+predicted_measurements	m_predicted_measurements.F90	/^module
 pseudo2D	m_pseudo2D.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module
@@ -170,6 +181,7 @@ tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module
 turbines_apply	m_turbines_apply.F90	/^module
 turbines_forcing	m_turbines_forcing.F90	/^module
+turbines_forcing_guo	m_turbines_forcing_guo.F90	/^module
 turbines_forcing_kupershtokh	m_turbines_forcing_kupershtokh.F90	/^module
 turbines_init	m_turbines_init.F90	/^module
 uvelshear	m_uvelshear.F90	/^module

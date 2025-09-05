@@ -13,8 +13,11 @@ subroutine boundarycond(f,uvel)
    use m_boundary_iinflow_edges
 
    use m_boundary_iperiodic
+   use m_boundary_iperiodic_kernel
    use m_boundary_jperiodic
+   use m_boundary_jperiodic_kernel
    use m_boundary_kperiodic
+   use m_boundary_kperiodic_kernel
 
    use m_boundary_noslipbb_j1_A
    use m_boundary_noslipbb_j1_B
@@ -58,17 +61,41 @@ subroutine boundarycond(f,uvel)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Periodic boundary conditions in i-direction.
    if (ibnd==0) then
-      call boundary_iperiodic(f)
+!      call boundary_iperiodic(f)
+#ifdef _CUDA
+      tx=ntx; bx=(nl  +tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
+      call boundary_iperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+#else
+      call boundary_iperiodic_kernel                                    (f,nx,ny,nz,nl)
+#endif
    endif
 
 ! Periodic boundary conditions in j-direction.
    if (jbnd==0) then
-      call boundary_jperiodic(f)
+!      call boundary_jperiodic(f)
+#ifdef _CUDA
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(nl  +ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
+      call boundary_jperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+#else
+      call boundary_jperiodic_kernel                                    (f,nx,ny,nz,nl)
+#endif
    endif
 
 ! Periodic boundary conditions in k-direction.
    if (kbnd==0) then
-      call boundary_kperiodic(f)
+!      call boundary_kperiodic(f)
+#ifdef _CUDA
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nl  +tz-1)/tz
+      call boundary_kperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+#else
+      call boundary_kperiodic_kernel                                    (f,nx,ny,nz,nl)
+#endif
    endif
 
 
@@ -209,16 +236,40 @@ subroutine boundarycond(f,uvel)
 
 ! Update edges for inflow conditions for periodic boundary conditions in i-direction
    if (ibnd==0) then
-      call boundary_iperiodic(f)
+!      call boundary_iperiodic(f)
+#ifdef _CUDA
+      tx=ntx; bx=(nl  +tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
+      call boundary_iperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+#else
+      call boundary_iperiodic_kernel                                    (f,nx,ny,nz,nl)
+#endif
    endif
 
 ! Periodic boundary conditions in j-direction.
    if (jbnd==0) then
-      call boundary_jperiodic(f)
+!      call boundary_jperiodic(f)
+#ifdef _CUDA
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(nl  +ty-1)/ty
+      tz=ntz; bz=(nz+2+tz-1)/tz
+      call boundary_jperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+#else
+      call boundary_jperiodic_kernel                                    (f,nx,ny,nz,nl)
+#endif
    endif
 
    if (kbnd==0) then
-      call boundary_kperiodic(f)
+!      call boundary_kperiodic(f)
+#ifdef _CUDA
+      tx=ntx; bx=(nx+2+tx-1)/tx
+      ty=nty; by=(ny+2+ty-1)/ty
+      tz=ntz; bz=(nl  +tz-1)/tz
+      call boundary_kperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+#else
+      call boundary_kperiodic_kernel                                    (f,nx,ny,nz,nl)
+#endif
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -42,7 +42,7 @@ endif
 endif
 
 ifdef CUDA
-FFLAGS+=  -gpu=lineinfo  -gpu=cc75,unroll -Minfo=accel -cuda
+FFLAGS+=  -gpu=lineinfo  -gpu=cc12,unroll -Minfo=accel -cuda
 #FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -Minfo=accel -cuda
 LINKFLAGS+= -cuda
 endif

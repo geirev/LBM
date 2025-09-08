@@ -52,6 +52,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    grid%z = (nz + tBlock%z - 1) / tBlock%z
 #endif
 
+   print *,'a'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing the S_i term returned in df
 #ifdef _CUDA
@@ -71,6 +72,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'b'
 
 #ifdef _CUDA
    call fequilscal<<<grid,tBlock>>>(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
@@ -84,12 +86,13 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'c'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(rho, u, v, w, ip, rtmp, vel,  uu, vv, ww, lit)
+!$OMP PARALLEL DO PRIVATE(j,k) SHARED(rho, ip, rtmp, vel,  uu, vv, ww, lit)
 #endif
    do k=1,nz
    do j=1,ny
@@ -103,6 +106,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'d'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
    call fequilscal<<<grid,tBlock>>>(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
@@ -117,6 +121,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'e'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
@@ -134,6 +139,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
+   print *,'f'
 
    call cpufinish(icpu)
 

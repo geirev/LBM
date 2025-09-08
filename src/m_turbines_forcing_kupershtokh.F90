@@ -78,6 +78,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 
 
 
+   print *,'AAA'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! copy macro velocities and density to rtmp and vel
 
@@ -100,13 +101,14 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'AA'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute equilibrium distribution for the turbine grid points
 
 #ifdef _CUDA
    call fequilscal<<<grid, tBlock>>>(dfeq1, rtmp, vel, weights, cxr, cyr, czr, H2, H3, ii)
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp,kp, ieps, iradius, dfeq1, rtmp, vel, weights, cxr, cyr, czr, H2, H3)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp,kp, iradius, dfeq1, rtmp, vel, weights, cxr, cyr, czr, H2, H3)
    do k=1,nz
    do j=1,ny
       if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
@@ -121,11 +123,11 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! copy macro velocities plus actuator line forcing and density to vel and rtmp
-
+   print *,'A'
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(rho, u, v, w, ip, rtmp, vel, du, dv, dw, ip)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(rho, u, v, w, ip, rtmp, vel, du, dv, dw)
 #endif
    do k=1,nz
    do j=1,ny
@@ -141,6 +143,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'B'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute equilibrium distribution for the turbine grid points with du forcing added
@@ -148,7 +151,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 #ifdef _CUDA
    call fequilscal<<<grid, tBlock>>>(dfeq2, rtmp, vel, weights, cxr, cyr, czr, H2, H3, ii)
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp, kp, ieps, dfeq2, rtmp, vel, weights, cxr, cyr, czr, H2, H3 )
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp, kp, dfeq2, rtmp, vel, weights, cxr, cyr, czr, H2, H3 )
    do k=1,nz
    do j=1,ny
       if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
@@ -161,6 +164,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'C'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute final turbine_df to be used in applyturbines
 
@@ -182,6 +186,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 !$OMP END PARALLEL DO
 #endif
 
+   print *,'D'
 
 end subroutine
 end module

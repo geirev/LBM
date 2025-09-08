@@ -28,7 +28,7 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
    real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
    real, intent(in)    :: w(nx,ny,nz)        ! z component of fluid velocity
    real, intent(in)    :: rho(nx,ny,nz)        ! z component of fluid velocity
-   logical, intent(in) :: lblanking(nx,ny,nz)  ! z component of fluid velocity
+   logical, intent(in) :: lblanking(0:nx+1,0:ny+1,0:nz+1)  ! z component of fluid velocity
 #ifdef _CUDA
    attributes(device) :: u
    attributes(device) :: v
@@ -41,11 +41,6 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
    integer, save :: iave=0
 
 
-   real, allocatable, dimension(:,:,:)   :: ave_h
-
-   real x
-   integer j,k,i,itmp
-   real utmp,vtmp,wtmp,Ttmp
 #ifdef _CUDA
    integer :: tx, ty, tz, bx, by, bz
 #endif

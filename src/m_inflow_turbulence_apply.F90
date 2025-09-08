@@ -3,7 +3,6 @@ module m_inflow_turbulence_apply
 contains
 subroutine inflow_turbulence_apply(f,turbulence_df,tau)
    use m_inflow_turbulence_init, only : iturb_pos, iturb_radius
-   use m_readinfile, only : iforce
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_wtime
@@ -16,8 +15,7 @@ subroutine inflow_turbulence_apply(f,turbulence_df,tau)
    attributes(device) :: turbulence_df
    attributes(device) :: tau
 #endif
-   real tmp
-   integer ip,i,j,k,l
+   integer ip,j,k,l
    integer, parameter :: icpu=9
    call cpustart()
    ip=iturb_pos

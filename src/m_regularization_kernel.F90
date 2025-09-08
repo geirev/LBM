@@ -42,7 +42,7 @@ contains
    if (i > nx .or. j > ny .or. k > nz) return
 #else
 !$OMP PARALLEL DO COLLAPSE(3) DEFAULT(none) PRIVATE(i, j, k, l, p, q, r, i1, j1, k1, vel, a1_2, a1_3, tmp)&
-!$OMP             & SHARED(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6, ihrr)
+!$OMP             & SHARED(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
    do k=1,nz
    do j=1,ny
    do i=1,nx

@@ -1,0 +1,23 @@
+Dual License Notice
+===================
+
+This software is licensed under a dual license model:
+
+1. Open Source License
+   -------------------
+   The code is available under the terms of the Apache License 2.0
+   (see LICENSE-APACHE file), which allows free use, modification,
+   and distribution, including in commercial research settings,
+   provided compliance with the license terms.
+
+2. Commercial License
+   ------------------
+   For commercial use outside the scope of the Apache License
+   (e.g. proprietary software development without attribution
+   or sharing of modifications), a separate commercial license
+   must be obtained from the copyright holder.
+
+   Contact: [Geir Evensen] – [geir.evensen@gmail.com]
+
+By using this software, you agree to the terms of either the
+Apache 2.0 license or a separate commercial license agreement.

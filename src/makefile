@@ -50,6 +50,7 @@ endif
 ifdef MP
 ifdef GFORTRAN
 FFLAGS+= -fopenmp -DOPEN_MP
+LINKFLAGS+= -fopenmp
 else
 FFLAGS+= -mp  -DOPEN_MP
 LINKFLAGS+= -fopenmp

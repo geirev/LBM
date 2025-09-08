@@ -37,7 +37,6 @@ subroutine turbines_forcing(rho,u,v,w)
 
    real, save :: dtheta=0.0
    real rps
-   real tmp(1:10)
 
    real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
@@ -96,7 +95,7 @@ subroutine turbines_forcing(rho,u,v,w)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(tubine_du, tubine_dv, tubine_dw, tubine_force, rho, ip, jp, kp, iradius)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(du, dv, dw, rho, ip, jp, kp, iradius)
 #endif
       do k=1,nz
       do j=1,ny

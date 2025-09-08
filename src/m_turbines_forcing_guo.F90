@@ -34,7 +34,7 @@ subroutine turbines_forcing_guo(df,du,dv,dw,rho,u,v,w,ip,iradius,nturbines,n)
 
    integer, intent(in) :: ip, iradius, n
    integer :: l
-   real cx,cy,cz,cdotuu,cminx,cminy,cminz
+!   real cx,cy,cz,cdotuu,cminx,cminy,cminz
    real cdota,udota,cdotu
 
 #ifdef _CUDA
@@ -58,8 +58,9 @@ subroutine turbines_forcing_guo(df,du,dv,dw,rho,u,v,w,ip,iradius,nturbines,n)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k,cdotuu,cminx,cminy,cminz,cx,cy,cz) &
-!$OMP             SHARED(df, rho, weights, u, v, w, ip, du, dv, dwa ,cxs, cys, czs, cs2, cs4)
+!!  !$OMP PARALLEL DO PRIVATE(i,j,k,cdotuu,cminx,cminy,cminz,cx,cy,cz) &
+!$OMP PARALLEL DO PRIVATE(i,j,k,l,cdota,cdotu,udota) &
+!$OMP             SHARED(n, df, rho, weights, u, v, w, ip, du, dv, dw ,cxs, cys, czs)
 #endif
    do k=1,nz
    do j=1,ny

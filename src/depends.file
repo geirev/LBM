@@ -207,7 +207,6 @@ m_inflow_turbulence_apply.o:      makefile
 m_inflow_turbulence_apply.o:      m_inflow_turbulence_init.o
 m_inflow_turbulence_apply.o:      mod_D3Q27setup.o
 m_inflow_turbulence_apply.o:      mod_dimensions.o
-m_inflow_turbulence_apply.o:      m_readinfile.o
 m_inflow_turbulence_apply.o:      m_wtime.o
 m_inflow_turbulence_compute.o:      makefile
 m_inflow_turbulence_compute.o:      mod_dimensions.o

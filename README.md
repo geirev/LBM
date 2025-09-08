@@ -1,6 +1,18 @@
 # Lattice-Boltzmann-Model
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
+## License
+
+This project is dual-licensed:
+
+- Open Source: [Apache License 2.0](./LICENSE-APACHE) for research and academic use.
+- Commercial: A commercial license is available for proprietary use.
+
+If you are interested in a commercial license, please contact:
+**[Geir Evensen] – [geir.evensen@gmail.com]**
+
+## Introduction
+
 The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP multicore, or a GPU, with optimization primarily for the GPU.
 
 The code runs in single precision as default but a flag copiles a double precision version.

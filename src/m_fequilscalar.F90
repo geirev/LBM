@@ -4,7 +4,6 @@ contains
 !attributes(device) &
 #endif
 function fequilscalar(rho,u,v,w,weights,cxs,cys,czs,H2,H3) result(feq)
-!function fequilscalar(rho, u, v, w) result(feq)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    implicit none
@@ -42,9 +41,9 @@ function fequilscalar(rho,u,v,w,weights,cxs,cys,czs,H2,H3) result(feq)
 
    integer l, p, q, r
 
-   real, parameter :: cs2=1/3.0
-   real, parameter :: cs4=1/9.0
-   real, parameter :: cs6=1/27.0
+   real, parameter :: cs2=1.0/3.0
+   real, parameter :: cs4=1.0/9.0
+   real, parameter :: cs6=1.0/27.0
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
 
 

@@ -10,6 +10,7 @@ end type
 contains
 subroutine predicted_measurements(u,v,w,it)
    use mod_dimensions
+   implicit none
    real, intent(in) :: u(nx,ny,nz)
    real, intent(in) :: v(nx,ny,nz)
    real, intent(in) :: w(nx,ny,nz)
@@ -22,6 +23,7 @@ subroutine predicted_measurements(u,v,w,it)
    character(len=100) fname
    character(len=5) cit
    integer iunit
+   integer m
 
    obs(1)%i=70 ; obs(1)%j=28; obs(1)%c='u'
    obs(2)%i=70 ; obs(2)%j=28; obs(2)%c='v'

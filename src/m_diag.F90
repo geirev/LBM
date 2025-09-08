@@ -2,7 +2,7 @@ module m_diag
 contains
 subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    use mod_dimensions
-   use m_readinfile, only : iout, iprt1, iprt2, dprt, lprtmin,  nt1
+   use m_readinfile, only : iout, iprt1, iprt2, dprt,  nt1
    use m_vorticity
    use m_tecout
    use m_wtime
@@ -34,8 +34,6 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    real, allocatable    :: Ti_h(:,:,:)
    integer, parameter :: icpu=14
    integer num_of_vars
-   real tmp
-   integer i,j,k
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. ((it <= iprt1 .or. it >= iprt2).and. mod(it,dprt) == 0)) then
       if (filetype==1) then

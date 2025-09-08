@@ -11,9 +11,9 @@ module mod_D3Q27setup
 #endif
 
 
-   real, parameter :: cs2=1/3.0
-   real, parameter :: cs4=1/9.0
-   real, parameter :: cs6=1/27.0
+   real, parameter :: cs2=1.0/3.0
+   real, parameter :: cs4=1.0/9.0
+   real, parameter :: cs6=1.0/27.0
 
 
 #ifdef D3Q19

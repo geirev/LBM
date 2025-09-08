@@ -41,6 +41,10 @@ city	m_city.F90	/^module
 city2	m_city2.F90	/^module
 collisions	m_collisions.F90	/^module
 collisions_kernel	m_collisions_kernel.F90	/^module
+compute_f	m_compute_f.F90	/^module
+compute_fneq	m_compute_fneq.F90	/^module
+compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
+compute_f_kernel	m_compute_f_kernel.F90	/^module
 cube	m_cube.F90	/^module
 cylinder	m_cylinder.F90	/^module
 D3Q27setup	mod_D3Q27setup.F90	/^module
@@ -110,6 +114,10 @@ m_city	m_city.F90	/^module
 m_city2	m_city2.F90	/^module
 m_collisions	m_collisions.F90	/^module
 m_collisions_kernel	m_collisions_kernel.F90	/^module
+m_compute_f	m_compute_f.F90	/^module
+m_compute_fneq	m_compute_fneq.F90	/^module
+m_compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
+m_compute_f_kernel	m_compute_f_kernel.F90	/^module
 m_cube	m_cube.F90	/^module
 m_cylinder	m_cylinder.F90	/^module
 m_density	m_density.F90	/^module

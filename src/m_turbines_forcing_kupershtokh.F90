@@ -2,7 +2,7 @@ module m_turbines_forcing_kupershtokh
 contains
 
 subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
-                                      rho,u,v,w,dfeq1,dfeq2,ip,jp,kp,iradius,cx,cy,cz,nturbines,n,it,nt1)
+                                      rho,u,v,w,dfeq1,dfeq2,ip,jp,kp,iradius,cxr,cyr,czr,nturbines,n)
 !     function [U,S]=SchemeIX(A,dt,tau,f,Rho,U)
 !        U= U +  0.0
 !        S=( Feq(Rho,U+dt*A) - Feq(Rho,U) )./ dt
@@ -38,8 +38,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
    real, intent(inout) :: dfeq2(nl,-ieps:ieps,ny,nz)
 
    integer, intent(in) :: ip, jp, kp, iradius, n
-   real,    intent(in) :: cx(nl), cy(nl), cz(nl)
-   integer :: it,nt1
+   real,    intent(in) :: cxr(nl), cyr(nl), czr(nl)
 
 #ifdef _CUDA
    attributes(device)  :: df
@@ -54,7 +53,7 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
    attributes(device)  :: rtmp
    attributes(device)  :: dfeq1
    attributes(device)  :: dfeq2
-   attributes(device)  :: cx,cy,cz
+   attributes(device)  :: cxr,cyr,czr
 #endif
 
    integer i,j,k
@@ -105,14 +104,14 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 ! Compute equilibrium distribution for the turbine grid points
 
 #ifdef _CUDA
-   call fequilscal<<<grid, tBlock>>>(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
+   call fequilscal<<<grid, tBlock>>>(dfeq1, rtmp, vel, weights, cxr, cyr, czr, H2, H3, ii)
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp,kp, ieps, iradius, dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp,kp, ieps, iradius, dfeq1, rtmp, vel, weights, cxr, cyr, czr, H2, H3)
    do k=1,nz
    do j=1,ny
       if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
          do i=-ieps,ieps
-            dfeq1(:,i,j,k)=fequilscalar(rtmp(i,j,k), vel(1,i,j,k), vel(2,i,j,k), vel(3,i,j,k), weights, cx, cy, cz, H2, H3)
+            dfeq1(:,i,j,k)=fequilscalar(rtmp(i,j,k), vel(1,i,j,k), vel(2,i,j,k), vel(3,i,j,k), weights, cxr, cyr, czr, H2, H3)
          enddo
       endif
    enddo
@@ -147,14 +146,14 @@ subroutine turbines_forcing_kupershtokh(df,du,dv,dw,vel,rtmp,&
 ! Compute equilibrium distribution for the turbine grid points with du forcing added
 
 #ifdef _CUDA
-   call fequilscal<<<grid, tBlock>>>(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
+   call fequilscal<<<grid, tBlock>>>(dfeq2, rtmp, vel, weights, cxr, cyr, czr, H2, H3, ii)
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp, kp, ieps, dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3 )
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(jp, kp, ieps, dfeq2, rtmp, vel, weights, cxr, cyr, czr, H2, H3 )
    do k=1,nz
    do j=1,ny
       if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
          do i=-ieps,ieps
-            dfeq2(:,i,j,k)=fequilscalar(rtmp(i,j,k), vel(1,i,j,k), vel(2,i,j,k), vel(3,i,j,k), weights, cx, cy, cz, H2, H3)
+            dfeq2(:,i,j,k)=fequilscalar(rtmp(i,j,k), vel(1,i,j,k), vel(2,i,j,k), vel(3,i,j,k), weights, cxr, cyr, czr, H2, H3)
          enddo
       endif
    enddo

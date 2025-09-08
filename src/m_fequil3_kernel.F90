@@ -34,6 +34,8 @@ contains
    real :: vel(3)
    real :: ratio
    real :: vratio
+   real :: cu
+   real :: tmp
 
    integer :: i, j, k, l, p, q, r, i1, j1, k1
 #ifdef _CUDA
@@ -70,6 +72,12 @@ contains
       vel(2)=v(i,j,k)
       vel(3)=w(i,j,k)
 
+! 1. order
+      do l=1,nl
+         cu = real(cxs(l))*vel(1) + real(cys(l))*vel(2) + real(czs(l))*vel(3)
+         feq(l,i1,j1,k1) = rho(i,j,k) * weights(l) * (1.0 + cu*inv1cs2)
+      enddo
+
 ! A0_2
       do q=1,3
       do p=1,3
@@ -77,22 +85,15 @@ contains
       enddo
       enddo
 
-
-! 1. order
-      do l=1,nl
-         feq(l,i1,j1,k1) = rho(i,j,k) * (cs2 + real(cxs(l))*vel(1)&
-                                             + real(cys(l))*vel(2)&
-                                             + real(czs(l))*vel(3)) * inv1cs2
-      enddo
-
-
 ! 2nd order equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
       do l=1,nl
+         tmp=0.0
          do q=1,3
          do p=1,3
-            feq(l,i1,j1,k1)=feq(l,i1,j1,k1) + H2(p,q,l)*A0_2(p,q)
+            tmp=tmp + H2(p,q,l)*A0_2(p,q)
          enddo
          enddo
+         feq(l,i1,j1,k1)=feq(l,i1,j1,k1) + weights(l)*tmp
       enddo
 
 
@@ -118,50 +119,18 @@ contains
 
 
          do l=2,nl
+            tmp=0.0
             do r=1,3
             do q=1,3
             do p=1,3
-               feq(l,i1,j1,k1)=feq(l,i1,j1,k1) + H3(p,q,r,l)*A0_3(p,q,r)
+               tmp=tmp + H3(p,q,r,l)*A0_3(p,q,r)
             enddo
             enddo
             enddo
+            feq(l,i1,j1,k1)=feq(l,i1,j1,k1) + weights(l)*tmp
          enddo
        endif
 
-!! !$CUF UNROLL
-!! dir$ unroll
-!      do l=1,nl
-!         f(l,i,j,k)= weights(l)*f(l,i,j,k)
-!      enddo
-       feq( 1,i1,j1,k1)= weights( 1)*feq( 1,i1,j1,k1)
-       feq( 2,i1,j1,k1)= weights( 2)*feq( 2,i1,j1,k1)
-       feq( 3,i1,j1,k1)= weights( 3)*feq( 3,i1,j1,k1)
-       feq( 4,i1,j1,k1)= weights( 4)*feq( 4,i1,j1,k1)
-       feq( 5,i1,j1,k1)= weights( 5)*feq( 5,i1,j1,k1)
-       feq( 6,i1,j1,k1)= weights( 6)*feq( 6,i1,j1,k1)
-       feq( 7,i1,j1,k1)= weights( 7)*feq( 7,i1,j1,k1)
-       feq( 8,i1,j1,k1)= weights( 8)*feq( 8,i1,j1,k1)
-       feq( 9,i1,j1,k1)= weights( 9)*feq( 9,i1,j1,k1)
-       feq(10,i1,j1,k1)= weights(10)*feq(10,i1,j1,k1)
-       feq(11,i1,j1,k1)= weights(11)*feq(11,i1,j1,k1)
-       feq(12,i1,j1,k1)= weights(12)*feq(12,i1,j1,k1)
-       feq(13,i1,j1,k1)= weights(13)*feq(13,i1,j1,k1)
-       feq(14,i1,j1,k1)= weights(14)*feq(14,i1,j1,k1)
-       feq(15,i1,j1,k1)= weights(15)*feq(15,i1,j1,k1)
-       feq(16,i1,j1,k1)= weights(16)*feq(16,i1,j1,k1)
-       feq(17,i1,j1,k1)= weights(17)*feq(17,i1,j1,k1)
-       feq(18,i1,j1,k1)= weights(18)*feq(18,i1,j1,k1)
-       feq(19,i1,j1,k1)= weights(19)*feq(19,i1,j1,k1)
-#ifndef D3Q19
-       feq(20,i1,j1,k1)= weights(20)*feq(20,i1,j1,k1)
-       feq(21,i1,j1,k1)= weights(21)*feq(21,i1,j1,k1)
-       feq(22,i1,j1,k1)= weights(22)*feq(22,i1,j1,k1)
-       feq(23,i1,j1,k1)= weights(23)*feq(23,i1,j1,k1)
-       feq(24,i1,j1,k1)= weights(24)*feq(24,i1,j1,k1)
-       feq(25,i1,j1,k1)= weights(25)*feq(25,i1,j1,k1)
-       feq(26,i1,j1,k1)= weights(26)*feq(26,i1,j1,k1)
-       feq(27,i1,j1,k1)= weights(27)*feq(27,i1,j1,k1)
-#endif
 
 #ifndef _CUDA
     enddo

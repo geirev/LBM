@@ -43,6 +43,10 @@ F90SOURCE = \
 	m_city.F90\
 	m_collisions.F90\
 	m_collisions_kernel.F90\
+	m_compute_f.F90\
+	m_compute_f_kernel.F90\
+	m_compute_fneq.F90\
+	m_compute_fneq_kernel.F90\
 	m_cube.F90\
 	m_cylinder.F90\
 	m_density.F90\

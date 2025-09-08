@@ -1,10 +1,10 @@
 module m_turbines_forcing
 contains
-subroutine turbines_forcing(rho,u,v,w,it,nt1)
+subroutine turbines_forcing(rho,u,v,w)
 ! Returns the S_i stored in turbine_df and possibly updated velocities
    use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup
-   use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines
+   use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
    use m_fequilscalar
    use m_actuatorline
    use m_turbines_init
@@ -14,6 +14,7 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
    use cudafor
 #endif
    use m_wtime
+   implicit none
    real, intent(inout) :: rho(nx,ny,nz)                     ! density
    real, intent(inout) :: u(nx,ny,nz)                       ! velocity
    real, intent(inout) :: v(nx,ny,nz)                       ! velocity
@@ -28,7 +29,6 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
 
    real :: force_h(0:ieps,ny,nz,3)        ! work array for computing the turbine force
 
-   integer :: it,nt1
    integer i,n,j,k,ip,jp,kp
    real :: u_h(ny, nz)
    real :: v_h(ny, nz)
@@ -37,6 +37,7 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
 
    real, save :: dtheta=0.0
    real rps
+   real tmp(1:10)
 
    real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
@@ -80,6 +81,7 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
         end do
       end do
 
+! Host mode
       u_h = slice_u
       v_h = slice_v
       w_h = slice_w
@@ -111,19 +113,19 @@ subroutine turbines_forcing(rho,u,v,w,it,nt1)
 !$OMP END PARALLEL DO
 #endif
 
-! (10) Kupershtokh 2009
       select case (iforce)
       case(10)
          call  turbines_forcing_kupershtokh(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
-                                             ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
+                                             ip, jp, kp, iradius, cx, cy, cz, nturbines, n)
 
       case(8)
-         call  turbines_forcing_guo(turbine_df, du, dv, dw, vel, rtmp, rho, u, v, w, dfeq1, dfeq2,&
-                                             ip, jp, kp, iradius, cx, cy, cz, nturbines, n, it, nt1)
-
+         !print *,'Guo forcing is inaccurate since the regularization kills the velocity contributions '
+         !print *,'due to a large fneq=f-feq that is not well represented in Rfneq.                    '
+         !stop
+         call  turbines_forcing_guo(turbine_df, du, dv, dw, rho, u, v, w, ip, iradius, nturbines, n)
 
       case default
-         print '(a)','  invalid forcing schemme (1,8,10,12)'
+         print '(a)','  invalid forcing scheme (8,10)'
          stop 'turbines_forcing'
       end select
 

@@ -15,40 +15,29 @@ subroutine turbines_apply(f,df,tau)
    attributes(device) :: df
    attributes(device) :: tau
 #endif
-   integer n,ip,i,j,k,ii
+   integer n,ip,i,j,k,ii,l
    integer, parameter :: icpu=8
+   real fac
    call cpustart()
-   if (iforce == 12 .or. iforce == 8) then
-      do n=1,nturbines
-         ip=ipos(n)
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#endif
-         do k=1,nz
-         do j=1,ny
-         do i=-ieps,ieps
-            f(:,ip+i,j,k)=f(:,ip+i,j,k) + (1.0-0.5/tau(ip+i,j,k))*df(:,i,j,k,n)
-         enddo
-         enddo
-         enddo
-      enddo
-   else
-      do n=1,nturbines
-         ip=ipos(n)
+   fac=1.0 ! for iforce=10
+   do n=1,nturbines
+      ip=ipos(n)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #endif
-         do k=1,nz
-         do j=1,ny
-         do ii=-ieps,ieps
-            i=ip+ii
-            !print '(4i4,10g13.4)',k,j,ii,i,df(1:10,ii,j,k,n)
-            f(1:nl,i,j,k) = f(1:nl,i,j,k) + df(1:nl,ii,j,k,n)
-         enddo
-         enddo
+      do k=1,nz
+      do j=1,ny
+      do ii=-ieps,ieps
+         i=ip+ii
+         if (iforce == 8) fac=(1.0-0.5/tau(i,j,k))
+         do l=1,nl
+            f(l,i,j,k) = f(l,i,j,k) + fac*df(l,ii,j,k,n)
+!            f(l,i,j,k) = f(l,i,j,k) + df(l,ii,j,k,n)
          enddo
       enddo
-   endif
+      enddo
+      enddo
+   enddo
    call cpufinish(icpu)
 end subroutine
 end module

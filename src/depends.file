@@ -13,6 +13,8 @@ main.o:      m_boundarycond.o
 main.o:      m_city2.o
 main.o:      m_city.o
 main.o:      m_collisions.o
+main.o:      m_compute_fneq.o
+main.o:      m_compute_f.o
 main.o:      m_cube.o
 main.o:      m_cylinder.o
 main.o:      m_density.o
@@ -154,6 +156,18 @@ m_collisions.o:      m_collisions_kernel.o
 m_collisions.o:      mod_D3Q27setup.o
 m_collisions.o:      mod_dimensions.o
 m_collisions.o:      m_wtime.o
+m_compute_f_kernel.o:      makefile
+m_compute_fneq_kernel.o:      makefile
+m_compute_fneq.o:      makefile
+m_compute_fneq.o:      m_compute_fneq_kernel.o
+m_compute_fneq.o:      mod_D3Q27setup.o
+m_compute_fneq.o:      mod_dimensions.o
+m_compute_fneq.o:      m_wtime.o
+m_compute_f.o:      makefile
+m_compute_f.o:      m_compute_f_kernel.o
+m_compute_f.o:      mod_D3Q27setup.o
+m_compute_f.o:      mod_dimensions.o
+m_compute_f.o:      m_wtime.o
 m_cube.o:      makefile
 m_cube.o:      mod_dimensions.o
 m_cylinder.o:      makefile
@@ -240,6 +254,8 @@ m_readrestart.o:      m_readinfile.o
 m_regularization_kernel.o:      makefile
 m_regularization.o:      m_ablim.o
 m_regularization.o:      makefile
+m_regularization.o:      m_compute_f_kernel.o
+m_regularization.o:      m_compute_fneq_kernel.o
 m_regularization.o:      mod_D3Q27setup.o
 m_regularization.o:      mod_dimensions.o
 m_regularization.o:      m_readinfile.o

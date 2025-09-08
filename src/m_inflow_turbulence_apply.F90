@@ -1,4 +1,5 @@
 module m_inflow_turbulence_apply
+! only set up for Kupershtokh forcing
 contains
 subroutine inflow_turbulence_apply(f,turbulence_df,tau)
    use m_inflow_turbulence_init, only : iturb_pos, iturb_radius
@@ -20,31 +21,16 @@ subroutine inflow_turbulence_apply(f,turbulence_df,tau)
    integer, parameter :: icpu=9
    call cpustart()
    ip=iturb_pos
-   if (iforce == 12 .or. iforce == 8) then
-      stop 'only works for iforce=10'
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#endif
-      do k=1,nz
-      do j=1,ny
-      do i=-iturb_radius,iturb_radius
-         f(:,ip+i,j,k)=f(:,ip+i,j,k) + (1.0-0.5/tau(ip+i,j,k))*turbulence_df(:,j,k)
-      enddo
-      enddo
-      enddo
-   else
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #endif
-      do k=1,nz
-      do j=1,ny
-      do l=1,nl
-         tmp=turbulence_df(l,j,k)
-         f(l,ip,j,k) = f(l,ip,j,k) + tmp
-      enddo
-      enddo
-      enddo
-   endif
+   do k=1,nz
+   do j=1,ny
+   do l=1,nl
+      f(l,ip,j,k) = f(l,ip,j,k) + turbulence_df(l,j,k)
+   enddo
+   enddo
+   enddo
    call cpufinish(icpu)
 end subroutine
 end module

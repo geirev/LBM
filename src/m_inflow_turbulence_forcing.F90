@@ -1,4 +1,6 @@
 module m_inflow_turbulence_forcing
+! kupershtokh forcing is used for the turbulence.
+! Its also applied on a thin slice of one grid cell thickness.
 contains
 subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    use mod_dimensions
@@ -16,9 +18,6 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    real, intent(inout)    :: u(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: v(nx,ny,nz)                       ! velocity
    real, intent(inout)    :: w(nx,ny,nz)                       ! velocity
-!   real, intent(in)       :: uu(ny,nz,0:nrturb)
-!   real, intent(in)       :: vv(ny,nz,0:nrturb)
-!   real, intent(in)       :: ww(ny,nz,0:nrturb)
    integer, intent(in)    :: it
    real, intent(in)       :: ampl
 #ifdef _CUDA
@@ -26,9 +25,6 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    attributes(device) :: u
    attributes(device) :: v
    attributes(device) :: w
-   !attributes(device) :: uu
-   !attributes(device) :: vv
-   !attributes(device) :: ww
 #endif
 
    integer lit,j,k,ip,l

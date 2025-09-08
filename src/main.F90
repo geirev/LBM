@@ -36,6 +36,8 @@ program LatticeBoltzmann
    use m_drift
    use m_fequil3
    use m_regularization
+   use m_compute_f
+   use m_compute_fneq
    use m_vreman
    use m_seedmanagement
    use m_readrestart
@@ -274,18 +276,27 @@ program LatticeBoltzmann
 ! start with f,rho,u,v,w
 
 
-! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
-      if (nturbines > 0)      call turbines_forcing(rho,u,v,w,it,nt1)
-
-! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
-
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call regularization(f, feq, u, v, w)
+      if (ihrr == 1) then
+         call regularization(f, feq, u, v, w)
+      else
+         call compute_fneq(f,feq)
+      endif
 
+! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
+      if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
+
+! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
+      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
+
+!! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
+      if (iforce /= 10 .and. nturbines > 0) then 
+         call fequil3(feq,rho,u,v,w)
+         call compute_fneq(f, feq)
+      endif
 
 ! [tau] = vreman[f] [f=Rneqf]
       call vreman(f, tau)

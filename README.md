@@ -5,12 +5,14 @@ The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP multicore, or
 
 The code runs in single precision as default but a flag copiles a double precision version.
 
-The collision operator is a single relaxation time third-order expansion with regularization similar to [Jacob et al (2018)](https://hal.science/hal-02114308)
-and [Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization, which I have not yet needed. It is also possible to use it for viscous flow without regularization and turbulence closure, and using a second-order BGK expansion.
+The collision operator is a single relaxation time third-order expansion with regularization similar to [Jacob et al (2018)](https://hal.science/hal-02114308) and
+[Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization, which I have not yet needed. It is also possible to use it for
+viscous flow without regularization and turbulence closure, and using a second-order BGK expansion.
 
 The turbulence closure scheme is the one described by [Vreman (2004)](https://doi.org/10.1063/1.1785131).
 
-The model boundary conditions are periodic or inflow-outflow in the i-direction, periodic or closed no-slip or free-slip two-timestep bounceback in the j- and k- directions.
+The model boundary conditions are periodic or inflow-outflow in the i-direction, periodic or closed no-slip or free-slip two-timestep bounceback in the j- and k-
+directions.
 
 The code allows for inserting solid bodies within the model domain to simulate, e.g., flow around an airfoil or a cylinder.
 
@@ -19,6 +21,16 @@ turbines at any location of the model domain.
 
 Inflow turbulence is mimicked or introduced at a section inside the inflow boundary at i=1 (typically at the slice i=10) by applying a smooth in space
 and time, pseudo-random force on the fluid.
+
+The forcing function for the inflow turbulence and the turbines is that of Kupershtokh (2009). For the turbine forcing, it is also possible to run with the forcing
+formulations of Guo et al (2002). However, when using regularization, we project the non-equilibrium distribution onto the third-order Hermite polynomials. The
+significant difference between the Guo scheme's equilibrium distribution computed on the forcing-updated velocities leads to a poor representation using Hermite
+polynomials, and we partly lose the effect of the forcing. Thus, in the Guo scheme with regularization, it is necessary to compute the regularization first on
+R(fneq)=R(f-feq(u)) and then recover f=feq(u)+R(fneq) before computing the updated forcing velocities u+du and the forcing distribution df. Next we compute
+feq(u+du) and fneq(u+du)= f-feq(u+du), which goes into the collision and vreman calls. Thus, the cost of Guo is therefore much higher as it requires two calls to
+fequil and an extra computation of f=feq +R(fneq) and extra computation of fneq= f-feq(u+du). It is possible to reduce the computational cost by updating only at
+the turbine locations, but for now, it is not worth the effort.
+
 
 
 <p align="center">

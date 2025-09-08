@@ -91,22 +91,12 @@ subroutine readinfile()
       read(10,*)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
       read(10,*)iforce             ; write(*,'(a,i8)',advance='no') 'iforce            = ',iforce
       select case (iforce)
-      case(1)
-         print '(a)','  Shan and Chen (1993)'
-         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
-         iforce=10
       case(8)
          print '(a)','  Guo (2002)'
-         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
-         iforce=10
       case(10)
          print '(a)','  Kupershtokh (2009)'
-      case(12)
-         print '(a)','  Khazaeli et al. 2019'
-         print '(a)','  Does not work with regularization (for some unclear reason): will use iforce=10'
-         iforce=10
       case default
-         print '(a)','  invalid forcing schemme (1,8,10,12)'
+         print '(a)','  invalid forcing scheme (8,10)'
          stop
       end select
       read(10,*)nt0                ; print '(a,i8)',      'nt0               = ',nt0

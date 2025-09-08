@@ -5,7 +5,7 @@ subroutine regularization(f, feq, u, v, w)
    use mod_dimensions
    use mod_D3Q27setup
    use m_ablim
-   use m_readinfile, only : ihrr
+   use m_readinfile, only : iforce
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
@@ -15,6 +15,8 @@ subroutine regularization(f, feq, u, v, w)
     use cudafor
 #endif
    use m_regularization_kernel
+   use m_compute_fneq_kernel
+   use m_compute_f_kernel
 
    implicit none
    real, intent(in)       :: u(nx,ny,nz)
@@ -46,12 +48,34 @@ subroutine regularization(f, feq, u, v, w)
    ty=nty; by=(ny+ty-1)/ty
    tz=ntz; bz=(nz+tz-1)/tz
 #endif
+
+
+
+   call compute_fneq_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(f, feq, nx, ny, nz, nl)
+
+
    call regularization_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6, ihrr)
+        &(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
 
+
+! If using Guo or other forcing formulations, the regularization will kill the 
+! contributions from the velocities due to the large difference between f and feq
+! when we compute feq from the updated velocities. Thus, we must compute the
+! regularization as a seperate step before applying the forcings. See main.F90.
+   if (iforce /= 10) then
+      call compute_f_kernel&
+#ifdef _CUDA
+           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+           &(f, feq, nx, ny, nz, nl)
+   endif
 
    call cpufinish(icpu)
 

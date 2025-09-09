@@ -5,8 +5,8 @@ contains
 subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    use mod_dimensions
    use m_inflow_turbulence_init
-   use m_fequilscal
-   use m_fequilscalar
+   use m_fequil3_block_kernel
+   use m_readinfile,    only : ibgk
 #ifdef _CUDA
    use cudafor
 #endif
@@ -27,10 +27,15 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    attributes(device) :: w
 #endif
 
-   integer lit,j,k,ip,l
+   integer lit,j,k,ip,l,ii
 #ifdef _CUDA
    type(dim3) :: grid,tblock
 #endif
+
+   real, parameter :: inv1cs2 = 1.0/(cs2)
+   real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
+   real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
+   real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
 
    integer, parameter :: icpu=3
    call cpustart()
@@ -40,19 +45,8 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
    lit=mod(it,nrturb)
    if (lit==0) lit=nrturb
 
-#ifdef _CUDA
-   ii = 1  ! i is fixed at 1
+   ii = 1
 
-   tBlock%x = 1         ! only 1 thread in x (i-direction)
-   tBlock%y = 8         ! 8 threads in y-direction
-   tBlock%z = 8         ! 8 threads in z-direction
-
-   grid%x = 1           ! only one block in x (i-direction)
-   grid%y = (ny + tBlock%y - 1) / tBlock%y
-   grid%z = (nz + tBlock%z - 1) / tBlock%z
-#endif
-
-   print *,'a'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing the S_i term returned in df
 #ifdef _CUDA
@@ -72,21 +66,20 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 !$OMP END PARALLEL DO
 #endif
 
-   print *,'b'
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute equilibrium distribution for the turbine grid points
 #ifdef _CUDA
-   call fequilscal<<<grid,tBlock>>>(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
-#else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(dfeq1, rtmp, vel, weights, cx, cy, cz, H2, H3 )
-   do k=1,nz
-   do j=1,ny
-      dfeq1(:,1,j,k)=fequilscalar(rtmp(1,j,k),vel(1,1,j,k), vel(2,1,j,k), vel(3,1,j,k), weights, cx, cy, cz, H2, H3)
-   enddo
-   enddo
-!$OMP END PARALLEL DO
+      tx=1; bx=(ii+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
 
-   print *,'c'
+      call fequil3_block_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(dfeq1,rtmp,vel,ii,ny,nz,nl,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
@@ -106,22 +99,19 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 !$OMP END PARALLEL DO
 #endif
 
-   print *,'d'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Compute equilibrium distribution for the turbine grid points
 #ifdef _CUDA
-   call fequilscal<<<grid,tBlock>>>(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3, ii)
-#else
-!$OMP PARALLEL DO PRIVATE(j,k) SHARED(dfeq2, rtmp, vel, weights, cx, cy, cz, H2, H3 )
-   do k=1,nz
-   do j=1,ny
-      dfeq2(:,1,j,k)=fequilscalar(rtmp(1,j,k),vel(1,1,j,k), vel(2,1,j,k), vel(3,1,j,k),&
-                     weights, cx, cy, cz, H2, H3)
-   enddo
-   enddo
-!$OMP END PARALLEL DO
+      tx=8; bx=(ii+tx-1)/tx
+      ty=8; by=(ny+ty-1)/ty
+      tz=8; bz=(nz+tz-1)/tz
 #endif
 
-   print *,'e'
+      call fequil3_block_kernel&
+#ifdef _CUDA
+        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+        &(dfeq2,rtmp,vel,ii,ny,nz,nl,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
@@ -139,7 +129,6 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 #ifndef _CUDA
 !$OMP END PARALLEL DO
 #endif
-   print *,'f'
 
    call cpufinish(icpu)
 

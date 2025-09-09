@@ -5,7 +5,6 @@ subroutine turbines_forcing(rho,u,v,w)
    use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup
    use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,iforce
-   use m_fequilscalar
    use m_actuatorline
    use m_turbines_init
    use m_turbines_forcing_kupershtokh
@@ -37,10 +36,12 @@ subroutine turbines_forcing(rho,u,v,w)
 
    real, save :: dtheta=0.0
    real rps
+   real rr
 
    real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
+   integer isafe
    integer, parameter :: icpu=2
    call cpustart()
 
@@ -95,15 +96,17 @@ subroutine turbines_forcing(rho,u,v,w)
 #ifdef _CUDA
 !$cuf kernel do(2) <<<*,*>>>
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(du, dv, dw, rho, ip, jp, kp, iradius)
+!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(force, du, dv, dw, rho, ip, jp, kp, iradius)
 #endif
       do k=1,nz
       do j=1,ny
          if ( ((j-jp)**2 + (k-kp)**2 ) <  (iradius+5)**2) then
             do i=-ieps,ieps
-               du(i,j,k)=-force(abs(i),j,k,1)/rho(ip+i,j,k)
-               dv(i,j,k)=-force(abs(i),j,k,2)/rho(ip+i,j,k)
-               dw(i,j,k)=-force(abs(i),j,k,3)/rho(ip+i,j,k)
+               isafe=min(nx,max(1,ip+i))
+               rr=rho(isafe,j,k)+tiny(rr)
+               du(i,j,k)=-force(abs(i),j,k,1)/rr
+               dv(i,j,k)=-force(abs(i),j,k,2)/rr
+               dw(i,j,k)=-force(abs(i),j,k,3)/rr
             enddo
          endif
       enddo

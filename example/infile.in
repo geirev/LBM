@@ -1,6 +1,6 @@
 #1.0 Version of infile.in ---------------------------------------------------------------------------------------
  T                ! runexp (true or false)
- city             ! experiment: cylinder, airfoil etc
+ city2             ! experiment: cylinder, airfoil etc
  512   1   1           ! number of threads per block in x, y, and z direction
  3                ! BGK order, ibgk=2 standard second order, ibgk=3 gives third order BGK
  1                ! Collision operator ihrr=1 includes regularization

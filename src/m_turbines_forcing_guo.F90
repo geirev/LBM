@@ -12,8 +12,6 @@ subroutine turbines_forcing_guo(df,du,dv,dw,rho,u,v,w,ip,iradius,nturbines,n)
    use m_turbines_init, only : ieps
    use m_wtime
    use mod_D3Q27setup
-   use m_fequilscal
-   use m_fequilscalar
 #ifdef _CUDA
    use cudafor
 #endif

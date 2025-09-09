@@ -1,5 +1,4 @@
 F90SOURCE = \
-	m_ablim.F90\
 	m_actuatorline.F90\
 	main.F90\
 	m_airfoil.F90\
@@ -53,10 +52,9 @@ F90SOURCE = \
 	m_diag.F90\
 	m_drift.F90\
 	m_drift_kernel.F90\
+	m_fequil3_block_kernel.F90\
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\
-	m_fequilscalar.F90\
-	m_fequilscal.F90\
 	m_gpu_meminfo.F90\
 	m_inflow_turbulence_apply.F90\
 	m_inflow_turbulence_compute.F90\

@@ -54,9 +54,8 @@ dimensions	mod_dimensions.F90	/^module
 drift	m_drift.F90	/^module
 drift_kernel	m_drift_kernel.F90	/^module
 fequil3	m_fequil3.F90	/^module
+fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 fequil3_kernel	m_fequil3_kernel.F90	/^module
-fequilscal	m_fequilscal.F90	/^module
-fequilscalar	m_fequilscalar.F90	/^module
 fftw3	mod_fftw3.F90	/^module
 gpu_meminfo	m_gpu_meminfo.F90	/^module
 inflow_turbulence_apply	m_inflow_turbulence_apply.F90	/^module
@@ -125,9 +124,8 @@ m_diag	m_diag.F90	/^module
 m_drift	m_drift.F90	/^module
 m_drift_kernel	m_drift_kernel.F90	/^module
 m_fequil3	m_fequil3.F90	/^module
+m_fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 m_fequil3_kernel	m_fequil3_kernel.F90	/^module
-m_fequilscal	m_fequilscal.F90	/^module
-m_fequilscalar	m_fequilscalar.F90	/^module
 m_gpu_meminfo	m_gpu_meminfo.F90	/^module
 m_inflow_turbulence_apply	m_inflow_turbulence_apply.F90	/^module
 m_inflow_turbulence_compute	m_inflow_turbulence_compute.F90	/^module

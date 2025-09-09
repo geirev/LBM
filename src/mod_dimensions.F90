@@ -11,14 +11,14 @@ module mod_dimensions
 !  integer, parameter :: nz = 96          ! resolution z-dir (up)
 
 !city
-   integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
-   integer, parameter :: ny = 96           ! resolution y-dir (north)
-   integer, parameter :: nz = 96            ! resolution z-dir (up)
+!   integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
+!   integer, parameter :: ny = 96           ! resolution y-dir (north)
+!   integer, parameter :: nz = 96            ! resolution z-dir (up)
 
 !minicity
-!    integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
-!    integer, parameter :: ny = 120          ! resolution y-dir (north)
-!    integer, parameter :: nz = 1            ! resolution z-dir (up)
+    integer, parameter :: nx = 200          ! 928 resolution x-dir (east)
+    integer, parameter :: ny = 120          ! resolution y-dir (north)
+    integer, parameter :: nz = 1            ! resolution z-dir (up)
 
 !cylinder and airfoil
 !  integer, parameter :: nx = 400          ! resolution x-dir (east)

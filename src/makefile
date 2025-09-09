@@ -19,7 +19,7 @@ endif
 
 ifdef GFORTRAN
 # gfortran flags
-FFLAGS = -c -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
+FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
           -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast
 else

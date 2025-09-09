@@ -176,28 +176,70 @@ Running in single precision is about twice as fast as using double precision.
 
 Running on the D3Q19 lattice reduces the CPU time with around 40 % but seems to introduce more noise.
 
-A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain of 96x96x200 gave the following wall times:
+A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain of 121x121x928 gave the following wall times:
 
 ```bash
-single-core     (gfortran)  : 440 s   (make -B GFORTRAN=1)
-single-core     (nvfortran) : 315 s   (make -B)
+single-core     (gfortran)  : 915.84 s   (make -B GFORTRAN=1)
+single-core     (nvfortran) : 641.48 s   (make -B)
 
-open-mp 6 cores (nvfortran) : 142 s   (make -B MP=1)
-GPU             (nvfortran) :  30 s   (make -B CUDA=1)
+open-mp 6 cores (gfortran)  : 295.57 s   (make -B GFORTRAN=1 MP=1)
+
+open-mp 6 cores (nvfortran) : 244.28 s   (make -B MP=1)
+open-mp 13 cores (nvfortran): 204.78 s   (make -B MP=1)
+open-mp 16 cores (nvfortran): 202.78 s   (make -B MP=1)
+open-mp 24 cores (nvfortran): 253.74 s   (make -B MP=1)
+
+GPU             (nvfortran) :  36.12 s   (make -B CUDA=1)
 ```
-The simulations were run on a Lenovo ThinkPad X1 with a simple gpu card "GeForce GTX 1650 Ti Mobile".
+The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 indepenent cores) and the gpu card is "Nvidia RTX 5090."
+
+
+<p align="center">
+<img src="doc/gpu.png" width="400">
+</p>
+These plots clearly show that GPU is the optimal choice for heavy simulations, while CPU scaling beyond 10-16 cores is inefficient.
+
+For the GPU simultion the timing of different routines were as follows after a first optimization pass doing the standards:
+---
+```bash
+---------------------------------------------------------------------------------------------------
+                           gfortran          nvfortran     nvfortran      nvidia            Speedup
+                             1 core             1 core      16 cores         GPU     nvf 1 core/GPU
+---------------------------------------------------------------------------------------------------
+initialization     time =      0.46               0.69          0.70        0.70
+turbine forcing    time =      9.37               5.35          2.42        0.60
+turbulence forcing time =      0.84               0.49          0.17        0.06
+equil              time =    344.73             186.11         59.24        8.35              41.28
+regularization     time =    377.08             252.33         77.45       11.71              21.55
+vreman             time =     87.00              97.88         20.06        1.19              82.25
+collisions         time =     24.85              24.98         10.64        4.21               5.93
+applyturbines      time =      0.49               0.39          0.60        0.06
+applyturbulence    time =      0.07               0.06          0.08        0.01
+solids             time =      0.00               0.00          0.00        0.00
+boundarycond       time =      1.68               1.73          1.19        0.89
+drift              time =     46.70              45.84         21.85        4.49              10.20
+macrovars          time =     20.14              22.71          5.33        0.74              30.68
+diag               time =      1.34               1.89          2.00        1.98
+averaging and turb time =      0.19               0.22          0.21        0.20
+final stuff        time =      0.82               0.75          0.76        0.86
+Total wall time    time =    915.84             641.48        202.77       36.12              17.75
+---------------------------------------------------------------------------------------------------
+```
+
+
 
 
 
 ## 4. Run the code
 
-Start by defining the required dimensions in the src/mod_dimensions.F90 file, and compile.
+Start by defining the required grid dimensions in the src/mod_dimensions.F90 file, and compile.
 
 Create a separate catalog preferably on a large scratch disk or work area, and copy the example/infile.in to this catalog.
-The example infile.in corresponds to the cylinder case, and the program should run without any other input files. Just choose 
-the cylinder case in mod_dimensions.F90
+The example infile.in corresponds to a  2D city case with flow through the city, and the program should run without any other input files. Just choose
+the city2 case in mod_dimensions.F90. You can also use this grid for the cylinder case by editing the infile.in. For more realistic 3D runs increase the
+vertical resolution.
 
-The example/run.sh script may be required for large open-mp simulations, as it sets ulimit -s unlimited and defines the number of cores.
+The example/run.sh script may be required for large grids, as it sets ulimit -s unlimited and it also defines the number of cores used in OPEN-MP simuilations.
 
 The example/uvel.orig file defines an atmospheric boundary layer if it is found in the run direcotry.
 
@@ -240,10 +282,10 @@ If you plan to change the code note the following:
 I always define subroutines in new modules:
 
 ```Fortran90
-module m_name_of_routine
+module m_name_of_subroutine
 ! define global variables here
 contains
-subroutine name_of_sub
+subroutine name_of_subroutine
 ! define local variables here
 ...
 end subroutine
@@ -253,9 +295,9 @@ end module
 in the main program you write
 
 ```Fortran90
-program seir
-use m_name_of_routine
-call  name_of_routine
+program name
+use m_name_of_subroutine
+call  name_of_subroutine
 end program
 ```
 
@@ -265,6 +307,9 @@ and the subroutine definition.
 
 make new -> updates the dependencies for the makefile
 make tags -> runs ctags (useful if you use vim)
+
+The current makefile updates the dependencies at every compilation, so if you add a file with a new subroutine you can just type make and it will be included
+in the compilation.
 
 For this to work install the scripts in the ./bin in your path and install ctags
 

@@ -130,11 +130,12 @@ source:
 	../bin/mksource.sh > source.files
 	sed -i '/ cudafor/d' source.files
 	sed -i '/ cublas/d' source.files
-
+	sed -i '/ iso_fortran_env/d' source.files
 depend:
 	../bin/mkdepend_linux.pl | sort -u > depends.file
 	sed -i '/ cudafor/d' depends.file
 	sed -i '/ cublas/d'  depends.file
+	sed -i '/ iso_fortran_env/d' depends.file
 
 tags: source.files
 	tags.sh

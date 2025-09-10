@@ -200,31 +200,32 @@ The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 
 These plots clearly show that GPU is the optimal choice for heavy simulations, while CPU scaling beyond 10-16 cores is inefficient.
 
 For the GPU simultion the timing of different routines were as follows after a first optimization pass doing the standards:
----
+
 ```bash
----------------------------------------------------------------------------------------------------
-                           gfortran          nvfortran     nvfortran      nvidia            Speedup
-                             1 core             1 core      16 cores         GPU     nvf 1 core/GPU
----------------------------------------------------------------------------------------------------
-initialization     time =      0.46               0.69          0.70        0.70
-turbine forcing    time =      9.37               5.35          2.42        0.60
-turbulence forcing time =      0.84               0.49          0.17        0.06
-equil              time =    344.73             186.11         59.24        8.35              41.28
-regularization     time =    377.08             252.33         77.45       11.71              21.55
-vreman             time =     87.00              97.88         20.06        1.19              82.25
-collisions         time =     24.85              24.98         10.64        4.21               5.93
-applyturbines      time =      0.49               0.39          0.60        0.06
-applyturbulence    time =      0.07               0.06          0.08        0.01
-solids             time =      0.00               0.00          0.00        0.00
-boundarycond       time =      1.68               1.73          1.19        0.89
-drift              time =     46.70              45.84         21.85        4.49              10.20
-macrovars          time =     20.14              22.71          5.33        0.74              30.68
-diag               time =      1.34               1.89          2.00        1.98
-averaging and turb time =      0.19               0.22          0.21        0.20
-final stuff        time =      0.82               0.75          0.76        0.86
-Total wall time    time =    915.84             641.48        202.77       36.12              17.75
----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+                           gfortran          nvfortran     nvfortran      nvidia       nvidia       Speedup
+                             1 core             1 core      16 cores         GPU       DP-GPU      core/GPU
+-----------------------------------------------------------------------------------------------------------
+initialization     time =      0.46               0.69          0.70        0.70         0.82
+turbine forcing    time =      9.37               5.35          2.42        0.60         1.49
+turbulence forcing time =      0.84               0.49          0.17        0.06         0.29
+equil              time =    344.73             186.11         59.24        8.35        27.83         41.28
+regularization     time =    377.08             252.33         77.45       11.71        37.65         21.55
+vreman             time =     87.00              97.88         20.06        1.19         6.02         82.25
+collisions         time =     24.85              24.98         10.64        4.21         7.66          5.93
+applyturbines      time =      0.49               0.39          0.60        0.06         0.12
+applyturbulence    time =      0.07               0.06          0.08        0.01         0.03
+solids             time =      0.00               0.00          0.00        0.00         0.00
+boundarycond       time =      1.68               1.73          1.19        0.89         3.39
+drift              time =     46.70              45.84         21.85        4.49         7.48         10.20
+macrovars          time =     20.14              22.71          5.33        0.74         3.81         30.68
+diag               time =      1.34               1.89          2.00        1.98         2.28
+averaging and turb time =      0.19               0.22          0.21        0.20         0.27
+final stuff        time =      0.82               0.75          0.76        0.86         2.50
+Total wall time    time =    915.84             641.48        202.77       36.12       101.72         17.75
+-----------------------------------------------------------------------------------------------------------
 ```
+DP-GPU means double precision on the GPU.
 
 
 

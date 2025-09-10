@@ -1,6 +1,7 @@
 module m_saverestart
 contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr)
+   !use iso_fortran_env, only : int64
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb
@@ -26,39 +27,31 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    real :: rr_h(ny,nz,0:nrturb)
 
    character(len=6) cit
-   integer :: irec,ireci,irecr
+   integer iunit
+   !integer(int64) :: irec, irecr, ireci
 
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
    if (inflowturbulence) then
-      inquire(iolength=ireci)ny,nz,nrturb
-      inquire(iolength=irecr)uu_h,vv_h,ww_h,rr_h
-      irec=ireci+irecr
-      print *,'irecA=',ireci,irecr,irec
-
-      open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
+      open(newunit=iunit,file='turbulence'//cit//'.uf',form="unformatted", status='unknown')
          uu_h=uu
          vv_h=vv
          ww_h=ww
          rr_h=rr
-         write(10,rec=1)ny,nz,nrturb,uu_h,vv_h,ww_h,rr_h
-      close(10)
+         write(iunit)ny,nz,nrturb,uu_h,vv_h,ww_h,rr_h
+      close(iunit)
    endif
 
    if (nturbines > 0) then
-      open(10,file='theta'//cit//'.dat')
-         write(10,*)theta
-      close(10)
+      open(newunit=iunit,file='theta'//cit//'.dat')
+         write(iunit,*)theta
+      close(iunit)
    endif
 
-   inquire(iolength=ireci)nx,ny,nz,nl
-   inquire(iolength=irecr)f_h
-   irec=ireci+irecr
-   print *,'irecB=',ireci,irecr,irec
-   open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
+   open(newunit=iunit,file='restart'//cit//'.uf',form="unformatted", status='replace')
       f_h=f
-      write(10,rec=1)nx,ny,nz,nl,f_h
-   close(10)
+      write(iunit)nx,ny,nz,nl,f_h
+   close(iunit)
 
 end subroutine
 end module

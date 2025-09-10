@@ -26,8 +26,9 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    real, allocatable  :: rr_h(:,:,:)
 
    logical ex
-   integer :: irec,i,j,k,l,n,ireci,irecr
+   integer :: i,j,k,l,n
    character(len=6) cit
+   integer iunit
 
    allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
    allocate(uu_h(ny,nz,0:nrturb)        )
@@ -42,13 +43,11 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       print '(3a)','reading: turbulence'//cit//'.uf'
       inquire(file='turbulence'//cit//'.uf',exist=ex)
       if (ex) then
-         inquire(iolength=ireci)j,k,l
-         inquire(iolength=irecr)uu_h,vv_h,ww_h,rr_h
-         irec=ireci+irecr
-         open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
-            read(10,rec=1,err=998)j,k,l
+         open(newunit=iunit,file='turbulence'//cit//'.uf',form="unformatted", status='old')
+            read(iunit,err=998)j,k,l
+            rewind(iunit)
             if ((j==ny).and.(k==nz).and.(l==nrturb)) then
-               read(10,rec=1,err=998)j,k,l,uu_h,vv_h,ww_h,rr_h
+               read(iunit,err=998)j,k,l,uu_h,vv_h,ww_h,rr_h
                uu=uu_h
                vv=vv_h
                ww=ww_h
@@ -57,10 +56,10 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
             else
                print '(a)','readrestart: Attempting to read incompatable turbulence restart file'
                print '(a,4i6)','readrestart: Dimensions in restart file are:',j,k,l
-               close(10)
+               close(iunit)
                stop
             endif
-         close(10)
+         close(iunit)
       else
          print '(a)','readrestart: No restart file for inflow turbulence fields available','turbulence'//cit//'.uf'
          stop
@@ -71,9 +70,9 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       print '(3a)','reading: theta'//cit//'.dat'
       inquire(file='theta'//cit//'.dat',exist=ex)
       if (ex) then
-         open(10,file='theta'//cit//'.dat')
-            read(10,*)theta
-         close(10)
+         open(newunit=iunit,file='theta'//cit//'.dat')
+            read(iunit,*)theta
+         close(iunit)
       else
          print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
          stop
@@ -82,21 +81,10 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 
    inquire(file='restart'//cit//'.uf',exist=ex)
    if (ex) then
-      inquire(iolength=ireci)i,j,k,n
-      inquire(iolength=irecr)f_h
-      irec=ireci+irecr
-      open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
-         read(10,rec=1,err=999)i,j,k,n
-         if ((i==nx).and.(j==ny).and.(k==nz).and.(n==nl)) then
-            read(10,rec=1,err=999)i,j,k,n,f_h
-            f=f_h
-         else
-            print '(a)','readrestart: Attempting to read incompatable restart file'
-            print '(a,4i5)','readrestart: Dimensions in restart file are:',i,j,k,nl
-            close(10)
-            stop
-         endif
-      close(10)
+      open(newunit=iunit,file='restart'//cit//'.uf',form="unformatted", status='unknown')
+         read(iunit)i,j,k,n,f_h
+         f=f_h
+      close(iunit)
    else
       print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
       stop

@@ -26,7 +26,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    real, allocatable  :: rr_h(:,:,:)
 
    logical ex
-   integer :: irec,i,j,k,l,n
+   integer :: irec,i,j,k,l,n,ireci,irecr
    character(len=6) cit
 
    allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
@@ -42,7 +42,9 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       print '(3a)','reading: turbulence'//cit//'.uf'
       inquire(file='turbulence'//cit//'.uf',exist=ex)
       if (ex) then
-         inquire(iolength=irec)j,k,l,uu_h,vv_h,ww_h,rr_h
+         inquire(iolength=ireci)j,k,l
+         inquire(iolength=irecr)uu_h,vv_h,ww_h,rr_h
+         irec=ireci+irecr
          open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
             read(10,rec=1,err=998)j,k,l
             if ((j==ny).and.(k==nz).and.(l==nrturb)) then
@@ -80,7 +82,9 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 
    inquire(file='restart'//cit//'.uf',exist=ex)
    if (ex) then
-      inquire(iolength=irec)i,j,k,n,f_h
+      inquire(iolength=ireci)i,j,k,n
+      inquire(iolength=irecr)f_h
+      irec=ireci+irecr
       open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
          read(10,rec=1,err=999)i,j,k,n
          if ((i==nx).and.(j==ny).and.(k==nz).and.(n==nl)) then

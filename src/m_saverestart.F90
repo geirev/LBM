@@ -26,12 +26,16 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    real :: rr_h(ny,nz,0:nrturb)
 
    character(len=6) cit
-   integer :: irec
+   integer :: irec,ireci,irecr
 
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
    if (inflowturbulence) then
-      inquire(iolength=irec)ny,nz,nrturb,uu_h,vv_h,ww_h,rr_h
+      inquire(iolength=ireci)ny,nz,nrturb
+      inquire(iolength=irecr)uu_h,vv_h,ww_h,rr_h
+      irec=ireci+irecr
+      print *,'irecA=',ireci,irecr,irec
+
       open(10,file='turbulence'//cit//'.uf',form="unformatted", access="direct", recl=irec)
          uu_h=uu
          vv_h=vv
@@ -47,7 +51,10 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
       close(10)
    endif
 
-   inquire(iolength=irec) nx,ny,nz,nl,f_h
+   inquire(iolength=ireci)nx,ny,nz,nl
+   inquire(iolength=irecr)f_h
+   irec=ireci+irecr
+   print *,'irecB=',ireci,irecr,irec
    open(10,file='restart'//cit//'.uf',form="unformatted", access="direct", recl=irec)
       f_h=f
       write(10,rec=1)nx,ny,nz,nl,f_h

@@ -55,14 +55,6 @@ the turbine locations, but for now, it is not worth the effort.
 
 
 
-<p align="center">
-  <a href="#installation">Installation</a> *
-  <a href="#code-standards">Code standards</a> *
-  <a href="#setting-up-an-experiment">Experiment setup</a> *
-  <a href="#plotting">Plotting</a> *
-  <a href="#git-instructions">Git instructions</a> *
-  <a href="https://github.com/geirev/LBM/blob/main/LICENSE">License</a>
-</p>
 
 <p align="center">
 <img src="example/windturbine.png" width="300">

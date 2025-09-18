@@ -1,0 +1,14 @@
+Commercial / Proprietary License
+
+Copyright [2025] [Geir Evensen]
+
+This software is available for commercial, proprietary, or for-profit use
+only under a separate commercial license.
+
+You **may not** use, copy, modify, or distribute this software for commercial
+purposes without obtaining a valid commercial license from the copyright holder.
+
+To obtain a commercial license, please contact:
+[Geir Evensen] – [geir.evensen@gmail.com]
+
+All rights not expressly granted are reserved by the copyright holder.

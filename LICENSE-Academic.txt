@@ -1,0 +1,29 @@
+Academic / Research License (Apache-2.0 Based, Non-Commercial Use Only)
+
+Copyright [2025] [Geir Evensen]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use,
+copy, modify, and distribute the Software **solely for academic and research purposes**,
+subject to the following conditions:
+
+1. **Non-Commercial Use Only**
+   The Software may **not** be used for any commercial, proprietary, or for-profit purposes.
+
+2. **Redistribution**
+   Redistributions of source or binary forms must retain this copyright notice
+   and this permission notice.
+
+3. **No Warranty**
+   The Software is provided "as is", without warranty of any kind, express or
+   implied, including but not limited to the warranties of merchantability,
+   fitness for a particular purpose, and non-infringement.
+
+4. **Other Conditions of Apache 2.0**
+   This license is based on the Apache License 2.0. Except for the non-commercial
+   restriction above, other terms of Apache 2.0 apply (e.g., notice requirements,
+   attribution, patent grant).
+
+For commercial use of this software, a separate commercial license is required.
+Please contact: [Geir Evensen] – [geir.evensen@gmail.com]
+

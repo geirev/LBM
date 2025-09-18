@@ -3,13 +3,23 @@ This repository contains a 3D implementation of a Lattice-Boltzmann model on a D
 
 ## License
 
-This project is dual-licensed:
+This project is dual-licensed to accommodate both academic/research and commercial use:
 
-- Open Source: [Apache License 2.0](./LICENSE-APACHE) for research and academic use.
-- Commercial: A commercial license is available for proprietary use.
+1. **Academic / Research License**
+   - Free for non-commercial academic and research purposes.
+   - Based on [Apache License 2.0](LICENSE-APACHE.txt) terms (with non-commercial restriction).
+   - See [LICENSE-Academic.txt](LICENSE-Academic.txt) for full details.
+   - **Commercial use is not permitted under this license.**
 
-If you are interested in a commercial license, please contact:
-**[Geir Evensen] – [geir.evensen@gmail.com]**
+2. **Commercial / Proprietary License**
+   - Required for any commercial, proprietary, or for-profit use.
+   - See [LICENSE-Commercial.txt](LICENSE-Commercial.txt) for details.
+   - To obtain a commercial license, please contact: [Geir Evensen] – [geir.evensen@gmail.com]
+
+
+**Summary:**
+Academic/research users can use the software freely under the Academic License.
+Commercial users must obtain a commercial license before using the software in any for-profit or proprietary project.
 
 ## Introduction
 

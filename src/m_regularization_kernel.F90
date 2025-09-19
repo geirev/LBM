@@ -3,14 +3,13 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine regularization_kernel(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
+   subroutine regularization_kernel(f, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
 #ifdef _CUDA
    use cudafor
 #endif
    implicit none
    integer, value      :: nx, ny, nz, nl
    real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
-   real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)
    real, intent(in)    :: u(nx,ny,nz)
    real, intent(in)    :: v(nx,ny,nz)
    real, intent(in)    :: w(nx,ny,nz)
@@ -28,21 +27,13 @@ contains
 
    integer :: i, j, k, l, p, q, r, i1, j1, k1
 #ifdef _CUDA
-   attributes(device) :: f
-   attributes(device) :: feq
-   attributes(device) :: h2
-   attributes(device) :: h3
-   attributes(device) :: u
-   attributes(device) :: v
-   attributes(device) :: w
-   attributes(device) :: weights
    i = threadidx%x + (blockidx%x - 1) * blockdim%x
    j = threadidx%y + (blockidx%y - 1) * blockdim%y
    k = threadidx%z + (blockidx%z - 1) * blockdim%z
    if (i > nx .or. j > ny .or. k > nz) return
 #else
 !$OMP PARALLEL DO COLLAPSE(3) DEFAULT(none) PRIVATE(i, j, k, l, p, q, r, i1, j1, k1, vel, a1_2, a1_3, tmp)&
-!$OMP             & SHARED(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
+!$OMP             & SHARED(f, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
    do k=1,nz
    do j=1,ny
    do i=1,nx

@@ -16,9 +16,6 @@ contains
    integer, intent(in) :: czs(nl)
    integer :: i, j, k
 #ifdef _CUDA
-   attributes(device) :: f
-   attributes(device) :: feq
-   attributes(device) :: cxs,cys,czs
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x + 1
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y + 1
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z + 1

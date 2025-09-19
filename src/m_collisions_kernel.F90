@@ -15,9 +15,6 @@ contains
    integer :: i, j, k , l
    real fac
 #ifdef _CUDA
-   attributes(device) :: feq
-   attributes(device) :: f
-   attributes(device) :: tau
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x + 1
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y + 1
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z + 1
@@ -34,6 +31,7 @@ contains
       do l=1,nl
          feq(l,i,j,k) =  feq(l,i,j,k) + fac*f(l,i,j,k)
       enddo
+
 !!        feq( 1,i,j,k) =  feq( 1,i,j,k) + fac*f( 1,i,j,k)
 !!        feq( 2,i,j,k) =  feq( 2,i,j,k) + fac*f( 2,i,j,k)
 !!        feq( 3,i,j,k) =  feq( 3,i,j,k) + fac*f( 3,i,j,k)

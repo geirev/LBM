@@ -2,49 +2,49 @@ program LatticeBoltzmann
 #ifdef _CUDA
    use cudafor
 #endif
-   use m_gpu_meminfo
-   use m_rhotest
-   use mod_dimensions
-   use mod_D3Q27setup
-   use mod_shapiro
-   use m_readinfile
-   use m_diag
-   use m_averaging_sec
-   use m_averaging_full
    use m_airfoil
+   use m_averaging_full
+   use m_averaging_sec
+   use m_boundarycond
    use m_city
    use m_city2
-   use m_cube
-   use m_cylinder
-   use m_sphere
-   use m_uvelshear
-   use m_predicted_measurements
-   use m_boundarycond
-   use m_inipert
-   use m_macrovars
-   use m_density
-   use m_velocity
-   use m_solids
-   use m_turbines_init
-   use m_turbines_forcing
-   use m_turbines_apply
-   use m_inflow_turbulence_init
-   use m_inflow_turbulence_compute
-   use m_inflow_turbulence_forcing
-   use m_inflow_turbulence_apply
    use m_collisions
-   use m_drift
-   use m_fequil3
-   use m_regularization
    use m_compute_f
    use m_compute_fneq
-   use m_vreman
-   use m_seedmanagement
+   use m_cube
+   use m_cylinder
+   use m_density
+   use m_diag
+   use m_drift
+   use m_fequil3
+   use m_gpu_meminfo
+   use m_inflow_turbulence_apply
+   use m_inflow_turbulence_compute
+   use m_inflow_turbulence_forcing
+   use m_inflow_turbulence_init
+   use m_inipert
+   use m_macrovars
+   use m_predicted_measurements
+   use m_readinfile
    use m_readrestart
+   use m_regularization
+   use m_rhotest
    use m_saverestart
-   use m_tecfld
-   use m_wtime
+   use m_seedmanagement
    use m_set_random_seed3
+   use m_solids
+   use m_sphere
+   use m_tecfld
+   use m_turbines_apply
+   use m_turbines_forcing
+   use m_turbines_init
+   use m_uvelshear
+   use m_velocity
+   use m_vreman
+   use m_wtime
+   use mod_D3Q27setup
+   use mod_dimensions
+   use mod_shapiro
    use, intrinsic :: omp_lib
    implicit none
 
@@ -98,9 +98,6 @@ program LatticeBoltzmann
    integer :: it
 
    logical, parameter :: debug=.false.
-#ifdef _CUDA
-   integer(c_size_t) :: free_mem, total_mem
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA

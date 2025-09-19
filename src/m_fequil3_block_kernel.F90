@@ -37,15 +37,6 @@ contains
 
    integer :: i, j, k, l, p, q, r
 #ifdef _CUDA
-   attributes(device) :: feq
-   attributes(device) :: rho
-   attributes(device) :: velocity
-   attributes(device) :: H2
-   attributes(device) :: H3
-   attributes(device) :: cxs
-   attributes(device) :: cys
-   attributes(device) :: czs
-   attributes(device) :: weights
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z

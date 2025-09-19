@@ -12,7 +12,6 @@ contains
    real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
    integer :: i, k, l
 #ifdef _CUDA
-   attributes(device) :: f
    i = threadIdx%x + (blockIdx%x-1)*blockDim%x
    l = threadIdx%y + (blockIdx%y-1)*blockDim%y
    k = threadIdx%z + (blockIdx%z-1)*blockDim%z

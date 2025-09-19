@@ -10,11 +10,9 @@ contains
    implicit none
    integer, value      :: nx, ny, nz, nl
    real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)    ! f_neq or Rf_neq on input.  f on output
-   real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)  ! f_eq on input
+   real, intent(in)    :: feq(nl,nx+2,ny+2,nz+2)  ! f_eq on input
    integer :: i, j, k, l, i1, j1, k1
 #ifdef _CUDA
-   attributes(device) :: f
-   attributes(device) :: feq
    i = threadidx%x + (blockidx%x - 1) * blockdim%x
    j = threadidx%y + (blockidx%y - 1) * blockdim%y
    k = threadidx%z + (blockidx%z - 1) * blockdim%z

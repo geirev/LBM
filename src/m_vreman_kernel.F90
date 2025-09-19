@@ -26,9 +26,6 @@ contains
    integer :: i, j, k, l, m, q, p
 
 #ifdef _CUDA
-   attributes(device) :: f
-   attributes(device) :: H2
-   attributes(device) :: tau
    attributes(value)  :: const
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y

@@ -10,7 +10,7 @@ contains
    implicit none
    integer, value      :: nx, ny, nz, nl
    real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
-   real, intent(inout) :: feq(nl,nx+2,ny+2,nz+2)
+   real, intent(in)    :: feq(nl,nx+2,ny+2,nz+2)
 
 
 

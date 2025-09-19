@@ -14,8 +14,6 @@ contains
    integer :: i, k, l, m
 #ifdef _CUDA
    integer j
-   attributes(device) :: f
-   attributes(device) :: cxs,cys,czs
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = 1
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z

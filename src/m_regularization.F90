@@ -36,6 +36,7 @@ subroutine regularization(f, feq, u, v, w)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
    real, parameter :: inv2cs6 = 1.0/(2.0*cs6)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
+   integer, parameter :: ntot=nl*(nx+2)*(ny+2)*(nz+2)
    integer, parameter :: icpu=5
 
    call cpustart()
@@ -43,20 +44,22 @@ subroutine regularization(f, feq, u, v, w)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
 #ifdef _CUDA
-   tx=ntx; bx=(nx+tx-1)/tx
-   ty=nty; by=(ny+ty-1)/ty
-   tz=ntz; bz=(nz+tz-1)/tz
+   tx=ntx; bx=(ntot+tx-1)/tx
+   ty=1; by=1
+   tz=1; bz=1
 #endif
-
-
-
    call compute_fneq_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, feq, nx, ny, nz, nl)
+        &(f, feq, ntot)
 
 
+#ifdef _CUDA
+   tx=ntx; bx=(nx+tx-1)/tx
+   ty=nty; by=(ny+ty-1)/ty
+   tz=ntz; bz=(nz+tz-1)/tz
+#endif
    call regularization_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
@@ -69,11 +72,16 @@ subroutine regularization(f, feq, u, v, w)
 ! when we compute feq from the updated velocities. Thus, we must compute the
 ! regularization as a seperate step before applying the forcings. See main.F90.
    if (iforce /= 10) then
+#ifdef _CUDA
+   tx=ntx; bx=(ntot+tx-1)/tx
+   ty=1; by=1
+   tz=1; bz=1
+#endif
       call compute_f_kernel&
 #ifdef _CUDA
            &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-           &(f, feq, nx, ny, nz, nl)
+           &(f, feq, ntot)
    endif
 
    call cpufinish(icpu)

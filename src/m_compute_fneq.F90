@@ -15,7 +15,7 @@ subroutine compute_fneq(f, feq)
    use m_compute_fneq_kernel
 
    implicit none
-   real, intent(inout)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: f
@@ -23,6 +23,7 @@ subroutine compute_fneq(f, feq)
    integer :: tx, ty, tz, bx, by, bz
 #endif
 
+   integer, parameter :: ntot=nl*(nx+2)*(ny+2)*(nz+2)
    integer, parameter :: icpu=5
 
    call cpustart()
@@ -30,15 +31,15 @@ subroutine compute_fneq(f, feq)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
 #ifdef _CUDA
-   tx=ntx; bx=(nx+tx-1)/tx
-   ty=nty; by=(ny+ty-1)/ty
-   tz=ntz; bz=(nz+tz-1)/tz
+   tx=ntx; bx=(ntot+tx-1)/tx
+   ty=1; by=1
+   tz=1; bz=1
 #endif
    call compute_fneq_kernel&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, feq, nx, ny, nz, nl)
+        &(f, feq, ntot)
 
 
    call cpufinish(icpu)

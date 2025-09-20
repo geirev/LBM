@@ -289,8 +289,8 @@ program LatticeBoltzmann
 ! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
-!! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      if (iforce /= 10 .and. nturbines > 0) then 
+!! [feq] = fequil3(rho,u,v,w] (returns new equilibrium density using updated forcing velocities)
+      if (iforce /= 10 .and. nturbines > 0) then
          call fequil3(feq,rho,u,v,w)
          call compute_fneq(f, feq)
       endif

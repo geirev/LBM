@@ -9,8 +9,8 @@ contains
 #endif
    implicit none
    integer, value      :: nx, ny, nz, nl
-   real, intent(in)    :: f(nl,nx+2,ny+2,nz+2)
-   real, intent(out)   :: tau(nx,ny,nz)
+   real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(out)   :: tau(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: H2(3,3,nl)
    real, intent(in)    :: const
    real, value, intent(in) :: eps
@@ -46,13 +46,15 @@ contains
 ! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
       do q=1,3
       do p=1,3
-         alpha(p,q) =  H2(p,q,1)*f(1,i+1,j+1,k+1)
+         alpha(p,q) =  0.0
       enddo
       enddo
-      do l=2,nl
+
+      do l=1,nl
+         tmp=f(l,i,j,k)
          do q=1,3
          do p=1,3
-            alpha(p,q) = alpha(p,q) + H2(p,q,l)*f(l,i+1,j+1,k+1)
+            alpha(p,q) = alpha(p,q) + H2(p,q,l)*tmp
          enddo
          enddo
       enddo

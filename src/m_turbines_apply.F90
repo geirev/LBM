@@ -9,7 +9,7 @@ subroutine turbines_apply(f,df,tau)
    implicit none
    real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution
    real, intent(in)    :: df(nl,-ieps:ieps,ny,nz,nturbines) ! forcing distributions
-   real, intent(in)    :: tau(nx,ny,nz)                     ! Tau
+   real, intent(in)    :: tau(0:nx+1,0:ny+1,0:nz+1)                     ! Tau
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: df

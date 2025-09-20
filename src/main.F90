@@ -75,7 +75,7 @@ program LatticeBoltzmann
    logical :: lsolids=.false.
 
 ! Spatially dependent relaxation time
-   real    :: tau(nx,ny,nz)                         ! relaxation time scale
+   real, dimension(:,:,:), allocatable  :: tau      ! relaxation time scale
 #ifdef _CUDA
    attributes(device) :: tau
 #endif
@@ -121,6 +121,8 @@ program LatticeBoltzmann
 #endif
 
    call cpustart()
+
+   allocate(tau(0:nx+1,0:ny+1,0:nz+1))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
@@ -225,10 +227,11 @@ program LatticeBoltzmann
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
 #endif
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         tau(i,j,k) = tauin
+      do k=0,nz+1
+      do j=0,ny+1
+      do i=0,nx+1
+         !tau(i,j,k) = tauin
+         tau(i,j,k) = 3.0*kinevisc + 0.5
       enddo
       enddo
       enddo
@@ -241,7 +244,7 @@ program LatticeBoltzmann
       call fequil3(feq,rho,u,v,w)
       call boundarycond(feq,uvel_d)
       call regularization(f, feq, u, v, w)
-      call vreman(f, tau)
+      if (ivreman == 1) call vreman(f, tau)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>
@@ -296,7 +299,7 @@ program LatticeBoltzmann
       endif
 
 ! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f, tau)
+      if (ivreman == 1) call vreman(f, tau)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau)
@@ -305,7 +308,7 @@ program LatticeBoltzmann
       if (nturbines > 0)      call turbines_apply(feq,turbine_df,tau)
 
 ! [feq=f] = inflow_turbulence_apply(feq,turbulence_df,tau)  f=f+turb_df
-      if (inflowturbulence)   call inflow_turbulence_apply(feq,turbulence_df,tau)
+      if (inflowturbulence)   call inflow_turbulence_apply(feq,turbulence_df)
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(feq,lblanking)

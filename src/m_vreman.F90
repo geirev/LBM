@@ -13,7 +13,7 @@ subroutine vreman(f, tau)
    use m_vreman_kernel
    implicit none
    real, intent(in)      :: f(nl,0:nx+1,0:ny+1,0:nz+1) ! Nonequilibrium f as input
-   real, intent(out)     :: tau(nx,ny,nz)              ! Tau including subgrid scale mixing
+   real, intent(out)     :: tau(0:nx+1,0:ny+1,0:nz+1)              ! Tau including subgrid scale mixing
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: tau

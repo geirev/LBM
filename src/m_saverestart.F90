@@ -27,7 +27,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    real :: rr_h(ny,nz,0:nrturb)
 
    character(len=6) cit
-   integer iunit
+   integer iunit,l
    !integer(int64) :: irec, irecr, ireci
 
    write(cit,'(i6.6)')it
@@ -52,6 +52,12 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
       f_h=f
       write(iunit)nx,ny,nz,nl,f_h
    close(iunit)
+
+   open(10,file='test.out')
+      do l=1,nl
+         write(10,'(10f13.10)')f_h(l,98:100,68:70,68)
+      enddo
+   close(19)
 
 end subroutine
 end module

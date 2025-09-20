@@ -1,19 +1,17 @@
 module m_inflow_turbulence_apply
 ! only set up for Kupershtokh forcing
 contains
-subroutine inflow_turbulence_apply(f,turbulence_df,tau)
+subroutine inflow_turbulence_apply(f,turbulence_df)
    use m_inflow_turbulence_init, only : iturb_pos, iturb_radius
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_wtime
    implicit none
-   real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution
+   real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)   ! distribution
    real, intent(in)    :: turbulence_df(nl,ny,nz)      ! forcing distributions
-   real, intent(in)    :: tau(nx,ny,nz)                     ! Tau
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: turbulence_df
-   attributes(device) :: tau
 #endif
    integer ip,j,k,l
    integer, parameter :: icpu=9

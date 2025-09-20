@@ -14,8 +14,6 @@ subroutine regularization(f, feq, u, v, w)
     use cudafor
 #endif
    use m_regularization_kernel
-   use m_compute_fneq_kernel
-   use m_compute_f_kernel
 
    implicit none
    real, intent(in)       :: u(nx,ny,nz)
@@ -42,17 +40,6 @@ subroutine regularization(f, feq, u, v, w)
    call cpustart()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Computing non-equilibrium distribution defined in \citet{fen21a} between Eqs (32) and (33)
-#ifdef _CUDA
-   tx=ntx; bx=(ntot+tx-1)/tx
-   ty=1; by=1
-   tz=1; bz=1
-#endif
-   call compute_fneq_kernel&
-#ifdef _CUDA
-        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-        &(f, feq, ntot)
 
 
 #ifdef _CUDA
@@ -65,24 +52,6 @@ subroutine regularization(f, feq, u, v, w)
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
         &(f, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
-
-
-! If using Guo or other forcing formulations, the regularization will kill the 
-! contributions from the velocities due to the large difference between f and feq
-! when we compute feq from the updated velocities. Thus, we must compute the
-! regularization as a seperate step before applying the forcings. See main.F90.
-   if (iforce /= 10) then
-#ifdef _CUDA
-   tx=ntx; bx=(ntot+tx-1)/tx
-   ty=1; by=1
-   tz=1; bz=1
-#endif
-      call compute_f_kernel&
-#ifdef _CUDA
-           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-           &(f, feq, ntot)
-   endif
 
    call cpufinish(icpu)
 

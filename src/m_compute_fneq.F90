@@ -24,7 +24,7 @@ subroutine compute_fneq(f, feq)
 #endif
 
    integer, parameter :: ntot=nl*(nx+2)*(ny+2)*(nz+2)
-   integer, parameter :: icpu=5
+   integer, parameter :: icpu=17
 
    call cpustart()
 

@@ -277,10 +277,9 @@ program LatticeBoltzmann
       call fequil3(feq,rho,u,v,w)
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
+      call compute_fneq(f,feq)
       if (ihrr == 1) then
          call regularization(f, feq, u, v, w)
-      else
-         call compute_fneq(f,feq)
       endif
 
 ! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
@@ -291,6 +290,7 @@ program LatticeBoltzmann
 
 !! [feq] = fequil3(rho,u,v,w] (returns new equilibrium density using updated forcing velocities)
       if (iforce /= 10 .and. nturbines > 0) then
+         call compute_f(f, feq)
          call fequil3(feq,rho,u,v,w)
          call compute_fneq(f, feq)
       endif

@@ -246,8 +246,6 @@ m_readrestart.o:      mod_dimensions.o
 m_readrestart.o:      m_readinfile.o
 m_regularization_kernel.o:      makefile
 m_regularization.o:      makefile
-m_regularization.o:      m_compute_f_kernel.o
-m_regularization.o:      m_compute_fneq_kernel.o
 m_regularization.o:      mod_D3Q27setup.o
 m_regularization.o:      mod_dimensions.o
 m_regularization.o:      m_readinfile.o

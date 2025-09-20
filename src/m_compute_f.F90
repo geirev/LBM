@@ -23,7 +23,7 @@ subroutine compute_f(f, feq)
    integer :: tx, ty, tz, bx, by, bz
 #endif
    integer, parameter :: ntot=nl*(nx+2)*(ny+2)*(nz+2)
-   integer, parameter :: icpu=5
+   integer, parameter :: icpu=17
 
    call cpustart()
 

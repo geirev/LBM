@@ -36,6 +36,7 @@ contains
    real :: vratio
    real :: cu
    real :: tmp
+   real :: dens
 
    integer :: i, j, k, l, p, q, r, i1, j1, k1
 #ifdef _CUDA
@@ -46,7 +47,7 @@ contains
    ratio = inv6cs6 / inv2cs4
 #else
    ratio = inv6cs6 / inv2cs4
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, i1, j1, k1, vel, cu, tmp, A0_2, A0_3,  vratio) &
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, i1, j1, k1, vel, dens, cu, tmp, A0_2, A0_3,  vratio) &
 !$OMP     SHARED(feq, rho, u, v, w, nx, ny, nz, nl, H2, H3, cxs, cys, czs, cs2, weights, inv1cs2, inv2cs4, inv6cs6, ratio, ibgk)
    do k=1,nz
    do j=1,ny
@@ -60,33 +61,15 @@ contains
       vel(1)=u(i,j,k)
       vel(2)=v(i,j,k)
       vel(3)=w(i,j,k)
-
-! 1. order
-      do l=1,nl
-         cu = real(cxs(l))*vel(1) + real(cys(l))*vel(2) + real(czs(l))*vel(3)
-         feq(l,i1,j1,k1) = rho(i,j,k) * weights(l) * (1.0 + cu*inv1cs2)
-      enddo
+      dens=rho(i,j,k)
 
 ! A0_2
       do q=1,3
       do p=1,3
-         A0_2(p,q)=rho(i,j,k)*vel(p)*vel(q)*inv2cs4
+         A0_2(p,q)=dens*vel(p)*vel(q)*inv2cs4
       enddo
       enddo
 
-! 2nd order equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
-      do l=1,nl
-         tmp=0.0
-         do q=1,3
-         do p=1,3
-            tmp=tmp + H2(p,q,l)*A0_2(p,q)
-         enddo
-         enddo
-         feq(l,i1,j1,k1)=feq(l,i1,j1,k1) + weights(l)*tmp
-      enddo
-
-
-! Third order components
      if (ibgk == 3) then
 ! compute A0_3 using A0_2 to save arithmetic
          do r=1,3
@@ -101,14 +84,25 @@ contains
 !         do r=1,3
 !         do q=1,3
 !         do p=1,3
-!            A0_3(p,q,r)=rho(i,j,k)*vel(p)*vel(q)*vel(r)*inv6cs6
+!            A0_3(p,q,r)=dens*vel(p)*vel(q)*vel(r)*inv6cs6
 !         enddo
 !         enddo
 !         enddo
+      endif
 
+! 1. order
+      do l=1,nl
+         cu = real(cxs(l))*vel(1) + real(cys(l))*vel(2) + real(czs(l))*vel(3)
+         tmp = dens * (1.0 + cu*inv1cs2)
 
-         do l=2,nl
-            tmp=0.0
+! 2nd order equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
+         do q=1,3
+         do p=1,3
+            tmp=tmp + H2(p,q,l)*A0_2(p,q)
+         enddo
+         enddo
+
+         if (ibgk == 3 .and. l > 1) then
             do r=1,3
             do q=1,3
             do p=1,3
@@ -116,9 +110,9 @@ contains
             enddo
             enddo
             enddo
-            feq(l,i1,j1,k1)=feq(l,i1,j1,k1) + weights(l)*tmp
-         enddo
-       endif
+         endif
+         feq(l,i1,j1,k1)= weights(l)*tmp
+      enddo
 
 
 #ifndef _CUDA

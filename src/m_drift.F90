@@ -22,9 +22,9 @@ subroutine drift(f,feq)
    call cpustart()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA
-   tx=ntx; bx=(nx+tx-1)/tx
-   ty=nty; by=(ny+ty-1)/ty
-   tz=ntz; bz=(nz+tz-1)/tz
+   tx=8; bx=(nx+tx-1)/tx
+   ty=8; by=(ny+ty-1)/ty
+   tz=8; bz=(nz+tz-1)/tz
 #endif
    call drift_kernel&
 #ifdef _CUDA

@@ -229,6 +229,8 @@ Total wall time    time =    915.84             641.48        202.77       36.12
 ```
 DP-GPU means double precision on the GPU.
 
+The most recent version of the code runs on 18 seconds on the GPU  :-)
+
 
 
 
@@ -253,7 +255,11 @@ boltzmann
 ```
 
 ## 5. Code profiling
-To profile the code run
+To profile the code run, e.g.,
+```bash
+nsys profile --stats=true boltzmann
+```
+or on prehistruc GPU architectures
 ```bash
 nvprof boltzmann
 ```

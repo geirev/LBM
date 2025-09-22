@@ -16,7 +16,7 @@ contains
    i = threadidx%x + (blockidx%x - 1) * blockdim%x
    if (i > ntot) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(none) PRIVATE(i) SHARED(f, feq, ntot)
+!$OMP PARALLEL DO DEFAULT(none) PRIVATE(i) SHARED(f, feq, ntot)
    do i=1,ntot
 #endif
       f(i) = feq(i) + f(i)

@@ -14,7 +14,7 @@ contains
    integer, intent(in) :: cxs(nl)
    integer, intent(in) :: cys(nl)
    integer, intent(in) :: czs(nl)
-   integer :: i, j, k
+   integer :: i, j, k, l
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x + 1
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y + 1
@@ -28,8 +28,7 @@ contains
    do j=2,ny+1
    do i=2,nx+1
 #endif
-!! !$CUF UNROLL
-!! dir$ unroll
+! !$CUF UNROLL
 !      do l=1,nl
 !         f(l,i,j,k) = feq(l,i-cxs(l),j-cys(l),k-czs(l))
 !      enddo
@@ -52,6 +51,7 @@ contains
        f(17,i,j,k) = feq(17,i-1,j  ,k+1)
        f(18,i,j,k) = feq(18,i  ,j+1,k-1)
        f(19,i,j,k) = feq(19,i  ,j-1,k+1)
+#ifndef D3Q19
        f(20,i,j,k) = feq(20,i+1,j-1,k-1)
        f(21,i,j,k) = feq(21,i-1,j+1,k+1)
        f(22,i,j,k) = feq(22,i+1,j+1,k+1)
@@ -60,6 +60,7 @@ contains
        f(25,i,j,k) = feq(25,i+1,j+1,k-1)
        f(26,i,j,k) = feq(26,i+1,j-1,k+1)
        f(27,i,j,k) = feq(27,i-1,j+1,k-1)
+#endif
 #ifndef _CUDA
    enddo
    enddo

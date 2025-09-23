@@ -12,7 +12,7 @@ contains
    real, intent(inout) :: feq(nl,ntot)
    real, intent(in)    :: f(nl,ntot)
    real, intent(in)    :: tau(ntot)
-   integer :: i,l
+   integer :: i
    real fac
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x

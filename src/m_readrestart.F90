@@ -96,7 +96,6 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    deallocate(rr_h)
    return
    998 stop 'readrestart: error during read of turbulence restart field'
-   999 stop 'readrestart: error during read of restart file'
 
 end subroutine
 end module

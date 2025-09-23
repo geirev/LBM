@@ -4,7 +4,6 @@ contains
 subroutine regularization(f, feq, u, v, w)
    use mod_dimensions
    use mod_D3Q27setup
-   use m_readinfile, only : iforce
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif

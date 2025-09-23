@@ -14,7 +14,7 @@ contains
    integer, intent(in) :: cxs(nl)
    integer, intent(in) :: cys(nl)
    integer, intent(in) :: czs(nl)
-   integer :: i, j, k, l
+   integer :: i, j, k
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x + 1
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y + 1

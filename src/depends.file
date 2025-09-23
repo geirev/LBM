@@ -248,7 +248,6 @@ m_regularization_kernel.o:      makefile
 m_regularization.o:      makefile
 m_regularization.o:      mod_D3Q27setup.o
 m_regularization.o:      mod_dimensions.o
-m_regularization.o:      m_readinfile.o
 m_regularization.o:      m_regularization_kernel.o
 m_regularization.o:      m_wtime.o
 m_rhotest.o:      makefile

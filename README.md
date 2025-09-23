@@ -181,19 +181,13 @@ Running on the D3Q19 lattice reduces the CPU time with around 40 % but seems to 
 A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain of 121x121x928 gave the following wall times:
 
 ```bash
-single-core     (gfortran)  : 915.84 s   (make -B GFORTRAN=1)
-single-core     (nvfortran) : 641.48 s   (make -B)
-
-open-mp 6 cores (gfortran)  : 295.57 s   (make -B GFORTRAN=1 MP=1)
-
-open-mp 6 cores (nvfortran) : 244.28 s   (make -B MP=1)
-open-mp 13 cores (nvfortran): 204.78 s   (make -B MP=1)
-open-mp 16 cores (nvfortran): 202.78 s   (make -B MP=1)
-open-mp 24 cores (nvfortran): 253.74 s   (make -B MP=1)
-
-GPU             (nvfortran) :  36.12 s   (make -B CUDA=1)
+single-core     (gfortran)  : 959.78 s   (make -B GFORTRAN=1)
+single-core     (nvfortran) : 646.42 s   (make -B)
+open-mp 13 cores (nvfortran): 223.33 s   (make -B MP=1)
+GPU             (nvfortran) :  16.66 s   (make -B CUDA=1)
 ```
-The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 indepenent cores) and the gpu card is "Nvidia RTX 5090."
+The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 indepenent cores)
+and the gpu card is "Nvidia RTX 5090."
 
 
 <p align="center">

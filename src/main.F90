@@ -243,20 +243,13 @@ program LatticeBoltzmann
 ! To recover initial tau
       call fequil3(feq,rho,u,v,w)
       call boundarycond(feq,uvel_d)
-      call regularization(f, feq, u, v, w)
+      if (ihrr == 1) then
+         call regularization(f, feq, u, v, w)
+      else
+         call compute_fneq(f,feq)
+      endif
       if (ivreman == 1) call vreman(f, tau)
-
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#endif
-      do k=0,nz+1
-      do j=0,ny+1
-      do i=0,nx+1
-         f(:,i,j,k)=feq(:,i,j,k)+f(:,i,j,k)
-      enddo
-      enddo
-      enddo
-
+      call compute_f(f, feq)
    endif
    call diag(1,0,rho,u,v,w,lblanking) ! Save geometry
    call cpufinish(1)
@@ -280,9 +273,10 @@ program LatticeBoltzmann
       call fequil3(feq,rho,u,v,w)
 
 ! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      call compute_fneq(f,feq)
       if (ihrr == 1) then
          call regularization(f, feq, u, v, w)
+      else
+         call compute_fneq(f,feq)
       endif
 
 ! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]

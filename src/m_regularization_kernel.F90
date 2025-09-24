@@ -3,13 +3,14 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine regularization_kernel(f, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
+   subroutine regularization_kernel(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
 #ifdef _CUDA
    use cudafor
 #endif
    implicit none
    integer, value      :: nx, ny, nz, nl
-   real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
+   real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: u(nx,ny,nz)
    real, intent(in)    :: v(nx,ny,nz)
    real, intent(in)    :: w(nx,ny,nz)
@@ -23,7 +24,7 @@ contains
    real :: vel(3)
    real :: a1_2(3,3)
    real :: a1_3(3,3,3)
-   real :: tmp!,tmp1,tmp2
+   real :: tmp
 
    integer :: i, j, k, l, p, q, r, i1, j1, k1
 #ifdef _CUDA
@@ -38,10 +39,6 @@ contains
    do j=1,ny
    do i=1,nx
 #endif
-      i1=i+1
-      j1=j+1
-      k1=k+1
-
 ! copy u,v,w to vel(1:3)
       vel(1)=u(i,j,k)
       vel(2)=v(i,j,k)
@@ -50,9 +47,10 @@ contains
 ! computing a1_2
       a1_2(:,:)=0.0
       do l=1,nl
+         tmp=f(l,i,j,k)-feq(l,i,j,k)
          do q=1,3
          do p=1,3
-            a1_2(p,q) = a1_2(p,q) + h2(p,q,l)*f(l,i1,j1,k1)
+            a1_2(p,q) = a1_2(p,q) + h2(p,q,l)*tmp
          enddo
          enddo
       enddo
@@ -111,7 +109,7 @@ contains
          end do
          end do
 
-         f(l,i1,j1,k1) = weights(l) * tmp
+         f(l,i,j,k) = weights(l) * tmp
       end do
 #ifndef _CUDA
    enddo

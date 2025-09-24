@@ -32,7 +32,7 @@ subroutine collisions(f,feq,tau)
 
    call cpustart()
 #ifdef _CUDA
-   tx=ntx; bx=(ntot+tx-1)/tx
+   tx=ntx; bx=(ntot*nl+tx-1)/tx
    ty=1; by=1
    tz=1; bz=1
 #endif

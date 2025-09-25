@@ -58,6 +58,7 @@ subroutine cpuprint()
    print '(a,1x,f13.5)','final stuff        time =',walltime(16)
    print '(a,1x,f13.5)','compute_f(neq)     time =',walltime(17)
    print '(a,1x,f13.5)','Total wall time    time =',sum(walltime(1:nrtimes))
+   print '(a,1x,f13.5)','Total TS routines  time =',sum(walltime(1:nrtimes))-walltime(1)-walltime(14)-walltime(16)
 end subroutine
 
 function wtime()

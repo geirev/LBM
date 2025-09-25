@@ -201,37 +201,60 @@ These plots clearly show that GPU is the optimal choice for heavy simulations, w
 
 For the GPU simultion the timing of different routines were as follows after a first optimization pass doing the standards:
 
+initialization     time =       0.70840
+turbine forcing    time =       2.27381
+turbulence forcing time =       0.16409
+equil              time =      67.89952
+regularization     time =      75.90164
+vreman             time =      20.11048
+collisions         time =      20.96322
+applyturbines      time =       0.54649
+applyturbulence    time =       0.08046
+solids             time =       0.00000
+boundarycond       time =       1.06530
+drift              time =      20.57725
+macrovars          time =       5.59716
+diag               time =       2.00443
+averaging and turb time =       0.21119
+final stuff        time =       1.27799
+compute_f(neq)     time =       0.00000
+Total wall time    time =     219.38142
+Total TS routines  time =     215.39060
 
 ```bash
-------------------------------------------------------------------------------------------------
-                           gfortran nvfortran   nvfortran    nvidia     Speedup
-                             1 core    1 core    10 cores       GPU    core/GPU
-------------------------------------------------------------------------------------------------
-initialization     time =   0.57         0.74        0.76     0.741       1.00x
-turbine forcing    time =   9.16         5.23        2.21     0.485      10.80x
-turbulence forcing time =   0.82         0.48        0.15     0.031      15.50x
-equil              time = 395.67       197.72       72.33     1.700     116.30x
-regularization     time = 347.00       217.11       70.63     1.949     111.40x
-vreman             time =  89.41       102.16       23.09     0.726     140.70x
-collisions         time =  23.26        30.73       11.78     2.409      12.80x
-applyturbines      time =   0.48         0.37        0.54     0.046       8.00x
-applyturbulence    time =   0.06         0.06        0.08     0.007       8.60x
-solids             time =   0.00         0.00        0.00     0.000       ---
-boundarycond       time =   1.64         1.69        1.07     0.588       2.90x
-drift              time =  45.75        45.03       19.98     2.074      21.70x
-macrovars          time =  19.75        22.02        6.10     0.607      36.30x
-diag               time =   1.54         2.04        2.15     2.052       1.00x
-final stuff        time =   1.30         1.21        1.32     1.342       0.90x
-compute_f(neq)     time =  23.13        19.54       10.87     1.687      11.60x
-Total wall time    time = 959.78       646.42      223.33    16.657      38.80x (52.1x)
-------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+                       gfortran nvfortran   nvfortran   nvidia    nvidia     Speedup
+                         1 core    1 core    13 cores   DP-GPU    SP-GPU     1 core/SP-GPU
+--------------------------------------------------------------------------------------------
+initialization      =                0.82        0.70     0.83     0.735       1.12x
+turbine forcing     =                5.06        2.27     0.92     0.501      10.12x
+turbulence forcing  =                0.47        0.16     0.14     0.039      15.66x
+equil               =              193.47       67.89    16.96     2.250      86.00x
+regularization      =              219.71       75.90    11.84     2.887      76.10x
+vreman              =               98.37       20.11     2.70     0.585     168.15x
+collisions          =               95.44       20.96     2.42     1.321      72.24x
+applyturbines       =                0.37        0.54     0.08     0.048       7.70x
+applyturbulence     =                0.06        0.08     0.01     0.007       8.57x
+solids              =                0.00        0.00     0.00     0.000
+boundarycond        =                1.64        1.06     1.46     0.680       2.41x
+drift               =               42.98       20.57     4.97     2.646      16.24x
+macrovars           =               21.44        5.59     1.48     0.486      44.12x
+diag                =                2.06        2.00     2.32     2.019       1.02x
+averaging and turb  =                0.21        0.21     0.31     0.201       1.00x
+final stuff         =                1.23        1.27     2.47     1.286       1.00x
+compute_f(neq)      =                0.00        0.00     0.00     0.000
+--------------------------------------------------------------------------------------------
+Total wall time     =              683.40      219.38    48.97    15.697      43.54x
+--------------------------------------------------------------------------------------------
+Total time stepping =              679.28      215.39    43.34    11.655      58.28x
+--------------------------------------------------------------------------------------------
 ```
 
-The total speedup is 52.1x if neglecting initalization and saving diagnostics.
+The total speedup is 58.28x when neglecting initalization and saving diagnostics.
 
-DP-GPU is aboutn 2.5 times slower than SP-GPU.
+DP-GPU is almost four times slower than SP-GPU.
 
-Optimization should now continue on collisions, drift, and computefneq.
+Optimization should now continue on the drift kernel.
 
 
 ## 4. Run the code

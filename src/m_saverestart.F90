@@ -58,7 +58,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
       do l=1,nl
          write(10,'(10f13.10)')f_h(l,98:100,68:70,68)
       enddo
-   close(19)
+   close(10)
 
 end subroutine
 end module

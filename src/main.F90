@@ -194,7 +194,7 @@ program LatticeBoltzmann
 ! To ensure we have values in the boundary points first time we call boundarycond.
       feq=f
    endif
-   if (ivreman /= 1) tau = 3.0*kinevisc + 0.5 ! static and constant tau for whole simulation
+   tau = 3.0*kinevisc + 0.5 ! static and constant tau also for ghost zones in case they are used
 
    call cpufinish(1)
 

@@ -23,10 +23,9 @@ contains
    do idx = 1, ntot*nl
 #endif
       ! recover (l,i) from flattened index
-      l = mod(idx-1, nl) + 1
+      ! l = mod(idx-1, nl) + 1
       i = (idx-1)/nl + 1
-
-      fac = 1.0 - 1.0 / tau(i)
+      fac = 1.0 - 1.0/tau(i)
       feq(idx) = feq(idx) + fac * f(idx)
 
 #ifndef _CUDA

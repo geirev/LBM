@@ -151,6 +151,8 @@ m_city2.o:      mod_dimensions.o
 m_city.o:      makefile
 m_city.o:      mod_dimensions.o
 m_collisions_kernel.o:      makefile
+m_collisions_kernel.o:      mod_D3Q27setup.o
+m_collisions_kernel.o:      mod_dimensions.o
 m_collisions.o:      makefile
 m_collisions.o:      m_collisions_kernel.o
 m_collisions.o:      mod_D3Q27setup.o

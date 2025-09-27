@@ -48,7 +48,7 @@ subroutine city2(lsolids,blanking)
       do j=0,ny+1
       do i=0,nx+1
          if ( (abs(i-ipos(ib)) < irad) .and. abs(j-jpos(ib)) < irad ) then
-            blanking(i,j,0:min(kpos,nz+1)) = .true.
+            blanking(i,j,1:min(kpos,nz)) = .true.
          endif
       enddo
       enddo

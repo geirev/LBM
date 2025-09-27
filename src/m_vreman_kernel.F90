@@ -12,9 +12,9 @@ contains
    real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(out)   :: tau(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: H2(3,3,nl)
-   real, intent(in)    :: const
    real, value, intent(in) :: eps
    real, value, intent(in) :: kinevisc
+   real, value, intent(in) :: const
 
    real   :: alpha(3,3)
    real   :: alphamag
@@ -26,7 +26,6 @@ contains
    integer :: i, j, k, l, m, q, p
 
 #ifdef _CUDA
-   attributes(value)  :: const
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
    k = threadIdx%z + (blockIdx%z - 1) * blockDim%z

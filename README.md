@@ -182,9 +182,9 @@ A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain 
 
 ```bash
 single-core     (gfortran)  : 959.78 s   (make -B GFORTRAN=1)
-single-core     (nvfortran) : 646.42 s   (make -B)
-open-mp 13 cores (nvfortran): 223.33 s   (make -B MP=1)
-GPU             (nvfortran) :  16.66 s   (make -B CUDA=1)
+single-core     (nvfortran) : 679.28 s   (make -B)
+open-mp 13 cores (nvfortran): 215.39 s   (make -B MP=1)
+GPU             (nvfortran) :  11.66 s   (make -B CUDA=1)
 ```
 The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 indepenent cores)
 and the gpu card is "Nvidia RTX 5090."
@@ -200,26 +200,6 @@ and the gpu card is "Nvidia RTX 5090."
 These plots clearly show that GPU is the optimal choice for heavy simulations, while CPU scaling beyond 10-16 cores is inefficient.
 
 For the GPU simultion the timing of different routines were as follows after a first optimization pass doing the standards:
-
-initialization     time =       0.70840
-turbine forcing    time =       2.27381
-turbulence forcing time =       0.16409
-equil              time =      67.89952
-regularization     time =      75.90164
-vreman             time =      20.11048
-collisions         time =      20.96322
-applyturbines      time =       0.54649
-applyturbulence    time =       0.08046
-solids             time =       0.00000
-boundarycond       time =       1.06530
-drift              time =      20.57725
-macrovars          time =       5.59716
-diag               time =       2.00443
-averaging and turb time =       0.21119
-final stuff        time =       1.27799
-compute_f(neq)     time =       0.00000
-Total wall time    time =     219.38142
-Total TS routines  time =     215.39060
 
 ```bash
 --------------------------------------------------------------------------------------------
@@ -281,12 +261,15 @@ To profile the code run, e.g.,
 ```bash
 nsys profile --stats=true boltzmann
 ```
-or on prehistruc GPU architectures
+or on prehistoric GPU architectures
 ```bash
 nvprof boltzmann
 ```
 which gives a detailed listing of the CPU time used by each kernel.
-It is clear that the third order expansion and the regularization are by far the most expensive computations in the code.
+
+To obtain more realistic profiling, removing the device to host copying which starts dominating for short GPU runs, set
+runexp to false in infile.in. This option also eliminates all the syncs before and after kernal lauches which the profiling
+reacts on but which has little impact on the total simulation time.
 
 
 ## 6. Plotting

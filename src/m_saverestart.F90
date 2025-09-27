@@ -4,7 +4,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    !use iso_fortran_env, only : int64
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile, only : inflowturbulence,nturbines,nrturb
+   use m_readinfile, only : inflowturbulence,nturbines,nrturb,runexp
    implicit none
    integer, intent(in) :: it
    real,    intent(in) :: theta
@@ -30,6 +30,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    integer iunit,l
    !integer(int64) :: irec, irecr, ireci
 
+   if (.not.runexp) return
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
    if (inflowturbulence) then

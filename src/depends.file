@@ -19,6 +19,7 @@ main.o:      m_cylinder.o
 main.o:      m_density.o
 main.o:      m_diag.o
 main.o:      m_drift.o
+main.o:      m_dump_elevation.o
 main.o:      m_fequil3.o
 main.o:      m_gpu_meminfo.o
 main.o:      m_inflow_turbulence_apply.o
@@ -188,6 +189,9 @@ m_drift.o:      m_drift_kernel.o
 m_drift.o:      mod_D3Q27setup.o
 m_drift.o:      mod_dimensions.o
 m_drift.o:      m_wtime.o
+m_dump_elevation.o:      makefile
+m_dump_elevation.o:      mod_dimensions.o
+m_dump_elevation.o:      m_tecfld.o
 m_fequil3_block_kernel.o:      makefile
 m_fequil3_kernel.o:      makefile
 m_fequil3.o:      makefile
@@ -323,3 +327,4 @@ m_vreman.o:      m_readinfile.o
 m_vreman.o:      m_vreman_kernel.o
 m_vreman.o:      m_wtime.o
 m_wtime.o:      makefile
+m_wtime.o:      m_readinfile.o

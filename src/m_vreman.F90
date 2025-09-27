@@ -28,21 +28,6 @@ subroutine vreman(f, tau)
    call cpustart()
 
    if (ivreman /= 1) then
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) SHARED(tau, kinevisc)
-#endif
-      do k=1,nz
-         do j=1,ny
-            do i=1,nx
-               tau(i,j,k) = 3.0*kinevisc + 0.5
-            enddo
-         enddo
-      enddo
-#ifndef _CUDA
-!$OMP END PARALLEL DO
-#endif
       return
    endif
 

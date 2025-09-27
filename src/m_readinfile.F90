@@ -56,6 +56,7 @@ module m_readinfile
                            !  iforce=8  !  Guo (2002)
                            !  iforce=10 !  Kupershtokh (2009)
                            !  iforce=12 !  Khazaeli et al. 2019
+   logical  runexp         ! true for normal runs, false turns off saving of diagnostics and restarts
 
 contains
 subroutine readinfile()
@@ -68,7 +69,6 @@ subroutine readinfile()
    logical ex
    real gridrn
    integer n
-   logical  runexp
 
 ! reading input data
    inquire(file='infile.in',exist=ex)
@@ -193,7 +193,7 @@ subroutine readinfile()
    print '(a,g12.4)','Compressibility        errors proportional to dt^2/dx**2 :', p2l%time**2/p2l%length**2
    print '(a,g12.4)','BGK truncation       errors proportional to (tauin-0.5)*2:', (tauin-0.5)**2
 
-   if (.not.runexp) stop 'runexp is false'
+   !if (.not.runexp) stop 'runexp is false'
 
 end subroutine
 end module

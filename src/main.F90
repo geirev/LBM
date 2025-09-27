@@ -16,6 +16,7 @@ program LatticeBoltzmann
    use m_density
    use m_diag
    use m_drift
+   use m_dump_elevation
    use m_fequil3
    use m_gpu_meminfo
    use m_inflow_turbulence_apply
@@ -51,7 +52,6 @@ program LatticeBoltzmann
 !   integer, parameter :: nshapiro=4
 !   real sh(0:nshapiro)
 
-
 ! Main variables
    real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)            ! density function
    real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)          ! Maxwells equilibrium density function
@@ -60,16 +60,15 @@ program LatticeBoltzmann
    attributes(device) :: feq
 #endif
 
-   logical, dimension(:,:,:), allocatable :: lblanking_h ! Host blanking variable
    logical, dimension(:,:,:), allocatable :: lblanking   ! blanking solids grid points
 #ifdef _CUDA
    attributes(device) :: lblanking
 #endif
 
-   real uvel(nz)
-   real, dimension(:), allocatable :: uvel_d        ! vertical u-velocity profile device version
+   real, dimension(:), allocatable :: uvel_h        ! vertical u-velocity profile on host
+   real, dimension(:), allocatable :: uvel          ! vertical u-velocity profile on device
 #ifdef _CUDA
-   attributes(device) :: uvel_d
+   attributes(device) :: uvel
 #endif
 
    logical :: lsolids=.false.
@@ -93,7 +92,6 @@ program LatticeBoltzmann
 #endif
 
 
-   real :: elevation(nx,ny)=0.0
    integer i,j,k,l
    integer :: it
 
@@ -137,24 +135,11 @@ program LatticeBoltzmann
 
    if (nturbines > 0)      call turbines_init()
    if (inflowturbulence)   call inflow_turbulence_init()
-#ifdef _CUDA
-   call gpu_meminfo('turb')
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      allocate(lblanking(0:nx+1,0:ny+1,0:nz+1))
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#endif
-      do k = 0, nz+1
-      do j = 0, ny+1
-      do i = 0, nx+1
-         lblanking(i,j,k) = .false.
-      end do
-      end do
-      end do
-
+! Including solid bodies like cylinder and urban city as blanking of grid cells
+   allocate(lblanking(0:nx+1,0:ny+1,0:nz+1))
+   lblanking = .false.
 
    select case(trim(experiment))
    case('city')
@@ -167,30 +152,13 @@ program LatticeBoltzmann
 !      call airfoil(lsolids,lblanking)
        stop 'needs fix airfoil routine for gpu'
    end select
+   if (lsolids) call dump_elevation(lblanking)
 
-   if (lsolids) then
-      allocate(lblanking_h(0:nx,0:ny,0:nz))
-      lblanking_h=lblanking
-      do j=1,ny
-      do i=1,nx
-         do k=1,nz
-            if (lblanking_h(i,j,k)) then
-                elevation(i,j)=k
-            else
-                exit
-            endif
-         enddo
-      enddo
-      enddo
-      call tecfld('elevation',nx,ny,1,elevation)
-      deallocate(lblanking_h)
-   endif
+! Save geometry
+   call diag(1,0,rho,u,v,w,lblanking)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
-   call uvelshear(uvel)
-   allocate(uvel_d(nz))
-   uvel_d=uvel
 
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
    call seedmanagement(nt0)
@@ -198,76 +166,59 @@ program LatticeBoltzmann
 ! setting shapiro factors (no really used)
 !   call shfact(nshapiro,sh)
 
+! Inflow velocity shear stored in uvel as read from file in uvelshare
+   allocate(uvel_h(nz))
+   allocate(uvel(nz))
+   call uvelshear(uvel_h)
+   uvel=uvel_h
+   deallocate(uvel_h)
+
    if (nt0 == 0) then
 ! Intialization of macro variables
-      call inipert(rho,u,v,w,uvel_d)
-
-! Generate trubulence forcing fields
-      if (inflowturbulence) call inflow_turbulence_compute(uu,vv,ww,rr,.true.,nrturb)
+      call inipert(rho,u,v,w,uvel)
 
 ! Initial diagnostics
-      call diag(2,0,rho,u,v,w,lblanking) ! Save initial condidion
+      call diag(2,0,rho,u,v,w,lblanking)
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w)
-      call boundarycond(feq,uvel_d)
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#endif
-      do k=0,nz+1
-      do j=0,ny+1
-      do i=0,nx+1
-         do l=1,nl
-            f(l,i,j,k) = feq(l,i,j,k)
-         enddo
-      enddo
-      enddo
-      enddo
+      call boundarycond(feq,uvel)
+      f=feq
 
-#ifdef _CUDA
-!$cuf kernel do(3) <<<*,*>>>
-#endif
-      do k=0,nz+1
-      do j=0,ny+1
-      do i=0,nx+1
-         !tau(i,j,k) = tauin
-         tau(i,j,k) = 3.0*kinevisc + 0.5
-      enddo
-      enddo
-      enddo
-
+! Generate turbulence forcing fields
+      if (inflowturbulence) call inflow_turbulence_compute(uu,vv,ww,rr,.true.,nrturb)
    else
 ! Restart from restart file
       call readrestart(nt0,f,theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,f)
-! To recover initial tau
-      call fequil3(feq,rho,u,v,w)
-      call boundarycond(feq,uvel_d)
-      if (ihrr == 1) then
-         call regularization(f, feq, u, v, w)
-      else
-         call compute_fneq(f,feq)
-      endif
-      if (ivreman == 1) call vreman(f, tau)
-      call compute_f(f, feq)
+! To ensure we have values in the boundary points first time we call boundarycond.
+      feq=f
    endif
-   call diag(1,0,rho,u,v,w,lblanking) ! Save geometry
+   if (ivreman /= 1) tau = 3.0*kinevisc + 0.5 ! static and constant tau for whole simulation
+
    call cpufinish(1)
 
 #ifdef _CUDA
    call gpu_meminfo('time stepping')
 #endif
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    print *,'Start timestepping loop'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Simulation Main Loop
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) then
-         write(*,'(a,i6,a,f10.2,a,3(a,f12.7))',advance='yes')'Iteration:', it,                     &
-                                                            ' Time:'  ,real(it)*p2l%time,' s.'
+         write(*,'(a,i6,a,f10.2,a,3(a,f12.7))')'Iteration:', it,' Time:'  ,real(it)*p2l%time,' s.'
       endif
 
-! start with f,rho,u,v,w
+! start time step with f,rho,u,v,w given
 
+! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
+      if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
+
+! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
+      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
@@ -279,12 +230,6 @@ program LatticeBoltzmann
          call compute_fneq(f,feq)
       endif
 
-! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
-      if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
-
-! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
-
 !! [feq] = fequil3(rho,u,v,w] (returns new equilibrium density using updated forcing velocities)
       if (iforce /= 10 .and. nturbines > 0) then
          call compute_f(f, feq)
@@ -293,7 +238,7 @@ program LatticeBoltzmann
       endif
 
 ! [tau] = vreman[f] [f=Rneqf]
-      if (ivreman == 1) call vreman(f, tau)
+      call vreman(f, tau)
 
 ! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
       call collisions(f,feq,tau)
@@ -308,7 +253,7 @@ program LatticeBoltzmann
       if (lsolids) call solids(feq,lblanking)
 
 ! General boundary conditions
-      call boundarycond(feq,uvel_d)
+      call boundarycond(feq,uvel)
 
 ! Drift of feq returned in f
       call drift(f,feq)
@@ -356,6 +301,6 @@ program LatticeBoltzmann
    if (allocated(ww))        deallocate(ww)
    if (allocated(rr))        deallocate(rr)
    if (allocated(lblanking)) deallocate(lblanking)
-   if (allocated(uvel_d))    deallocate(uvel_d)
+   if (allocated(uvel))      deallocate(uvel)
 
 end program LatticeBoltzmann

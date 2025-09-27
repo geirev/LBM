@@ -52,6 +52,7 @@ F90SOURCE = \
 	m_diag.F90\
 	m_drift.F90\
 	m_drift_kernel.F90\
+	m_dump_elevation.F90\
 	m_fequil3_block_kernel.F90\
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\

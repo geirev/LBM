@@ -52,6 +52,7 @@ diag	m_diag.F90	/^module
 dimensions	mod_dimensions.F90	/^module
 drift	m_drift.F90	/^module
 drift_kernel	m_drift_kernel.F90	/^module
+dump_elevation	m_dump_elevation.F90	/^module
 fequil3	m_fequil3.F90	/^module
 fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 fequil3_kernel	m_fequil3_kernel.F90	/^module
@@ -121,6 +122,7 @@ m_density	m_density.F90	/^module
 m_diag	m_diag.F90	/^module
 m_drift	m_drift.F90	/^module
 m_drift_kernel	m_drift_kernel.F90	/^module
+m_dump_elevation	m_dump_elevation.F90	/^module
 m_fequil3	m_fequil3.F90	/^module
 m_fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 m_fequil3_kernel	m_fequil3_kernel.F90	/^module

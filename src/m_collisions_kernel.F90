@@ -1,38 +1,43 @@
 module m_collisions_kernel
 contains
 #ifdef _CUDA
-   attributes(global) &
+   attributes(global)&
 #endif
-   subroutine collisions_kernel(feq, f, tau, ntot, nl)
+   subroutine collisions_kernel(feq, f, tau, nx, ny, nz, nl)
 #ifdef _CUDA
    use cudafor
 #endif
    implicit none
-   integer, value      :: ntot, nl
-   real, intent(inout) :: feq(nl*ntot)
-   real, intent(in)    :: f(nl*ntot)
-   real, intent(in)    :: tau(ntot)
-   integer :: idx, i, l
-   real :: fac
-
+   integer, value      :: nx, ny, nz, nl
+   real, intent(inout) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    ::   f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    ::    tau(0:nx+1,0:ny+1,0:nz+1)
+   integer :: i, j, k , l
+   real fac
 #ifdef _CUDA
-   idx = threadIdx%x + (blockIdx%x - 1) * blockDim%x
-   if (idx > ntot*nl) return
+   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
+   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
+   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
+   if (i > nx) return
+   if (j > ny) return
+   if (k > nz) return
 #else
-!$OMP PARALLEL DO PRIVATE(idx, i, l, fac) SHARED(f, feq, tau, ntot, nl)
-   do idx = 1, ntot*nl
+!$OMP PARALLEL DO PRIVATE(i,j,k,fac) SHARED(f, feq, tau, nx, ny, nz, nl)
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
 #endif
-      ! recover (l,i) from flattened index
-      ! l = mod(idx-1, nl) + 1
-      i = (idx-1)/nl + 1
-      fac = 1.0 - 1.0/tau(i)
-      feq(idx) = feq(idx) + fac * f(idx)
+      fac=1.0-1.0/tau(i,j,k)
+      do l=1,nl
+         feq(l,i,j,k) =  feq(l,i,j,k) + fac*f(l,i,j,k)
+      enddo
 
 #ifndef _CUDA
-   end do
+    enddo
+    enddo
+    enddo
 !$OMP END PARALLEL DO
 #endif
 
 end subroutine
 end module
-

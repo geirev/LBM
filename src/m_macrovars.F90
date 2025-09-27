@@ -23,7 +23,6 @@ subroutine macrovars(rho,u,v,w,f)
    attributes(device) :: w
    integer :: tx, ty, tz, bx, by, bz
 #endif
-   integer i,j,k,l
    integer, parameter :: icpu=13
 
    call cpustart()

@@ -15,7 +15,7 @@ contains
    real, intent(out) :: v(nx,ny,nz)
    real, intent(out) :: w(nx,ny,nz)
    integer :: i, j, k, l
-   real fl,tmpr,tmpu,tmpv,tmpw,inv_rho
+!   real fl,tmpr,tmpu,tmpv,tmpw,inv_rho
 
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
@@ -25,7 +25,7 @@ contains
    if (j > ny) return
    if (k > nz) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f, nx, ny, nz, nl)
    do k=1,nz
    do j=1,ny
    do i=1,nx

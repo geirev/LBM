@@ -17,30 +17,29 @@ subroutine collisions(f,feq,tau)
    use cudafor
 #endif
    implicit none
-   real, intent(in)    :: f(  nl,0:nx+1,0:ny+1,0:nz+1)  ! non-equlibrium distribution R(fneq)
+   real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)    ! non-equlibrium distribution R(fneq)
    real, intent(inout) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)  ! equilibrium distribution on input
-   real, intent(in)    :: tau(   0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    :: tau(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: tau
    attributes(device) :: f
    attributes(device) :: feq
    integer :: tx, ty, tz, bx, by, bz
 #endif
-   integer, parameter :: ntot=(nx+2)*(ny+2)*(nz+2)
    integer, parameter :: icpu=7
 
 
    call cpustart()
 #ifdef _CUDA
-   tx=ntx; bx=(ntot*nl+tx-1)/tx
-   ty=1; by=1
-   tz=1; bz=1
+   tx=ntx; bx=(nx+tx-1)/tx
+   ty=nty; by=(ny+ty-1)/ty
+   tz=ntz; bz=(nz+tz-1)/tz
 #endif
    call collisions_kernel&
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(feq, f, tau, ntot, nl)
+          &(feq, f, tau, nx, ny, nz, nl)
    call cpufinish(icpu)
 
 end subroutine

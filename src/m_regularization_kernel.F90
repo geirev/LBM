@@ -26,14 +26,14 @@ contains
    real :: a1_3(3,3,3)
    real :: tmp
 
-   integer :: i, j, k, l, p, q, r, i1, j1, k1
+   integer :: i, j, k, l, p, q, r
 #ifdef _CUDA
    i = threadidx%x + (blockidx%x - 1) * blockdim%x
    j = threadidx%y + (blockidx%y - 1) * blockdim%y
    k = threadidx%z + (blockidx%z - 1) * blockdim%z
    if (i > nx .or. j > ny .or. k > nz) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(none) PRIVATE(i, j, k, l, p, q, r, i1, j1, k1, vel, a1_2, a1_3, tmp)&
+!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(none) PRIVATE(i, j, k, l, p, q, r, vel, a1_2, a1_3, tmp)&
 !$OMP             & SHARED(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
    do k=1,nz
    do j=1,ny

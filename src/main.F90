@@ -92,7 +92,6 @@ program LatticeBoltzmann
 #endif
 
 
-   integer i,j,k,l
    integer :: it
 
    logical, parameter :: debug=.false.

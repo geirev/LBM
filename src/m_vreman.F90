@@ -22,7 +22,6 @@ subroutine vreman(f, tau)
 
    real :: const           ! c in Vreman 2004 Eq (5)
    real :: eps
-   integer :: i, j, k
 
    integer, parameter :: icpu=6
    call cpustart()

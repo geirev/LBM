@@ -1,33 +1,33 @@
 #1.0 Version of infile.in ---------------------------------------------------------------------------------------
  T                ! runexp (true or false)
- city2             ! experiment: cylinder, airfoil etc
- 512   1   1           ! number of threads per block in x, y, and z direction
+ city2            ! experiment: cylinder, airfoil etc
+ 512   1   1           ! number of GPU threads per block in x, y, and z direction
  3                ! BGK order, ibgk=2 standard second order, ibgk=3 gives third order BGK
  1                ! Collision operator ihrr=1 includes regularization
  1 0.15           ! Vreman subgridscale mixing (1) with Smagorinsky constant (0.15)
  10               ! iforce: Forcing scheme: 8-Guo (2002); 10-Kupershtokh (2009); 12-Khazaeli et al. 2019
- 00000            ! nt0   : First timestep
- 00200            ! nt1   : Final timestep
- 200              ! iout  : Number of steps between outputs
- 1000             ! irestarts: Number of steps between restart outputs
- 00 22000 1       ! iprt  : Output every timestep for it <= iprt1 and it >= iprt2
- T                ! lprtmin : Minimalistic output to save disk space by 50%
- 1000000          ! ifout : Number of steps between f-outputs
+ 0000             ! nt0   : First timestep
+ 1000             ! nt1   : Final timestep
+ 100              ! iout  : Number of steps between outputs
+ 10000             ! irestarts: Number of steps between restart outputs
+ 000 200000 2        ! iprt  : Output every timestep for it <= iprt1 and it >= iprt2
+ T                ! NOT USED. lprtmin : Minimalistic output to save disk space by 50%
+ 1000000          ! NOT USED. ifout : Number of steps between f-outputs
  1                ! ibnd  : 0-periodic, 1 in/out flow,
  0                ! jbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for j=1 and j=ny
- 12               ! kbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for k=1 and k=nz
- 6.0 0.0          ! 11.4 ! uini, udir : Inflow wind velocity [m/s], durection in degrees (-45:45)
+ 22               ! kbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for k=1 and k=nz
+ 10   -40.0         ! 11.4 ! uini, udir : Inflow wind velocity [m/s], direction in degrees (-45:45)
  1.0              ! rho0  : Non-dimensional average (initial) density []
- 0.0005           ! rhoa  : Relative pressure gradient for ibnd=2 (over 1:nx) NOT USED
+ 0.0005           ! NOT USED.  rhoa  : Relative pressure gradient for ibnd=2 (over 1:nx) NOT USED
  T                ! linipert: Add pseudorandom field to initial macro variables (must be true)
- T 0.00001  100  ! lturb   : Add turbulence forcing on inflow, amplitude, number of prestored time steps
+ F 0.00001  100   ! lturb   : Add turbulence forcing on inflow, amplitude, number of prestored time steps
  0.0000178        ! visckin : Dimensional kinematic viscosity
  1.225            ! C_rho - Density of air at surface 15C and  101.325 kPa  [kg/m^3] Eq. (7.12)
  4.0              ! C_l   - Length of a lattice cell in meters [m]
  75.0             ! C_u   - Wind velocity conversion [m/s]   -> C_t=C_l/C_u
  T F              ! Switch on/off full averaging and turbine section averaging
- 40000            ! Iteration to start computing section averages
- 40100            ! Iteration to save section averages
+ 40000            ! Iteration to start computing averages
+ 40100            ! Iteration to save averages
 #-Turbine-definitions
  0                ! Number of turbines
  0.0              ! Imposed pitchangle (0 until u=11.4, see table 7.1 in NREL doc).

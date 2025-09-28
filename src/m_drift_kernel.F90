@@ -3,30 +3,28 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine drift_kernel(f,feq, nx, ny, nz, nl, cxs, cys, czs)
+   subroutine drift_kernel(f,feq)
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx, ny, nz
+   use mod_D3Q27setup, only : cxs, cys, czs, nl
    implicit none
-   integer, value    :: nx, ny, nz, nl
-   real, intent(out) :: f(nl,nx+2,ny+2,nz+2)
-   real, intent(in)  :: feq(nl,nx+2,ny+2,nz+2)
-   integer, intent(in) :: cxs(nl)
-   integer, intent(in) :: cys(nl)
-   integer, intent(in) :: czs(nl)
+   real, intent(out) ::   f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)  :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    integer :: i, j, k
 #ifdef _CUDA
-   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x + 1
-   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y + 1
-   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z + 1
-   if (i > nx+1) return
-   if (j > ny+1) return
-   if (k > nz+1) return
+   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
+   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
+   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
+   if (i > nx) return
+   if (j > ny) return
+   if (k > nz) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k) SHARED(f, feq, nx, ny, nz, nl)
-   do k=2,nz+1
-   do j=2,ny+1
-   do i=2,nx+1
+!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k) SHARED(f, feq)
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
 #endif
 ! !$CUF UNROLL
 !      do l=1,nl

@@ -186,6 +186,8 @@ m_diag.o:      m_tecout.o
 m_diag.o:      m_vorticity.o
 m_diag.o:      m_wtime.o
 m_drift_kernel.o:      makefile
+m_drift_kernel.o:      mod_D3Q27setup.o
+m_drift_kernel.o:      mod_dimensions.o
 m_drift.o:      makefile
 m_drift.o:      m_drift_kernel.o
 m_drift.o:      mod_D3Q27setup.o

@@ -30,7 +30,7 @@ subroutine drift(f,feq)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f,feq, nx, ny, nz, nl, cxs, cys, czs)
+        &(f,feq)
 !@cuf istat = cudaDeviceSynchronize()
    call cpufinish(icpu)
 

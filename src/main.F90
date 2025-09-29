@@ -177,7 +177,7 @@ program LatticeBoltzmann
       call inipert(rho,u,v,w,uvel)
 
 ! Initial diagnostics
-      call diag(2,0,rho,u,v,w,lblanking)
+      call diag(itecout,0,rho,u,v,w,lblanking)
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(feq,rho,u,v,w)
@@ -262,7 +262,7 @@ program LatticeBoltzmann
       call macrovars(rho,u,v,w,f)
 
 ! Diagnostics
-      call diag(2,it,rho,u,v,w,lblanking)
+      call diag(itecout,it,rho,u,v,w,lblanking)
 
       call cpustart()
 ! Averaging for diagnostics similar to Asmuth paper for wind turbines

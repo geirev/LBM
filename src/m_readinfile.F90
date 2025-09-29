@@ -8,7 +8,7 @@ module m_readinfile
    integer  dprt           ! delta high frequency output 
    logical  lprtmin        ! Print minimalistice plt file if true (no derived variables)
    integer  irestart       ! number of steps between restart files
-   integer  ifout          ! number of steps between outputs 0, 0+iout, ...
+   integer  itecout        ! format of tecplot solution files (0 full files, 2 only solution variables)
    integer  ibnd           ! Type of bondary condition in i direction (ibnd=0 periodic, 1 inflow/outflow, 12
    integer  jbnd           ! Type of bondary condition in i direction
    integer  kbnd           ! Type of bondary condition in k direction
@@ -106,7 +106,7 @@ subroutine readinfile()
       read(10,*)irestart           ; print '(a,i8)',      'irestart          = ',irestart
       read(10,*)iprt1,iprt2,dprt   ; print '(a,3i8)',     'iprt1, iprt2, dprt= ',iprt1,iprt2,dprt
       read(10,*)lprtmin            ; print '(a,tr7,l1)',  'lprtmin           = ',lprtmin
-      read(10,*)ifout              ; print '(a,i8)',      'ifout             = ',ifout
+      read(10,*)itecout            ; print '(a,i8)',      'itecout           = ',itecout
       read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
       read(10,*)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
       read(10,*)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd

@@ -36,11 +36,24 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    integer num_of_vars
    call cpustart()
    if ((mod(it, iout) == 0) .or. it == nt1 .or. ((it <= iprt1 .or. it >= iprt2).and. mod(it,dprt) == 0)) then
-      if (filetype==1) then
+
+      if (filetype==0) then
+         if (present(Ti)) then
+            cit='F_AVERAGE'
+            variables='i,j,k,blanking,rho,u,v,w,Ti'
+            num_of_vars=9
+         else
+            write(cit,'(a1,i6.6)')'F',it
+            variables='i,j,k,blanking,rho,u,v,w'
+            num_of_vars=8
+         endif
+
+      elseif (filetype==1) then
          cit='_GRID'
          variables='i,j,k,blanking'
          num_of_vars=4
-      else
+
+      elseif (filetype==2) then
          if (present(Ti)) then
             cit='_AVERAGE'
             variables='rho,u,v,w,Ti'
@@ -50,6 +63,9 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
             variables='rho,u,v,w'
             num_of_vars=4
          endif
+      else
+         print *,'diag filetype:',filetype
+         stop 'invalid filetype in diag'
       endif
 
       allocate(u_h(nx,ny,nz))

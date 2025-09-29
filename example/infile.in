@@ -12,7 +12,7 @@
  10000             ! irestarts: Number of steps between restart outputs
  000 200000 2        ! iprt  : Output every timestep for it <= iprt1 and it >= iprt2
  T                ! NOT USED. lprtmin : Minimalistic output to save disk space by 50%
- 1000000          ! NOT USED. ifout : Number of steps between f-outputs
+ 0                ! itecout : 0-full files, 2-only solution variables
  1                ! ibnd  : 0-periodic, 1 in/out flow,
  0                ! jbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for j=1 and j=ny
  22               ! kbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for k=1 and k=nz

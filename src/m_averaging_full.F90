@@ -14,7 +14,7 @@ contains
 subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
    use mod_dimensions
 #ifdef _CUDA
-   use m_readinfile, only : ntx,nty,ntz
+   use m_readinfile, only : ntx,nty,ntz,itecout
 #endif
    use m_readinfile, only : uini
    use m_averaging_full_kernel
@@ -85,7 +85,7 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
 #endif
           &(nx, ny, nz, uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
 
-      call diag(2,0,rho,uave,vave,wave,lblanking,Ti)
+      call diag(itecout,0,rho,uave,vave,wave,lblanking,Ti)
 
       deallocate( uave , vave , wave , uave2 , vave2 , wave2 , Ti)
       print '(a)','Done with averaging.'

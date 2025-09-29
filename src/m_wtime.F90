@@ -14,19 +14,19 @@ module m_wtime
 contains
 
 subroutine cpustart()
-   use m_readinfile, only : runexp
+   use m_readinfile, only : ltiming
    implicit none
-   if (.not.runexp) return
+   if (.not.ltiming) return
    tstart = wtime()
 end subroutine
 
 subroutine cpufinish(icpu)
-   use m_readinfile, only : runexp
+   use m_readinfile, only : ltiming
    implicit none
    integer, intent(in) :: icpu
    real(kind(1.0D+00)) :: tend
    real(kind(1.0D+00)) :: elapsed
-   if (.not.runexp) return
+   if (.not.ltiming) return
 
    if (icpu < 1 .or. icpu > nrtimes) then
       print *, "Error: Invalid timer index icpu = ", icpu
@@ -43,9 +43,9 @@ subroutine cpufinish(icpu)
 end subroutine
 
 subroutine cpuprint()
-   use m_readinfile, only : runexp
+   use m_readinfile, only : ltiming
    implicit none
-   if (.not.runexp) return
+   if (.not.ltiming) return
    print '(a,1x,f13.5)','initialization     time =',walltime(1)
    print '(a,1x,f13.5)','turbine forcing    time =',walltime(2)
    print '(a,1x,f13.5)','turbulence forcing time =',walltime(3)

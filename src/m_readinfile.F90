@@ -56,7 +56,7 @@ module m_readinfile
                            !  iforce=8  !  Guo (2002)
                            !  iforce=10 !  Kupershtokh (2009)
                            !  iforce=12 !  Khazaeli et al. 2019
-   logical  runexp         ! true for normal runs, false turns off saving of diagnostics and restarts
+   logical ltiming         ! true for timing of kernels. Should be false to avoid syncs
 
 contains
 subroutine readinfile()
@@ -83,7 +83,7 @@ subroutine readinfile()
          print *,'Update version of infile.in to:',version,ver
          stop
       endif
-      read(10,'(1x,l1)')runexp     ; print '(a,tr7,l1)',  'runexp            = ',runexp
+      read(10,'(1x,l1)')ltiming    ; print '(a,tr7,l1)',  'ltiming           = ',ltiming
       read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
       read(10,*)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
       read(10,*)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
@@ -193,7 +193,6 @@ subroutine readinfile()
    print '(a,g12.4)','Compressibility        errors proportional to dt^2/dx**2 :', p2l%time**2/p2l%length**2
    print '(a,g12.4)','BGK truncation       errors proportional to (tauin-0.5)*2:', (tauin-0.5)**2
 
-   !if (.not.runexp) stop 'runexp is false'
 
 end subroutine
 end module

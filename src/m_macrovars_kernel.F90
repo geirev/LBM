@@ -3,12 +3,13 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine macrovars_kernel(f, rho, u, v, w, nx, ny, nz, nl)
+   subroutine macrovars_kernel(f, rho, u, v, w)
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx,ny,nz
+   use mod_D3Q27setup, only : nl
    implicit none
-   integer, value :: nx, ny, nz, nl
    real, intent(in)  :: f(nl, 0:nx+1, 0:ny+1, 0:nz+1)
    real, intent(out) :: rho(nx,ny,nz)
    real, intent(out) :: u(nx,ny,nz)

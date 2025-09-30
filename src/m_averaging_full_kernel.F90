@@ -3,12 +3,12 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine averaging_full_kernel(nx, ny, nz, u, v, w, uave, vave, wave, uave2, vave2, wave2 )
+   subroutine averaging_full_kernel(u, v, w, uave, vave, wave, uave2, vave2, wave2 )
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx,ny,nz
    implicit none
-   integer, value      :: nx,ny,nz
    real, intent(in)    :: u(nx,ny,nz)
    real, intent(in)    :: v(nx,ny,nz)
    real, intent(in)    :: w(nx,ny,nz)

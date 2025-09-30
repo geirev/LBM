@@ -70,7 +70,7 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(nx, ny, nz, u, v, w, uave, vave, wave, uave2, vave2, wave2 )
+          &(u, v, w, uave, vave, wave, uave2, vave2, wave2 )
 
 
    if (lfinal) then
@@ -83,7 +83,7 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(nx, ny, nz, uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
+          &(uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
 
       call diag(itecout,0,rho,uave,vave,wave,lblanking,Ti)
 

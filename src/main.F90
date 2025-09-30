@@ -3,6 +3,7 @@ program LatticeBoltzmann
    use cudafor
 #endif
    use m_airfoil
+   use m_printdefines
    use m_averaging_full
    use m_averaging_sec
    use m_boundarycond
@@ -53,77 +54,41 @@ program LatticeBoltzmann
 !   real sh(0:nshapiro)
 
 ! Main variables
-   real    :: f(nl,0:nx+1,0:ny+1,0:nz+1)            ! density function
-   real    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)          ! Maxwells equilibrium density function
+   real    ::      f(nl,0:nx+1,0:ny+1,0:nz+1) ! density function
+   real    ::    feq(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
+   real    ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
+   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
+   real    ::         u(nx,ny,nz)             ! x component of fluid velocity
+   real    ::         v(nx,ny,nz)             ! y component of fluid velocity
+   real    ::         w(nx,ny,nz)             ! z component of fluid velocity
+   real    ::       rho(nx,ny,nz)             ! fluid density
+   real    ::      uvel(nz)                   ! vertical u-velocity profile on device
+
+
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: feq
-#endif
-
-   logical, dimension(:,:,:), allocatable :: lblanking   ! blanking solids grid points
-#ifdef _CUDA
-   attributes(device) :: lblanking
-#endif
-
-   real, dimension(:), allocatable :: uvel_h        ! vertical u-velocity profile on host
-   real, dimension(:), allocatable :: uvel          ! vertical u-velocity profile on device
-#ifdef _CUDA
-   attributes(device) :: uvel
-#endif
-
-   logical :: lsolids=.false.
-
-! Spatially dependent relaxation time
-   real, dimension(:,:,:), allocatable  :: tau      ! relaxation time scale
-#ifdef _CUDA
    attributes(device) :: tau
-#endif
-
-! Fluid variables
-   real    :: u(nx,ny,nz)                           ! x component of fluid velocity
-   real    :: v(nx,ny,nz)                           ! y component of fluid velocity
-   real    :: w(nx,ny,nz)                           ! z component of fluid velocity
-   real    :: rho(nx,ny,nz)                         ! fluid density
-#ifdef _CUDA
+   attributes(device) :: lblanking
    attributes(device) :: u
    attributes(device) :: v
    attributes(device) :: w
    attributes(device) :: rho
+   attributes(device) :: uvel
 #endif
 
-
+   real,    dimension(:),       allocatable :: uvel_h      ! vertical u-velocity profile on host
    integer :: it
+   logical :: lsolids=.false.
 
-   logical, parameter :: debug=.false.
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef _CUDA
-   print*, "Running GPU version!"
-#elif OPEN_MP
-   print*, "Running OPEN_MP version!"
-#else
-   print*, "Running single CPU version!"
-#endif
-
-#ifdef D3Q19
-   print*, "D3Q19 lattice"
-#else
-   print*, "D3Q27 lattice"
-#endif
-
-#ifdef DOUBLE_PRECISION
-   print*, "Double precision code (-r8)"
-#else
-   print*, "Single precision code"
-#endif
-
+   call printdefines()
    call cpustart()
-
-   allocate(tau(0:nx+1,0:ny+1,0:nz+1))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
+
 
 #ifdef _CUDA
    call gpu_meminfo('ini')
@@ -137,7 +102,6 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Including solid bodies like cylinder and urban city as blanking of grid cells
-   allocate(lblanking(0:nx+1,0:ny+1,0:nz+1))
    lblanking = .false.
 
    select case(trim(experiment))
@@ -153,6 +117,7 @@ program LatticeBoltzmann
    end select
    if (lsolids) call dump_elevation(lblanking)
 
+   print *,'A'
 ! Save geometry
    call diag(1,0,rho,u,v,w,lblanking)
 
@@ -167,7 +132,6 @@ program LatticeBoltzmann
 
 ! Inflow velocity shear stored in uvel as read from file in uvelshare
    allocate(uvel_h(nz))
-   allocate(uvel(nz))
    call uvelshear(uvel_h)
    uvel=uvel_h
    deallocate(uvel_h)
@@ -295,11 +259,9 @@ program LatticeBoltzmann
    call cpufinish(16)
    call cpuprint()
 
-   if (allocated(uu))        deallocate(uu)
-   if (allocated(vv))        deallocate(vv)
-   if (allocated(ww))        deallocate(ww)
-   if (allocated(rr))        deallocate(rr)
-   if (allocated(lblanking)) deallocate(lblanking)
-   if (allocated(uvel))      deallocate(uvel)
+   if (allocated(uu       ))  deallocate(uu            )
+   if (allocated(vv       ))  deallocate(vv            )
+   if (allocated(ww       ))  deallocate(ww            )
+   if (allocated(rr       ))  deallocate(rr            )
 
 end program LatticeBoltzmann

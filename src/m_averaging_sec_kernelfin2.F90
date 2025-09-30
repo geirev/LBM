@@ -3,12 +3,13 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine averaging_sec_kernelfin2(nx, ny, iave, uxave, vxave, wxave, uxave2, vxave2, wxave2, Tix, uini )
+   subroutine averaging_sec_kernelfin2(iave, uxave, vxave, wxave, uxave2, vxave2, wxave2, Tix, uini )
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx,ny
    implicit none
-   integer, value   :: nx,ny,iave
+   integer, value   :: iave
    real,    value   :: uini
 
    real, intent(inout) :: uxave(nx,ny)

@@ -35,7 +35,7 @@ subroutine macrovars(rho,u,v,w,f)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, rho, u, v, w, nx, ny, nz, nl)
+        &(f, rho, u, v, w)
 
    call cpufinish(icpu)
 

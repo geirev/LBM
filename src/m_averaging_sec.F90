@@ -132,7 +132,7 @@ subroutine averaging_sec(u,v,w,lfinal,iradius)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(jdim, kdim, nrsec, ja, ka, iseci, u, v, w, nx, ny, nz, uave, vave, wave, uave2, vave2, wave2 )
+          &(jdim, kdim, nrsec, ja, ka, iseci, u, v, w, uave, vave, wave, uave2, vave2, wave2 )
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !   print *,'computing i-j  section averages'
@@ -145,7 +145,7 @@ subroutine averaging_sec(u,v,w,lfinal,iradius)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(u, v, w, nx, ny, nz, uxave, vxave, wxave, uxave2, vxave2, wxave2, kpos(1))
+          &(u, v, w, uxave, vxave, wxave, uxave2, vxave2, wxave2, kpos(1))
 !   print *,'done computing along-flow section averages'
 
 
@@ -174,7 +174,7 @@ subroutine averaging_sec(u,v,w,lfinal,iradius)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(nx, ny, iave, uxave, vxave, wxave, uxave2, vxave2, wxave2, Tix, uini )
+          &(iave, uxave, vxave, wxave, uxave2, vxave2, wxave2, Tix, uini )
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

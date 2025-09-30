@@ -60,7 +60,6 @@ module m_readinfile
 
 contains
 subroutine readinfile()
-   use mod_dimensions
    implicit none
 
    character(len=3) ca

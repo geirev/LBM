@@ -4,13 +4,14 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine fequil3_kernel(feq, rho, u, v, w, nx, ny, nz, nl, H2, H3, cxs, cys, czs, cs2, weights,&
+   subroutine fequil3_kernel(feq, rho, u, v, w, H2, H3, cxs, cys, czs, cs2, weights,&
                              inv1cs2, inv2cs4, inv6cs6, ibgk)
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx,ny,nz
+   use mod_D3Q27setup, only : nl
    implicit none
-   integer, value       :: nx, ny, nz, nl
    real, intent(out)    :: feq(nl,nx+2,ny+2,nz+2)
    real, intent(in)     :: rho(nx,ny,nz)
    real, intent(in)     :: u(nx,ny,nz)

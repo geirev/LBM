@@ -6,7 +6,7 @@ subroutine dump_elevation(lblanking)
    implicit none
    logical, intent(in)  :: lblanking(0:nx,0:ny,0:nz)
    logical, allocatable :: lblanking_h(:,:,:)
-   real, allocatable :: elevation(:,:)
+   real, allocatable    :: elevation(:,:)
    integer i,j,k
 #ifdef _CUDA
    attributes(device) :: lblanking

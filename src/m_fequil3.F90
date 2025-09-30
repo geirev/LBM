@@ -45,7 +45,7 @@ subroutine fequil3(feq, rho, u, v, w)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(feq, rho, u, v, w, nx, ny, nz, nl, H2, H3, cxs, cys, czs, cs2, weights, inv1cs2, inv2cs4, inv6cs6, ibgk)
+        &(feq, rho, u, v, w, H2, H3, cxs, cys, czs, cs2, weights, inv1cs2, inv2cs4, inv6cs6, ibgk)
 
 
    call cpufinish(icpu)

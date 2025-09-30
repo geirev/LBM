@@ -50,7 +50,7 @@ subroutine regularization(f, feq, u, v, w)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, feq, u, v, w, nx, ny, nz, nl, h2, h3, weights, inv2cs4, inv6cs6)
+        &(f, feq, u, v, w, h2, h3, weights, inv2cs4, inv6cs6)
 
    call cpufinish(icpu)
 

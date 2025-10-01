@@ -4,6 +4,7 @@ program LatticeBoltzmann
 #endif
    use m_airfoil
    use m_testing
+   use m_postcoll
    use m_printdefines
    use m_averaging_full
    use m_averaging_sec
@@ -182,15 +183,6 @@ program LatticeBoltzmann
 
 ! start time step with f,rho,u,v,w given
 
-! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
-      call fequil3(feq,rho,u,v,w)
-
-! [f=Rneqf] = regularization[f,feq,u,v,w] (input f is full f and returns reg. non-eq-density)
-      if (ihrr == 1) then
-         call regularization(f, feq, u, v, w)
-      else
-         call compute_fneq(f,feq)
-      endif
 
 ! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
       if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
@@ -198,18 +190,8 @@ program LatticeBoltzmann
 ! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
-! [feq] = fequil3(rho,u,v,w] (returns new equilibrium density using updated forcing velocities)
-      if (iforce /= 10 .and. nturbines > 0 .and. ihrr == 1) then
-         call compute_f(f, feq)
-         call fequil3(feq,rho,u,v,w)
-         call compute_fneq(f, feq)
-      endif
-
-! [tau] = vreman[f] [f=Rneqf]
-      call vreman(f, tau)
-
-! [feq=f] = collisions(f,feq,tau)  f=f^eq + (1-1/tau) * R(f^neq)
-      call collisions(f,feq,tau)
+! [feq] = post collision(rho,u,v,w] (returns post collision density)
+      call postcoll(f,feq, tau, rho,u,v,w)
 
 ! [feq=f] = turbines_apply(feq,turbine_df,tau)  f=f+turbine_df
       if (nturbines > 0)      call turbines_apply(feq,turbine_df,tau)
@@ -225,7 +207,6 @@ program LatticeBoltzmann
 
 ! Drift of feq returned in f
       call drift(f,feq)
-
 
 ! Compute updated macro variables
       call macrovars(rho,u,v,w,f)

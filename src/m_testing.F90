@@ -17,7 +17,7 @@ subroutine testing(it,f,feq)
    character(len=6) cit
    logical ex
    integer iunit,i
-   real fsum,eps
+   real fsum,fmax,eps,diff
    if (.not. ltesting) return
 
    eps = sqrt(tiny(1.0))
@@ -34,11 +34,14 @@ subroutine testing(it,f,feq)
 !$cuf kernel do(1) <<<*,*>>>
 #endif
      fsum=0.0
+     fmax=0.0
      do i=1,ntot
-        fsum=fsum+abs(f(i)-feq(i))  !*(f(i)-feq(i))
+        diff=abs(f(i)-feq(i))
+        fsum=fsum+diff
+        fmax=max(diff,fmax)
      enddo
      fsum=fsum/real(ntot)
-     print *,'Total misfit: ',fsum
+     print *,'Total misfit: ',fsum,fmax
    else
       open(newunit=iunit,file='testing'//cit//'.uf',form="unformatted", status='replace')
          f_h=f

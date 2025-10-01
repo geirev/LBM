@@ -89,6 +89,10 @@ subroutine readinfile()
       read(10,*)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
       read(10,*)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
       read(10,*)iforce             ; write(*,'(a,i8)',advance='no') 'iforce            = ',iforce
+      if (iforce == 8 .and. ihrr == 1) then
+         print *,'Guo forcing (iforce=8) together with regularization (ihrr=1) is inconsistent'
+         stop
+      endif
       select case (iforce)
       case(8)
          print '(a)','  Guo (2002)'

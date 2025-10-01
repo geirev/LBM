@@ -119,7 +119,10 @@ sudo apt install nvidia-cuda-toolkit
 ```
 
 In addition you can use netcdf for output and you must then install netcdf on your system.
-You can use the included installation script:
+```bash
+sudo apt install netcdf-bin libnetcdf-dev libnetcdff-dev
+```
+or you can use the included installation script:
 ```bash
 ./bin/install_netcdf.sh
 ```

@@ -31,6 +31,7 @@ main.o:      m_macrovars.o
 main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o
 main.o:      mod_shapiro.o
+main.o:      m_postcoll.o
 main.o:      m_predicted_measurements.o
 main.o:      m_printdefines.o
 main.o:      m_readinfile.o
@@ -265,6 +266,15 @@ mod_dimensions.o:      makefile
 mod_fftw3.o:      makefile
 mod_nrel5mw.o:      makefile
 mod_shapiro.o:      makefile
+m_postcoll_kernel.o:      makefile
+m_postcoll_kernel.o:      mod_D3Q27setup.o
+m_postcoll_kernel.o:      mod_dimensions.o
+m_postcoll.o:      makefile
+m_postcoll.o:      mod_D3Q27setup.o
+m_postcoll.o:      mod_dimensions.o
+m_postcoll.o:      m_postcoll_kernel.o
+m_postcoll.o:      m_readinfile.o
+m_postcoll.o:      m_wtime.o
 m_predicted_measurements.o:      makefile
 m_predicted_measurements.o:      mod_dimensions.o
 m_printdefines.o:      makefile

@@ -60,12 +60,30 @@ if [ $NCF -eq 1 ]; then
   wget https://downloads.unidata.ucar.edu/netcdf-fortran/4.6.2/netcdf-fortran-4.6.2.tar.gz
   tar xzf netcdf-fortran-4.6.2.tar.gz
   cd netcdf-fortran-4.6.2
-  CPPFLAGS="-I$NCCDIR/netcdf-c-4.9.3/include"
-  LDFLAGS="-L$NCCDIR/netcdf-c-4.9.3/lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lnetcdf"
-  FC=pgf90
+  CPPFLAGS="-I$NCCDIR/include" 
+  LDFLAGS="-L$NCCDIR/lib"
+  FC=pgf90 
   CC=gcc
   ./configure --prefix=$NCFDIR
-
   make -j4 check
   make install
 fi
+
+
+## netcdf-f
+#if [ $NCF -eq 1 ]; then
+#  cd $NCDIR
+#  mkdir -p netcdf-f
+#  cd netcdf-f
+#  wget https://downloads.unidata.ucar.edu/netcdf-fortran/4.6.2/netcdf-fortran-4.6.2.tar.gz
+#  tar xzf netcdf-fortran-4.6.2.tar.gz
+#  cd netcdf-fortran-4.6.2
+#  CPPFLAGS="-I$NCCDIR/netcdf-c-4.9.3/include"
+#  LDFLAGS="-L$NCCDIR/netcdf-c-4.9.3/lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lnetcdf"
+#  FC=pgf90
+#  CC=gcc
+#  ./configure --prefix=$NCFDIR
+#
+#  make -j4 check
+#  make install
+#fi

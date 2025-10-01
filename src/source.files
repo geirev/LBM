@@ -71,6 +71,8 @@ F90SOURCE = \
 	mod_fftw3.F90\
 	mod_nrel5mw.F90\
 	mod_shapiro.F90\
+	m_postcoll.F90\
+	m_postcoll_kernel.F90\
 	m_predicted_measurements.F90\
 	m_printdefines.F90\
 	m_pseudo2D.F90\

@@ -195,6 +195,7 @@ m_density.o:      mod_D3Q27setup.o
 m_density.o:      mod_dimensions.o
 m_density.o:      m_wtime.o
 m_diag.o:      makefile
+m_diag.o:      m_netcdfout.o
 m_diag.o:      mod_dimensions.o
 m_diag.o:      m_readinfile.o
 m_diag.o:      m_tecout.o
@@ -255,6 +256,8 @@ m_macrovars.o:      mod_D3Q27setup.o
 m_macrovars.o:      mod_dimensions.o
 m_macrovars.o:      m_readinfile.o
 m_macrovars.o:      m_wtime.o
+m_netcdfout.o:      makefile
+m_netcdfout.o:      mod_dimensions.o
 m_nrelliftdrag.o:      makefile
 m_nrelliftdrag.o:      mod_nrel5mw.o
 m_nrelreadfoil.o:      makefile

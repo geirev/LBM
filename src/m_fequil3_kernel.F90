@@ -12,7 +12,7 @@ contains
    use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup, only : nl
    implicit none
-   real, intent(out)    :: feq(nl,nx+2,ny+2,nz+2)
+   real, intent(out)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)     :: rho(nx,ny,nz)
    real, intent(in)     :: u(nx,ny,nz)
    real, intent(in)     :: v(nx,ny,nz)
@@ -54,9 +54,6 @@ contains
    do j=1,ny
    do i=1,nx
 #endif
-      i1=i+1
-      j1=j+1
-      k1=k+1
 
 ! Copy u,v,w to vel(1:3)
       vel(1)=u(i,j,k)
@@ -112,7 +109,7 @@ contains
             enddo
             enddo
          endif
-         feq(l,i1,j1,k1)= weights(l)*tmp
+         feq(l,i,j,k)= weights(l)*tmp
       enddo
 
 

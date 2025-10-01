@@ -89,16 +89,17 @@ program LatticeBoltzmann
 ! Reading all input parameters
    call readinfile()
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Some initialization
+   call hermite_polynomials()
+   if (nturbines > 0)      call turbines_init()
+   if (inflowturbulence)   call inflow_turbulence_init()
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Print GPU memory use
 #ifdef _CUDA
    call gpu_meminfo('ini')
 #endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call hermite_polynomials()
-
-
-   if (nturbines > 0)      call turbines_init()
-   if (inflowturbulence)   call inflow_turbulence_init()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Including solid bodies like cylinder and urban city as blanking of grid cells
@@ -117,18 +118,21 @@ program LatticeBoltzmann
    end select
    if (lsolids) call dump_elevation(lblanking)
 
-   print *,'A'
-! Save geometry
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Save grid geometry and blanking
    call diag(1,0,rho,u,v,w,lblanking)
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Initialization requires specification of u,v,w, and rho to compute feq
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
    call seedmanagement(nt0)
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting shapiro factors (no really used)
 !   call shfact(nshapiro,sh)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Initialization requires specification of u,v,w, and rho to compute feq
 
 ! Inflow velocity shear stored in uvel as read from file in uvelshare
    allocate(uvel_h(nz))
@@ -177,12 +181,6 @@ program LatticeBoltzmann
 
 ! start time step with f,rho,u,v,w given
 
-! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
-      if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
-
-! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
-      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
-
 ! [feq] = fequil3(rho,u,v,w] (returns equilibrium density)
       call fequil3(feq,rho,u,v,w)
 
@@ -193,8 +191,14 @@ program LatticeBoltzmann
          call compute_fneq(f,feq)
       endif
 
-!! [feq] = fequil3(rho,u,v,w] (returns new equilibrium density using updated forcing velocities)
-      if (iforce /= 10 .and. nturbines > 0) then
+! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
+      if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
+
+! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
+      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
+
+! [feq] = fequil3(rho,u,v,w] (returns new equilibrium density using updated forcing velocities)
+      if (iforce /= 10 .and. nturbines > 0 .and. ihrr == 1) then
          call compute_f(f, feq)
          call fequil3(feq,rho,u,v,w)
          call compute_fneq(f, feq)

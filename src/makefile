@@ -1,7 +1,9 @@
 BUILD = ../build
 VPATH = .:$(BUILD)
-HOME = /home/geev/
-HOME = /home/AD.NORCERESEARCH.NO/geev
+#HOME = /home/geev/
+#HOME = /home/AD.NORCERESEARCH.NO/geev
+HOME = /private/knss
+NCFDIR = $(HOME)/prog/netcdf/netcdf-f
 
 .SUFFIXES:
 .SUFFIXES: .o .F90 .f90 .F .f .c
@@ -42,7 +44,8 @@ endif
 endif
 
 ifdef CUDA
-FFLAGS+=  -gpu=lineinfo  -gpu=cc12,unroll -Minfo=accel -cuda
+#FFLAGS+=  -gpu=lineinfo  -gpu=cc12,unroll -Minfo=accel -cuda
+FFLAGS+=  -gpu=lineinfo  -gpu=cc89,unroll -Minfo=accel -cuda
 #FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -Minfo=accel -cuda
 LINKFLAGS+= -cuda
 endif
@@ -57,14 +60,17 @@ LINKFLAGS+= -fopenmp
 endif
 endif
 
+# netcdf
+FFLAGS+= -I$(NCFDIR)/include
+
 
 F77FLG =
 F90FLG =
 
 ifdef CUDA
-LIBS =  -lcublas
+LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 -lcublas
 else
-LIBS =  -lblas
+LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 -lnvblas
 endif
 
 ifdef DP
@@ -72,6 +78,9 @@ LIBS+= -lfftw3
 else
 LIBS+= -lfftw3f
 endif
+
+#netcdf
+LIBS+= -L$(NCFDIR)/lib -lnetcdff
 
 BINDIR = $(HOME)/bin
 
@@ -136,6 +145,7 @@ depend:
 	sed -i '/ cudafor/d' depends.file
 	sed -i '/ cublas/d'  depends.file
 	sed -i '/ iso_fortran_env/d' depends.file
+	sed -i '/ netcdf/d' depends.file
 
 tags: source.files
 	tags.sh

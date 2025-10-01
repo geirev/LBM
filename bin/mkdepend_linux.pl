@@ -15,9 +15,7 @@ foreach $file (<*.F *.F90>) {
      if (/^[ ]*use /i) {
         s/^[ ]*use[ ]*//i;
         s/[^a-z0-9_].*$//i;
-        if (! /netcdf[ ,]*/i) {
-           print "$objfile:      $_.o\n";
-        }
+        print "$objfile:      $_.o\n";
      }
      if (/^[ ]*include/i) {
         s/^[ ]*include[ ]*//i;

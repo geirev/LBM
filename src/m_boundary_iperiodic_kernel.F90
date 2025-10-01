@@ -3,12 +3,13 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine boundary_iperiodic_kernel(f,nx,ny,nz,nl)
+   subroutine boundary_iperiodic_kernel(f)
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx,ny,nz
+   use mod_D3Q27setup, only : nl
    implicit none
-   integer, value    :: nx, ny, nz, nl
    real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
    integer :: j, k, l
 #ifdef _CUDA

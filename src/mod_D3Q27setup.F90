@@ -86,20 +86,11 @@ subroutine hermite_polynomials()
    allocate(bounce(nl))
    allocate(weights(1:nl))
 
-!!  #ifdef _CUDA
-!!      ierr = cudaMemcpy(cxs, cxs_h, nl*4, cudaMemcpyHostToDevice)
-!!      ierr = cudaMemcpy(cys, cys_h, nl*4, cudaMemcpyHostToDevice)
-!!      ierr = cudaMemcpy(czs, czs_h, nl*4, cudaMemcpyHostToDevice)
-!!      ierr = cudaMemcpy(bounce, bounce_h, nl*4, cudaMemcpyHostToDevice)
-!!  !   ierr = cudaMemcpy(weights, weights_h, nl*sz, cudaMemcpyHostToDevice)
-!!      weights=weights_h
-!!  #else
     cxs=cxs_h
     cys=cys_h
     czs=czs_h
     bounce=bounce_h
     weights=weights_h
-!! #endif
 
 
 ! Build lattice velocity matrix
@@ -118,9 +109,6 @@ subroutine hermite_polynomials()
    delta_h(1,1) = 1.0
    delta_h(2,2) = 1.0
    delta_h(3,3) = 1.0
-#ifdef _CUDA
-    !ierr = cudaMemcpy(delta, delta_h, 3*3*sz, cudaMemcpyHostToDevice); print *,'cpdelta:ierr',ierr
-#endif
    delta=delta_h
 
    allocate(H2(3,3,1:nl))

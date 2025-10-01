@@ -137,6 +137,7 @@ m_macrovars_kernel	m_macrovars_kernel.F90	/^module
 m_nrelliftdrag	m_nrelliftdrag.F90	/^module
 m_nrelreadfoil	m_nrelreadfoil.F90	/^module
 m_predicted_measurements	m_predicted_measurements.F90	/^module
+m_printdefines	m_printdefines.F90	/^module
 m_pseudo2D	m_pseudo2D.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
@@ -168,6 +169,7 @@ nrel5mw	mod_nrel5mw.F90	/^module
 nrelliftdrag	m_nrelliftdrag.F90	/^module
 nrelreadfoil	m_nrelreadfoil.F90	/^module
 predicted_measurements	m_predicted_measurements.F90	/^module
+printdefines	m_printdefines.F90	/^module
 pseudo2D	m_pseudo2D.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module

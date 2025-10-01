@@ -42,7 +42,7 @@ subroutine vreman(f, tau)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(tau, f, H2, const, kinevisc, nx, ny, nz, nl, eps)
+        &(tau, f, H2, const, kinevisc, eps)
 
 
    call cpufinish(icpu)

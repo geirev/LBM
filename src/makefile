@@ -141,7 +141,7 @@ source:
 	sed -i '/ cublas/d' source.files
 	sed -i '/ iso_fortran_env/d' source.files
 depend:
-	../bin/mkdepend_linux.pl | sort -u > depends.file
+	../bin/mkdepend.pl | sort -u > depends.file
 	sed -i '/ cudafor/d' depends.file
 	sed -i '/ cublas/d'  depends.file
 	sed -i '/ iso_fortran_env/d' depends.file

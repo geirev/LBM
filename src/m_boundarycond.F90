@@ -66,9 +66,9 @@ subroutine boundarycond(f,uvel)
       tx=ntx; bx=(nl  +tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
       tz=ntz; bz=(nz+2+tz-1)/tz
-      call boundary_iperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+      call boundary_iperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f)
 #else
-      call boundary_iperiodic_kernel                                    (f,nx,ny,nz,nl)
+      call boundary_iperiodic_kernel                                    (f)
 #endif
    endif
 
@@ -79,9 +79,9 @@ subroutine boundarycond(f,uvel)
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(nl  +ty-1)/ty
       tz=ntz; bz=(nz+2+tz-1)/tz
-      call boundary_jperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+      call boundary_jperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f)
 #else
-      call boundary_jperiodic_kernel                                    (f,nx,ny,nz,nl)
+      call boundary_jperiodic_kernel                                    (f)
 #endif
    endif
 
@@ -92,9 +92,9 @@ subroutine boundarycond(f,uvel)
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
       tz=ntz; bz=(nl  +tz-1)/tz
-      call boundary_kperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+      call boundary_kperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f)
 #else
-      call boundary_kperiodic_kernel                                    (f,nx,ny,nz,nl)
+      call boundary_kperiodic_kernel                                    (f)
 #endif
    endif
 
@@ -241,9 +241,9 @@ subroutine boundarycond(f,uvel)
       tx=ntx; bx=(nl  +tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
       tz=ntz; bz=(nz+2+tz-1)/tz
-      call boundary_iperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+      call boundary_iperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f)
 #else
-      call boundary_iperiodic_kernel                                    (f,nx,ny,nz,nl)
+      call boundary_iperiodic_kernel                                    (f)
 #endif
    endif
 
@@ -254,9 +254,9 @@ subroutine boundarycond(f,uvel)
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(nl  +ty-1)/ty
       tz=ntz; bz=(nz+2+tz-1)/tz
-      call boundary_jperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+      call boundary_jperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f)
 #else
-      call boundary_jperiodic_kernel                                    (f,nx,ny,nz,nl)
+      call boundary_jperiodic_kernel                                    (f)
 #endif
    endif
 
@@ -266,9 +266,9 @@ subroutine boundarycond(f,uvel)
       tx=ntx; bx=(nx+2+tx-1)/tx
       ty=nty; by=(ny+2+ty-1)/ty
       tz=ntz; bz=(nl  +tz-1)/tz
-      call boundary_kperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f,nx,ny,nz,nl)
+      call boundary_kperiodic_kernel<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>(f)
 #else
-      call boundary_kperiodic_kernel                                    (f,nx,ny,nz,nl)
+      call boundary_kperiodic_kernel                                    (f)
 #endif
    endif
 

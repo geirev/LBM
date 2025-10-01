@@ -25,10 +25,12 @@ subroutine airfoil(lsolids,blanking)
    real, parameter :: yref=50.0           ! y-center point of airfoil
    real, parameter :: tilt=-0.10          ! Tilt of airfoil
 
-   real :: elevation(nx,ny)=-1.0
+   real, allocatable, dimension(:,:) :: elevation
    integer :: i,j
    real :: theta, yt, yc, dyc_dx, x
    lsolids=.true.
+   allocate(elevation(nx,ny))
+   elevation=-1.0
 
    do i = 1, num_points
       x = (i-1)/real(num_points-1)*chord_len
@@ -94,6 +96,7 @@ subroutine airfoil(lsolids,blanking)
 
    call tecfld('elevation',nx,ny,1,elevation)
 
+   deallocate(elevation)
 
 end subroutine
 end module

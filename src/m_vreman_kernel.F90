@@ -3,12 +3,13 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine vreman_kernel(tau,f, H2, const, kinevisc, nx, ny, nz, nl, eps)
+   subroutine vreman_kernel(tau,f, H2, const, kinevisc, eps)
 #ifdef _CUDA
    use cudafor
 #endif
+   use mod_dimensions, only : nx,ny,nz
+   use mod_D3Q27setup, only : nl
    implicit none
-   integer, value      :: nx, ny, nz, nl
    real, intent(in)    :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(out)   :: tau(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: H2(3,3,nl)

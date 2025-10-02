@@ -64,7 +64,6 @@ F90SOURCE = \
 	m_inipert.F90\
 	m_macrovars.F90\
 	m_macrovars_kernel.F90\
-	m_netcdfout.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\

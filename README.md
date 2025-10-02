@@ -118,6 +118,12 @@ sudo apt-get install -y nvhpc-25-7
 sudo apt install nvidia-cuda-toolkit
 ```
 
+In addition you can use netcdf for output and you must then install netcdf on your system.
+You can use the included installation script:
+```bash
+./bin/install_netcdf.sh
+```
+
 ## 3. Compile the `LBM` code
 
 For gpu compilation run 'nvidia-smi' or 'lshw -C display' to find you gpu-card.
@@ -174,7 +180,12 @@ E.g., recomile for GPU in double precision using D3Q19 lattice
 make -B CUDA=1 DP=1 D3Q19=1
 ```
 
-Running in single precision is about twice as fast as using double precision.
+To compile and link the netcdf library you compile as
+```bash
+make -B CUDA=1 NETCDF=1
+```
+
+Running in single precision is about 2-3 faster  than using double precision.
 
 Running on the D3Q19 lattice reduces the CPU time with around 40 % but seems to introduce more noise.
 

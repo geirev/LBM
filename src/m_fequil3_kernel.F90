@@ -39,7 +39,7 @@ contains
    real :: tmp
    real :: dens
 
-   integer :: i, j, k, l, p, q, r, i1, j1, k1
+   integer :: i, j, k, l, p, q, r
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
@@ -48,7 +48,7 @@ contains
    ratio = inv6cs6 / inv2cs4
 #else
    ratio = inv6cs6 / inv2cs4
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, i1, j1, k1, vel, dens, cu, tmp, A0_2, A0_3,  vratio) &
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, vel, dens, cu, tmp, A0_2, A0_3,  vratio) &
 !$OMP     SHARED(feq, rho, u, v, w, nx, ny, nz, nl, H2, H3, cxs, cys, czs, cs2, weights, inv1cs2, inv2cs4, inv6cs6, ratio, ibgk)
    do k=1,nz
    do j=1,ny

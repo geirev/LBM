@@ -1,3 +1,4 @@
+#ifdef NETCDF
 module m_netcdfout
   use netcdf
   use mod_dimensions
@@ -76,3 +77,4 @@ contains
   end subroutine netcdfout
 
 end module m_netcdfout
+#endif

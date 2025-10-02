@@ -14,9 +14,9 @@ contains
 subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
    use mod_dimensions
 #ifdef _CUDA
-   use m_readinfile, only : ntx,nty,ntz,itecout
+   use m_readinfile, only : ntx,nty,ntz
 #endif
-   use m_readinfile, only : uini
+   use m_readinfile, only : uini,itecout
    use m_averaging_full_kernel
    use m_averaging_full_kernelfin
    use m_diag

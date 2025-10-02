@@ -5,7 +5,9 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    use m_readinfile, only : iout, iprt1, iprt2, dprt,  nt1
    use m_vorticity
    use m_tecout
+#ifdef NETCDF
    use m_netcdfout
+#endif
    use m_wtime
    implicit none
    integer, intent(in)   :: filetype
@@ -105,13 +107,23 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
 
       if (present(Ti)) then
          if (filetype==3) then
+#ifdef NETCDF
             call netcdfout('out'//trim(cit)//'.nc',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h,Ti_h)
+#else
+            print *,'you need to compile with NETCDF active to use filetype=3'
+            stop
+#endif
          else
             call tecout(filetype,'tec'//trim(cit)//'.plt',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h,Ti_h)
          endif
       else
          if (filetype==3) then
+#ifdef NETCDF
             call netcdfout('out'//trim(cit)//'.nc',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h)
+#else
+            print *,'you need to compile with NETCDF active to use filetype=3'
+            stop
+#endif
          else
             call tecout(filetype,'tec'//trim(cit)//'.plt',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h)
          endif

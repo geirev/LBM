@@ -9,6 +9,7 @@ NCFDIR = $(HOME)/.netcdf/netcdf-f
 .SUFFIXES: .o .F90 .f90 .F .f .c
 
 
+
 ifdef GFORTRAN
 LD = gfortran
 F90 = gfortran
@@ -18,6 +19,7 @@ LD = pgf90
 F90 = pgf90
 F77 = pgf90
 endif
+
 
 ifdef GFORTRAN
 # gfortran flags
@@ -33,6 +35,10 @@ LINKFLAGS =
 
 ifdef D3Q19
 FFLAGS+= -DD3Q19
+endif
+
+ifdef NETCDF
+FFLAGS+= -DNETCDF
 endif
 
 ifdef DP
@@ -60,8 +66,9 @@ LINKFLAGS+= -fopenmp
 endif
 endif
 
-# netcdf
+ifdef NETCDF
 FFLAGS+= -I$(NCFDIR)/include
+endif
 
 
 F77FLG =
@@ -79,8 +86,9 @@ else
 LIBS+= -lfftw3f
 endif
 
-#netcdf
+ifdef NETCDF
 LIBS+= -L$(NCFDIR)/lib -lnetcdff
+endif
 
 BINDIR = $(HOME)/bin
 
@@ -135,17 +143,37 @@ timer.o: timer.c
 	cd ./$(BUILD)
 	gcc -c ../src/timer.c -o ./$(BUILD)/timer.o
 
+ifdef NETCDF
 source:
 	../bin/mksource.sh > source.files
 	sed -i '/ cudafor/d' source.files
 	sed -i '/ cublas/d' source.files
 	sed -i '/ iso_fortran_env/d' source.files
+else
+source:
+	../bin/mksource.sh > source.files
+	sed -i '/ cudafor/d' source.files
+	sed -i '/ cublas/d' source.files
+	sed -i '/ iso_fortran_env/d' source.files
+	sed -i '/m_netcdfout/d' source.files
+endif
+
+ifdef NETCDF
 depend:
 	../bin/mkdepend.pl | sort -u > depends.file
 	sed -i '/ cudafor/d' depends.file
 	sed -i '/ cublas/d'  depends.file
 	sed -i '/ iso_fortran_env/d' depends.file
 	sed -i '/ netcdf/d' depends.file
+else
+depend:
+	../bin/mkdepend.pl | sort -u > depends.file
+	sed -i '/ cudafor/d' depends.file
+	sed -i '/ cublas/d'  depends.file
+	sed -i '/ iso_fortran_env/d' depends.file
+	sed -i '/ netcdf/d' depends.file
+	sed -i '/m_netcdfout/d' depends.file
+endif
 
 tags: source.files
 	tags.sh

@@ -1,9 +1,9 @@
 BUILD = ../build
 VPATH = .:$(BUILD)
 #HOME = /home/geev/
-#HOME = /home/AD.NORCERESEARCH.NO/geev
-HOME = /private/knss
-NCFDIR = $(HOME)/prog/netcdf/netcdf-f
+HOME = /home/AD.NORCERESEARCH.NO/geev
+#HOME = /private/knss
+NCFDIR = $(HOME)/.netcdf/netcdf-f
 
 .SUFFIXES:
 .SUFFIXES: .o .F90 .f90 .F .f .c
@@ -44,8 +44,8 @@ endif
 endif
 
 ifdef CUDA
-#FFLAGS+=  -gpu=lineinfo  -gpu=cc12,unroll -Minfo=accel -cuda
-FFLAGS+=  -gpu=lineinfo  -gpu=cc89,unroll -Minfo=accel -cuda
+FFLAGS+=  -gpu=lineinfo  -gpu=cc12,unroll -Minfo=accel -cuda
+#FFLAGS+=  -gpu=lineinfo  -gpu=cc89,unroll -Minfo=accel -cuda
 #FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -Minfo=accel -cuda
 LINKFLAGS+= -cuda
 endif

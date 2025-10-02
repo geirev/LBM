@@ -53,12 +53,6 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
       write(iunit)nx,ny,nz,nl,f_h
    close(iunit)
 
-   open(10,file='test.out')
-      do l=1,nl
-         write(10,'(10f13.10)')f_h(l,130:132,20:22,1)
-      enddo
-   close(10)
-
 end subroutine
 end module
 

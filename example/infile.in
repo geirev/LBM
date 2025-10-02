@@ -1,7 +1,7 @@
 #1.0 Version of infile.in ---------------------------------------------------------------------------------------
- T                ! runexp (true or false)
+ T                ! CPU timing
  city2            ! experiment: cylinder, airfoil etc
- 512   1   1           ! number of GPU threads per block in x, y, and z direction
+ 512 1 1          ! number of threads per block in x, y, and z direction
  3                ! BGK order, ibgk=2 standard second order, ibgk=3 gives third order BGK
  1                ! Collision operator ihrr=1 includes regularization
  1 0.15           ! Vreman subgridscale mixing (1) with Smagorinsky constant (0.15)
@@ -11,12 +11,12 @@
  100              ! iout  : Number of steps between outputs
  10000             ! irestarts: Number of steps between restart outputs
  000 200000 2        ! iprt  : Output every timestep for it <= iprt1 and it >= iprt2
- T                ! NOT USED. lprtmin : Minimalistic output to save disk space by 50%
- 0                ! itecout : 0-full files, 2-only solution variables
+ F                ! ltesting : Minimalistic output to save disk space by 50%
+ 2                ! tecout: full tecplot files (0), only solution (2)
  1                ! ibnd  : 0-periodic, 1 in/out flow,
  0                ! jbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for j=1 and j=ny
  22               ! kbnd  : 0-periodic, 11,12,21,22 no-slip bb(1), free-slip bb(2) for k=1 and k=nz
- 10   -40.0         ! 11.4 ! uini, udir : Inflow wind velocity [m/s], direction in degrees (-45:45)
+ 6.0     00.0         ! 11.4 ! uini, udir : Inflow wind velocity [m/s], direction in degrees (-45:45)
  1.0              ! rho0  : Non-dimensional average (initial) density []
  0.0005           ! NOT USED.  rhoa  : Relative pressure gradient for ibnd=2 (over 1:nx) NOT USED
  T                ! linipert: Add pseudorandom field to initial macro variables (must be true)
@@ -37,9 +37,6 @@
  96               ! ipos
  61               ! jpos
  61               ! kpos
- 64               ! ipos
- 75               ! jpos
- 48               ! kpos
 
 
  kinematic viscosity of air is 1.78E-5

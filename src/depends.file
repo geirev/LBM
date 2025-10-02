@@ -43,6 +43,7 @@ main.o:      m_set_random_seed3.o
 main.o:      m_solids.o
 main.o:      m_sphere.o
 main.o:      m_tecfld.o
+main.o:      m_testing.o
 main.o:      m_turbines_apply.o
 main.o:      m_turbines_forcing.o
 main.o:      m_turbines_init.o
@@ -308,6 +309,10 @@ m_tecout.o:      m_readinfile.o
 m_tecout.o:      m_tecplot.o
 m_tecplot.o:      makefile
 m_tecplot.o:      m_string.o
+m_testing.o:      makefile
+m_testing.o:      mod_D3Q27setup.o
+m_testing.o:      mod_dimensions.o
+m_testing.o:      m_readinfile.o
 m_turbines_apply.o:      makefile
 m_turbines_apply.o:      mod_D3Q27setup.o
 m_turbines_apply.o:      mod_dimensions.o

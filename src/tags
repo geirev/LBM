@@ -155,6 +155,7 @@ m_tecfld	m_tecfld.F90	/^module
 m_tecfldsec	m_tecfldsec.F90	/^module
 m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
+m_testing	m_testing.F90	/^module
 m_turbines_apply	m_turbines_apply.F90	/^module
 m_turbines_forcing	m_turbines_forcing.F90	/^module
 m_turbines_forcing_guo	m_turbines_forcing_guo.F90	/^module
@@ -189,6 +190,7 @@ tecfld	m_tecfld.F90	/^module
 tecfldsec	m_tecfldsec.F90	/^module
 tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module
+testing	m_testing.F90	/^module
 turbines_apply	m_turbines_apply.F90	/^module
 turbines_forcing	m_turbines_forcing.F90	/^module
 turbines_forcing_guo	m_turbines_forcing_guo.F90	/^module

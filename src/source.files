@@ -89,6 +89,7 @@ F90SOURCE = \
 	m_tecfldsec.F90\
 	m_tecout.F90\
 	m_tecplot.F90\
+	m_testing.F90\
 	m_turbines_apply.F90\
 	m_turbines_forcing.F90\
 	m_turbines_forcing_guo.F90\

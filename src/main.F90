@@ -3,6 +3,7 @@ program LatticeBoltzmann
    use cudafor
 #endif
    use m_airfoil
+   use m_testing
    use m_printdefines
    use m_averaging_full
    use m_averaging_sec
@@ -267,5 +268,7 @@ program LatticeBoltzmann
    if (allocated(vv       ))  deallocate(vv            )
    if (allocated(ww       ))  deallocate(ww            )
    if (allocated(rr       ))  deallocate(rr            )
+
+   call testing(it,f,feq)
 
 end program LatticeBoltzmann

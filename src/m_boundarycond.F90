@@ -54,8 +54,8 @@ subroutine boundarycond(f,uvel)
    if (ibnd==1) then
 #ifdef _CUDA
       tx=1;   bx=1
-      ty=512; by=(ny+2+tx-1)/tx
-      tz=1;   bz=(nz+2+tz-1)/tz
+      ty=8;   by=(ny+2+ty-1)/ty
+      tz=8;   bz=(nz+2+tz-1)/tz
 #endif
       call boundary_iinflow&
 #ifdef _CUDA

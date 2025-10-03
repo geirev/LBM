@@ -14,18 +14,18 @@ subroutine boundary_iinflow(f,uvel,rho0,udir)
    implicit none
    real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
-   real, value, intent(in)   :: udir
-   real, value, intent(in)   :: rho0
+   real, value   :: udir
+   real, value   :: rho0
    integer i,j,k,l,ka
    real, parameter :: pi=3.1415927410125732
-   real tmp
+   real tmp,wl,cxl,cyl,czl
 
 #ifdef _CUDA
-   i = 1
-   j = threadIdx%y + (blockIdx%y-1)*blockDim%y
-   k = threadIdx%z + (blockIdx%z-1)*blockDim%z
-   if (j > nz+2) return
-   if (k > nz+2) return
+   i =  1
+   j = threadIdx%y + (blockIdx%y-1)*blockDim%y-1
+   k = threadIdx%z + (blockIdx%z-1)*blockDim%z-1
+   if (j > ny+1) return
+   if (k > nz+1) return
 #else
 !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(j,k,l,tmp) SHARED(f, nx, ny, nz, nl, cxs, cys, czs, uvel, rho0, udir, weights, ka, pi)
       do k=0,nz+1
@@ -34,10 +34,11 @@ subroutine boundary_iinflow(f,uvel,rho0,udir)
 ! Inflow is formula 5.26 from Kruger 2016
          ka = min(max(k,1), nz)
          do l=1,nl
-            f(l,0,j,k) = f(l,1,j,k) - 2.0*weights(l)*rho0*(real(cxs(l))*uvel(ka)*cos(udir*pi/180)&
-                                                         + real(cys(l))*uvel(ka)*sin(udir*pi/180)&
-                                                         + real(czs(l))*0)/cs2
-         enddo
+            wl = weights(l)
+            cxl = real(cxs(l)); cyl = real(cys(l)); czl = real(czs(l))
+            f(l,0,j,k) = f(l,1,j,k) - 2.0*wl*rho0*(cxl*uvel(ka)*cos(udir*pi/180.0) + cyl*uvel(ka)*sin(udir*pi/180.0))/cs2
+         end do
+
 
 ! bounce back specifically coded for current ordering. It could be using a general formula with bounce(l) array
          do l=2,nl-1,2

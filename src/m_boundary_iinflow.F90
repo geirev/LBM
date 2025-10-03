@@ -20,8 +20,8 @@ subroutine boundary_iinflow(f,uvel,rho0,udir)
    real, parameter :: pi=3.1415927410125732
    real tmp,wl,cxl,cyl,czl
 
-#ifdef _CUDA
    i =  1
+#ifdef _CUDA
    j = threadIdx%y + (blockIdx%y-1)*blockDim%y-1
    k = threadIdx%z + (blockIdx%z-1)*blockDim%z-1
    if (j > ny+1) return

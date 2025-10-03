@@ -183,7 +183,6 @@ program LatticeBoltzmann
 
 ! start time step with f,rho,u,v,w given
 
-
 ! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
       if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
 

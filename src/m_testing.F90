@@ -18,8 +18,8 @@ subroutine testing(it,f,feq)
    logical ex
    integer iunit,i,j,k,l,idx
    real fsum,fmax,eps,diff
-  integer :: strideI, strideJ, strideK
-  integer :: remk, remj
+   integer :: strideI, strideJ, strideK
+   integer :: remk, remj
    if (.not. ltesting) return
 
    eps = sqrt(tiny(1.0))

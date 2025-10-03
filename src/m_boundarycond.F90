@@ -12,11 +12,8 @@ subroutine boundarycond(f,uvel)
    use m_boundary_iinflow
    use m_boundary_iinflow_edges
 
-   use m_boundary_iperiodic
    use m_boundary_iperiodic_kernel
-   use m_boundary_jperiodic
    use m_boundary_jperiodic_kernel
-   use m_boundary_kperiodic
    use m_boundary_kperiodic_kernel
 
    use m_boundary_noslipbb_j1_A

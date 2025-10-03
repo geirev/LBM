@@ -23,11 +23,8 @@ F90SOURCE = \
 	m_boundary_freeslip_edges.F90\
 	m_boundary_iinflow_edges.F90\
 	m_boundary_iinflow.F90\
-	m_boundary_iperiodic.F90\
 	m_boundary_iperiodic_kernel.F90\
-	m_boundary_jperiodic.F90\
 	m_boundary_jperiodic_kernel.F90\
-	m_boundary_kperiodic.F90\
 	m_boundary_kperiodic_kernel.F90\
 	m_boundary_noslipbb_j1_A.F90\
 	m_boundary_noslipbb_j1_B.F90\

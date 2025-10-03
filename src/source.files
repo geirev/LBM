@@ -11,30 +11,15 @@ F90SOURCE = \
 	m_averaging_sec_kernelfin1.F90\
 	m_averaging_sec_kernelfin2.F90\
 	m_bilin.F90\
+	m_boundary_closed_edges.F90\
 	m_boundarycond.F90\
-	m_boundary_freeslipbb_j1_A.F90\
-	m_boundary_freeslipbb_j1_B.F90\
-	m_boundary_freeslipbb_jny_A.F90\
-	m_boundary_freeslipbb_jny_B.F90\
-	m_boundary_freeslipbb_k1_A.F90\
-	m_boundary_freeslipbb_k1_B.F90\
-	m_boundary_freeslipbb_knz_A.F90\
-	m_boundary_freeslipbb_knz_B.F90\
-	m_boundary_freeslip_edges.F90\
-	m_boundary_iinflow_edges.F90\
-	m_boundary_iinflow.F90\
-	m_boundary_iperiodic_kernel.F90\
-	m_boundary_jperiodic_kernel.F90\
-	m_boundary_kperiodic_kernel.F90\
-	m_boundary_noslipbb_j1_A.F90\
-	m_boundary_noslipbb_j1_B.F90\
-	m_boundary_noslipbb_jny_A.F90\
-	m_boundary_noslipbb_jny_B.F90\
-	m_boundary_noslipbb_k1_A.F90\
-	m_boundary_noslipbb_k1_B.F90\
-	m_boundary_noslipbb_knz_A.F90\
-	m_boundary_noslipbb_knz_B.F90\
-	m_boundary_noslip_edges.F90\
+	m_boundary_i_inflow_edges.F90\
+	m_boundary_i_inflow.F90\
+	m_boundary_i_periodic_kernel.F90\
+	m_boundary_j_closed_kernel.F90\
+	m_boundary_j_periodic_kernel.F90\
+	m_boundary_k_closed_kernel.F90\
+	m_boundary_k_periodic_kernel.F90\
 	m_city2.F90\
 	m_city.F90\
 	m_collisions.F90\
@@ -53,6 +38,7 @@ F90SOURCE = \
 	m_fequil3_block_kernel.F90\
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\
+	m_fillghosts.F90\
 	m_gpu_meminfo.F90\
 	m_inflow_turbulence_apply.F90\
 	m_inflow_turbulence_compute.F90\

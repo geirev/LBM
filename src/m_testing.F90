@@ -7,19 +7,17 @@ subroutine testing(it,f,feq)
    implicit none
    integer, intent(in)  :: it
    integer, parameter   :: ntot=nl*(nx+2)*(ny+2)*(nz+2)
-   real,    intent(in)  :: f(ntot)
-   real,    intent(out) :: feq(ntot)
+   real,    intent(in)  :: f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(out) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: feq
 #endif
-   real(kind=4) :: f_h(ntot)
+   real(kind=4) :: f_h(nl,0:nx+1,0:ny+1,0:nz+1)
    character(len=6) cit
    logical ex
-   integer iunit,i,j,k,l,idx
+   integer iunit,i,j,k,l
    real fsum,fmax,eps,diff
-  integer :: strideI, strideJ, strideK
-  integer :: remk, remj
    if (.not. ltesting) return
 
    eps = sqrt(tiny(1.0))
@@ -37,24 +35,19 @@ subroutine testing(it,f,feq)
 #endif
      fsum=0.0
      fmax=0.0
-     do idx=1,ntot
-        diff=abs(f(idx)-feq(idx))
-        if (diff > 1.0E-3) then
-           strideI = nl
-           strideJ = nl*(nx+2)
-           strideK = nl*(nx+2)*(ny+2)
-
-           k = (idx-1) / strideK + 1
-           remk = mod(idx-1, strideK)
-           j = remk / strideJ + 1
-           remj = mod(remk, strideJ)
-           I = remj / strideI + 1
-           l = mod(remj, strideI) + 1
-
-           print *,idx,i,j,k,l,diff
+     do k=1,nz
+     do j=1,ny
+     do i=1,nx
+     do l=1,nl
+        diff=abs(f(l,i,j,k)-feq(l,i,j,k))
+        if (diff > 1.0E-4) then
+           print *,l,i,j,k,diff
         endif
         fsum=fsum+diff
         fmax=max(diff,fmax)
+     enddo
+     enddo
+     enddo
      enddo
      fsum=fsum/real(ntot)
      print *,'Total misfit: ',fsum,fmax

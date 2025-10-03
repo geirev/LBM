@@ -1,7 +1,7 @@
 module m_postcoll
 contains
 
-subroutine postcoll(f, feq, tau, rho, u, v, w)
+subroutine postcoll(f, tau, rho, u, v, w)
    use mod_dimensions
    use mod_D3Q27setup
    use m_readinfile
@@ -17,7 +17,6 @@ subroutine postcoll(f, feq, tau, rho, u, v, w)
    real, intent(in)      :: u(nx,ny,nz)
    real, intent(in)      :: v(nx,ny,nz)
    real, intent(in)      :: w(nx,ny,nz)
-   real, intent(out)     :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)   :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)   :: tau(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
@@ -25,7 +24,6 @@ subroutine postcoll(f, feq, tau, rho, u, v, w)
    attributes(device) :: u
    attributes(device) :: v
    attributes(device) :: w
-   attributes(device) :: feq
    attributes(device) :: f
    attributes(device) :: tau
    integer :: tx, ty, tz, bx, by, bz
@@ -53,7 +51,8 @@ subroutine postcoll(f, feq, tau, rho, u, v, w)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, feq, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman)
+        &(f, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman)
+
 
    call cpufinish(icpu)
 

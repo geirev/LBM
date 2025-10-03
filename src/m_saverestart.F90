@@ -28,7 +28,6 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    character(len=6) cit
    integer iunit
-   integer l
 
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit

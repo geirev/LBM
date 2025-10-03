@@ -1,9 +1,9 @@
-module m_boundary_iperiodic_kernel
+module m_boundary_i_periodic_kernel
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine boundary_iperiodic_kernel(f)
+   subroutine boundary_i_periodic_kernel(f)
 #ifdef _CUDA
    use cudafor
 #endif
@@ -20,7 +20,7 @@ contains
    if (j > ny+2) return
    if (k > nz+2) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(j,k,l) SHARED(f, nx, ny, nz, nl)
+!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(j,k,l) SHARED(f)
    do k=1,nz+2
    do j=1,ny+2
    do l=1,nl

@@ -127,7 +127,6 @@ m_boundary_iinflow_edges.o:      mod_dimensions.o
 m_boundary_iinflow.o:      makefile
 m_boundary_iinflow.o:      mod_D3Q27setup.o
 m_boundary_iinflow.o:      mod_dimensions.o
-m_boundary_iinflow.o:      m_readinfile.o
 m_boundary_iperiodic_kernel.o:      makefile
 m_boundary_iperiodic_kernel.o:      mod_D3Q27setup.o
 m_boundary_iperiodic_kernel.o:      mod_dimensions.o

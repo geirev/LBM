@@ -97,11 +97,13 @@ BINDIR = $(HOME)/bin
 .F90.o:
 	@mkdir -p $(BUILD)
 	@rm -f ./$(BUILD)/$*.*
+	echo
 	cd $(BUILD) ; $(F90) $(FFLAGS) $(F90FLG) -o $*.o ../src/$*.F90
 
 .F.o:
 	@mkdir -p $(BUILD)
 	@rm -f ./$(BUILD)/$*.*
+	echo
 	cd $(BUILD) ; $(F77) $(FFLAGS) $(F77FLG) -o $*.o ../src/$*.F
 
 .c.o:
@@ -129,6 +131,7 @@ libenkfanalysis.a:
 
 $(TARGET): $(INCFILES) $(OBJECTS)  timer.o
 	@mkdir -p $(BUILD)
+	echo
 	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) timer.o $(LIBDIR) $(LIBS)
 
 install:

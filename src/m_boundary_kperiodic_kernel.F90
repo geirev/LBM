@@ -10,25 +10,22 @@ contains
    use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup, only : nl
    implicit none
-   real, intent(inout) :: f(nl,nx+2,ny+2,nz+2)
+   real, parameter     :: ntot=nl*(nx+2)
+   real, intent(inout) :: f(ntot,ny+2,nz+2)
    integer :: i, j, l
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x-1)*blockDim%x
    j = threadIdx%y + (blockIdx%y-1)*blockDim%y
-   l = threadIdx%z + (blockIdx%z-1)*blockDim%z
-   if (i > nx+2) return
+   if (i > ntot) return
    if (j > ny+2) return
-   if (l > nl  ) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,l) SHARED(f, nx, ny, nz, nl)
+!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,l) SHARED(f, nx, ny, nz, nl)
    do j=1,ny+2
-   do i=1,nx+2
-   do l=1,nl
+   do i=1,ntot
 #endif
-      f(l,i,j,1)   =f(l,i,j,nz+1)
-      f(l,i,j,nz+2)=f(l,i,j,2)
+      f(i,j,1)   =f(i,j,nz+1)
+      f(i,j,nz+2)=f(i,j,2)
 #ifndef _CUDA
-   enddo
    enddo
    enddo
 !$OMP END PARALLEL DO

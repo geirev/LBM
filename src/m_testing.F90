@@ -51,7 +51,7 @@ subroutine testing(it,f,feq)
            I = remj / strideI + 1
            l = mod(remj, strideI) + 1
 
-           print *,idx,i,j,k,l,diff
+!           print *,idx,i,j,k,l,diff
         endif
         fsum=fsum+diff
         fmax=max(diff,fmax)

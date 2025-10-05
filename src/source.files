@@ -11,10 +11,11 @@ F90SOURCE = \
 	m_averaging_sec_kernelfin1.F90\
 	m_averaging_sec_kernelfin2.F90\
 	m_bilin.F90\
+	m_bilin_gpu.F90\
 	m_boundary_closed_edges.F90\
 	m_boundarycond.F90\
 	m_boundary_i_inflow_edges.F90\
-	m_boundary_i_inflow.F90\
+	m_boundary_i_inflow_kernel.F90\
 	m_boundary_i_periodic_kernel.F90\
 	m_boundary_j_closed_kernel.F90\
 	m_boundary_j_periodic_kernel.F90\
@@ -30,7 +31,6 @@ F90SOURCE = \
 	m_compute_fneq_kernel.F90\
 	m_cube.F90\
 	m_cylinder.F90\
-	m_density.F90\
 	m_diag.F90\
 	m_drift.F90\
 	m_drift_kernel.F90\
@@ -76,13 +76,17 @@ F90SOURCE = \
 	m_tecplot.F90\
 	m_testing.F90\
 	m_turbines_apply.F90\
+	m_turbines_apply_kernel.F90\
+	m_turbines_compute_force.F90\
+	m_turbines_compute_force_kernel.F90\
 	m_turbines_forcing.F90\
-	m_turbines_forcing_guo.F90\
-	m_turbines_forcing_kupershtokh.F90\
+	m_turbines_forcing_kernel_A.F90\
+	m_turbines_forcing_kernel_B.F90\
+	m_turbines_forcing_kernel_C.F90\
 	m_turbines_init.F90\
+	m_turbines_print_blade.F90\
+	m_turbines_print_force.F90\
 	m_uvelshear.F90\
-	m_velocity.F90\
-	m_vorticity.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\
 	m_wtime.F90

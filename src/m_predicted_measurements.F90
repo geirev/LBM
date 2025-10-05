@@ -1,5 +1,5 @@
 module m_predicted_measurements
-logical :: lmeasurements=.true.
+logical :: lmeasurements=.false.
 type measurement
    character(len=1)c
    integer i

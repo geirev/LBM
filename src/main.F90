@@ -17,7 +17,6 @@ program LatticeBoltzmann
    use m_compute_fneq
    use m_cube
    use m_cylinder
-   use m_density
    use m_diag
    use m_drift
    use m_dump_elevation
@@ -44,7 +43,6 @@ program LatticeBoltzmann
    use m_turbines_forcing
    use m_turbines_init
    use m_uvelshear
-   use m_velocity
    use m_vreman
    use m_wtime
    use mod_D3Q27setup
@@ -192,36 +190,37 @@ program LatticeBoltzmann
          write(*,'(a,i6,a,f10.2,a,3(a,f12.7))')'Iteration:', it,' Time:'  ,real(it)*p2l%time,' s.'
       endif
 
-! start time step with f,rho,u,v,w given
+! start time step with f1,rho,u,v,w given
 
-! [u,v,w,turbine_df] = turbines_forcing[rho,u,v,w]
-      if (nturbines > 0)      call turbines_forcing(rho,u,v,w)
+! [turbine_df = turbines_forcing(rho,u,v,w)]
+      if (nturbines > 0)      call turbines_forcing(rho,u,v,w,it)
 
-! [u,v,w,turbulence_df] = turbulenceforcing[rho,u,v,w]
+! [turbulence_df = turbulenceforcing(rho,u,v,w)]
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
-! [feq] = post collision(rho,u,v,w] (returns post collision density)
+! [f1,tau = post collision(f1,rho,u,v,w] (returns post collision density and tau for forcing)
       call postcoll(f1, tau, rho,u,v,w)
 
-! [feq=f] = turbines_apply(feq,turbine_df,tau)  f=f+turbine_df
+! [f1 = f1 + turbine_df]
       if (nturbines > 0)      call turbines_apply(f1,turbine_df,tau)
 
-! [feq=f] = inflow_turbulence_apply(feq,turbulence_df,tau)  f=f+turb_df
+! [f1 = f1 + turbulence_df]
       if (inflowturbulence)   call inflow_turbulence_apply(f1,turbulence_df)
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(f1,lblanking)
 
-! General boundary conditions
+! [f1 and f2 updated with boundary conditions]
       call boundarycond(f1,f2,uvel)
 
 
-! Drift of feq returned in f2
+! Drift of f1 returned in f2
       call drift(f2,f1)
+
+! Swap such that f2 becomes f1 in next time step
       tmp   => f1
       f1  => f2
       f2 => tmp
-
 
 ! Compute updated macro variables
       call macrovars(rho,u,v,w,f1)
@@ -235,6 +234,7 @@ program LatticeBoltzmann
          if (avestart < it .and. it < avesave) call averaging_sec(u,v,w,.false.,iradius)
          if (it == avesave)                    call averaging_sec(u,v,w,.true.,iradius)
       endif
+
 ! Averaging for diagnostics
       if (laveraging) then
          if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,lblanking,.false.)
@@ -251,9 +251,6 @@ program LatticeBoltzmann
       call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
-
-      call cpustart()
-      call cpufinish(6)
 
    enddo
 

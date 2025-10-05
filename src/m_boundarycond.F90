@@ -9,7 +9,7 @@ subroutine boundarycond(f1,f2,uvel)
 #endif
    use m_wtime
 
-   use m_boundary_i_inflow
+   use m_boundary_i_inflow_kernel
    use m_boundary_i_inflow_edges
 
    use m_boundary_i_periodic_kernel
@@ -44,7 +44,7 @@ subroutine boundarycond(f1,f2,uvel)
       ty=8;   by=(ny+2+ty-1)/ty
       tz=8;   bz=(nz+2+tz-1)/tz
 #endif
-      call boundary_i_inflow&
+      call boundary_i_inflow_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif

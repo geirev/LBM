@@ -1,9 +1,9 @@
-module m_boundary_i_inflow
+module m_boundary_i_inflow_kernel
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-subroutine boundary_i_inflow(f,uvel,rho0,udir)
+subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir)
 ! Inflow outflow boundary conditions in i-direction.
 #ifdef _CUDA
    use cudafor

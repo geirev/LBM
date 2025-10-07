@@ -4,15 +4,14 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine postcoll_kernel(f, feq, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman)
+   subroutine postcoll_kernel(f, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman)
 #ifdef _CUDA
    use cudafor
 #endif
    use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup, only : nl,cxs,cys,czs,cs2, weights, H2, H3
    implicit none
-   real, intent(in)     :: f(nl,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(out)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)  :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)  :: tau(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)     :: rho(nx,ny,nz)
    real, intent(in)     :: u(nx,ny,nz)
@@ -61,8 +60,7 @@ contains
    ratio = inv6cs6 / inv2cs4
 !$OMP PARALLEL DO collapse(3) DEFAULT(NONE) &
 !$OMP  PRIVATE(i,j,k,l,p,q,r,vel,dens,cu,tmpeq,tmpneq,A2,A3,vratio,alpha,alphamag,beta,Bbeta,eddyvisc,tautmp,fac)&
-!$OMP  SHARED(f,feq,rho,u,v,w,nx,ny,nz,nl,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ratio,ibgk,ihrr,ivreman,eps,&
-!$OMP        &kinevisc,const,tau)
+!$OMP  SHARED(f,rho,u,v,w,H2,H3,cxs,cys,czs,weights,inv1cs2,inv2cs4,inv6cs6,ratio,ibgk,ihrr,ivreman,eps,kinevisc,const,tau)
    do k=1,nz
    do j=1,ny
    do i=1,nx
@@ -116,7 +114,6 @@ contains
             enddo
          endif
          tmpeq(l)=weights(l)*tmpeq(l)
-         !feq(l,i,j,k)=tmpeq(l)
       enddo
 
 
@@ -240,8 +237,7 @@ contains
 
       fac = 1.0 - 1.0/tau(i,j,k)
       do l=1,nl
-        ! feq(l,i,j,k) = feq(l,i,j,k) + fac * f(l,i,j,k)
-         feq(l,i,j,k) = tmpeq(l) + fac * tmpneq(l)
+         f(l,i,j,k) = tmpeq(l) + fac * tmpneq(l)
       enddo
 
 #ifndef _CUDA

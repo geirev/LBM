@@ -253,6 +253,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! D I A G N O S T I C S   F O R   A   B L A D E
+#ifndef _CUDA
          if (ifirst==1) then
             if (iblade==1) then
                if (ichord == 1) then
@@ -284,9 +285,8 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
                !if (ichord == nrchords) stop
             endif
          endif
+#endif
       enddo
-
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Computing the forces on the grid
@@ -319,6 +319,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Dumping detailed diagnostics for one turbine case
+#ifndef _CUDA
    if ((ifirst <= 0).and.(nturbines==1)) then
       do k=0,ieps
          write(tag3,'(i3.3)')k
@@ -340,6 +341,7 @@ subroutine actuatorline(force,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho,ieps)
          close(21)
       enddo
    endif
+#endif
 
 end subroutine
 end module

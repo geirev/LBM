@@ -35,7 +35,7 @@ contains
    if (j > ny) return
    if (i > nx) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j) SHARED(nx, ny, u, v, w, uxave, vxave, wxave, uxave2, vxave2, wxave2, kpos )
+!$OMP PARALLEL DO PRIVATE(i,j) SHARED(u, v, w, uxave, vxave, wxave, uxave2, vxave2, wxave2, kpos )
    do j=1,ny
    do i=1,nx
 #endif

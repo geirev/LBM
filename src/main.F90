@@ -8,6 +8,7 @@ program LatticeBoltzmann
    use m_printdefines
    use m_averaging_full
    use m_averaging_sec
+   use m_fillghosts
    use m_boundarycond
    use m_city
    use m_city2
@@ -56,20 +57,24 @@ program LatticeBoltzmann
 !   real sh(0:nshapiro)
 
 ! Main variables
-   real    ::      f(nl,0:nx+1,0:ny+1,0:nz+1) ! density function
-   real    ::    feq(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
-   real    ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
-   logical :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
-   real    ::         u(nx,ny,nz)             ! x component of fluid velocity
-   real    ::         v(nx,ny,nz)             ! y component of fluid velocity
-   real    ::         w(nx,ny,nz)             ! z component of fluid velocity
-   real    ::       rho(nx,ny,nz)             ! fluid density
-   real    ::      uvel(nz)                   ! vertical u-velocity profile on device
+   real, target ::     fA(nl,0:nx+1,0:ny+1,0:nz+1) ! density function
+   real, target ::     fB(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
+   real         ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
+   logical      :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
+   real         ::         u(nx,ny,nz)             ! x component of fluid velocity
+   real         ::         v(nx,ny,nz)             ! y component of fluid velocity
+   real         ::         w(nx,ny,nz)             ! z component of fluid velocity
+   real         ::       rho(nx,ny,nz)             ! fluid density
+   real         ::      uvel(nz)                   ! vertical u-velocity profile on device
 
+   real, pointer:: f1(:,:,:,:), f2(:,:,:,:), tmp(:,:,:,:)
 
 #ifdef _CUDA
-   attributes(device) :: f
-   attributes(device) :: feq
+   attributes(device) :: f1
+   attributes(device) :: f2
+   attributes(device) :: tmp
+   attributes(device) :: fA
+   attributes(device) :: fB
    attributes(device) :: tau
    attributes(device) :: lblanking
    attributes(device) :: u
@@ -150,18 +155,19 @@ program LatticeBoltzmann
       call diag(itecout,0,rho,u,v,w,lblanking)
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
-      call fequil3(feq,rho,u,v,w)
-      call boundarycond(feq,uvel)
-      f=feq
+      call fequil3(fB,rho,u,v,w)
+      call fillghosts(fB)
+      call boundarycond(fB,fA,uvel)
+      fA=fB
 
 ! Generate turbulence forcing fields
       if (inflowturbulence) call inflow_turbulence_compute(uu,vv,ww,rr,.true.,nrturb)
    else
 ! Restart from restart file
-      call readrestart(nt0,f,theta,uu,vv,ww,rr)
-      call macrovars(rho,u,v,w,f)
+      call readrestart(nt0,fA,theta,uu,vv,ww,rr)
+      call macrovars(rho,u,v,w,fA)
 ! To ensure we have values in the boundary points first time we call boundarycond.
-      feq=f
+      fB=fA
    endif
    tau = 3.0*kinevisc + 0.5 ! static and constant tau also for ghost zones in case they are used
 
@@ -170,6 +176,11 @@ program LatticeBoltzmann
 #ifdef _CUDA
    call gpu_meminfo('time stepping')
 #endif
+
+
+! initialize pointers
+   f1 => fA
+   f2 => fB
 
 
 
@@ -190,25 +201,30 @@ program LatticeBoltzmann
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
 
 ! [feq] = post collision(rho,u,v,w] (returns post collision density)
-      call postcoll(f,feq, tau, rho,u,v,w)
+      call postcoll(f1, tau, rho,u,v,w)
 
 ! [feq=f] = turbines_apply(feq,turbine_df,tau)  f=f+turbine_df
-      if (nturbines > 0)      call turbines_apply(feq,turbine_df,tau)
+      if (nturbines > 0)      call turbines_apply(f1,turbine_df,tau)
 
 ! [feq=f] = inflow_turbulence_apply(feq,turbulence_df,tau)  f=f+turb_df
-      if (inflowturbulence)   call inflow_turbulence_apply(feq,turbulence_df)
+      if (inflowturbulence)   call inflow_turbulence_apply(f1,turbulence_df)
 
 ! Bounce back boundary on fixed walls within the fluid
-      if (lsolids) call solids(feq,lblanking)
+      if (lsolids) call solids(f1,lblanking)
 
 ! General boundary conditions
-      call boundarycond(feq,uvel)
+      call boundarycond(f1,f2,uvel)
 
-! Drift of feq returned in f
-      call drift(f,feq)
+
+! Drift of feq returned in f2
+      call drift(f2,f1)
+      tmp   => f1
+      f1  => f2
+      f2 => tmp
+
 
 ! Compute updated macro variables
-      call macrovars(rho,u,v,w,f)
+      call macrovars(rho,u,v,w,f1)
 
 ! Diagnostics
       call diag(itecout,it,rho,u,v,w,lblanking)
@@ -231,16 +247,19 @@ program LatticeBoltzmann
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f,theta,uu,vv,ww,rr)
+      if (mod(it,irestart) == 0)            call saverestart(it,f1,theta,uu,vv,ww,rr)
       call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
+
+      call cpustart()
+      call cpufinish(6)
 
    enddo
 
 
    call cpustart()
-   call saverestart(it-1,f,theta,uu,vv,ww,rr)
+   call saverestart(it-1,f1,theta,uu,vv,ww,rr)
    call cpufinish(16)
    call cpuprint()
 
@@ -249,6 +268,6 @@ program LatticeBoltzmann
    if (allocated(ww       ))  deallocate(ww            )
    if (allocated(rr       ))  deallocate(rr            )
 
-   call testing(it,f,feq)
+   call testing(it,f1,f2)
 
 end program LatticeBoltzmann

@@ -1,12 +1,15 @@
-module m_boundary_freeslip_edges
+module m_boundary_closed_edges
 contains
-subroutine boundary_freeslip_edges(f)
+subroutine boundary_closed_edges(f1,f2,opt)
    use mod_dimensions
    use mod_D3Q27setup, only : cxs,cys,czs,nl
    implicit none
-   real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout):: f1(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout):: f2(nl,0:nx+1,0:ny+1,0:nz+1)
+   integer, value     :: opt    ! -1 for noslip, 1 for freeslip
 #ifdef _CUDA
-   attributes(device) :: f
+   attributes(device) :: f1
+   attributes(device) :: f2
 #endif
    integer i,j,k,l,m
 
@@ -19,8 +22,8 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if ((cys(l) < 0) .and. (czs(l) < 0)) then
             do m=1,nl
-               if (cxs(m) == cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
-                  f(m,i,0,0)=f(l,i,0,0)
+               if (cxs(m) == (opt*cxs(l)) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f1(m,i,0,0)=f2(l,i,0,0)
                   exit
                endif
             enddo
@@ -35,7 +38,7 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if ((cys(l) < 0) .and. (czs(l) < 0)) then
             j=0; k=0
-            f(l, i, j, k)=f(l, i-cxs(l), j-cys(l), k-czs(l))
+            f1(l, i, j, k)=f1(l, i-cxs(l), j-cys(l), k-czs(l))
          endif
       enddo
    enddo
@@ -50,8 +53,8 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) < 0) then
             do m=1,nl
-               if (cxs(m) == cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
-                  f(m,i,ny+1,0)=f(l,i,ny+1,0)
+               if (cxs(m) == (opt*cxs(l)) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f1(m,i,ny+1,0)=f2(l,i,ny+1,0)
                   exit
                endif
             enddo
@@ -66,7 +69,7 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) < 0) then
             j=ny+1; k=0
-            f(l, i, j, k)=f(l, i-cxs(l), j-cys(l), k-czs(l))
+            f1(l, i, j, k)=f1(l, i-cxs(l), j-cys(l), k-czs(l))
          endif
       enddo
    enddo
@@ -80,8 +83,8 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if (cys(l) < 0 .and. czs(l) > 0) then
             do m=1,nl
-               if (cxs(m) == cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
-                  f(m,i,0,nz+1)=f(l,i,0,nz+1)
+               if (cxs(m) == (opt*cxs(l)) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f1(m,i,0,nz+1)=f2(l,i,0,nz+1)
                   exit
                endif
             enddo
@@ -96,7 +99,7 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if (cys(l) < 0 .and. czs(l) > 0) then
             j=0; k=nz+1
-            f(l, i, j, k)=f(l, i-cxs(l), j-cys(l), k-czs(l))
+            f1(l, i, j, k)=f1(l, i-cxs(l), j-cys(l), k-czs(l))
          endif
       enddo
    enddo
@@ -110,8 +113,8 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) > 0) then
             do m=1,nl
-               if (cxs(m) == cxs(l) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
-                  f(m,i,ny+1,nz+1)=f(l,i,ny+1,nz+1)
+               if (cxs(m) == (opt*cxs(l)) .and. cys(m) == -cys(l) .and. czs(m) == -czs(l)) then
+                  f1(m,i,ny+1,nz+1)=f2(l,i,ny+1,nz+1)
                   exit
                endif
             enddo
@@ -126,7 +129,7 @@ subroutine boundary_freeslip_edges(f)
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) > 0) then
             j=ny+1; k=nz+1
-            f(l, i, j, k)=f(l, i-cxs(l), j-cys(l), k-czs(l))
+            f1(l, i, j, k)=f1(l, i-cxs(l), j-cys(l), k-czs(l))
          endif
       enddo
    enddo

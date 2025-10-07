@@ -33,7 +33,7 @@ contains
    k=1
    if ((j > ny).or.(i > nx)) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j) SHARED(nx, ny, uxave, vxave,wxave, uxave2, vxave2, wxave2, Tix, iave, uini )
+!$OMP PARALLEL DO PRIVATE(i,j) SHARED(uxave, vxave,wxave, uxave2, vxave2, wxave2, Tix, iave, uini )
    do j=1,ny
    do i=1,nx
 #endif

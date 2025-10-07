@@ -178,6 +178,9 @@ depend:
 	sed -i '/m_netcdfout/d' depends.file
 endif
 
+touch:
+	touch makefile
+
 tags: source.files
 	tags.sh
 	#ctags *.F90

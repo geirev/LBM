@@ -26,7 +26,7 @@ contains
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l) SHARED(u, v, w, rho, f, nx, ny, nz, nl)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,l,tmpf,tmpr,tmpu,tmpv,tmpw,invrho) SHARED(u, v, w, rho, f, cxs, cys, czs)
    do k=1,nz
    do j=1,ny
    do i=1,nx

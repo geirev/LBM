@@ -1,9 +1,9 @@
-module m_boundary_iinflow
+module m_boundary_i_inflow
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-subroutine boundary_iinflow(f,uvel,rho0,udir)
+subroutine boundary_i_inflow(f,uvel,rho0,udir)
 ! Inflow outflow boundary conditions in i-direction.
 #ifdef _CUDA
    use cudafor
@@ -27,7 +27,7 @@ subroutine boundary_iinflow(f,uvel,rho0,udir)
    if (j > ny+1) return
    if (k > nz+1) return
 #else
-!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(j,k,l,tmp) SHARED(f, nx, ny, nz, nl, cxs, cys, czs, uvel, rho0, udir, weights, ka, pi)
+!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(j,k,l,tmp) SHARED(f, cxs, cys, czs, uvel, rho0, udir, weights, ka)
       do k=0,nz+1
       do j=0,ny+1
 #endif

@@ -12,14 +12,12 @@ module m_readinfile
    integer  ibnd           ! Type of bondary condition in i direction (ibnd=0 periodic, 1 inflow/outflow, 12
    integer  jbnd           ! Type of bondary condition in i direction
    integer  kbnd           ! Type of bondary condition in k direction
-   logical  linipert       ! Add smooth pseudo-random peturbations to initial fields
    logical  inflowturbulence          ! Add smooth pseudo-random peturbations for turbulent inflow
    integer  nrturb         ! Number of precomputed batches of inflow turbulence for u,v,w, and rho
    real     turbulence_ampl! strength of inflow turbulence
    real     uini           ! Initial absolute velocity
    real     udir           ! Initial velocity direction in degrees
    real     rho0           ! Average density
-   real     rhoa           ! Imposed density gradient for ibnd=2 case
    real     tauin          ! Collision timescale
    real     kinevisc       ! Kinematic viscosity (nondimensional used in fequil)
    character(len=20) experiment ! experiment name
@@ -31,6 +29,7 @@ module m_readinfile
    integer :: ntx          ! Number of threads per block in x-direction
    integer :: nty          ! Number of threads per block in y-direction
    integer :: ntz          ! Number of threads per block in z-direction
+   logical :: lnodump      ! No dumping to disk while analysing performance
 
    type physconv
       real rho
@@ -51,20 +50,16 @@ module m_readinfile
    integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
    integer  ivreman        ! Option (1) for subgridscale mixing using Vreman
    real smagorinsky        ! smagorinsky constant (0.15) used in subgridscale mixing
-   integer iforce          ! Method for forcing scheme
-                           !  iforce=1  !  Shan and Chen (1993)
-                           !  iforce=8  !  Guo (2002)
-                           !  iforce=10 !  Kupershtokh (2009)
-                           !  iforce=12 !  Khazaeli et al. 2019
    logical ltiming         ! true for timing of kernels. Should be false to avoid syncs
 
 contains
 subroutine readinfile()
+   use m_mkinfile
    implicit none
 
    character(len=3) ca
    character(len=3) :: version='1.0'
-   character(len=3) ver
+   character(len=1) ver
    logical ex
    real gridrn
    integer n
@@ -72,79 +67,77 @@ subroutine readinfile()
 ! reading input data
    inquire(file='infile.in',exist=ex)
    if (.not.ex) then
-      print '(a)','Did not find inputfile infile.in...'
+      print '(a)','Did not find inputfile infile.in'
+      print '(a)','Generating new template infile.in.....'
+      call mkinfile()
+      print '(a)','Please edit and relaunch boltzmann'
       stop
    endif
    print '(a)','--------------------------------------------------------------------------------'
    open(10,file='infile.in')
-      read(10,'(tr1,a)')ver
-      if (version /= ver) then
-         print *,'Update version of infile.in to:',version,ver
-         stop
-      endif
-      read(10,'(1x,l1)')ltiming    ; print '(a,tr7,l1)',  'ltiming           = ',ltiming
-      read(10,*)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
-      read(10,*)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
-      read(10,*)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
-      read(10,*)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
-      read(10,*)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
-      read(10,*)iforce             ; write(*,'(a,i8)',advance='no') 'iforce            = ',iforce
-      if (iforce == 8 .and. ihrr == 1) then
-         print *,'Guo forcing (iforce=8) together with regularization (ihrr=1) is inconsistent'
-         stop
-      endif
-      select case (iforce)
-      case(8)
-         print '(a)','  Guo (2002)'
-      case(10)
-         print '(a)','  Kupershtokh (2009)'
-      case default
-         print '(a)','  invalid forcing scheme (8,10)'
-         stop
-      end select
-      read(10,*)nt0                ; print '(a,i8)',      'nt0               = ',nt0
-      read(10,*)nt1                ; print '(a,i8)',      'nt1               = ',nt1
-      if (nt1 .le. nt0) stop 'readinfile: nt1 <= nt0'
-      read(10,*)iout               ; print '(a,i8)',      'iout              = ',iout
-      read(10,*)irestart           ; print '(a,i8)',      'irestart          = ',irestart
-      read(10,*)iprt1,iprt2,dprt   ; print '(a,3i8)',     'iprt1, iprt2, dprt= ',iprt1,iprt2,dprt
-      read(10,*)ltesting           ; print '(a,tr7,l1)',  'ltesting          = ',ltesting
-      read(10,*)itecout            ; print '(a,i8)',      'itecout           = ',itecout
-      read(10,*)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
-      read(10,*)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
-      read(10,*)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
-      read(10,*)uini,udir          ; print '(a,2(f8.3,a))','inflow (uini,udir)= ',uini,       ' [m/s]',udir,' [degrees]'
-      read(10,*)rho0               ; print '(a,f8.3,a)',  'rho0 (latt dens)  = ',rho0,       ' []'
-      read(10,*)rhoa               ; print '(a,f8.3,a)',  'rhoa (pres grad)  = ',rhoa,       ' []'
-      read(10,'(1x,l1)')linipert   ; print '(a,tr7,l1)',  'linipert          = ',linipert
-      read(10,*)inflowturbulence,turbulence_ampl,nrturb
-                  ; print '(a,tr7,l1,tr2,g13.5,tr2,i5)',  'inflowturbulence  = ',inflowturbulence,turbulence_ampl,nrturb
-      read(10,*)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
-      read(10,*)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
-      read(10,*)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
-      read(10,*)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
-      uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
-      read(10,'(1x,l1,1x,l1)')laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
-      read(10,*)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
-      read(10,*)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
+      read(10,'(a,end=100)')ver
 
-      read(10,'(a)')ca
-      if (ca /= '#-T') then
-         print *,'#-T: error in infile.in'
-         stop
-      endif
-      print *
-      read(10,*)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
+      read(10,*,err=100,end=100)ltiming            ; print '(a,tr7,l1)',  'ltiming           = ',ltiming
+      read(10,*,end=100)ltesting           ; print '(a,tr7,l1)',  'ltesting          = ',ltesting
+      read(10,*,end=100)lnodump            ; print '(a,tr7,l1)',  'lnodump           = ',lnodump
+      read(10,*,end=100)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
+
+      read(10,'(a,end=100)')ver
+
+      read(10,*,end=100)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
+      read(10,*,end=100)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
+      read(10,*,end=100)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
+      read(10,*,end=100)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
+
+      read(10,'(a,end=100)')ver
+
+      read(10,*,end=100)nt0                ; print '(a,i8)',      'nt0               = ',nt0
+      read(10,*,end=100)nt1                ; print '(a,i8)',      'nt1               = ',nt1
+      if (nt1 .le. nt0) stop 'readinfile: nt1 <= nt0'
+      read(10,*,end=100)iout               ; print '(a,i8)',      'iout              = ',iout
+      read(10,*,end=100)irestart           ; print '(a,i8)',      'irestart          = ',irestart
+      read(10,*,end=100)iprt1,iprt2,dprt   ; print '(a,3i8)',     'iprt1, iprt2, dprt= ',iprt1,iprt2,dprt
+      read(10,*,end=100)itecout            ; print '(a,i8)',      'itecout           = ',itecout
+
+      read(10,'(a,end=100)')ver
+
+      read(10,*,end=100)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
+      read(10,*,end=100)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
+      read(10,*,end=100)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
+
+      read(10,'(a,end=100)')ver
+
+      read(10,*,end=100)uini,udir          ; print '(a,2(f8.3,a))','inflow (uini,udir)= ',uini,       ' [m/s]',udir,' [degrees]'
+      read(10,*,end=100)inflowturbulence,turbulence_ampl,nrturb
+                  ; print '(a,tr7,l1,tr2,g13.5,tr2,i5)',  'inflowturbulence  = ',inflowturbulence,turbulence_ampl,nrturb
+
+      read(10,'(a,end=100)')ver
+
+      read(10,*,end=100)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
+      read(10,*,end=100)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
+      read(10,*,end=100)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
+      read(10,*,end=100)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
+      uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
+
+      read(10,'(a,end=100)')ver
+
+      read(10,'(1x,l1,1x,l1,end=100)')laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
+      read(10,*,end=100)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
+      read(10,*,end=100)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
+
+      read(10,'(a,end=100)')ver
+
+      read(10,*,end=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
          allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines))
-         read(10,*)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
-         read(10,*)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
-         read(10,*)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
-         read(10,*)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
+         read(10,*,end=100)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
+         read(10,*,end=100)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
+         read(10,*,end=100)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
+         read(10,*,end=100)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
          do n=1,nturbines
-            read(10,*)ipos(n)
-            read(10,*)jpos(n)
-            read(10,*)kpos(n)
+            read(10,*,end=100)ipos(n)
+            read(10,*,end=100)jpos(n)
+            read(10,*,end=100)kpos(n)
             print '(a,i4,a,3i4)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n)
          enddo
       else
@@ -196,6 +189,14 @@ subroutine readinfile()
    print '(a,g12.4)','Compressibility        errors proportional to dt^2/dx**2 :', p2l%time**2/p2l%length**2
    print '(a,g12.4)','BGK truncation       errors proportional to (tauin-0.5)*2:', (tauin-0.5)**2
 
+   rho0=1.0
+   return
+
+   100 close(10)
+   call system('mv -i infile.in infile_backup.in')
+   call mkinfile()
+   print *,'infile.in problem; infile.in moved to infile_backup.in and generated new template infile.in'
+   stop
 
 end subroutine
 end module

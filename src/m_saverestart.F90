@@ -4,7 +4,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    !use iso_fortran_env, only : int64
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile, only : inflowturbulence,nturbines,nrturb
+   use m_readinfile, only : inflowturbulence,nturbines,nrturb,lnodump
    implicit none
    integer, intent(in) :: it
    real,    intent(in) :: theta
@@ -28,6 +28,8 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    character(len=6) cit
    integer iunit
+
+   if (lnodump) return
 
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit

@@ -217,6 +217,7 @@ m_macrovars.o:      mod_D3Q27setup.o
 m_macrovars.o:      mod_dimensions.o
 m_macrovars.o:      m_readinfile.o
 m_macrovars.o:      m_wtime.o
+m_mkinfile.o:      makefile
 m_nrelliftdrag.o:      makefile
 m_nrelliftdrag.o:      mod_nrel5mw.o
 m_nrelreadfoil.o:      makefile
@@ -241,6 +242,7 @@ m_printdefines.o:      makefile
 m_pseudo2D.o:      makefile
 m_pseudo2D.o:      mod_fftw3.o
 m_readinfile.o:      makefile
+m_readinfile.o:      m_mkinfile.o
 m_readrestart.o:      makefile
 m_readrestart.o:      mod_D3Q27setup.o
 m_readrestart.o:      mod_dimensions.o
@@ -283,6 +285,9 @@ m_testing.o:      makefile
 m_testing.o:      mod_D3Q27setup.o
 m_testing.o:      mod_dimensions.o
 m_testing.o:      m_readinfile.o
+m_tmp.o:      makefile
+m_tmp.o:      mod_dimensions.o
+m_tmp.o:      m_turbines_init.o
 m_turbines_apply_kernel.o:      makefile
 m_turbines_apply_kernel.o:      mod_D3Q27setup.o
 m_turbines_apply_kernel.o:      mod_dimensions.o
@@ -319,6 +324,7 @@ m_turbines_forcing.o:      mod_D3Q27setup.o
 m_turbines_forcing.o:      mod_dimensions.o
 m_turbines_forcing.o:      mod_nrel5mw.o
 m_turbines_forcing.o:      m_readinfile.o
+m_turbines_forcing.o:      m_tmp.o
 m_turbines_forcing.o:      m_turbines_compute_force_kernel.o
 m_turbines_forcing.o:      m_turbines_compute_force.o
 m_turbines_forcing.o:      m_turbines_forcing_kernel_A.o

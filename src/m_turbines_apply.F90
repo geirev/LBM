@@ -4,7 +4,7 @@ subroutine turbines_apply(f,df,tau)
    use mod_dimensions,  only : nx,ny,nz
    use mod_D3Q27setup,  only : nl
    use m_turbines_init, only : ieps
-   use m_readinfile   , only : ipos,nturbines,iforce
+   use m_readinfile   , only : ipos,nturbines
 #ifdef _CUDA
    use m_readinfile,    only : ntx,nty,ntz
 #endif
@@ -37,7 +37,7 @@ subroutine turbines_apply(f,df,tau)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(f,df,tau,ip,n,iforce,nturbines)
+          &(f,df,tau,ip,n,nturbines)
    enddo
    call cpufinish(icpu)
 end subroutine

@@ -1,6 +1,18 @@
 # Lattice-Boltzmann-Model
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
+### Relese notes:
+The latest pushes have been major upgrades. Speedup is now around 92 on GPU relative a single CPU core.
+   -The code uses pointers to switch beteen f1 and f2 every second timestep. This allows for a significant simplification
+    for the implementation of boundary conditions and reduces the load on the GPU for the postcoll routine.
+   -postcoll now replaces fequil2, regularization, vreman and collisions, which are all done in one common kernel.
+   -The actuatorline model was a mess, and I have now cleaned it up and tested it again.
+   -I have changed the format of the infile.in somewhat. Also, if there is no infile.in present, Boltzmann will generate one for you.
+   -I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole f in a file at the end of the
+   simulation
+    e.g., testing000200.uf if you run 200 time-steps. All subsequent runs will then compute the difference between the latest simulations and the reference
+    testing000200.uf file.   Please use this approach while modifying code to avoid introducing bugs.  A tolerance of (RMSE=1.0E-07 and MAXERR=1.0E-06) are acceptable.
+
 ## License
 
 This project is dual-licensed to accommodate both academic/research and commercial use:

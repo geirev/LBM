@@ -26,7 +26,6 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 
 
 
-   integer, parameter :: ialmout=2000     ! timestep for dumping ALMdata file
    real, parameter :: dx=1.0
    real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
@@ -248,7 +247,7 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Diagnostocs
-         if (iblade == 1 .and. ifirst == ialmout) then
+         if (iblade == 1 .and. ifirst == 2000) then
          ! Lift and drag forces force(LD) per chord in Newton scaled by chord length (DC) to get Newton/meter.
             newton=(p2l%length**2)*p2l%rho*(p2l%vel**2)
             fL(ichord)=forceL(ichord,iblade)*newton/(dc(ichord)*p2l%length)
@@ -268,11 +267,7 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
       theta=theta+rad120
    enddo
 
-   if (ifirst == ialmout) then
-! To recover results from Asmuth 2020 (fig 4):
-!    Run with constant RPM of 8.95 (tipspeedratio set to 0.0 meaning constant RPM),
-!    use inflow velocity of 8.00 m/s,
-!    and save result after a significant spinup.
+   if (ifirst == 2000) then
       call turbines_print_blade(clift,cdrag,fL,fD,fN,fT,fTa,fNa,radius)
    endif
 

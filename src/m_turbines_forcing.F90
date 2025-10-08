@@ -13,6 +13,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
    use m_turbines_compute_force_kernel
    use m_turbines_print_force
    use m_fequil3_block_kernel
+   use m_tmp
    use m_turbines_forcing_kernel_A
    use m_turbines_forcing_kernel_B
    use m_turbines_forcing_kernel_C
@@ -133,7 +134,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
         &(force,forceN,forceT,theta,jp,kp,iradius,relm_d)
 
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+      !istat = cudaDeviceSynchronize()
 #endif
 
 !!      call turbines_compute_force(force_h,forceN_h,forceT_h,theta,jp,kp,iradius)
@@ -158,7 +159,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
         &(u,v,w,rho,rtmp,vel,du,dv,dw,force,iradius,ip)
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+      !istat = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -174,7 +175,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
         &(dfeq1,rtmp,vel,ii,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+      !istat = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -190,7 +191,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
         &(u,v,w,rho,rtmp,vel,du,dv,dw,ip)
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+      !istat = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -207,7 +208,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
         &(dfeq2,rtmp,vel,ii,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+      !istat = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -223,7 +224,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
         &(turbine_df,dfeq1,dfeq2,nturbines,n)
 #ifdef _CUDA
-      istat = cudaDeviceSynchronize()
+      !istat = cudaDeviceSynchronize()
 #endif
 
    enddo

@@ -152,6 +152,7 @@ source:
 	sed -i '/ cudafor/d' source.files
 	sed -i '/ cublas/d' source.files
 	sed -i '/ iso_fortran_env/d' source.files
+	sed -i '/ iso_c_binding/d' source.files
 else
 source:
 	../bin/mksource.sh > source.files
@@ -159,6 +160,7 @@ source:
 	sed -i '/ cublas/d' source.files
 	sed -i '/ iso_fortran_env/d' source.files
 	sed -i '/m_netcdfout/d' source.files
+	sed -i '/ iso_c_binding/d' source.files
 endif
 
 ifdef NETCDF
@@ -168,6 +170,7 @@ depend:
 	sed -i '/ cublas/d'  depends.file
 	sed -i '/ iso_fortran_env/d' depends.file
 	sed -i '/ netcdf/d' depends.file
+	sed -i '/ iso_c_binding/d' depends.file
 else
 depend:
 	../bin/mkdepend.pl | sort -u > depends.file
@@ -176,6 +179,7 @@ depend:
 	sed -i '/ iso_fortran_env/d' depends.file
 	sed -i '/ netcdf/d' depends.file
 	sed -i '/m_netcdfout/d' depends.file
+	sed -i '/ iso_c_binding/d' depends.file
 endif
 
 touch:

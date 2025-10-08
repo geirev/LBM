@@ -78,7 +78,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(dfeq1,rtmp,vel,ii,ny,nz,nl,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
+        &(dfeq1,rtmp,vel,ii,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -111,7 +111,7 @@ subroutine inflow_turbulence_forcing(rho,u,v,w,ampl,it,nrturb)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(dfeq2,rtmp,vel,ii,ny,nz,nl,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
+        &(dfeq2,rtmp,vel,ii,H2,H3,cxs,cys,czs,cs2,weights,inv1cs2,inv2cs4,inv6cs6,ibgk)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef _CUDA

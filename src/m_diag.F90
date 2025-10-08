@@ -3,7 +3,6 @@ contains
 subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    use mod_dimensions
    use m_readinfile, only : iout, iprt1, iprt2, dprt,  nt1
-   use m_vorticity
    use m_tecout
 #ifdef NETCDF
    use m_netcdfout

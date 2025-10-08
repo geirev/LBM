@@ -1,42 +1,43 @@
 module m_turbines_apply
 contains
 subroutine turbines_apply(f,df,tau)
-   use mod_dimensions
-   use mod_D3Q27setup, only : nl
+   use mod_dimensions,  only : nx,ny,nz
+   use mod_D3Q27setup,  only : nl
    use m_turbines_init, only : ieps
    use m_readinfile   , only : ipos,nturbines,iforce
+#ifdef _CUDA
+   use m_readinfile,    only : ntx,nty,ntz
+#endif
+   use m_turbines_apply_kernel
    use m_wtime
    implicit none
    real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution
    real, intent(in)    :: df(nl,-ieps:ieps,ny,nz,nturbines) ! forcing distributions
-   real, intent(in)    :: tau(0:nx+1,0:ny+1,0:nz+1)                     ! Tau
+   real, intent(in)    :: tau(0:nx+1,0:ny+1,0:nz+1)         ! Tau
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: df
    attributes(device) :: tau
 #endif
-   integer n,ip,i,j,k,ii,l
+   integer n,ip
+
+#ifdef _CUDA
+   integer :: tx, ty, tz, bx, by, bz
+#endif
    integer, parameter :: icpu=8
-   real fac
    call cpustart()
-   fac=1.0 ! for iforce=10
+#ifdef _CUDA
+   tx=16; bx=((2*ieps+1)+tx-1)/tx
+   ty=8;  by=(ny+ty-1)/ty
+   tz=1;  bz=(nz+tz-1)/tz
+#endif
    do n=1,nturbines
       ip=ipos(n)
+      call turbines_apply_kernel&
 #ifdef _CUDA
-!$cuf kernel do(2) <<<*,*>>>
+          &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      do k=1,nz
-      do j=1,ny
-      do ii=-ieps,ieps
-         i=ip+ii
-         if (iforce == 8) fac=(1.0-0.5/tau(i,j,k))
-         do l=1,nl
-            f(l,i,j,k) = f(l,i,j,k) + fac*df(l,ii,j,k,n)
-!            f(l,i,j,k) = f(l,i,j,k) + df(l,ii,j,k,n)
-         enddo
-      enddo
-      enddo
-      enddo
+          &(f,df,tau,ip,n,iforce,nturbines)
    enddo
    call cpufinish(icpu)
 end subroutine

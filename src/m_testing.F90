@@ -50,7 +50,7 @@ subroutine testing(it,f,feq)
      enddo
      enddo
      fsum=fsum/real(ntot)
-     print *,'Total misfit: ',fsum,fmax
+     print *,'Total misfit: Mean abs error=',fsum,' max error=',fmax
    else
       open(newunit=iunit,file='testing'//cit//'.uf',form="unformatted", status='replace')
          f_h=f

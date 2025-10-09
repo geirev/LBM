@@ -75,69 +75,69 @@ subroutine readinfile()
    endif
    print '(a)','--------------------------------------------------------------------------------'
    open(10,file='infile.in')
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,err=100,end=100)ltiming            ; print '(a,tr7,l1)',  'ltiming           = ',ltiming
-      read(10,*,end=100)ltesting           ; print '(a,tr7,l1)',  'ltesting          = ',ltesting
-      read(10,*,end=100)lnodump            ; print '(a,tr7,l1)',  'lnodump           = ',lnodump
-      read(10,*,end=100)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
+      read(10,*,err=100,err=100)ltiming            ; print '(a,tr7,l1)',  'ltiming           = ',ltiming
+      read(10,*,err=100)ltesting           ; print '(a,tr7,l1)',  'ltesting          = ',ltesting
+      read(10,*,err=100)lnodump            ; print '(a,tr7,l1)',  'lnodump           = ',lnodump
+      read(10,*,err=100)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,end=100)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
-      read(10,*,end=100)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
-      read(10,*,end=100)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
-      read(10,*,end=100)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
+      read(10,*,err=100)experiment         ; print '(a,a)',       'experiment        = ',trim(experiment)
+      read(10,*,err=100)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
+      read(10,*,err=100)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
+      read(10,*,err=100)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,end=100)nt0                ; print '(a,i8)',      'nt0               = ',nt0
-      read(10,*,end=100)nt1                ; print '(a,i8)',      'nt1               = ',nt1
+      read(10,*,err=100)nt0                ; print '(a,i8)',      'nt0               = ',nt0
+      read(10,*,err=100)nt1                ; print '(a,i8)',      'nt1               = ',nt1
       if (nt1 .le. nt0) stop 'readinfile: nt1 <= nt0'
-      read(10,*,end=100)iout               ; print '(a,i8)',      'iout              = ',iout
-      read(10,*,end=100)irestart           ; print '(a,i8)',      'irestart          = ',irestart
-      read(10,*,end=100)iprt1,iprt2,dprt   ; print '(a,3i8)',     'iprt1, iprt2, dprt= ',iprt1,iprt2,dprt
-      read(10,*,end=100)itecout            ; print '(a,i8)',      'itecout           = ',itecout
+      read(10,*,err=100)iout               ; print '(a,i8)',      'iout              = ',iout
+      read(10,*,err=100)irestart           ; print '(a,i8)',      'irestart          = ',irestart
+      read(10,*,err=100)iprt1,iprt2,dprt   ; print '(a,3i8)',     'iprt1, iprt2, dprt= ',iprt1,iprt2,dprt
+      read(10,*,err=100)itecout            ; print '(a,i8)',      'itecout           = ',itecout
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,end=100)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
-      read(10,*,end=100)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
-      read(10,*,end=100)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
+      read(10,*,err=100)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
+      read(10,*,err=100)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
+      read(10,*,err=100)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,end=100)uini,udir          ; print '(a,2(f8.3,a))','inflow (uini,udir)= ',uini,       ' [m/s]',udir,' [degrees]'
-      read(10,*,end=100)inflowturbulence,turbulence_ampl,nrturb
+      read(10,*,err=100)uini,udir          ; print '(a,2(f8.3,a))','inflow (uini,udir)= ',uini,       ' [m/s]',udir,' [degrees]'
+      read(10,*,err=100)inflowturbulence,turbulence_ampl,nrturb
                   ; print '(a,tr7,l1,tr2,g13.5,tr2,i5)',  'inflowturbulence  = ',inflowturbulence,turbulence_ampl,nrturb
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,end=100)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
-      read(10,*,end=100)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
-      read(10,*,end=100)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
-      read(10,*,end=100)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
+      read(10,*,err=100)kinevisc           ; print '(a,f8.3,a)',  'Kinematic viscos  = ',kinevisc,   ' [m^2/2] '
+      read(10,*,err=100)p2l%rho            ; print '(a,f8.3,a)',  'air density       = ',p2l%rho,    ' [kg/m^3]'   ! 1.225 is Air density
+      read(10,*,err=100)p2l%length         ; print '(a,f8.3,a)',  'grid cell size    = ',p2l%length, ' [m]'
+      read(10,*,err=100)p2l%vel            ; print '(a,f8.3,a)',  'wind velocity     = ',p2l%vel,    ' [m/s]'
       uini=uini/p2l%vel            ; print '(a,f8.3,a)',  'Non-dim uinflow   = ',uini,       ' [] Should be less that 0.2'
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,'(1x,l1,1x,l1,end=100)')laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
-      read(10,*,end=100)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
-      read(10,*,end=100)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
+      read(10,'(1x,l1,1x,l1)',err=100)laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
+      read(10,*,err=100)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
+      read(10,*,err=100)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
 
-      read(10,'(a,end=100)')ver
+      read(10,'(a)',err=100)ver
 
-      read(10,*,end=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
+      read(10,*,err=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
          allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines))
-         read(10,*,end=100)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
-         read(10,*,end=100)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
-         read(10,*,end=100)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
-         read(10,*,end=100)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
+         read(10,*,err=100)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
+         read(10,*,err=100)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
+         read(10,*,err=100)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
+         read(10,*,err=100)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
          do n=1,nturbines
-            read(10,*,end=100)ipos(n)
-            read(10,*,end=100)jpos(n)
-            read(10,*,end=100)kpos(n)
+            read(10,*,err=100)ipos(n)
+            read(10,*,err=100)jpos(n)
+            read(10,*,err=100)kpos(n)
             print '(a,i4,a,3i4)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n)
          enddo
       else

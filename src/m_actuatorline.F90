@@ -1,6 +1,10 @@
 module m_actuatorline
 contains
-subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
+subroutine actuatorline(forceN,forceT,jpos,kpos,thetain,iradius,u,v,w,rho)
+! This routine currently runs on the CPU, as for a single turbine there are only 3 blades time 17 chords, i.e. 51 parallel
+! computations. In the future it will make sense to include many turbines (>> 100) in this routine and extend forceT(ichord,iblade)
+! to forceT(ichord,iblade,nturbines).
+   use mod_dimensions, only : ny,nz
    use m_readinfile, only : p2l,uini,turbrpm,pitchangle,itiploss,tipspeedratio
    use mod_nrel5mw
    use m_nrelreadfoil
@@ -9,83 +13,82 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
    use m_turbines_print_blade
 
    implicit none
-   integer, intent(in)    :: nx           ! dimension of horizontal axis of turbine plane (=ny from 3D grid)
-   integer, intent(in)    :: ny           ! dimension of vertical   axis of turbine plane (=nz from 3D grid)
-   integer, intent(in)    :: ipos         ! horizontal gridpoint for center of turbine
-   integer, intent(in)    :: jpos         ! vertical   gridpoint for center of turbine
+   integer, intent(in)    :: jpos         ! horizontal gridpoint for center of turbine
+   integer, intent(in)    :: kpos         ! vertical   gridpoint for center of turbine
 
 
-   real,    intent(in)    :: u(nx,ny)     ! u velocity through the turbine section
-   real,    intent(in)    :: v(nx,ny)     ! v velocity at the turbine section
-   real,    intent(in)    :: w(nx,ny)     ! w velocity at the turbine section
-   real,    intent(in)    :: rho(nx,ny)   ! density at the turbine section
+   real,    intent(in)    :: u(ny,nz)     ! u velocity through the turbine section
+   real,    intent(in)    :: v(ny,nz)     ! v velocity at the turbine section
+   real,    intent(in)    :: w(ny,nz)     ! w velocity at the turbine section
+   real,    intent(in)    :: rho(ny,nz)   ! density at the turbine section
+
    real,    intent(in)    :: thetain      ! input rotation angle of blade one
    integer, intent(inout) :: iradius      ! number of gridpoints for blade length computed at first call
+
    real, intent(out) :: forceT(nrchords,3)  ! Tangential (driving force) along the blade
    real, intent(out) :: forceN(nrchords,3)  ! Nornal (drag force) along the blade
 
 
-
    integer, parameter :: ialmout=2000     ! timestep for dumping ALMdata file
-   real, parameter :: dx=1.0
    real, parameter :: pi=3.1415927410125732
    real, parameter :: pi2=2.0*pi
    real, parameter :: rad120=pi2*120.0/360.0
 
-   real costheta
-   real sintheta
-   real x0,y0                             ! x-y location of turbine center
-   real xb,yb                             ! x-y locatiuon along a blade
-   real theta                             ! work blade rotation angle
-   real q                                 ! Dynamic pressure
+   real costheta,sintheta
+   real y0,z0                             ! y-z location of turbine center
+   real yb,zb                             ! y-z locatiuon along a blade
+   integer jc,kc                          ! gridpoint along a blade
+   real theta                             ! blade rotation angle
+   real dynpres                           ! Dynamic pressure
    real ux,vx,wx,dens                     ! local velocity and density variables
    real utheta                            ! tangential velocity from v and w
    real urel2                             ! relative velocity squared
-   real, save :: radius                   ! turbine radius in grid cells
+
    integer i,j,k                          ! counters
-   integer ic,jc                          ! gridpoint along a blade
    integer iblade                         ! blade counter
-   real u0
+   integer ichord                         ! chord counter
+   real u0                                ! u-velocity at turbine plane
 
    real phi                               ! Angle between rotorplane and relative velocity direction
    real cosphi(nrchords)
    real sinphi(nrchords)
    real clift(nrchords)                   ! Lift coefficient for each chord along the blade
    real cdrag(nrchords)                   ! Drag coefficient for each chord along the blade
-   real forceL(nrchords,3)                  ! Lift force along the blade
-   real forceD(nrchords,3)                  ! Drag force along the blade
+   real forceL(nrchords,3)                ! Lift force along the blade
+   real forceD(nrchords,3)                ! Drag force along the blade
 
 ! Lift and drag forces force(LD) per chord in Newton scaled by chord length (DC) to get Newton/meter.
-   real fL(nrchords)
-   real fD(nrchords)
+!   real fL(nrchords)                      ! for diagnostics
+!   real fD(nrchords)                      ! for diagnostics
 
 ! Tangential (rotational force) and normal (drag forces) f(TN) in N/m as in zho19a
-   real fN(nrchords)
-   real fT(nrchords)
+!   real fN(nrchords)                      ! for diagnostics
+!   real fT(nrchords)                      ! for diagnostics
 
 ! Non-dimensional tangent and normal  forces using asm20a scaling
-   real fNa(nrchords)
-   real fTa(nrchords)
+!   real fNa(nrchords)                     ! for diagnostics
+!   real fTa(nrchords)                     ! for diagnostics
 
-   integer ichord                         ! chord counter
-   integer, save :: ifirst=0
+   integer, save :: ifirst=0              ! Counter for calls to routine
 
+   real, save :: radius                   ! turbine radius in grid cells
    real, save :: omega                    ! Rotation speed in radians per second
    real, save :: omegand                  ! Nondimensional rotation speed
-   real newton,R
-   real c1,c2,blades,frac,tiploss
-   real, save :: g,lambda
-   real :: denom, acos_arg
+
+   real newton                            ! conversion to Newton
+
+! local tiploss variables
+   real c1,c2,blades,frac,tiploss,denom, acos_arg
+   real, save :: g                        ! tiploss parameter
+   real, save :: lambda
    real angattack                         ! computed angle of attack
    real angle                             ! work angle
-   integer iave
+   integer iave                           ! counter for computing an average
 
    ifirst=ifirst+1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! I N I T I A L I Z A T I O N   D O N E   A T   F I R S T   C A L L
-
-
+! INITIALIZATION DONE AT FIRST CALL
 
    if (ifirst == 1) then
 ! Read lift and drag from foil data files
@@ -100,23 +103,22 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 
 ! Blade length in number of gridpoints
       radius=rotorradius+hubradius     ! radius comes from mod_nrel5Mw
-      R=2.0*radius                     ! rotor diameter
       iradius=nint(radius)             ! approximate radius in number of gridcells
       print '(a,f8.2,i4)','Rotor radius=   ',radius,iradius
-      print '(a,f8.2)',   'Rotor diamenter=',R
-      print '(a,50f8.2)', 'dc  :',dc(1:nrchords)
-      print '(a,50f8.2)', 'relm:',relm(1:nrchords)
-      print '(a,50f8.2)', 'chor:',chord(1:nrchords)
+      print '(a,f8.2)',   'Rotor diamenter=',2.0*radius
+!      print '(a,50f8.2)', 'dc  :',dc(1:nrchords)
+!      print '(a,50f8.2)', 'relm:',relm(1:nrchords)
+!      print '(a,50f8.2)', 'chor:',chord(1:nrchords)
 
 ! Rotation speed in radians/s
       omega=pi2*turbrpm/60.0
 ! nondimesonal omega
       omegand=omega*p2l%time
 
-      print *,'Omega  (RPM)                 =',turbrpm
-      print *,'Omega  (radians/s)           =',omega
-      print *,'Omega  (radians/)            =',omegand
-      print *,'Time per revolution          =',pi2/omega
+!      print *,'Omega  (RPM)                 =',turbrpm
+!      print *,'Omega  (radians/s)           =',omega
+!      print *,'Omega  (radians/)            =',omegand
+      !print *,'Time per revolution          =',pi2/omega
 ! Tipspeed(Tip speed can be determined from the rotational speed, which is ωR where ω is the rotational
 ! speed in radians per second and R is the radius of the turbine in meters.)
       print *,'tipspeed R*Omega m/s         =',real(iradius)*p2l%length*omega
@@ -137,17 +139,17 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
       endif
    endif
 
-! If given tipspeed ratio is larger than 0.0 we recompute the rotation speed to match the imposed tipspeed ratio
-! based on the average velocity sampled on the circle with half a rotor radius.
+! If given tipspeed ratio  from infile.in is larger than 0.0 we recompute the rotation speed to match the imposed tipspeed ratio
+! based on the average velocity sampled on the circle at half a rotor radius.
    if (tipspeedratio > 0.0) then
-      if (ifirst==1) print '(a)','Recomputing omega and lambda based on average  u velocity in rotor plane'
+      if (ifirst==1) print '(a)','Recomputing omega and tipspeed ratio based on average  u velocity in rotor plane'
       u0=0.0
       iave=0
-      do k=0,360,10
+      do i=0,360,10
          angle=real(k)*pi2/360.0
-         i=ipos+nint(real(iradius)*cos(angle)/2.0)
-         j=jpos+nint(real(iradius)*sin(angle)/2.0)
-         u0=u0+u(i,j)
+         j=jpos+nint(real(iradius)*cos(angle)/2.0)
+         k=kpos+nint(real(iradius)*sin(angle)/2.0)
+         u0=u0+u(j,k)
          iave=iave+1
       enddo
       u0=u0/real(iave)
@@ -160,11 +162,19 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 
    if (ifirst==1) then
       print *
-      print '(a)','**************************************'
-      print '(a,2f8.2)','TIPSPEED RATIO R*Omega/uini  =',lambda,tipspeedratio
-      print '(a,f8.2)','UINI                  (m/s)  =',u0*p2l%vel
-      print '(a,f8.2)','omega                 (RPM)  =',omega*60.0/pi2
-      print '(a)','**************************************'
+      print '(a)','********************************************************'
+      if (tipspeedratio > 0.0) then
+         print '(a)','using prescribed tip-speed-ratio and recomputed omega'
+      else
+         print '(a)','tip-speed-ratio computed from given omega and u-inflow'
+      endif
+      print '(a,f8.2,i4)','Rotor radius          (m,i)  =',radius*p2l%length,iradius
+      print '(a,f8.2)',   'Rotor diamenter       (m)    =',2.0*radius*p2l%length
+      print '(a,f8.2)',   'TIPSPEED RATIO R*Omega/uini  =',lambda
+      print '(a,f8.2)',   'UINI                  (m/s)  =',u0*p2l%vel
+      print '(a,f8.2)',   'omega                 (RPM)  =',omega*60.0/pi2
+      print '(a,f8.2)',   'Time per revolution   (s)    =',pi2/omega
+      print '(a)','********************************************************'
       print *
    endif
 
@@ -172,6 +182,8 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 ! Prandtl-Glauert and Shen tip speed model (updated with new lambda)
       if (itiploss == 2) g=exp(-c1*(blades*lambda-c2))+0.1
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! C O M P U T I N G   T H E   B L A D E   F O R C E S
 ! The given twist angles (in degrees) refers to zero angle a the tip, and then twists the blade as we
 ! move towards the hub from chord to chord. We store the twist angle for each chord in twist(:).
 ! Below we will calculate the angle between the relative velocity and the rotor plane as phi=atan2(ux,utheta).
@@ -182,13 +194,11 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 !      angle=atan(1.0/lambda)*360.0/pi2
 !      print *,'tip relative angle',angle
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! C O M P U T I N G   T H E   B L A D E   F O R C E S
 ! Set rotation angle
 
 ! Center point of turbine
-   x0=real(ipos)
    y0=real(jpos)
+   z0=real(kpos)
 
 ! Running through blades
    theta=thetain
@@ -200,14 +210,14 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
 ! Compute lift and drag force along blade
       do ichord=1,nrchords
          ! Finding pivot gridpoint index closest to chord number ichord to extract velocity
-         xb=x0+relm(ichord)*costheta
-         yb=y0+relm(ichord)*sintheta
-         ic=int(xb)
+         yb=y0+relm(ichord)*costheta
+         zb=z0+relm(ichord)*sintheta
          jc=int(yb)
+         kc=int(zb)
 
-! Bilinear interpolation, to find u(xb,yb), v(xb,yb), w(xb,yb) in the square  ic=int(xb), ic+1,  jc=int(yb), jc+1
+! Bilinear interpolation, to find u(yb,zb), v(yb,zb), w(yb,zb) in the square  jc=int(yb), jc+1,  kc=int(zb), kc+1
 ! Non-dimensional velocity components from model
-         call bilin(xb,yb,u,v,w,rho,ic,jc,nx,ny,ux,vx,wx,dens)
+         call bilin(yb,zb,u,v,w,rho,jc,kc,ny,nz,ux,vx,wx,dens)
 
 ! Non-dimensional utheta (non-dim omegand and distance relm(ichord)
          utheta =  omegand*relm(ichord) - wx*costheta - vx*sintheta
@@ -216,7 +226,7 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
          urel2  = ux**2 + utheta**2
 
 ! Non-dimensional dynamic pressure
-         q= 0.5 * dens * urel2
+         dynpres= 0.5 * dens * urel2
 
 ! Flowangle between relative windspeed and rotor plane
          phi = atan2(ux,utheta)
@@ -240,41 +250,41 @@ subroutine actuatorline(forceN,forceT,nx,ny,ipos,jpos,thetain,iradius,u,v,w,rho)
          endif
 
 ! Non-dimensional lift and drag forces per blade element
-         forceL(ichord,iblade) = q * chord(ichord) * dc(ichord) * clift(ichord) * tiploss
-         forceD(ichord,iblade) = q * chord(ichord) * dc(ichord) * cdrag(ichord) * tiploss
+         forceL(ichord,iblade) = dynpres * chord(ichord) * dc(ichord) * clift(ichord) * tiploss
+         forceD(ichord,iblade) = dynpres * chord(ichord) * dc(ichord) * cdrag(ichord) * tiploss
 
          forceT(ichord,iblade) =forceL(ichord,iblade)*sinphi(ichord) - forceD(ichord,iblade)*cosphi(ichord)
          forceN(ichord,iblade) =forceL(ichord,iblade)*cosphi(ichord) + forceD(ichord,iblade)*sinphi(ichord)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Diagnostocs
-         if (iblade == 1 .and. ifirst == ialmout) then
-         ! Lift and drag forces force(LD) per chord in Newton scaled by chord length (DC) to get Newton/meter.
-            newton=(p2l%length**2)*p2l%rho*(p2l%vel**2)
-            fL(ichord)=forceL(ichord,iblade)*newton/(dc(ichord)*p2l%length)
-            fD(ichord)=forceD(ichord,iblade)*newton/(dc(ichord)*p2l%length)
-
-         ! Tangential (rotational force) and normal (drag forces) f(TN) in N/m as in zho19a
-            fT(ichord)=fL(ichord)*sinphi(ichord)  - fD(ichord)*cosphi(ichord)
-            fN(ichord)=fL(ichord)*cosphi(ichord)  + fD(ichord)*sinphi(ichord)
-
-         ! Non-dimensional tangent and normal  forces using asm20a scaling
-            fTa(ichord)=fT(ichord)/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
-            fNa(ichord)=fN(ichord)/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
-         endif
+!         if (iblade == 1 .and. ifirst == ialmout) then
+!         ! Lift and drag forces force(LD) per chord in Newton scaled by chord length (DC) to get Newton/meter.
+!            newton=(p2l%length**2)*p2l%rho*(p2l%vel**2)
+!            fL(ichord)=forceL(ichord,iblade)*newton/(dc(ichord)*p2l%length)
+!            fD(ichord)=forceD(ichord,iblade)*newton/(dc(ichord)*p2l%length)
+!
+!         ! Tangential (rotational force) and normal (drag forces) f(TN) in N/m as in zho19a
+!            fT(ichord)=fL(ichord)*sinphi(ichord)  - fD(ichord)*cosphi(ichord)
+!            fN(ichord)=fL(ichord)*cosphi(ichord)  + fD(ichord)*sinphi(ichord)
+!
+!         ! Non-dimensional tangent and normal  forces using asm20a scaling
+!            fTa(ichord)=fT(ichord)/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
+!            fNa(ichord)=fN(ichord)/(p2l%rho*(uini*p2l%vel)**2*radius*p2l%length)
+!         endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       enddo
       theta=theta+rad120
    enddo
 
-   if (ifirst == ialmout) then
+!   if (ifirst == ialmout) then
 ! To recover results from Asmuth 2020 (fig 4):
 !    Run with constant RPM of 8.95 (tipspeedratio set to 0.0 meaning constant RPM),
 !    use inflow velocity of 8.00 m/s,
 !    and save result after a significant spinup.
-      call turbines_print_blade(clift,cdrag,fL,fD,fN,fT,fTa,fNa,radius)
-   endif
+!      call turbines_print_blade(clift,cdrag,fL,fD,fN,fT,fTa,fNa,radius)
+!   endif
 
 end subroutine
 end module

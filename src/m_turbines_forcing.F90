@@ -114,7 +114,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
       v_h = slice_v
       w_h = slice_w
       r_h = slice_r
-      call actuatorline(forceN_h,forceT_h,ny,nz,jp,kp,theta,iradius,u_h,v_h,w_h,r_h)
+      call actuatorline(forceN_h,forceT_h,jp,kp,theta,iradius,u_h,v_h,w_h,r_h)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Establising the forces from the blades on the fluid

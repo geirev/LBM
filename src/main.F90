@@ -101,12 +101,6 @@ program LatticeBoltzmann
    if (inflowturbulence)   call inflow_turbulence_init()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Print GPU memory use
-#ifdef _CUDA
-   call gpu_meminfo('ini')
-#endif
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Including solid bodies like cylinder and urban city as blanking of grid cells
    lblanking = .false.
 
@@ -216,6 +210,7 @@ program LatticeBoltzmann
 
 ! Drift of f1 returned in f2
       call drift(f2,f1)
+!      call drift_macrovars(f2,f1,u,v,w,rho)
 
 ! Swap such that f2 becomes f1 in next time step
       tmp   => f1

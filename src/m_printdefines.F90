@@ -22,5 +22,11 @@ subroutine printdefines()
    print*, "Single precision code"
 #endif
 
+#ifdef NETCDF
+   print*, "Netcdf libraries included"
+#else
+   print*, "No Netcdf"
+#endif
+
 end subroutine
 end module

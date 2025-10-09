@@ -94,9 +94,9 @@ subroutine turbines_compute_force_kernel(force, forceN, forceT, thetain, jpos, k
             theta_local = theta_local + rad120
          end do
 
-         force(i,j,k,1) = force(i,j,k,1) + f1
-         force(i,j,k,2) = force(i,j,k,2) + f2
-         force(i,j,k,3) = force(i,j,k,3) + f3
+         force(i,j,k,1) =  f1
+         force(i,j,k,2) =  f2
+         force(i,j,k,3) =  f3
 #ifndef _CUDA
       enddo
       enddo

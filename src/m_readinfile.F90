@@ -135,6 +135,7 @@ subroutine readinfile()
          read(10,*,err=100)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
          read(10,*,err=100)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
          do n=1,nturbines
+            read(10,'(a)',err=100)ver
             read(10,*,err=100)ipos(n)
             read(10,*,err=100)jpos(n)
             read(10,*,err=100)kpos(n)

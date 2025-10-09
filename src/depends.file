@@ -318,11 +318,11 @@ m_turbines_forcing_kernel_C.o:      m_turbines_init.o
 m_turbines_forcing.o:      m_actuatorline.o
 m_turbines_forcing.o:      makefile
 m_turbines_forcing.o:      m_fequil3_block_kernel.o
+m_turbines_forcing.o:      m_fequil3_block_kernel_opt.o
 m_turbines_forcing.o:      mod_D3Q27setup.o
 m_turbines_forcing.o:      mod_dimensions.o
 m_turbines_forcing.o:      mod_nrel5mw.o
 m_turbines_forcing.o:      m_readinfile.o
-m_turbines_forcing.o:      m_tmp.o
 m_turbines_forcing.o:      m_turbines_compute_force_kernel.o
 m_turbines_forcing.o:      m_turbines_compute_force.o
 m_turbines_forcing.o:      m_turbines_forcing_kernel_A.o

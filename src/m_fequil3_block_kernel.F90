@@ -12,9 +12,9 @@ contains
    use mod_D3Q27setup, only : nl
    implicit none
    integer, value       :: ii
-   real, intent(out)    :: feq(nl,ii,ny,nz)
-   real, intent(in)     :: rho(ii,ny,nz)
-   real, intent(in)     :: velocity(3,ii,ny,nz)
+   real, intent(out), contiguous    :: feq(nl,ii,ny,nz)
+   real, intent(in), contiguous     :: rho(ii,ny,nz)
+   real, intent(in), contiguous     :: velocity(3,ii,ny,nz)
    real, intent(in)     :: H2(3,3,nl)
    real, intent(in)     :: H3(3,3,3,nl)
    real, intent(in)     :: weights(nl)
@@ -34,7 +34,7 @@ contains
    real :: ratio
    real :: vratio
    real :: cu
-   real :: tmp
+   real :: tmp0,tmp1,tmp2,tmp3,rr
 
 
    integer :: i, j, k, l, p, q, r
@@ -53,60 +53,52 @@ contains
    do i=1,ii
 #endif
 
-! Copy u,v,w to vel(1:3)
       vel(1)=velocity(1,i,j,k)
       vel(2)=velocity(2,i,j,k)
       vel(3)=velocity(3,i,j,k)
+      rr=rho(i,j,k)
 
-! 1. order
-      do l=1,nl
-         cu = real(cxs(l))*vel(1) + real(cys(l))*vel(2) + real(czs(l))*vel(3)
-         feq(l,i,j,k) = rho(i,j,k) * weights(l) * (1.0 + cu*inv1cs2)
-      enddo
-
-! A0_2
       do q=1,3
       do p=1,3
          A0_2(p,q)=rho(i,j,k)*vel(p)*vel(q)*inv2cs4
       enddo
       enddo
 
-! 2nd order equilibrium distribution \citet{fen21a} Eq. (32) or jac18a eq (27)
-      do l=1,nl
-         tmp=0.0
-         do q=1,3
-         do p=1,3
-            tmp=tmp + H2(p,q,l)*A0_2(p,q)
-         enddo
-         enddo
-         feq(l,i,j,k)=feq(l,i,j,k) + weights(l)*tmp
-      enddo
-
-! Third order components
      if (ibgk == 3) then
-! compute A0_3 using A0_2 to save arithmetic
          do r=1,3
-         vratio = vel(r) * ratio        ! combine vel(r) with ratio to 1 value
+         vratio = vel(r) * ratio
          do q=1,3
          do p=1,3
             A0_3(p,q,r) = A0_2(p,q) * vratio
          enddo
          enddo
          enddo
+      endif
 
-         do l=2,nl
-            tmp=0.0
+      do l=1,nl
+         cu = real(cxs(l))*vel(1) + real(cys(l))*vel(2) + real(czs(l))*vel(3)
+         tmp1 =  rho(i,j,k) * (1.0 + cu*inv1cs2)
+
+         tmp2=0.0
+         do q=1,3
+         do p=1,3
+            tmp2=tmp2 + H2(p,q,l)*A0_2(p,q)
+         enddo
+         enddo
+
+         tmp3=0.0
+         if (ibgk == 3) then
             do r=1,3
             do q=1,3
             do p=1,3
-               tmp=tmp + H3(p,q,r,l)*A0_3(p,q,r)
+               tmp3=tmp3 + H3(p,q,r,l)*A0_3(p,q,r)
             enddo
             enddo
             enddo
-            feq(l,i,j,k)=feq(l,i,j,k) + weights(l)*tmp
-         enddo
-       endif
+         endif
+         feq(l,i,j,k)= weights(l)*(tmp1 + tmp2 + tmp3)
 
+      enddo
 
 #ifndef _CUDA
     enddo

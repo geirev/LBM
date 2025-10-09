@@ -13,10 +13,10 @@ subroutine turbines_forcing(rho,u,v,w,it)
    use m_turbines_compute_force_kernel
    use m_turbines_print_force
    use m_fequil3_block_kernel
-   use m_tmp
    use m_turbines_forcing_kernel_A
    use m_turbines_forcing_kernel_B
    use m_turbines_forcing_kernel_C
+   use m_fequil3_block_kernel_opt
 #ifdef _CUDA
    use cudafor
    use iso_c_binding, only: c_sizeof
@@ -132,18 +132,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
         &(force,forceN,forceT,theta,jp,kp,iradius,relm_d)
-
-#ifdef _CUDA
-      !istat = cudaDeviceSynchronize()
-#endif
-
-!!      call turbines_compute_force(force_h,forceN_h,forceT_h,theta,jp,kp,iradius)
-!!      force(0:ieps,1:ny,1:nz,1:3)=force_h(0:ieps,1:ny,1:nz,1:3)
-!      if (it<2) then
-!         force_h=force
-!         call turbines_print_force(force_h,it)
-!      endif
-
+! output is force from the blades projected onto the grid with a Gaussian smooting kernel.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! kupershtokh forcing
@@ -161,6 +150,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #ifdef _CUDA
       !istat = cudaDeviceSynchronize()
 #endif
+! out put is du from force  and vel from u
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Compute equilibrium distribution for the turbine grid points
@@ -170,6 +160,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
       tz=1;  bz=(nz+tz-1)/tz
 #endif
       call fequil3_block_kernel&
+      !call fequil3_block_kernel_opt&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
@@ -177,19 +168,20 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #ifdef _CUDA
       !istat = cudaDeviceSynchronize()
 #endif
+!output is equilibrium distribution at the gridoints where we apply the forcing.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! copy macro velocities plus actuator line forcing and density to vel and rtmp
 #ifdef _CUDA
-      tx=32; bx=(ii+tx-1)/tx
-      ty=8;  by=(ny+ty-1)/ty
-      tz=1;  bz=(nz+tz-1)/tz
+      tx=512; bx=((2*ieps+1)*ny*nz+tx-1)/tx
+      ty=1;  by=1
+      tz=1;  bz=1
 #endif
       call turbines_forcing_kernel_B&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(u,v,w,rho,rtmp,vel,du,dv,dw,ip)
+        &(vel,du,dv,dw)
 #ifdef _CUDA
       !istat = cudaDeviceSynchronize()
 #endif
@@ -203,6 +195,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
 
       call fequil3_block_kernel&
+      !call fequil3_block_kernel_opt&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif

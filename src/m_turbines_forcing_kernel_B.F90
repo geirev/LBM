@@ -1,46 +1,34 @@
 module m_turbines_forcing_kernel_B
+! Assumes vel was set in kernel_A and not changed after
 contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-   subroutine turbines_forcing_kernel_B(u,v,w,rho,rtmp,vel,du,dv,dw,ip)
+   subroutine turbines_forcing_kernel_B(vel,du,dv,dw)
 #ifdef _CUDA
    use cudafor
 #endif
    use mod_dimensions,  only : nx,ny,nz
    use m_turbines_init, only : ieps
    implicit none
-   real, intent(in)     :: rho(nx,ny,nz)
-   real, intent(in)     :: u(nx,ny,nz)
-   real, intent(in)     :: v(nx,ny,nz)
-   real, intent(in)     :: w(nx,ny,nz)
-   real, intent(out)    :: du(-ieps:ieps,ny,nz)
-   real, intent(out)    :: dv(-ieps:ieps,ny,nz)
-   real, intent(out)    :: dw(-ieps:ieps,ny,nz)
-   real, intent(out)    :: rtmp(-ieps:ieps,ny,nz)
-   real, intent(out)    :: vel(3,-ieps:ieps,ny,nz)
-   integer, value       :: ip
-   integer, parameter   :: ii=2*ieps+1
+   integer, parameter :: ntot=(2*ieps+1)*ny*nz
+   real, intent(out)    :: du(ntot)
+   real, intent(out)    :: dv(ntot)
+   real, intent(out)    :: dw(ntot)
+   real, intent(inout)    :: vel(3,ntot)
 
-   integer i,j,k
+   integer i
 
 #ifdef _CUDA
-   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x - ieps -1
-   j = threadIdx%y + (blockIdx%y - 1) * blockDim%y
-   k = threadIdx%z + (blockIdx%z - 1) * blockDim%z
-   if (j > ny .or. k > nz) return
-   if (i < -ieps .or. i > ieps) return
-   if (ip+i < 1 .or. ip+i> nx) return
+   i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
+   if (i > ntot) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(du, dv, dw, rho, ip, u, v, w, rtmp, vel)
-      do k=1,nz
-      do j=1,ny
-      do i=-ieps,ieps
+!$OMP PARALLEL DO PRIVATE(i) SHARED(du, dv, dw, vel)
+      do i=1,ntot
 #endif
-         rtmp(i,j,k) =rho(ip+i,j,k)
-         vel(1,i,j,k)=u(ip+i,j,k)+du(i,j,k)
-         vel(2,i,j,k)=v(ip+i,j,k)+dv(i,j,k)
-         vel(3,i,j,k)=w(ip+i,j,k)+dw(i,j,k)
+         vel(1,i)=vel(1,i)+du(i)
+         vel(2,i)=vel(2,i)+dv(i)
+         vel(3,i)=vel(3,i)+dw(i)
 #ifndef _CUDA
       enddo
       enddo

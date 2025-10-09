@@ -14,7 +14,7 @@ contains
    integer, value       :: nturbines
    integer, value       :: n
    integer, parameter   :: ii=nl*(2*ieps+1)*ny*nz
-   real, intent(out)    :: turbine_df(ii,nturbines)
+   real, intent(inout)  :: turbine_df(ii,nturbines)
    real, intent(in)     :: dfeq1(ii)
    real, intent(in)     :: dfeq2(ii)
    integer i

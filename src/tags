@@ -34,8 +34,6 @@ diag	m_diag.F90	/^module
 dimensions	mod_dimensions.F90	/^module
 drift	m_drift.F90	/^module
 drift_kernel	m_drift_kernel.F90	/^module
-drift_macrovars	m_drift_macrovars.F90	/^module
-drift_macrovars_kernel	m_drift_macrovars_kernel.F90	/^module
 dump_elevation	m_dump_elevation.F90	/^module
 fequil3	m_fequil3.F90	/^module
 fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
@@ -49,7 +47,6 @@ inflow_turbulence_forcing	m_inflow_turbulence_forcing.F90	/^module
 inflow_turbulence_init	m_inflow_turbulence_init.F90	/^module
 inipert	m_inipert.F90	/^module
 macrovars	m_macrovars.F90	/^module
-macrovars_finalize_kernel	m_macrovars_finalize_kernel.F90	/^module
 macrovars_kernel	m_macrovars_kernel.F90	/^module
 mkinfile	m_mkinfile.F90	/^module
 mod_D3Q27setup	mod_D3Q27setup.F90	/^module
@@ -91,8 +88,6 @@ m_cylinder	m_cylinder.F90	/^module
 m_diag	m_diag.F90	/^module
 m_drift	m_drift.F90	/^module
 m_drift_kernel	m_drift_kernel.F90	/^module
-m_drift_macrovars	m_drift_macrovars.F90	/^module
-m_drift_macrovars_kernel	m_drift_macrovars_kernel.F90	/^module
 m_dump_elevation	m_dump_elevation.F90	/^module
 m_fequil3	m_fequil3.F90	/^module
 m_fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
@@ -105,7 +100,6 @@ m_inflow_turbulence_forcing	m_inflow_turbulence_forcing.F90	/^module
 m_inflow_turbulence_init	m_inflow_turbulence_init.F90	/^module
 m_inipert	m_inipert.F90	/^module
 m_macrovars	m_macrovars.F90	/^module
-m_macrovars_finalize_kernel	m_macrovars_finalize_kernel.F90	/^module
 m_macrovars_kernel	m_macrovars_kernel.F90	/^module
 m_mkinfile	m_mkinfile.F90	/^module
 m_netcdfout	m_netcdfout.F90	/^module
@@ -113,6 +107,7 @@ m_nrelliftdrag	m_nrelliftdrag.F90	/^module
 m_nrelreadfoil	m_nrelreadfoil.F90	/^module
 m_postcoll	m_postcoll.F90	/^module
 m_postcoll_kernel	m_postcoll_kernel.F90	/^module
+m_postcoll_kernel_clean	m_postcoll_kernel_clean.F90	/^module
 m_predicted_measurements	m_predicted_measurements.F90	/^module
 m_printdefines	m_printdefines.F90	/^module
 m_pseudo2D	m_pseudo2D.F90	/^module
@@ -132,7 +127,6 @@ m_tecfldsec	m_tecfldsec.F90	/^module
 m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
 m_testing	m_testing.F90	/^module
-m_tmp	m_tmp.F90	/^module
 m_turbines_apply	m_turbines_apply.F90	/^module
 m_turbines_apply_kernel	m_turbines_apply_kernel.F90	/^module
 m_turbines_compute_force	m_turbines_compute_force.F90	/^module
@@ -154,6 +148,7 @@ nrelliftdrag	m_nrelliftdrag.F90	/^module
 nrelreadfoil	m_nrelreadfoil.F90	/^module
 postcoll	m_postcoll.F90	/^module
 postcoll_kernel	m_postcoll_kernel.F90	/^module
+postcoll_kernel_clean	m_postcoll_kernel_clean.F90	/^module
 predicted_measurements	m_predicted_measurements.F90	/^module
 printdefines	m_printdefines.F90	/^module
 pseudo2D	m_pseudo2D.F90	/^module
@@ -174,7 +169,6 @@ tecfldsec	m_tecfldsec.F90	/^module
 tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module
 testing	m_testing.F90	/^module
-tmp	m_tmp.F90	/^module
 turbines_apply	m_turbines_apply.F90	/^module
 turbines_apply_kernel	m_turbines_apply_kernel.F90	/^module
 turbines_compute_force	m_turbines_compute_force.F90	/^module

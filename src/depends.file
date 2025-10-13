@@ -239,6 +239,7 @@ m_postcoll.o:      m_readinfile.o
 m_postcoll.o:      m_wtime.o
 m_predicted_measurements.o:      makefile
 m_predicted_measurements.o:      mod_dimensions.o
+m_predicted_measurements.o:      m_readinfile.o
 m_printdefines.o:      makefile
 m_pseudo2D.o:      makefile
 m_pseudo2D.o:      mod_fftw3.o

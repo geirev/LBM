@@ -107,7 +107,6 @@ m_nrelliftdrag	m_nrelliftdrag.F90	/^module
 m_nrelreadfoil	m_nrelreadfoil.F90	/^module
 m_postcoll	m_postcoll.F90	/^module
 m_postcoll_kernel	m_postcoll_kernel.F90	/^module
-m_postcoll_kernel_clean	m_postcoll_kernel_clean.F90	/^module
 m_predicted_measurements	m_predicted_measurements.F90	/^module
 m_printdefines	m_printdefines.F90	/^module
 m_pseudo2D	m_pseudo2D.F90	/^module
@@ -148,7 +147,6 @@ nrelliftdrag	m_nrelliftdrag.F90	/^module
 nrelreadfoil	m_nrelreadfoil.F90	/^module
 postcoll	m_postcoll.F90	/^module
 postcoll_kernel	m_postcoll_kernel.F90	/^module
-postcoll_kernel_clean	m_postcoll_kernel_clean.F90	/^module
 predicted_measurements	m_predicted_measurements.F90	/^module
 printdefines	m_printdefines.F90	/^module
 pseudo2D	m_pseudo2D.F90	/^module

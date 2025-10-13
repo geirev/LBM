@@ -1,5 +1,4 @@
 module m_predicted_measurements
-logical :: lmeasurements=.false.
 type measurement
    character(len=1)c
    integer i
@@ -10,6 +9,7 @@ end type
 contains
 subroutine predicted_measurements(u,v,w,it)
    use mod_dimensions
+   use m_readinfile, only : lmeasurements
    implicit none
    real, intent(in) :: u(nx,ny,nz)
    real, intent(in) :: v(nx,ny,nz)
@@ -18,19 +18,36 @@ subroutine predicted_measurements(u,v,w,it)
    attributes(device) u,v,w
 #endif
    integer, intent(in) :: it
-   integer, parameter :: nrobs=6
-   type(measurement) obs(nrobs)
+   integer nrobs
+   type(measurement), allocatable :: obs(:)
    character(len=100) fname
    character(len=5) cit
    integer iunit
-   integer m
+   integer m,ii
+   logical ex
 
-   obs(1)%i=70 ; obs(1)%j=28; obs(1)%c='u'
-   obs(2)%i=70 ; obs(2)%j=28; obs(2)%c='v'
-   obs(3)%i=86 ; obs(3)%j=85; obs(3)%c='u'
-   obs(4)%i=86 ; obs(4)%j=85; obs(4)%c='v'
-   obs(5)%i=102; obs(5)%j=62; obs(5)%c='u'
-   obs(6)%i=102; obs(6)%j=62; obs(6)%c='v'
+! Reading the measurement locations and types
+   inquire(file='measurement_loc.in',exist=ex)
+   if (.not.ex) then
+      print *,'The file measurement_loc.in does not exist'
+      print *,'Are you sure lmeasurents should be true in infile,in?'
+      stop
+   endif
+
+   open(newunit=iunit,file='measurement_loc.in',status='old',action='read')
+      m=0
+      do
+        read(iunit,*,end=100,err=100)ii
+        m=m+1
+      enddo
+      100 nrobs=m
+      print *,'nrobs=',nrobs
+      if (allocated(obs)) deallocate(obs); allocate(obs(nrobs))
+      rewind(iunit)
+      do m=1,nrobs
+        read(iunit,*)obs(m)%i, obs(m)%j, obs(m)%c
+      enddo
+   close(iunit)
 
    do m=1,nrobs
       if (obs(m)%c == 'u') then
@@ -50,5 +67,18 @@ subroutine predicted_measurements(u,v,w,it)
       enddo
    close(iunit)
 
+   write(cit,'(i5.5)')it
+   fname='measurement_locations.dat'
+   open(newunit=iunit,file=trim(fname), status='unknown', action='write')
+      write(iunit,'(a)')'TITLE = "Measurement locations"'
+      write(iunit,'(a)')'VARIABLES = "num" "i" "j" "k" "value"'
+      write(iunit,'(a,i8,a)')' ZONE  F=POINT, I= ', nrobs,' J=  1, K=1'
+      do m=1,nrobs
+         write(iunit,'(i5,tr1,i4,i4,a,f10.5)')m,obs(m)%i,obs(m)%j,' 1 ',obs(m)%d
+      enddo
+   close(iunit)
+
 end subroutine
 end module
+
+

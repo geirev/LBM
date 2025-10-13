@@ -15,8 +15,15 @@ module mod_D3Q27setup
    real, parameter :: cs4=1.0/9.0
    real, parameter :: cs6=1.0/27.0
 
-
-#ifdef D3Q19
+#ifdef D2Q9
+! D2Q9 weights: [rest, 4 faces, 4 diagonals]
+   integer, parameter :: cxs_h(1:nl)     = [0, 1,-1, 0, 0, 1,-1, 1,-1]
+   integer, parameter :: cys_h(1:nl)     = [0, 0, 0, 1,-1, 1, 1,-1,-1]
+   integer, parameter :: bounce_h(1:nl)  = [1, 3, 2, 5, 4, 9, 8, 7, 6]
+   real,    parameter :: weights_h(1:nl) = [4.0/9.0, &
+                                            1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0, &
+                                            1.0/36.0, 1.0/36.0, 1.0/36.0, 1.0/36.0]
+#elif defined(D3Q19)
 ! D3Q19 weights: [rest, 6 faces, 12 edges]
    integer, parameter :: cxs_h(1:nl)     = [0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1,-1, 1, 0, 0,-1, 1, 0, 0]
    integer, parameter :: cys_h(1:nl)     = [0, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 0, 0,-1, 1]

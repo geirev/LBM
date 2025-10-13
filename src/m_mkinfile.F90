@@ -8,6 +8,7 @@ open(10,file='infile.in',status='new')
    write(10,'(a)')' F                ! ltesting      : testing final solution while developing code.'
    write(10,'(a)')' F                ! lnodump       : No saving of diagnostics or restarts while optimizing GPU code'
    write(10,'(a)')' 256 1 1          ! ntx, nty, ntz : number of threads per block in x, y, and z direction'
+   write(10,'(a)')' F                ! lmeasurements : Saves predicted measurements for data assimilation experiments'
    write(10,'(a)')'# Experiment configuration'
    write(10,'(a)')' windfarm         ! experiment    : Cylinder, airfoil etc'
    write(10,'(a)')' 3                ! ibgk          : BGK order, ibgk=2 standard second order, ibgk=3 gives third order BGK'

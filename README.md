@@ -2,13 +2,13 @@
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
 ## Relese notes:
-The latest pushes have been major upgrades. Speedup is now around 92 on GPU relative a single CPU core.
-   -The code uses pointers to switch beteen f1 and f2 every second timestep. This allows for a significant simplification
+**The latest pushes have been major upgrades. Speedup is now around 92 on GPU relative a single CPU core.**
+  - The code uses pointers to switch beteen f1 and f2 every second timestep. This allows for a significant simplification
     for the implementation of boundary conditions and reduces the load on the GPU for the postcoll routine.
-   -postcoll now replaces fequil2, regularization, vreman and collisions, which are all done in one common kernel.
-   -The actuatorline model was a mess, and I have now cleaned it up and tested it again.
-   -I have changed the format of the infile.in somewhat. Also, if there is no infile.in present, Boltzmann will generate one for you.
-   -I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole f in a file at the end of the
+  - postcoll now replaces fequil2, regularization, vreman and collisions, which are all done in one common kernel.
+  - The actuatorline model was a mess, and I have now cleaned it up and tested it again.
+  - I have changed the format of the infile.in somewhat. Also, if there is no infile.in present, Boltzmann will generate one for you.
+  - I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole f in a file at the end of the
     simulation e.g., testing000200.uf if you run 200 time-steps. All subsequent 200 time-steps runs will then compute the difference between the latest
     simulations and the reference testing000200.uf file. Please use this approach while modifying code to reduce the risk of introducing bugs.  A tolerance of
     (RMSE=1.0E-07 and MAXERR=1.0E-06) are acceptable.
@@ -225,43 +225,10 @@ and the gpu card is "Nvidia RTX 5090."
 
 These plots clearly show that GPU is the optimal choice for heavy simulations, while CPU scaling beyond 10-16 cores is inefficient.
 
-For the GPU simultion the timing of different routines were as follows after a first optimization pass doing the standards:
 
-```bash
---------------------------------------------------------------------------------------------
-                       gfortran nvfortran   nvfortran   nvidia    nvidia     Speedup
-                         1 core    1 core    13 cores   DP-GPU    SP-GPU     1 core/SP-GPU
---------------------------------------------------------------------------------------------
-initialization      =                0.82        0.70     0.83     0.735       1.12x
-turbine forcing     =                5.06        2.27     0.92     0.501      10.12x
-turbulence forcing  =                0.47        0.16     0.14     0.039      15.66x
-equil               =              193.47       67.89    16.96     2.250      86.00x
-regularization      =              219.71       75.90    11.84     2.887      76.10x
-vreman              =               98.37       20.11     2.70     0.585     168.15x
-collisions          =               95.44       20.96     2.42     1.321      72.24x
-applyturbines       =                0.37        0.54     0.08     0.048       7.70x
-applyturbulence     =                0.06        0.08     0.01     0.007       8.57x
-solids              =                0.00        0.00     0.00     0.000
-boundarycond        =                1.64        1.06     1.46     0.680       2.41x
-drift               =               42.98       20.57     4.97     2.646      16.24x
-macrovars           =               21.44        5.59     1.48     0.486      44.12x
-diag                =                2.06        2.00     2.32     2.019       1.02x
-averaging and turb  =                0.21        0.21     0.31     0.201       1.00x
-final stuff         =                1.23        1.27     2.47     1.286       1.00x
-compute_f(neq)      =                0.00        0.00     0.00     0.000
---------------------------------------------------------------------------------------------
-Total wall time     =              683.40      219.38    48.97    15.697      43.54x
---------------------------------------------------------------------------------------------
-Total time stepping =              679.28      215.39    43.34    11.655      58.28x
---------------------------------------------------------------------------------------------
-```
-
-The total speedup is 58.28x when neglecting initalization and saving diagnostics.
+The total speedup is 92x when neglecting initalization and saving diagnostics.
 
 DP-GPU is almost four times slower than SP-GPU.
-
-Optimization should now continue on the drift kernel.
-
 
 ## 4. Run the code
 

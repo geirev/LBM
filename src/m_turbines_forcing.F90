@@ -16,7 +16,6 @@ subroutine turbines_forcing(rho,u,v,w,it)
    use m_turbines_forcing_kernel_A
    use m_turbines_forcing_kernel_B
    use m_turbines_forcing_kernel_C
-   use m_fequil3_block_kernel_opt
 #ifdef _CUDA
    use cudafor
    use iso_c_binding, only: c_sizeof
@@ -160,7 +159,6 @@ subroutine turbines_forcing(rho,u,v,w,it)
       tz=1;  bz=(nz+tz-1)/tz
 #endif
       call fequil3_block_kernel&
-      !call fequil3_block_kernel_opt&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
@@ -195,7 +193,6 @@ subroutine turbines_forcing(rho,u,v,w,it)
 #endif
 
       call fequil3_block_kernel&
-      !call fequil3_block_kernel_opt&
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif

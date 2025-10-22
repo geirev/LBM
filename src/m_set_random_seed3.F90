@@ -5,25 +5,29 @@ subroutine set_random_seed3
    implicit none
 
    integer , dimension(8)::val
-   integer cnt
    integer sze,i
    integer, allocatable, dimension(:):: pt
    logical ex
 
-   call DATE_AND_TIME(values=val)!; print *,'VAL:',val(:)
-   call SYSTEM_CLOCK(count=cnt)!; print *,'CNT:',cnt
-   call RANDOM_SEED(size=sze)!  ; print *,'sze:',sze
+   integer :: clock_max
+   integer :: clock_rate
+   integer :: clock_reading
+
+   call RANDOM_SEED(size=sze)
    allocate(pt(sze))
-   do i=1,sze,2
-      pt(i) = val(8)*val(7)
-      pt(i+1) = cnt
-   enddo
+
    inquire(file='seed.dat',exist=ex)
    if (ex) then
       open(10,file='seed.dat')
          read(10,*)pt
       close(10)
    else
+      do i=1,sze
+         call DATE_AND_TIME(values=val)
+         call system_clock(clock_reading, clock_rate, clock_max)
+         pt(i) = val(8)*val(7)+clock_reading
+      enddo
+
       open(10,file='seed.dat')
          write(10,*)pt
       close(10)

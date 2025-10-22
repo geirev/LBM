@@ -116,6 +116,7 @@ m_regularization	m_regularization.F90	/^module
 m_regularization_kernel	m_regularization_kernel.F90	/^module
 m_rhotest	m_rhotest.F90	/^module
 m_saverestart	m_saverestart.F90	/^module
+m_save_uvw	m_save_uvw.F90	/^module
 m_seedmanagement	m_seedmanagement.F90	/^module
 m_set_random_seed3	m_set_random_seed3.F90	/^module
 m_solids	m_solids.F90	/^module
@@ -156,6 +157,7 @@ regularization	m_regularization.F90	/^module
 regularization_kernel	m_regularization_kernel.F90	/^module
 rhotest	m_rhotest.F90	/^module
 saverestart	m_saverestart.F90	/^module
+save_uvw	m_save_uvw.F90	/^module
 seedmanagement	m_seedmanagement.F90	/^module
 set_randoseed3	m_set_random_seed3.F90	/^module
 shapiro	mod_shapiro.F90	/^module

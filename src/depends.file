@@ -41,6 +41,7 @@ main.o:      m_readrestart.o
 main.o:      m_regularization.o
 main.o:      m_rhotest.o
 main.o:      m_saverestart.o
+main.o:      m_save_uvw.o
 main.o:      m_seedmanagement.o
 main.o:      m_set_random_seed3.o
 main.o:      m_solids.o
@@ -265,6 +266,9 @@ m_saverestart.o:      makefile
 m_saverestart.o:      mod_D3Q27setup.o
 m_saverestart.o:      mod_dimensions.o
 m_saverestart.o:      m_readinfile.o
+m_save_uvw.o:      makefile
+m_save_uvw.o:      mod_dimensions.o
+m_save_uvw.o:      m_readinfile.o
 m_seedmanagement.o:      makefile
 m_seedmanagement.o:      m_set_random_seed3.o
 m_set_random_seed3.o:      makefile

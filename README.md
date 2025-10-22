@@ -210,9 +210,9 @@ A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain 
 single-core     (gfortran)  : 959.78 s   (make -B GFORTRAN=1)
 single-core     (nvfortran) : 679.28 s   (make -B)
 open-mp 13 cores (nvfortran): 215.39 s   (make -B MP=1)
-GPU             (nvfortran) :  11.66 s   (make -B CUDA=1)
+GPU             (nvfortran) :   7.37 s   (make -B CUDA=1)
 ```
-The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 indepenent cores)
+The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 independent cores)
 and the gpu card is "Nvidia RTX 5090."
 
 
@@ -246,6 +246,7 @@ The example/uvel.orig file defines an atmospheric boundary layer if it is found 
 To execute the code run:
 
 ```bash
+ulimit -s unlimited
 boltzmann
 ```
 

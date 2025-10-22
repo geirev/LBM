@@ -34,6 +34,7 @@ program LatticeBoltzmann
    use m_regularization
    use m_rhotest
    use m_saverestart
+   use m_save_uvw
    use m_seedmanagement
    use m_set_random_seed3
    use m_solids
@@ -260,6 +261,7 @@ program LatticeBoltzmann
    if (allocated(ww       ))  deallocate(ww            )
    if (allocated(rr       ))  deallocate(rr            )
 
+   call save_uvw(it,u,v,w)
    call testing(it,f1,f2)
 
 end program LatticeBoltzmann

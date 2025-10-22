@@ -66,6 +66,7 @@ F90SOURCE = \
 	m_regularization_kernel.F90\
 	m_rhotest.F90\
 	m_saverestart.F90\
+	m_save_uvw.F90\
 	m_seedmanagement.F90\
 	m_set_random_seed3.F90\
 	m_solids.F90\

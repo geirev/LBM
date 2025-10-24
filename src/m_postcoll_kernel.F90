@@ -185,7 +185,6 @@ contains
       endif
 
 ! vreman stuff
-
 ! Eq (11) from Jacob 2018 is identical to the 33a from Feng (2021)
       if (ivreman == 1) then
          do q=1,3

@@ -35,7 +35,7 @@ contains
    if (i < -ieps .or. i > ieps) return
    if (ip+i < 1 .or. ip+i> nx) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(force, du, dv, dw, rho, iradius, u, v, w, ip, rtmp, vel)
+!$OMP PARALLEL DO PRIVATE(i,j,k,rr) SHARED(force, du, dv, dw, rho, iradius, u, v, w, ip, rtmp, vel)
       do k=1,nz
       do j=1,ny
       do i=-ieps,ieps

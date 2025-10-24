@@ -31,7 +31,7 @@ subroutine turbines_apply_kernel(f,df,tau,ip,n,nturbines)
 !$OMP SHARED(f,df,ip)
       do k=1,nz
       do j=1,ny
-      do i=ip-ieps,ip+ieps
+      do i=max(1,ip-ieps),min(nx,ip+ieps)
 #endif
          do l=1,nl
             !f(l,i,j,k) = f(l,i,j,k) + fac*df(l,i-ip,j,k,n)

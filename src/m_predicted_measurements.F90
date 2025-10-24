@@ -9,7 +9,6 @@ end type
 contains
 subroutine predicted_measurements(u,v,w,it)
    use mod_dimensions
-   use m_readinfile, only : lmeasurements
    implicit none
    real, intent(in) :: u(nx,ny,nz)
    real, intent(in) :: v(nx,ny,nz)

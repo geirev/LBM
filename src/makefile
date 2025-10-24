@@ -27,9 +27,8 @@ FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
           -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast
 else
-FFLAGS = -c -O2 -g -ffpe-trap=invalid -lineinfo \
-      -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
-      -Mlarge_arrays -traceback -Ktrap=fp
+FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback
+#FFLAGS = -c -O2 -g -ffpe-trap=invalid -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback -Ktrap=fp
 endif
 LINKFLAGS =
 
@@ -39,6 +38,10 @@ endif
 
 ifdef NETCDF
 FFLAGS+= -DNETCDF
+endif
+
+ifdef GFORTRAN
+FFLAGS+= -DGFORTRAN
 endif
 
 ifdef DP
@@ -75,9 +78,9 @@ F77FLG =
 F90FLG =
 
 ifdef CUDA
-LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 -lcublas
+LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 
 else
-LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 -lnvblas
+LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 
 endif
 
 ifdef DP
@@ -97,18 +100,19 @@ BINDIR = $(HOME)/bin
 .F90.o:
 	@mkdir -p $(BUILD)
 	@rm -f ./$(BUILD)/$*.*
-	echo
+	@echo
 	cd $(BUILD) ; $(F90) $(FFLAGS) $(F90FLG) -o $*.o ../src/$*.F90
 
 .F.o:
 	@mkdir -p $(BUILD)
 	@rm -f ./$(BUILD)/$*.*
-	echo
+	@echo
 	cd $(BUILD) ; $(F77) $(FFLAGS) $(F77FLG) -o $*.o ../src/$*.F
 
 .c.o:
 	@mkdir -p $(BUILD)
 	@rm -f ./$(BUILD)/$*.*
+	@echo
 	cd $(BUILD) ; gcc -c ../src/$*.c
 
 
@@ -123,7 +127,7 @@ OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
 all: new $(TARGET) install
 
-libs: libenkfanalysis.a -lcuda -lcublas
+libs: libenkfanalysis.a -lcuda 
 
 
 libenkfanalysis.a:
@@ -140,7 +144,7 @@ install:
 clean:
 	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a *.bc
 
-new: source depend
+new: source depend tags
 
 timer.o: timer.c
 	cd ./$(BUILD)

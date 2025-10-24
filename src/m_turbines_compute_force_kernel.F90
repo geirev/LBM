@@ -43,7 +43,7 @@ subroutine turbines_compute_force_kernel(force, forceN, forceT, thetain, jpos, k
 
     ! compute global thread indices (CUDA Fortran are 1-based)
 #ifdef _CUDA
-    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x  -1  ! i=0...0eps
+    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x  -1  ! i=0...ieps
     j = threadIdx%y + (blockIdx%y - 1) * blockDim%y      ! 1..ny
     k = threadIdx%z + (blockIdx%z - 1) * blockDim%z      ! 1..nz
 
@@ -54,8 +54,8 @@ subroutine turbines_compute_force_kernel(force, forceN, forceT, thetain, jpos, k
 #else
 !$OMP PARALLEL DO PRIVATE(i,j,k,f1,f2,f3,theta_local,costheta,sintheta,ichord,iblade,yp,zp,gauss)&
 !$OMP  &SHARED(force, jpos, kpos, y0,z0, relm)
-      do k=1,nz
-      do j=1,ny
+      do k=ka,kb
+      do j=ja,jb
       do i=0,ieps
 #endif
 
@@ -92,7 +92,7 @@ subroutine turbines_compute_force_kernel(force, forceN, forceT, thetain, jpos, k
             end do
 
             theta_local = theta_local + rad120
-         end do
+         enddo
 
          force(i,j,k,1) =  f1
          force(i,j,k,2) =  f2

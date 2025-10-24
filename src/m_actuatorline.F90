@@ -75,7 +75,7 @@ subroutine actuatorline(forceN,forceT,jpos,kpos,thetain,iradius,u,v,w,rho)
    real, save :: omega                    ! Rotation speed in radians per second
    real, save :: omegand                  ! Nondimensional rotation speed
 
-   real newton                            ! conversion to Newton
+   !real newton                            ! conversion to Newton
 
 ! local tiploss variables
    real c1,c2,blades,frac,tiploss,denom, acos_arg

@@ -8,6 +8,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
    use m_readinfile,   only : turbrpm,p2l,ipos,jpos,kpos,nturbines,ibgk
    use m_actuatorline
    !use m_actuatorline_kernel
+   use m_testvar
    use m_turbines_init
    use m_turbines_compute_force
    use m_turbines_compute_force_kernel
@@ -18,7 +19,6 @@ subroutine turbines_forcing(rho,u,v,w,it)
    use m_turbines_forcing_kernel_C
 #ifdef _CUDA
    use cudafor
-   use iso_c_binding, only: c_sizeof
 #endif
    use m_wtime
    implicit none
@@ -133,6 +133,10 @@ subroutine turbines_forcing(rho,u,v,w,it)
         &(force,forceN,forceT,theta,jp,kp,iradius,relm_d)
 ! output is force from the blades projected onto the grid with a Gaussian smooting kernel.
 
+      if (it == 1) then
+         call testvar(force,'force',(ieps+1)*ny*nz*3,it)
+      endif
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! kupershtokh forcing
 ! Computing the force induced velocity increments in the circular 3D rotor plane (F/rho)
@@ -219,6 +223,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 
    enddo
    call cpufinish(icpu)
+   if (it == 1)   call testvar(turbine_df,'turbinedf',nl*(2*ieps+1)*ny*nz,it)
 
 end subroutine
 end module

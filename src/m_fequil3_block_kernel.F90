@@ -12,9 +12,15 @@ contains
    use mod_D3Q27setup, only : nl
    implicit none
    integer, value       :: ii
+#ifdef GFORTRAN
+   real, intent(out)   :: feq(nl,ii,ny,nz)
+   real, intent(in)    :: rho(ii,ny,nz)
+   real, intent(in)    :: velocity(3,ii,ny,nz)
+#else
    real, intent(out), contiguous    :: feq(nl,ii,ny,nz)
-   real, intent(in), contiguous     :: rho(ii,ny,nz)
-   real, intent(in), contiguous     :: velocity(3,ii,ny,nz)
+   real, intent(in),  contiguous     :: rho(ii,ny,nz)
+   real, intent(in),  contiguous     :: velocity(3,ii,ny,nz)
+#endif
    real, intent(in)     :: H2(3,3,nl)
    real, intent(in)     :: H3(3,3,3,nl)
    real, intent(in)     :: weights(nl)
@@ -34,7 +40,7 @@ contains
    real :: ratio
    real :: vratio
    real :: cu
-   real :: tmp0,tmp1,tmp2,tmp3,rr
+   real :: tmp1,tmp2,tmp3,rr
 
 
    integer :: i, j, k, l, p, q, r
@@ -46,7 +52,7 @@ contains
    ratio = inv6cs6 / inv2cs4
 #else
    ratio = inv6cs6 / inv2cs4
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, vel, cu, tmp, A0_2, A0_3,  vratio) &
+!$OMP PARALLEL DO collapse(3) DEFAULT(NONE) PRIVATE(i, j, k, l, q, p, r, vel, cu, tmp1, tmp2,tmp3, rr, A0_2, A0_3,  vratio) &
 !$OMP     SHARED(feq, rho, velocity, ii, H2, H3, cxs, cys, czs, cs2, weights, inv1cs2, inv2cs4, inv6cs6, ratio, ibgk)
    do k=1,nz
    do j=1,ny

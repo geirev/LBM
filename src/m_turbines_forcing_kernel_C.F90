@@ -23,7 +23,7 @@ contains
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
    if (i > ii) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,n) SHARED(turbine_df,dfeq1,dfeq2)
+!$OMP PARALLEL DO PRIVATE(i) SHARED(turbine_df,dfeq1,dfeq2)
       do i=1,ii
 #endif
          turbine_df(i,n)=dfeq2(i)-dfeq1(i)

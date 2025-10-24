@@ -58,8 +58,6 @@ subroutine readinfile()
    use m_mkinfile
    implicit none
 
-   character(len=3) ca
-   character(len=3) :: version='1.0'
    character(len=1) ver
    logical ex
    real gridrn

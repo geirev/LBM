@@ -31,8 +31,6 @@ contains
          vel(3,i)=vel(3,i)+dw(i)
 #ifndef _CUDA
       enddo
-      enddo
-      enddo
 #endif
 
 end subroutine

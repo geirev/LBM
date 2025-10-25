@@ -11,8 +11,8 @@ subroutine drift(f,feq)
    use m_wtime
    use m_drift_kernel
    implicit none
-   real, intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)  :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: feq

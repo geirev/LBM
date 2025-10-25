@@ -211,7 +211,6 @@ program LatticeBoltzmann
 
 ! Drift of f1 returned in f2
       call drift(f2,f1)
-!      call drift_macrovars(f2,f1,u,v,w,rho)
 
 ! Swap such that f2 becomes f1 in next time step
       tmp   => f1

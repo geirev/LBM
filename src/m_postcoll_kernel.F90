@@ -71,7 +71,6 @@ contains
       vel(2)=v(i,j,k)
       vel(3)=w(i,j,k)
       dens=rho(i,j,k)
-
 ! A2
       do q=1,3
       do p=1,3
@@ -201,20 +200,22 @@ contains
             enddo
          enddo
 
-         alphamag=0.00001
+         alphamag=0.0
          do q=1,3
          do p=1,3
             alphamag=alphamag+alpha(p,q)*alpha(p,q)
          enddo
          enddo
+         alphamag = max(alphamag, tiny(alphamag))
 
    !! beta = del^2 * alpha' * alpha
          do q=1,3
          do p=1,3
-            beta(p,q)=0.00001
+            beta(p,q)=0.0
             do m=1,3
                beta(p,q)=beta(p,q)+alpha(m,p)*alpha(m,q)
             enddo
+            beta(p,q)=beta(p,q)+eps
          enddo
          enddo
 

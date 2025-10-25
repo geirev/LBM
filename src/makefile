@@ -27,8 +27,8 @@ FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
           -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast
 else
-FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback
-#FFLAGS = -c -O2 -g -ffpe-trap=invalid -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback -Ktrap=fp
+#FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback
+FFLAGS = -c -O2 -g -ffpe-trap=invalid -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback -Ktrap=fp
 endif
 LINKFLAGS =
 

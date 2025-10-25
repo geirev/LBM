@@ -26,15 +26,14 @@ subroutine turbines_apply_kernel(f,df,tau,ip,n,nturbines)
    if (i > nx .or. j > ny .or. k > nz) return
    if (i < ip-ieps  .or. i > ip+ieps) return
 #else
-!$OMP PARALLEL DO collapse(3) DEFAULT(NONE)&
-!$OMP PRIVATE(i,j,k,l,n)&
-!$OMP SHARED(f,df,ip)
+!$OMP PARALLEL DO collapse(2) DEFAULT(NONE)&
+!$OMP PRIVATE(i,j,k,l)&
+!$OMP SHARED(f,df,ip,n)
       do k=1,nz
       do j=1,ny
       do i=max(1,ip-ieps),min(nx,ip+ieps)
 #endif
          do l=1,nl
-            !f(l,i,j,k) = f(l,i,j,k) + fac*df(l,i-ip,j,k,n)
             f(l,i,j,k) = f(l,i,j,k) + df(l,i-ip,j,k,n)
          enddo
 #ifndef _CUDA

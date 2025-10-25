@@ -13,8 +13,8 @@ contains
    implicit none
 
    ! f and feq flattened in (l,i), explicit dims in j,k
-   real, intent(out) :: f(nl*(nx+2), 0:ny+1, 0:nz+1)
-   real, intent(in)  :: feq(nl*(nx+2), 0:ny+1, 0:nz+1)
+   real, intent(inout) :: f(nl*(nx+2), 0:ny+1, 0:nz+1)
+   real, intent(inout) :: feq(nl*(nx+2), 0:ny+1, 0:nz+1)
 
    integer :: idx, j, k, i, l
 

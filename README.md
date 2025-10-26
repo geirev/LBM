@@ -199,6 +199,7 @@ To compile and link the netcdf library you compile as
 ```bash
 make -B CUDA=1 NETCDF=1
 ```
+Some editing of paths to NETCDF libraries etc in the makefile might be necessary.
 
 Running in single precision is about 2-3 faster  than using double precision.
 
@@ -207,10 +208,11 @@ Running on the D3Q19 lattice reduces the CPU time with around 40 % but seems to 
 A test running 200 time steps on single CPU, with OPEN-MP, and GPU for a domain of 121x121x928 gave the following wall times:
 
 ```bash
-single-core     (gfortran)  : 959.78 s   (make -B GFORTRAN=1)
-single-core     (nvfortran) : 679.28 s   (make -B)
-open-mp 13 cores (nvfortran): 215.39 s   (make -B MP=1)
-GPU             (nvfortran) :   7.37 s   (make -B CUDA=1)
+single-core     (gfortran)  :  753.83 s   (make -B GFORTRAN=1)
+single-core     (nvfortran) : 1096.98 s   (make -B)
+open-mp 18 cores (nvfortran):  176.39 s   (make -B MP=1)
+open-mp 24 cores (gfortran) :  140.07 s   (make -B GFORTRAN=1 MP=1)
+GPU             (nvfortran) :    7.00 s   (make -B CUDA=1)
 ```
 The simulations were run on a "Lenovo Legion 7 Pro" laptop with a "Core Ultra 9 275 HX" (having 24 independent cores)
 and the gpu card is "Nvidia RTX 5090."
@@ -219,14 +221,10 @@ and the gpu card is "Nvidia RTX 5090."
 <p align="center">
 <img src="doc/gpu.png" width="500">
 </p>
-<p align="center">
-<img src="doc/speedup.png" width="500">
-</p>
 
 These plots clearly show that GPU is the optimal choice for heavy simulations, while CPU scaling beyond 10-16 cores is inefficient.
 
-
-The total speedup is 92x when neglecting initalization and saving diagnostics.
+Also, for single core and OPEN-MP gfortran is faster than nvfortran with the compiler flags currently used.
 
 DP-GPU is almost four times slower than SP-GPU.
 

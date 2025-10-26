@@ -133,9 +133,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
         &(force,forceN,forceT,theta,jp,kp,iradius,relm_d)
 ! output is force from the blades projected onto the grid with a Gaussian smooting kernel.
 
-      if (it == 1) then
-         call testvar(force,'force',(ieps+1)*ny*nz*3,it)
-      endif
+      !if (it == 1) call testvar(force,'force',(ieps+1)*ny*nz*3,it)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! kupershtokh forcing
@@ -223,7 +221,7 @@ subroutine turbines_forcing(rho,u,v,w,it)
 
    enddo
    call cpufinish(icpu)
-   if (it == 1)   call testvar(turbine_df,'turbinedf',nl*(2*ieps+1)*ny*nz,it)
+   ! if (it == 1)   call testvar(turbine_df,'turbinedf',nl*(2*ieps+1)*ny*nz,it)
 
 end subroutine
 end module

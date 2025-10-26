@@ -25,10 +25,11 @@ ifdef GFORTRAN
 # gfortran flags
 FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
-          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow -Ofast
+          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow
+FFLAGS = -c -Ofast -mcmodel=large -march=native -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math
 else
-#FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback
-FFLAGS = -c -O2 -g -ffpe-trap=invalid -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback -Ktrap=fp
+FFLAGS = -c -Ofast -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays
+FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback -Ktrap=fp -ffpe-trap=invalid
 endif
 LINKFLAGS =
 
@@ -46,7 +47,7 @@ endif
 
 ifdef DP
 ifdef GFORTRAN
-FFLAGS+= -DDOUBLE_PRECISION -fdefault-real-8 
+FFLAGS+= -DDOUBLE_PRECISION -fdefault-real-8
 else
 FFLAGS+= -DDOUBLE_PRECISION -r8
 endif
@@ -54,8 +55,6 @@ endif
 
 ifdef CUDA
 FFLAGS+=  -gpu=lineinfo  -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
-#FFLAGS+=  -gpu=lineinfo  -gpu=cc89,unroll -Minfo=accel -cuda
-#FFLAGS+=  -gpu=lineinfo  -gpu=ccall,unroll -Minfo=accel -cuda
 LINKFLAGS+= -cuda
 endif
 

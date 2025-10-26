@@ -40,9 +40,9 @@ subroutine testing(it,f,feq)
      do i=1,nx
      do l=1,nl
         diff=abs(f(l,i,j,k)-feq(l,i,j,k))
-!        if (diff > 1.0E-4) then
-!           print *,l,i,j,k,diff
-!        endif
+        if (diff > 1.0E-5) then
+           print *,l,i,j,k,diff
+        endif
         fsum=fsum+diff
         fmax=max(diff,fmax)
      enddo
@@ -50,7 +50,7 @@ subroutine testing(it,f,feq)
      enddo
      enddo
      fsum=fsum/real(ntot)
-     print *,'Total misfit: Mean abs error=',fsum,' max error=',fmax
+     print '(a,g12.5,a,g12.5)','Total misfit: Mean abs error=',fsum,' max error=',fmax
    else
       open(newunit=iunit,file='testing'//cit//'.uf',form="unformatted", status='replace')
          f_h=f

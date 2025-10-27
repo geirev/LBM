@@ -28,10 +28,13 @@ FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow
 FFLAGS = -c -Ofast -mcmodel=large -march=native -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math
 else
-FFLAGS = -c -Ofast -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays
-FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -traceback -Ktrap=fp -ffpe-trap=invalid
+ifdef CUDA
+FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=fp 
+else
+FFLAGS = -c -Ofast           -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast
 endif
-LINKFLAGS =
+endif
+LINKFLAGS = 
 
 ifdef D3Q19
 FFLAGS+= -DD3Q19
@@ -55,7 +58,7 @@ endif
 
 ifdef CUDA
 FFLAGS+=  -gpu=lineinfo  -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
-LINKFLAGS+= -cuda
+LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays
 endif
 
 ifdef MP
@@ -64,7 +67,7 @@ FFLAGS+= -fopenmp -DOPEN_MP
 LINKFLAGS+= -fopenmp
 else
 FFLAGS+= -mp  -DOPEN_MP
-LINKFLAGS+= -fopenmp
+LINKFLAGS+= -fopenmp -mcmodel=medium -Mlarge_arrays
 endif
 endif
 

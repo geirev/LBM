@@ -192,7 +192,7 @@ touch:
 	touch makefile
 
 tags: source.files
-	tags.sh
+	../bin/tags.sh
 	#ctags *.F90
 	#f90tags.sh
 

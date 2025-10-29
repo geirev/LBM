@@ -211,11 +211,10 @@ contains
    !! beta = del^2 * alpha' * alpha
          do q=1,3
          do p=1,3
-            beta(p,q)=0.0
+            beta(p,q)=eps
             do m=1,3
                beta(p,q)=beta(p,q)+alpha(m,p)*alpha(m,q)
             enddo
-            beta(p,q)=beta(p,q)+eps
          enddo
          enddo
 

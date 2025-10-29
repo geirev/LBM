@@ -371,9 +371,9 @@ Then you fork the repository to your account (make your personal copy of it) (fo
 This you clone to your local system where you can compile and run.
 
 ```bash
-git clone https://github.com/<YourUserName>/EnKF_seir
-git remote add upstream https://github.com/geirev/EnKF_seir
-git remote add origin git@github.com:<YourUserName>/EnKF_seir
+git clone https://github.com/<YourUserName>/LBM
+git remote add upstream https://github.com/geirev/LBM
+git remote add origin git@github.com:<YourUserName>/LBM
 git remote -v                   #   should list both your local and remote repository
 ```
 

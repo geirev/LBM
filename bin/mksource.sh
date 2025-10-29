@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/bash
 ls *.F90 2>/dev/null |\
 awk  '{
     CC[NR]=$1

@@ -10,7 +10,7 @@ This repository contains a 3D implementation of a Lattice-Boltzmann model on a D
   - I have changed the format of the infile.in. Also, if there is no infile.in present, Boltzmann will generate one for you.
   - I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole distribution function 
     f in a file at the end of the simulation e.g., testing000200.uf if you run 200 time-steps. All subsequent 200 time-steps runs will then compute the
-    difference between the latest simulations and the reference testing000200.uf file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-04) are acceptable.
+    difference between the latest simulations and the reference testing000200.uf file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-05) are acceptable.
 
 ## License
 

@@ -33,9 +33,10 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 #ifdef MPI
    character(len=4) ctile
 #endif
-   character(len=3) ext
-   character(len=5) suffix
-   character(len=10) prefix
+   character(len=3)   ext
+   character(len=5)   suffix
+   character(len=10)  prefix
+   character(len=10)  directory
    character(len=100) fname
 
    if (lnodump) return
@@ -51,10 +52,13 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
 
+   directory='restart/'
+   call system('mkdir -p '//trim(directory))
+   
 
    if (inflowturbulence) then
       prefix='turbulence'
-      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname = trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
       open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
          uu_h=uu
          vv_h=vv
@@ -66,14 +70,14 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    if (nturbines > 0) then
       prefix='theta'
-      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
       open(newunit=iunit,file=trim(fname))
          write(iunit,*)theta
       close(iunit)
    endif
 
    prefix='restart'
-   fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
    open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
       f_h=f
       write(iunit)nx,ny,nz,nl,f_h

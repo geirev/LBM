@@ -359,6 +359,9 @@ reacts on but which has little impact on the total simulation time.
 
 
 ## 6. Plotting
+The boltzmann program stores all diagnostic output files in a catalog ```output```. There are a lot of Tecplot files, in particular when
+using MPI, as we store every tile in its own file.  Similarly, we store the restart files to a catalog named ```restart``` and the testing files
+in the catalog ```testing```.
 
 The current code version outputs Tecplot plt files read by tec360.
 

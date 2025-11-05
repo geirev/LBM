@@ -31,6 +31,7 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    character(len=4)   :: ctile
    character(len=5)   :: suffix
    character(len=3)   :: prefix
+   character(len=10)  :: directory
    character(len=4)   :: ext
    character(len=200) :: fname
    integer, parameter :: icpu = 14
@@ -93,8 +94,10 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    prefix = 'tec'
    ext    = '.plt'
 #endif
+   directory='output/'
 
-   fname = prefix // trim(suffix) // '_' // trim(cit) // trim(ext)
+   call system('mkdir -p '//trim(directory))
+   fname = trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
 
    ! -------------------------
    ! Host copies (needed by writers)

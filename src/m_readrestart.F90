@@ -38,6 +38,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    character(len=3) ext
    character(len=5) suffix
    character(len=10) prefix
+   character(len=10)  directory
    character(len=100) fname
 
    allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
@@ -55,11 +56,13 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 #endif
    ext='.uf'
    write(cit,'(i6.6)')it
-   print '(a,a)',' readrestart:',cit
+
+   directory='restart/'
+   call system('mkdir -p '//trim(directory))
 
    if (inflowturbulence) then
       prefix='turbulence'
-      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
       inquire(file=trim(fname),exist=ex)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
@@ -88,7 +91,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 
    if (nturbines > 0) then
       prefix='theta'
-      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
       inquire(file=trim(fname),exist=ex)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
@@ -102,7 +105,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    endif
 
    prefix='restart'
-   fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       print '(3a)','reading: ',trim(fname)

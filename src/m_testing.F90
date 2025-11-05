@@ -27,6 +27,7 @@ subroutine testing(it,f,feq)
    character(len=3) ext
    character(len=5) suffix
    character(len=10) prefix
+   character(len=10)  directory
    character(len=100) fname
 
    if (.not. ltesting) return
@@ -42,8 +43,11 @@ subroutine testing(it,f,feq)
 
    eps = sqrt(tiny(1.0))
 
+   directory='testing/'
+   call system('mkdir -p '//trim(directory))
    prefix='testing'
-   fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+
+   fname = trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       open(newunit=iunit,file=trim(fname),form="unformatted", status='old')

@@ -54,6 +54,9 @@ mod_dimensions	mod_dimensions.F90	/^module
 mod_fftw3	mod_fftw3.F90	/^module
 mod_nrel5mw	mod_nrel5mw.F90	/^module
 mod_shapiro	mod_shapiro.F90	/^module
+mpi_decomp_finalize	m_mpi_decomp_finalize.F90	/^module
+mpi_decomp_init	m_mpi_decomp_init.F90	/^module
+mpi_halo_j	m_mpi_halo_j.F90	/^module
 m_actuatorline	m_actuatorline.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_averaging_full	m_averaging_full.F90	/^module
@@ -102,6 +105,9 @@ m_inipert	m_inipert.F90	/^module
 m_macrovars	m_macrovars.F90	/^module
 m_macrovars_kernel	m_macrovars_kernel.F90	/^module
 m_mkinfile	m_mkinfile.F90	/^module
+m_mpi_decomp_finalize	m_mpi_decomp_finalize.F90	/^module
+m_mpi_decomp_init	m_mpi_decomp_init.F90	/^module
+m_mpi_halo_j	m_mpi_halo_j.F90	/^module
 m_netcdfout	m_netcdfout.F90	/^module
 m_nrelliftdrag	m_nrelliftdrag.F90	/^module
 m_nrelreadfoil	m_nrelreadfoil.F90	/^module

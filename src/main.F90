@@ -50,6 +50,14 @@ program LatticeBoltzmann
    use mod_dimensions
    use mod_shapiro
    use, intrinsic :: omp_lib
+
+#ifdef MPI
+   use mpi
+   use m_mpi_decomp_init
+   use m_mpi_halo_j
+   use m_mpi_decomp_finalize
+#endif
+
    implicit none
 
 !   integer, parameter :: nshapiro=4
@@ -87,6 +95,10 @@ program LatticeBoltzmann
    integer :: it
    logical :: lsolids=.false.
 
+#ifdef MPI
+   logical periodic_j_bc
+#endif
+
 
    call printdefines()
    call cpustart()
@@ -94,6 +106,18 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
+
+#ifdef MPI
+   periodic_j_bc = (jbnd == 0)
+   print *, 'periodic_j_bc= ', periodic_j_bc
+
+   ! Initialize MPI and domain decomposition
+   call mpi_decomp_init(ny_global=nyg, periodic_j_in=periodic_j_bc)
+
+   if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' ny_local=', ny_local
+
+   call halo_buffers_alloc()
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Some initialization
@@ -182,7 +206,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) then
-         write(*,'(a,i6,a,f10.2,a,3(a,f12.7))')'Iteration:', it,' Time:'  ,real(it)*p2l%time,' s.'
+         write(*,'(a,i6,a,f10.2,a)')'Iteration: ',it,' Time: ',real(it)*p2l%time,' s.'
       endif
 
 ! start time step with f1,rho,u,v,w given
@@ -208,6 +232,10 @@ program LatticeBoltzmann
 ! [f1 and f2 updated with boundary conditions]
       call boundarycond(f1,f2,uvel)
 
+#ifdef MPI
+! >>>>>>>>>>>>>>> MPI HALO EXCHANGE FOR DRIFT <<<<<<<<<<<<<<
+      call halo_exchange_j(f1)                  ! fills j=0 and j=ny_local+1 ghosts from neighbors
+#endif
 
 ! Drift of f1 returned in f2
       call drift(f2,f1)
@@ -263,4 +291,10 @@ program LatticeBoltzmann
    call save_uvw(it,u,v,w)
    call testing(it,f1,f2)
 
+#ifdef MPI
+   call halo_buffers_free()
+!   call dev_deallocate_all()
+   call mpi_decomp_finalize()
+#endif
 end program LatticeBoltzmann
+

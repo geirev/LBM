@@ -1,28 +1,36 @@
-BUILD = ../build
-VPATH = .:$(BUILD)
-#HOME = /home/geev/
-HOME = /home/AD.NORCERESEARCH.NO/geev
-#HOME = /private/knss
-NCFDIR = $(HOME)/.netcdf/netcdf-f
+SRC_DIR := ../src
+BUILD   := ../build
+VPATH   := $(SRC_DIR):$(BUILD)
+HOME    := $(HOME)
+BINDIR  := $(HOME)/bin
+NCFDIR  := $(HOME)/.netcdf/netcdf-f
+
+DEP_FILE := depends.file
+SRC_FILE := source.files
 
 .SUFFIXES:
 .SUFFIXES: .o .F90 .f90 .F .f .c
 
 
-
+################################# COMPILER
 ifdef GFORTRAN
-LD = gfortran
+LD  = gfortran
 F90 = gfortran
 F77 = gfortran
 else
-LD = pgf90
-F90 = pgf90
-F77 = pgf90
+ifdef MPI
+LD  = mpif90
+F90 = mpif90
+F77 = mpif90
+else
+LD  = nvfortran
+F90 = nvfortran
+F77 = nvfortran
+endif
 endif
 
-
+################################# FFLAGS
 ifdef GFORTRAN
-# gfortran flags
 FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
           -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow
@@ -30,22 +38,10 @@ FFLAGS = -c -Ofast -mcmodel=large -march=native -std=gnu -fimplicit-none -frecur
 else
 ifdef CUDA
 FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=fp 
+FFLAGS+= -gpu=lineinfo  -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
 else
 FFLAGS = -c -Ofast           -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast
 endif
-endif
-LINKFLAGS = 
-
-ifdef D3Q19
-FFLAGS+= -DD3Q19
-endif
-
-ifdef NETCDF
-FFLAGS+= -DNETCDF
-endif
-
-ifdef GFORTRAN
-FFLAGS+= -DGFORTRAN
 endif
 
 ifdef DP
@@ -56,35 +52,50 @@ FFLAGS+= -DDOUBLE_PRECISION -r8
 endif
 endif
 
-ifdef CUDA
-FFLAGS+=  -gpu=lineinfo  -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
-LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays
+ifdef GFORTRAN
+FFLAGS+= -DGFORTRAN
 endif
 
 ifdef MP
 ifdef GFORTRAN
 FFLAGS+= -fopenmp -DOPEN_MP
-LINKFLAGS+= -fopenmp
 else
 FFLAGS+= -mp  -DOPEN_MP
-LINKFLAGS+= -fopenmp -mcmodel=medium -Mlarge_arrays
 endif
 endif
 
+ifdef MPI
+FFLAGS+= -DMPI
+endif
+
+ifdef D3Q19
+FFLAGS+= -DD3Q19
+endif
+
 ifdef NETCDF
+FFLAGS+= -DNETCDF
 FFLAGS+= -I$(NCFDIR)/include
 endif
 
 
+################################# LINKFLAGS
+LINKFLAGS =
+ifdef CUDA
+LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays
+endif
+
+ifdef MP
+LINKFLAGS+= -fopenmp
+endif
+
+ifdef MPI
+LINKFLAGS+= -lmpi
+endif
+
 F77FLG =
 F90FLG =
 
-ifdef CUDA
-LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 
-else
-LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64 
-endif
-
+LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64
 ifdef DP
 LIBS+= -lfftw3
 else
@@ -95,7 +106,6 @@ ifdef NETCDF
 LIBS+= -L$(NCFDIR)/lib -lnetcdff
 endif
 
-BINDIR = $(HOME)/bin
 
 
 # Rules for running cpp and updating files in $(BUILD) directory
@@ -118,22 +128,17 @@ BINDIR = $(HOME)/bin
 	cd $(BUILD) ; gcc -c ../src/$*.c
 
 
-include source.files
-include target.mk
+-include $(SRC_FILE)
+-include target.mk
 
 INCFILES =$(INCSOURCE:.H=.h)
 F90FILES =$(F90SOURCE:.F90=.f90)
 F77FILES =$(F77SOURCE:.F=.f)
 OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
+.PHONY: all install clean new source depend all touch
 
-all: new $(TARGET) install
-
-libs: libenkfanalysis.a -lcuda 
-
-
-libenkfanalysis.a:
-	cd ../../EnKF_analysis/lib; make BUILD=../../LBM/build
+all: $(SRC_FILE) $(DEP_FILE) new $(TARGET) install
 
 $(TARGET): $(INCFILES) $(OBJECTS)  timer.o
 	@mkdir -p $(BUILD)
@@ -141,59 +146,63 @@ $(TARGET): $(INCFILES) $(OBJECTS)  timer.o
 	cd ./$(BUILD) ; $(LD) $(LINKFLAGS) -o $(TARGET) $(OBJECTS) timer.o $(LIBDIR) $(LIBS)
 
 install:
+	@mkdir -p $(BINDIR)
 	cp $(BUILD)/$(TARGET) $(BINDIR)
 
 clean:
 	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a *.bc
 
-new: source depend tags
+new: depend source tags
 
 timer.o: timer.c
 	cd ./$(BUILD)
 	gcc -c ../src/timer.c -o ./$(BUILD)/timer.o
 
-ifdef NETCDF
-source:
-	../bin/mksource.sh > source.files
-	sed -i '/ cudafor/d' source.files
-	sed -i '/ cublas/d' source.files
-	sed -i '/ iso_fortran_env/d' source.files
-	sed -i '/ iso_c_binding/d' source.files
-else
-source:
-	../bin/mksource.sh > source.files
-	sed -i '/ cudafor/d' source.files
-	sed -i '/ cublas/d' source.files
-	sed -i '/ iso_fortran_env/d' source.files
-	sed -i '/m_netcdfout/d' source.files
-	sed -i '/ iso_c_binding/d' source.files
+################################# Automatic dependency generation
+# Always regenerate these before any other target
+$(SRC_FILE): $(wildcard $(SRC_DIR)/*.F90) $(wildcard $(SRC_DIR)/*.F)
+	@echo ">>> Updating source.files"
+	../bin/mksource.sh | sort -u > $@
+	sed -i '/ cudafor/d' $@
+	sed -i '/ mpi.o/d' $@
+ifndef NETCDF
+	sed -i '/netcdf/d' $@
+endif
+ifndef MPI
+	sed -i '/mpi/d' $@
 endif
 
-ifdef NETCDF
-depend:
-	../bin/mkdepend.pl | sort -u > depends.file
-	sed -i '/ cudafor/d' depends.file
-	sed -i '/ cublas/d'  depends.file
-	sed -i '/ iso_fortran_env/d' depends.file
-	sed -i '/ netcdf/d' depends.file
-	sed -i '/ iso_c_binding/d' depends.file
-else
-depend:
-	../bin/mkdepend.pl | sort -u > depends.file
-	sed -i '/ cudafor/d' depends.file
-	sed -i '/ cublas/d'  depends.file
-	sed -i '/ iso_fortran_env/d' depends.file
-	sed -i '/ netcdf/d' depends.file
-	sed -i '/m_netcdfout/d' depends.file
-	sed -i '/ iso_c_binding/d' depends.file
+$(DEP_FILE): $(SRC_FILE)
+	@echo ">>> Checking dependencies..."
+	@if [ -f $@ ]; then cp $@ $@.old; fi
+	../bin/mkdepend.pl | sort -u > $@
+	sed -i '/ cudafor/d;/ mpi.o/d' $@
+ifndef NETCDF
+	sed -i '/netcdf/d' $@
 endif
+ifndef MPI
+	sed -i '/mpi/d' $@
+endif
+	@if [ -f $@.old ]; then \
+		if ! cmp -s $@ $@.old; then \
+			echo ">>> Dependencies updated — please rerun make."; \
+			rm -f $@.old; \
+			false; \
+		else \
+			rm -f $@.old; \
+		fi; \
+	else \
+		echo ">>> First-time dependency generation — please rerun make."; \
+		false; \
+	fi
+
+stop-deps:
+	$(error Stopping because depends.file was regenerated)
 
 touch:
 	touch makefile
 
 tags: source.files
 	../bin/tags.sh
-	#ctags *.F90
-	#f90tags.sh
 
-include depends.file
+-include $(DEP_FILE)

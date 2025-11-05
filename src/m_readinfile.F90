@@ -159,7 +159,7 @@ subroutine readinfile()
    print *
 
 
-!  Compute non dimensional tau from input dmensional kinematic viscosity
+!  Compute non dimensional tau from input dimensional kinematic viscosity
    print '(a,g13.6,a)',  'Kinematic visc       = ',kinevisc     ,' [m^2/s]'
    tauin = 0.5 + 3.0*kinevisc/p2l%visc
    print '(a,g13.6,a)',  'tau from kinevisc    = ',tauin        ,' [ ]'

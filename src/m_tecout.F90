@@ -6,6 +6,9 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    use mod_dimensions
    use m_tecplot
    use m_readinfile
+#ifdef MPI
+   use m_mpi_decomp_init, only : j_start
+#endif
    implicit none
    character(len=*), intent(in) :: filename         ! Output filename
    integer,          intent(in) :: filetype           ! Save only geometry when filetype=1
@@ -32,6 +35,9 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    real :: xyz(3)
    integer dd
    real, allocatable :: blanking(:,:,:)
+#ifndef MPI
+   integer :: j_start=1
+#endif
 
    physics_time=real(it)
    print '(5a,f10.2)','tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
@@ -76,13 +82,20 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
 
 ! static grid data
    if ((filetype == 0) .or. (filetype == 1)) then
-      do d = 1, 3
-         do concurrent(i=1:nx, j=1:ny, k=1:nz)
-            xyz = [i-1., j-1., k-1.]
-            your_datas(i,j,k,d) = xyz(d)
+      do k = 1, nz
+         do j = 1, ny
+            do i = 1, nx
+               your_datas(i,j,k,1) = real(i - 1)
+               your_datas(i,j,k,2) = real(j_start + j - 1)
+               your_datas(i,j,k,3) = real(k - 1)
+             ! your_datas(i,j,k,1) = (i - 1) * dx
+             ! your_datas(i,j,k,2) = (jstart + j - 1) * dy
+             ! your_datas(i,j,k,3) = (k - 1) * dz
+            end do
          end do
       end do
-      dd=3+1; your_datas(:,:,:,dd)  = blanking(:,:,:)
+
+      your_datas(:,:,:,4) = blanking(:,:,:)
    endif
 
 ! solution data

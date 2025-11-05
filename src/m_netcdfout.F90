@@ -1,12 +1,9 @@
 #ifdef NETCDF
 module m_netcdfout
-  use netcdf
-  use mod_dimensions
-  implicit none
-
 contains
-
   subroutine netcdfout(filename, it, variables_string, num_of_variables, lblanking, rho, u, v, w, Ti)
+    use netcdf
+    use mod_dimensions
     implicit none
     character(len=*), intent(in) :: filename         ! Output filename
     integer,          intent(in) :: it               ! Timestep index

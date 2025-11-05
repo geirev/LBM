@@ -2,142 +2,161 @@ module m_diag
 contains
 subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    use mod_dimensions
-   use m_readinfile, only : iout, iprt1, iprt2, dprt,  nt1, lnodump
+   use m_readinfile, only : iout, iprt1, iprt2, dprt, nt1, lnodump
    use m_tecout
 #ifdef NETCDF
    use m_netcdfout
 #endif
+#ifdef MPI
+   use m_mpi_decomp_init, only : mpi_rank
+#endif
    use m_wtime
    implicit none
-   integer, intent(in)   :: filetype
-   integer, intent(in)   :: it
-   real,    intent(in)   :: rho(nx,ny,nz)
-   real,    intent(in)   :: u(nx,ny,nz)
-   real,    intent(in)   :: v(nx,ny,nz)
-   real,    intent(in)   :: w(nx,ny,nz)
+   integer, intent(in)   :: filetype, it
+   real,    intent(in)   :: rho(nx,ny,nz), u(nx,ny,nz), v(nx,ny,nz), w(nx,ny,nz)
    logical, intent(in)   :: lblanking(0:nx+1,0:ny+1,0:nz+1)
-   real, optional,  intent(in)   :: Ti(nx,ny,nz)
+   real,    optional, intent(in) :: Ti(nx,ny,nz)
 #ifdef _CUDA
-   attributes(device) :: rho
-   attributes(device) :: u
-   attributes(device) :: v
-   attributes(device) :: w
-   attributes(device) :: lblanking
-   attributes(device) :: Ti
+   attributes(device) :: rho, u, v, w, lblanking, Ti
 #endif
-   character(len=10) cit
 
-   character(len=200) :: variables='i,j,k,blanking,rho,u,v,w'
-   real, allocatable    :: u_h(:,:,:)
-   real, allocatable    :: v_h(:,:,:)
-   real, allocatable    :: w_h(:,:,:)
-   real, allocatable    :: rho_h(:,:,:)
+   ! Host scratch
+   real,    allocatable :: u_h(:,:,:), v_h(:,:,:), w_h(:,:,:), rho_h(:,:,:), Ti_h(:,:,:)
    logical, allocatable :: lblanking_h(:,:,:)
-   real, allocatable    :: Ti_h(:,:,:)
-   integer, parameter :: icpu=14
-   integer num_of_vars
+
+   ! Output bookkeeping
+   integer            :: num_of_vars
+   character(len=200) :: variables
+   character(len=10)  :: cit
+   character(len=4)   :: ctile
+   character(len=5)   :: suffix
+   character(len=3)   :: prefix
+   character(len=4)   :: ext
+   character(len=200) :: fname
+   integer, parameter :: icpu = 14
+
    if (lnodump) return
+   if (.not. (mod(it,iout)==0 .or. it==nt1 .or. ((it<=iprt1 .or. it>=iprt2) .and. mod(it,dprt)==0))) return
+
    call cpustart()
-   if ((mod(it, iout) == 0) .or. it == nt1 .or. ((it <= iprt1 .or. it >= iprt2).and. mod(it,dprt) == 0)) then
 
-      if (filetype==0) then
-         if (present(Ti)) then
-            cit='F_AVERAGE'
-            variables='i,j,k,blanking,rho,u,v,w,Ti'
-            num_of_vars=9
-         else
-            write(cit,'(a1,i6.6)')'F',it
-            variables='i,j,k,blanking,rho,u,v,w'
-            num_of_vars=8
-         endif
-
-      elseif (filetype==1) then
-         cit='_GRID'
-         variables='i,j,k,blanking'
-         num_of_vars=4
-
-      elseif (filetype==2) then
-         if (present(Ti)) then
-            cit='_AVERAGE'
-            variables='rho,u,v,w,Ti'
-            num_of_vars=5
-         else
-            write(cit,'(i6.6)')it
-            variables='rho,u,v,w'
-            num_of_vars=4
-         endif
-      elseif (filetype==3) then
-         if (present(Ti)) then
-            cit='_AVERAGE'
-            variables='i,j,k,blanking,rho,u,v,w,Ti'
-            num_of_vars=9
-         else
-            write(cit,'(i6.6)')it
-            variables='i,j,k,blanking,rho,u,v,w'
-            num_of_vars=8
-         endif
-      else
-         print *,'diag filetype:',filetype
-         stop 'invalid filetype in diag'
-      endif
-
-      allocate(u_h(nx,ny,nz))
-      allocate(v_h(nx,ny,nz))
-      allocate(w_h(nx,ny,nz))
-      allocate(rho_h(nx,ny,nz))
-
-      allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
-      lblanking_h=lblanking
-
-      u_h=u
-      v_h=v
-      w_h=w
-      rho_h=rho
-
+   ! -------------------------
+   ! Decide "cit", variables, num_of_vars
+   ! -------------------------
+   select case (filetype)
+   case (0,3)   ! Full field with indices
       if (present(Ti)) then
-         allocate(Ti_h(nx,ny,nz))
-         Ti_h=Ti
-      endif
-
-      if  (minval(rho_h) < 0.0) then
-         print *,'iter=',it,'  minmaxrho=',minval(rho_h),' -- ',maxval(rho_h)
-         print *,'iter=',it,'  minmaxloc=',minloc(rho_h),' -- ',maxloc(rho_h)
-         stop 'Unstable simulation'
-      endif
-
-      if (present(Ti)) then
-         if (filetype==3) then
-#ifdef NETCDF
-            call netcdfout('out'//trim(cit)//'.nc',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h,Ti_h)
-#else
-            print *,'you need to compile with NETCDF active to use filetype=3'
-            stop
-#endif
-         else
-            call tecout(filetype,'tec'//trim(cit)//'.plt',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h,Ti_h)
-         endif
+         cit         = 'F_AVERAGE'
+         variables   = 'i,j,k,blanking,rho,u,v,w,Ti'
+         num_of_vars = 9
       else
-         if (filetype==3) then
-#ifdef NETCDF
-            call netcdfout('out'//trim(cit)//'.nc',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h)
-#else
-            print *,'you need to compile with NETCDF active to use filetype=3'
-            stop
-#endif
-         else
-            call tecout(filetype,'tec'//trim(cit)//'.plt',it,trim(variables),num_of_vars,lblanking_h,rho_h,u_h,v_h,w_h)
-         endif
-      endif
+         write(cit,'(a1,i6.6)') 'F', it
+         variables   = 'i,j,k,blanking,rho,u,v,w'
+         num_of_vars = 8
+      end if
 
-      deallocate(u_h)
-      deallocate(v_h)
-      deallocate(w_h)
-      deallocate(rho_h)
-      if (allocated(lblanking_h)) deallocate(lblanking_h)
-      if (allocated(Ti_h))        deallocate(Ti_h)
-   endif
+   case (1)     ! Grid only
+      cit         = 'GRID'
+      variables   = 'i,j,k,blanking'
+      num_of_vars = 4
+
+   case (2)     ! Solution (no indices)
+      if (present(Ti)) then
+         cit         = '_AVERAGE'
+         variables   = 'rho,u,v,w,Ti'
+         num_of_vars = 5
+      else
+         write(cit,'(i6.6)') it
+         variables   = 'rho,u,v,w'
+         num_of_vars = 4
+      end if
+
+   case default
+      print *, 'diag filetype:', filetype
+      stop 'invalid filetype in diag'
+   end select
+
+   ! -------------------------
+   ! Build filename pieces
+   ! -------------------------
+#ifdef MPI
+   write(ctile,'(i4.4)') mpi_rank
+   suffix = '_' // trim(ctile)
+#else
+   suffix = ''
+#endif
+
+#ifdef NETCDF
+   prefix = 'out'
+   ext    = '.nc'
+#else
+   prefix = 'tec'
+   ext    = '.plt'
+#endif
+
+   fname = prefix // trim(suffix) // '_' // trim(cit) // trim(ext)
+
+   ! -------------------------
+   ! Host copies (needed by writers)
+   ! -------------------------
+   allocate(u_h(nx,ny,nz), v_h(nx,ny,nz), w_h(nx,ny,nz), rho_h(nx,ny,nz))
+   allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
+
+   u_h         = u
+   v_h         = v
+   w_h         = w
+   rho_h       = rho
+   lblanking_h = lblanking
+
+   if (present(Ti)) then
+      allocate(Ti_h(nx,ny,nz))
+      Ti_h = Ti
+   end if
+
+   if (minval(rho_h) < 0.0) then
+      print *,'iter=',it,'  minmaxrho=',minval(rho_h),' -- ',maxval(rho_h)
+      print *,'iter=',it,'  minmaxloc=',minloc(rho_h),' -- ',maxloc(rho_h)
+      stop 'Unstable simulation'
+   end if
+
+   ! -------------------------
+   ! Single, non-duplicated writer dispatch
+   ! -------------------------
+   select case (filetype)
+
+   case (0,1,2)
+      if (present(Ti)) then
+         call tecout(filetype, trim(fname), it, trim(variables), num_of_vars, &
+                     lblanking_h, rho_h, u_h, v_h, w_h, Ti_h)
+      else
+         call tecout(filetype, trim(fname), it, trim(variables), num_of_vars, &
+                     lblanking_h, rho_h, u_h, v_h, w_h)
+      end if
+
+   case (3)
+#ifdef NETCDF
+      if (present(Ti)) then
+         call netcdfout(trim(fname), it, trim(variables), num_of_vars, &
+                        lblanking_h, rho_h, u_h, v_h, w_h, Ti_h)
+      else
+         call netcdfout(trim(fname), it, trim(variables), num_of_vars, &
+                        lblanking_h, rho_h, u_h, v_h, w_h)
+      end if
+#else
+      print *, 'filetype=3 requires compiling with NETCDF'
+      stop
+#endif
+
+   end select
+
+   ! -------------------------
+   ! Cleanup
+   ! -------------------------
+   deallocate(u_h, v_h, w_h, rho_h)
+   if (allocated(lblanking_h)) deallocate(lblanking_h)
+   if (allocated(Ti_h))        deallocate(Ti_h)
 
    call cpufinish(icpu)
-
 end subroutine
 end module
+

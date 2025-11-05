@@ -10,7 +10,8 @@ This repository contains a 3D implementation of a Lattice-Boltzmann model on a D
   - I have changed the format of the infile.in. Also, if there is no infile.in present, Boltzmann will generate one for you.
   - I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole distribution function 
     f in a file at the end of the simulation e.g., testing000200.uf if you run 200 time-steps. All subsequent 200 time-steps runs will then compute the
-    difference between the latest simulations and the reference testing000200.uf file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-05) are acceptable.
+    difference between the latest simulations and the reference testing000200.uf file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-05) are acceptable in
+    sigle precision.
 
 ## License
 
@@ -118,23 +119,59 @@ If you are new to Git, read the section <a href="#git-instructions">Git instruct
 
 ## 2. Required Packages
 
-### Linux
+### FFTW3 Package
 
 ```bash
 sudo apt-get -y update
 sudo apt-get -y install libfftw3-dev  # fft library used when sampling pseudo-random fields
 ```
 
-nvidia Cuda fortran compiler and utilities installation (get the latest version, nvhpc-25-7 is just for illustration).
+### Gfortran compiler
+```bash
+sudo apt-get -y install gfortran
+```
+
+### NVIDIA CUDA NVfortran
+nvidia Cuda fortran compiler and utilities installation (get the latest version, nvhpc-25-9 is just for illustration).
 ```bash
 curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
 echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
 sudo apt-get update -y
-sudo apt-get install -y nvhpc-25-7
+sudo apt-get install -y nvhpc-25-9
 sudo apt install nvidia-cuda-toolkit
 ```
+and add the following in your .bachrc file
+```bash
+# path to executable
+PATH="$PATH:$HOME/bin"
+# nvfortran paths
+export NVHPC=/opt/nvidia/hpc_sdk
+export PATH=$NVHPC/Linux_x86_64/2025/compilers/bin:$PATH
+export LD_LIBRARY_PATH=$NVHPC/Linux_x86_64/2025/math_libs/lib64:$LD_LIBRARY_PATH
+```
 
-In addition you can use netcdf for output and if you wish using netcdf you must then install it on your system.
+### Optional: mpi
+Optionally, you can compile with OPEN-MPI to run on multiple GPUs by installing
+```bash
+sudo apt install openmpi-bin libopenmpi-dev
+```bash
+and add the following in your .bachrc file
+```bash
+export PATH="$PATH:$HOME/bin"
+# nvfortran paths
+export PATH=$NVHPC/Linux_x86_64/2025/compilers/bin:$PATH
+export PATH=$NVHPC/Linux_x86_64/2025/comm_libs/mpi/bin:$PATH
+export LD_LIBRARY_PATH=$NVHPC/Linux_x86_64/2025/comm_libs/mpi/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$NVHPC/Linux_x86_64/2025/math_libs/lib64:$LD_LIBRARY_PATH
+export HWLOC_HIDE_ERRORS=1
+# Clean NVIDIA MPI defaults (no IB hardware)
+export OMPI_MCA_coll_hcoll_enable=0
+export UCX_TLS=sm,tcp,cuda_copy,cuda_ipc
+export HWLOC_HIDE_ERRORS=1
+```
+
+### Optional: Netcdf
+Optionally, you can use netcdf for output and if you wish using netcdf you must then install it on your system.
 ```bash
 sudo apt install netcdf-bin libnetcdf-dev libnetcdff-dev
 ```
@@ -142,6 +179,7 @@ In case of problems you can use the included installation script with manual com
 ```bash
 ./bin/install_netcdf.sh
 ```
+Some editing of paths and makefile may be necessary in this case.
 
 ## 3. Compile the `LBM` code
 
@@ -277,8 +315,31 @@ boltzmann
 
 To run on the GPU it's just:
 ```bash
+make -B CUDA=1
 boltzmann
 ```
+
+To run on multiple GPUs (4 in this case) using MPI:
+```bash
+make -B CUDA=1 MPI=1
+mpirun -np 4 ./boltzmann
+```
+Note the definition of `ny_global` vs `ny`.
+
+To run on multiple CPU cores (24 here) using MPI:
+```bash
+make -B MPI=1
+mpirun -np 24 --bind-to core ./boltzmann
+```
+Note the definition of `ny_global` vs `ny`.
+
+To run on multiple CPU cores (24 here) using MPI and OPEN-MP on two cores:
+```bash
+make -B MPI=1 MP=1
+export OMP_NUM_THREADS=2
+mpirun -np 12 --map-by ppr:12:socket:pe=2 --bind-to core  ./boltzmann
+```
+Note the definition of `ny_global` vs `ny`.
 
 ## 5. Code profiling
 To profile the code run, e.g.,

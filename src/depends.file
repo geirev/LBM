@@ -30,6 +30,9 @@ main.o:      m_inflow_turbulence_forcing.o
 main.o:      m_inflow_turbulence_init.o
 main.o:      m_inipert.o
 main.o:      m_macrovars.o
+main.o:      m_mpi_decomp_finalize.o
+main.o:      m_mpi_decomp_init.o
+main.o:      m_mpi_halo_j.o
 main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o
 main.o:      mod_shapiro.o
@@ -155,6 +158,7 @@ m_cylinder.o:      makefile
 m_cylinder.o:      mod_dimensions.o
 m_cylinder.o:      m_tecfld.o
 m_diag.o:      makefile
+m_diag.o:      m_mpi_decomp_init.o
 m_diag.o:      mod_dimensions.o
 m_diag.o:      m_readinfile.o
 m_diag.o:      m_tecout.o
@@ -220,6 +224,11 @@ m_macrovars.o:      mod_dimensions.o
 m_macrovars.o:      m_readinfile.o
 m_macrovars.o:      m_wtime.o
 m_mkinfile.o:      makefile
+m_mpi_decomp_finalize.o:      makefile
+m_mpi_decomp_init.o:      makefile
+m_mpi_halo_j.o:      makefile
+m_mpi_halo_j.o:      m_mpi_decomp_init.o
+m_mpi_halo_j.o:      mod_dimensions.o
 m_nrelliftdrag.o:      makefile
 m_nrelliftdrag.o:      mod_nrel5mw.o
 m_nrelreadfoil.o:      makefile
@@ -281,6 +290,7 @@ m_string.o:      makefile
 m_tecfld.o:      makefile
 m_tecfldsec.o:      makefile
 m_tecout.o:      makefile
+m_tecout.o:      m_mpi_decomp_init.o
 m_tecout.o:      mod_dimensions.o
 m_tecout.o:      m_readinfile.o
 m_tecout.o:      m_tecplot.o

@@ -1,3 +1,4 @@
+
 F90SOURCE = \
 	m_actuatorline.F90\
 	main.F90\
@@ -48,6 +49,9 @@ F90SOURCE = \
 	m_macrovars.F90\
 	m_macrovars_kernel.F90\
 	m_mkinfile.F90\
+	m_mpi_decomp_finalize.F90\
+	m_mpi_decomp_init.F90\
+	m_mpi_halo_j.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\
@@ -93,4 +97,3 @@ F90SOURCE = \
 	m_vreman.F90\
 	m_vreman_kernel.F90\
 	m_wtime.F90
-

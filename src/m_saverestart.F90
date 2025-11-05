@@ -1,10 +1,12 @@
 module m_saverestart
 contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr)
-   !use iso_fortran_env, only : int64
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb,lnodump
+#ifdef MPI
+   use m_mpi_decomp_init, only : mpi_rank
+#endif
    implicit none
    integer, intent(in) :: it
    real,    intent(in) :: theta
@@ -28,13 +30,32 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    character(len=6) cit
    integer iunit
+#ifdef MPI
+   character(len=4) ctile
+#endif
+   character(len=3) ext
+   character(len=5) suffix
+   character(len=10) prefix
+   character(len=100) fname
 
    if (lnodump) return
 
+! File names
+#ifdef MPI
+   write(ctile,'(i4.4)') mpi_rank
+   suffix = '_' // trim(ctile)
+#else
+   suffix = ''
+#endif
+   ext='.uf'
    write(cit,'(i6.6)')it
    print '(a,a)',' saverestart:',cit
+
+
    if (inflowturbulence) then
-      open(newunit=iunit,file='turbulence'//cit//'.uf',form="unformatted", status='unknown')
+      prefix='turbulence'
+      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
          uu_h=uu
          vv_h=vv
          ww_h=ww
@@ -44,12 +65,16 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    endif
 
    if (nturbines > 0) then
-      open(newunit=iunit,file='theta'//cit//'.dat')
+      prefix='theta'
+      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      open(newunit=iunit,file=trim(fname))
          write(iunit,*)theta
       close(iunit)
    endif
 
-   open(newunit=iunit,file='restart'//cit//'.uf',form="unformatted", status='replace')
+   prefix='restart'
+   fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
       f_h=f
       write(iunit)nx,ny,nz,nl,f_h
    close(iunit)

@@ -255,6 +255,7 @@ m_pseudo2D.o:      mod_fftw3.o
 m_readinfile.o:      makefile
 m_readinfile.o:      m_mkinfile.o
 m_readrestart.o:      makefile
+m_readrestart.o:      m_mpi_decomp_init.o
 m_readrestart.o:      mod_D3Q27setup.o
 m_readrestart.o:      mod_dimensions.o
 m_readrestart.o:      m_readinfile.o
@@ -271,6 +272,7 @@ m_rhotest.o:      makefile
 m_rhotest.o:      mod_D3Q27setup.o
 m_rhotest.o:      mod_dimensions.o
 m_saverestart.o:      makefile
+m_saverestart.o:      m_mpi_decomp_init.o
 m_saverestart.o:      mod_D3Q27setup.o
 m_saverestart.o:      mod_dimensions.o
 m_saverestart.o:      m_readinfile.o
@@ -297,6 +299,7 @@ m_tecout.o:      m_tecplot.o
 m_tecplot.o:      makefile
 m_tecplot.o:      m_string.o
 m_testing.o:      makefile
+m_testing.o:      m_mpi_decomp_init.o
 m_testing.o:      mod_D3Q27setup.o
 m_testing.o:      mod_dimensions.o
 m_testing.o:      m_readinfile.o

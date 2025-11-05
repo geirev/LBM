@@ -4,6 +4,9 @@ subroutine testing(it,f,feq)
    use mod_dimensions, only : nx,ny,nz
    use mod_D3Q27setup, only : nl
    use m_readinfile,   only : ltesting
+#ifdef MPI
+   use m_mpi_decomp_init, only : mpi_rank
+#endif
    implicit none
    integer, intent(in)  :: it
    integer, parameter   :: ntot=nl*(nx+2)*(ny+2)*(nz+2)
@@ -14,19 +17,36 @@ subroutine testing(it,f,feq)
    attributes(device) :: feq
 #endif
    real(kind=4) :: f_h(nl,0:nx+1,0:ny+1,0:nz+1)
-   character(len=6) cit
    logical ex
    integer iunit,i,j,k,l
    real fsum,fmax,eps,diff
+#ifdef MPI
+   character(len=4) ctile
+#endif
+   character(len=6) cit
+   character(len=3) ext
+   character(len=5) suffix
+   character(len=10) prefix
+   character(len=100) fname
+
    if (.not. ltesting) return
+! File names
+#ifdef MPI
+   write(ctile,'(i4.4)') mpi_rank
+   suffix = '_' // trim(ctile)
+#else
+   suffix = ''
+#endif
+   ext='.uf'
+   write(cit,'(i6.6)')it-1
 
    eps = sqrt(tiny(1.0))
 
-   write(cit,'(i6.6)')it-1
-   inquire(file='testing'//cit//'.uf',exist=ex)
-
+   prefix='testing'
+   fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   inquire(file=trim(fname),exist=ex)
    if (ex) then
-      open(newunit=iunit,file='testing'//cit//'.uf',form="unformatted", status='old')
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='old')
          read(iunit)f_h
       close(iunit)
       feq=f_h
@@ -52,7 +72,7 @@ subroutine testing(it,f,feq)
      fsum=fsum/real(ntot)
      print '(a,g12.5,a,g12.5)','Total misfit: Mean abs error=',fsum,' max error=',fmax
    else
-      open(newunit=iunit,file='testing'//cit//'.uf',form="unformatted", status='replace')
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
          f_h=f
          write(iunit)f_h
       close(iunit)

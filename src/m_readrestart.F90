@@ -4,6 +4,9 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb
+#ifdef MPI
+   use m_mpi_decomp_init, only : mpi_rank
+#endif
    implicit none
    integer, intent(in)  :: it
    real,    intent(out) :: theta
@@ -29,6 +32,13 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    integer :: i,j,k,l,n
    character(len=6) cit
    integer iunit
+#ifdef MPI
+   character(len=4) ctile
+#endif
+   character(len=3) ext
+   character(len=5) suffix
+   character(len=10) prefix
+   character(len=100) fname
 
    allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
    allocate(uu_h(ny,nz,0:nrturb)        )
@@ -36,14 +46,24 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    allocate(ww_h(ny,nz,0:nrturb)        )
    allocate(rr_h(ny,nz,0:nrturb)        )
 
+! File names
+#ifdef MPI
+   write(ctile,'(i4.4)') mpi_rank
+   suffix = '_' // trim(ctile)
+#else
+   suffix = ''
+#endif
+   ext='.uf'
    write(cit,'(i6.6)')it
-   print '(a,a)','readrestart:',cit
+   print '(a,a)',' readrestart:',cit
 
    if (inflowturbulence) then
-      print '(3a)','reading: turbulence'//cit//'.uf'
-      inquire(file='turbulence'//cit//'.uf',exist=ex)
+      prefix='turbulence'
+      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      inquire(file=trim(fname),exist=ex)
+      print '(3a)','reading: ',trim(fname)
       if (ex) then
-         open(newunit=iunit,file='turbulence'//cit//'.uf',form="unformatted", status='old')
+         open(newunit=iunit,file=trim(fname),form="unformatted", status='old')
             read(iunit,err=998)j,k,l
             rewind(iunit)
             if ((j==ny).and.(k==nz).and.(l==nrturb)) then
@@ -67,10 +87,12 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    endif
 
    if (nturbines > 0) then
-      print '(3a)','reading: theta'//cit//'.dat'
-      inquire(file='theta'//cit//'.dat',exist=ex)
+      prefix='theta'
+      fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      inquire(file=trim(fname),exist=ex)
+      print '(3a)','reading: ',trim(fname)
       if (ex) then
-         open(newunit=iunit,file='theta'//cit//'.dat')
+         open(newunit=iunit,file=trim(fname))
             read(iunit,*)theta
          close(iunit)
       else
@@ -79,9 +101,12 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       endif
    endif
 
-   inquire(file='restart'//cit//'.uf',exist=ex)
+   prefix='restart'
+   fname = trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   inquire(file=trim(fname),exist=ex)
    if (ex) then
-      open(newunit=iunit,file='restart'//cit//'.uf',form="unformatted", status='unknown')
+      print '(3a)','reading: ',trim(fname)
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
          read(iunit)i,j,k,n,f_h
          f=f_h
       close(iunit)

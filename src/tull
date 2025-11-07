@@ -1,78 +1,43 @@
-#ifdef MPI
-   integer, parameter :: TAG_SOUTH = 200   ! "south boundary" (j=1) being sent upward
-   integer, parameter :: TAG_NORTH = 201   ! "north boundary" (j=ny) being sent downward
+subroutine mpi_halo_exchange_j(f)
+   use mpi
+   use cudafor
+   use mod_dimensions, only: nx, ny, nz
+   use mod_D3Q27setup, only: nl
+   use m_mpi_decomp_init, only: north, south
+   use m_mpi_pack_jplane, only: mpi_pack_jplane
+   use m_mpi_unpack_jplane, only: mpi_unpack_jplane
+   use m_mpi_halo_buffers
+   implicit none
+   real, device :: f(:,:,:,:)
+   type(dim3) :: B, G
    integer :: ierr, req(4), stat(MPI_STATUS_SIZE,4)
-   integer :: mpi_rtype, count_i
+   integer :: count_i, mpi_rtype
 
-   ! Select MPI datatype matching 'real' kind
-   if (kind(f(1,0,1,0)) == kind(1.0d0)) then
+   B = dim3(16,8,4)
+   G = dim3(((nx+2)+B%x-1)/B%x, ((nz+2)+B%y-1)/B%y, (nl+B%z-1)/B%z)
+
+   ! --- pack boundary planes
+   call mpi_pack_jplane<<<G,B>>>(f, 1,  snd_south)
+   call mpi_pack_jplane<<<G,B>>>(f, ny, snd_north)
+
+   ! --- MPI halo exchange
+   if (kind(snd_south(1)) == kind(1.0d0)) then
       mpi_rtype = MPI_DOUBLE_PRECISION
    else
       mpi_rtype = MPI_REAL
    end if
-   count_i = int(plane_elems, kind=4)
+   count_i = plane_elems
 
-   ! We packed:
-   !   snd_south = j=1   (to be used by SOUTH neighbor as its NORTH ghost, j=ny+1)
-   !   snd_north = j=ny  (to be used by NORTH neighbor as its SOUTH ghost, j=0)
-
-   ! RECV what we need for our ghosts:
-   !   rcv_south <- from SOUTH neighbor’s north boundary (its j=ny) with TAG_NORTH
-   !   rcv_north <- from NORTH neighbor’s south boundary (its j=1 ) with TAG_SOUTH
-   if (south /= MPI_PROC_NULL) then
-      call MPI_Irecv(rcv_south, count_i, mpi_rtype, south, TAG_NORTH, MPI_COMM_WORLD, req(1), ierr)
-   else
-      req(1) = MPI_REQUEST_NULL
-   end if
-   if (north /= MPI_PROC_NULL) then
-      call MPI_Irecv(rcv_north, count_i, mpi_rtype, north, TAG_SOUTH, MPI_COMM_WORLD, req(3), ierr)
-   else
-      req(3) = MPI_REQUEST_NULL
-   end if
-
-   ! SEND our boundaries out:
-   !   send j=1   to SOUTH neighbor with TAG_SOUTH
-   !   send j=ny  to NORTH neighbor with TAG_NORTH
-   if (south /= MPI_PROC_NULL) then
-      call MPI_Isend(snd_south, count_i, mpi_rtype, south, TAG_SOUTH, MPI_COMM_WORLD, req(2), ierr)
-   else
-      req(2) = MPI_REQUEST_NULL
-   end if
-   if (north /= MPI_PROC_NULL) then
-      call MPI_Isend(snd_north, count_i, mpi_rtype, north, TAG_NORTH, MPI_COMM_WORLD, req(4), ierr)
-   else
-      req(4) = MPI_REQUEST_NULL
-   end if
-
+   call MPI_Irecv(rcv_south, count_i, mpi_rtype, south, 201, MPI_COMM_WORLD, req(1), ierr)
+   call MPI_Isend(snd_south, count_i, mpi_rtype, south, 200, MPI_COMM_WORLD, req(2), ierr)
+   call MPI_Irecv(rcv_north, count_i, mpi_rtype, north, 200, MPI_COMM_WORLD, req(3), ierr)
+   call MPI_Isend(snd_north, count_i, mpi_rtype, north, 201, MPI_COMM_WORLD, req(4), ierr)
    call MPI_Waitall(4, req, stat, ierr)
 
-   ! Unpack into ghosts
-   if (south /= MPI_PROC_NULL) then
-      call unpack_jplane &
-#ifdef _CUDA
-      &<<<G,B>>>&
-#endif
-      (f, 0, rcv_south)
-   else
-      call unpack_jplane &
-#ifdef _CUDA
-      &<<<G,B>>>&
-#endif
-      (f, 0, snd_south)   ! non-periodic fallback
-   end if
+   ! --- unpack into ghosts
+   call mpi_unpack_jplane<<<G,B>>>(f, 0,    rcv_south)
+   call mpi_unpack_jplane<<<G,B>>>(f, ny+1, rcv_north)
 
-   if (north /= MPI_PROC_NULL) then
-      call unpack_jplane &
-#ifdef _CUDA
-      &<<<G,B>>>&
-#endif
-      (f, ny+1, rcv_north)
-   else
-      call unpack_jplane &
-#ifdef _CUDA
-      &<<<G,B>>>&
-#endif
-      (f, ny+1, snd_north) ! non-periodic fallback
-   end if
-#endif
+   call cudaDeviceSynchronize()
+end subroutine
 

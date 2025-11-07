@@ -145,7 +145,7 @@ program LatticeBoltzmann
 #ifdef MPI
       if (mpi_rank == 0) call cylinder(lsolids,lblanking)
       if (mpi_rank == 1) call city2(lsolids,lblanking)
-      if (mpi_rank == 2) call city2(lsolids,lblanking)
+      if (mpi_rank == 3) call city2(lsolids,lblanking)
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -202,7 +202,7 @@ program LatticeBoltzmann
    call cpufinish(1)
 
 #ifdef _CUDA
-   call gpu_meminfo('time stepping')
+   if (ir == 0) call gpu_meminfo('time stepping')
 #endif
 
 
@@ -213,7 +213,7 @@ program LatticeBoltzmann
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   print *,'Start timestepping loop'
+   if (ir == 0) print *,'Start timestepping loop'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) then

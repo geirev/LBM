@@ -20,6 +20,7 @@ subroutine testing(it,f,feq)
    logical ex
    integer iunit,i,j,k,l
    real fsum,fmax,eps,diff
+   integer ir
 #ifdef MPI
    character(len=4) ctile
 #endif
@@ -33,9 +34,11 @@ subroutine testing(it,f,feq)
    if (.not. ltesting) return
 ! File names
 #ifdef MPI
+   ir=mpi_rank
    write(ctile,'(i4.4)') mpi_rank
    suffix = '_' // trim(ctile)
 #else
+   ir=0
    suffix = ''
 #endif
    ext='.uf'
@@ -74,7 +77,7 @@ subroutine testing(it,f,feq)
      enddo
      enddo
      fsum=fsum/real(ntot)
-     print '(a,g12.5,a,g12.5)','Total misfit: Mean abs error=',fsum,' max error=',fmax
+     print '(a,i4,a,g12.5,a,g12.5)','Total misfit ',ir,': Mean abs error=',fsum,' max error=',fmax
    else
       open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
          f_h=f

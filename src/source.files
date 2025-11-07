@@ -45,13 +45,17 @@ F90SOURCE = \
 	m_inflow_turbulence_compute.F90\
 	m_inflow_turbulence_forcing.F90\
 	m_inflow_turbulence_init.F90\
+	m_inflow_turbulence_update.F90\
 	m_inipert.F90\
 	m_macrovars.F90\
 	m_macrovars_kernel.F90\
 	m_mkinfile.F90\
 	m_mpi_decomp_finalize.F90\
 	m_mpi_decomp_init.F90\
-	m_mpi_halo_j.F90\
+	m_mpi_halo_buffers.F90\
+	m_mpi_halo_exchange_j.F90\
+	m_mpi_pack_jplane.F90\
+	m_mpi_unpack_jplane.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\

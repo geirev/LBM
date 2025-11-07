@@ -1,48 +1,30 @@
 module m_inflow_turbulence_init
+
    integer, parameter :: iturb_pos=10
    integer, parameter :: iturb_radius=2
 
    real, allocatable  :: turbulence_df(:,:,:)
-
-! Persistent local device arrays
    real, allocatable  :: vel(:,:,:,:), rtmp(:,:,:)
    real, allocatable  :: dfeq1(:,:,:,:), dfeq2(:,:,:,:)
    real, allocatable  :: cx(:), cy(:), cz(:)
+   real, allocatable  :: uu(:,:,:), vv(:,:,:), ww(:,:,:), rr(:,:,:)
 
 #ifdef _CUDA
-   attributes(device) :: turbulence_df
-   attributes(device) :: vel, rtmp
-   attributes(device) :: dfeq1, dfeq2
-   attributes(device) :: cx, cy, cz
+   attributes(device) :: turbulence_df, vel, rtmp, dfeq1, dfeq2
+   attributes(device) :: cx, cy, cz, uu, vv, ww, rr
 #endif
-
-! Stochastic input field on inflow boundary
-   real, allocatable :: uu(:,:,:)
-   real, allocatable :: vv(:,:,:)
-   real, allocatable :: ww(:,:,:)
-   real, allocatable :: rr(:,:,:)
-#ifdef _CUDA
-   attributes(device) :: uu
-   attributes(device) :: vv
-   attributes(device) :: ww
-   attributes(device) :: rr
-#endif
-
 
 contains
-
 subroutine inflow_turbulence_init
-   use mod_dimensions
-   use mod_D3Q27setup
-   use m_readinfile, only : nrturb
+   use mod_dimensions, only : ny,nz
+   use mod_D3Q27setup, only : nl, cxs_h, cys_h, czs_h
+   use m_readinfile,   only : nrturb
    implicit none
-   integer l
-   if (nrturb==0) then
-      print *,'make sure read_infile is called before inflow_turbulence_init and nrturb>0'
-      stop
-   endif
+   integer :: l
 
-   if (.not. allocated(turbulence_df)) allocate(turbulence_df(1:nl,1:ny,1:nz))
+   if (nrturb <= 0) stop 'Call read_infile before inflow_turbulence_init'
+
+   if (.not. allocated(turbulence_df)) allocate(turbulence_df(nl,ny,nz))
    if (.not. allocated(vel))           allocate(vel(3,1,ny,nz))
    if (.not. allocated(rtmp))          allocate(rtmp(1,ny,nz))
    if (.not. allocated(dfeq1))         allocate(dfeq1(nl,1,ny,nz))
@@ -63,5 +45,4 @@ subroutine inflow_turbulence_init
    enddo
 end subroutine
 end module
-
 

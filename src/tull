@@ -1,0 +1,78 @@
+#ifdef MPI
+   integer, parameter :: TAG_SOUTH = 200   ! "south boundary" (j=1) being sent upward
+   integer, parameter :: TAG_NORTH = 201   ! "north boundary" (j=ny) being sent downward
+   integer :: ierr, req(4), stat(MPI_STATUS_SIZE,4)
+   integer :: mpi_rtype, count_i
+
+   ! Select MPI datatype matching 'real' kind
+   if (kind(f(1,0,1,0)) == kind(1.0d0)) then
+      mpi_rtype = MPI_DOUBLE_PRECISION
+   else
+      mpi_rtype = MPI_REAL
+   end if
+   count_i = int(plane_elems, kind=4)
+
+   ! We packed:
+   !   snd_south = j=1   (to be used by SOUTH neighbor as its NORTH ghost, j=ny+1)
+   !   snd_north = j=ny  (to be used by NORTH neighbor as its SOUTH ghost, j=0)
+
+   ! RECV what we need for our ghosts:
+   !   rcv_south <- from SOUTH neighbor’s north boundary (its j=ny) with TAG_NORTH
+   !   rcv_north <- from NORTH neighbor’s south boundary (its j=1 ) with TAG_SOUTH
+   if (south /= MPI_PROC_NULL) then
+      call MPI_Irecv(rcv_south, count_i, mpi_rtype, south, TAG_NORTH, MPI_COMM_WORLD, req(1), ierr)
+   else
+      req(1) = MPI_REQUEST_NULL
+   end if
+   if (north /= MPI_PROC_NULL) then
+      call MPI_Irecv(rcv_north, count_i, mpi_rtype, north, TAG_SOUTH, MPI_COMM_WORLD, req(3), ierr)
+   else
+      req(3) = MPI_REQUEST_NULL
+   end if
+
+   ! SEND our boundaries out:
+   !   send j=1   to SOUTH neighbor with TAG_SOUTH
+   !   send j=ny  to NORTH neighbor with TAG_NORTH
+   if (south /= MPI_PROC_NULL) then
+      call MPI_Isend(snd_south, count_i, mpi_rtype, south, TAG_SOUTH, MPI_COMM_WORLD, req(2), ierr)
+   else
+      req(2) = MPI_REQUEST_NULL
+   end if
+   if (north /= MPI_PROC_NULL) then
+      call MPI_Isend(snd_north, count_i, mpi_rtype, north, TAG_NORTH, MPI_COMM_WORLD, req(4), ierr)
+   else
+      req(4) = MPI_REQUEST_NULL
+   end if
+
+   call MPI_Waitall(4, req, stat, ierr)
+
+   ! Unpack into ghosts
+   if (south /= MPI_PROC_NULL) then
+      call unpack_jplane &
+#ifdef _CUDA
+      &<<<G,B>>>&
+#endif
+      (f, 0, rcv_south)
+   else
+      call unpack_jplane &
+#ifdef _CUDA
+      &<<<G,B>>>&
+#endif
+      (f, 0, snd_south)   ! non-periodic fallback
+   end if
+
+   if (north /= MPI_PROC_NULL) then
+      call unpack_jplane &
+#ifdef _CUDA
+      &<<<G,B>>>&
+#endif
+      (f, ny+1, rcv_north)
+   else
+      call unpack_jplane &
+#ifdef _CUDA
+      &<<<G,B>>>&
+#endif
+      (f, ny+1, snd_north) ! non-periodic fallback
+   end if
+#endif
+

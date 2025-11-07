@@ -23,7 +23,7 @@ program LatticeBoltzmann
    use m_fequil3
    use m_gpu_meminfo
    use m_inflow_turbulence_apply
-   use m_inflow_turbulence_compute
+   use m_inflow_turbulence_update
    use m_inflow_turbulence_forcing
    use m_inflow_turbulence_init
    use m_inipert
@@ -36,7 +36,6 @@ program LatticeBoltzmann
    use m_saverestart
    use m_save_uvw
    use m_seedmanagement
-   use m_set_random_seed3
    use m_solids
    use m_sphere
    use m_tecfld
@@ -54,7 +53,8 @@ program LatticeBoltzmann
 #ifdef MPI
    use mpi
    use m_mpi_decomp_init
-   use m_mpi_halo_j
+   use m_mpi_halo_buffers
+   use m_mpi_halo_exchange_j
    use m_mpi_decomp_finalize
 #endif
 
@@ -66,6 +66,7 @@ program LatticeBoltzmann
 ! Main variables
    real, target ::     fA(nl,0:nx+1,0:ny+1,0:nz+1) ! density function
    real, target ::     fB(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
+   real         ::     fH(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
    real         ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
    logical      :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
    real         ::         u(nx,ny,nz)             ! x component of fluid velocity
@@ -92,7 +93,7 @@ program LatticeBoltzmann
 #endif
 
    real,    dimension(:),       allocatable :: uvel_h      ! vertical u-velocity profile on host
-   integer :: it
+   integer :: it,ir
    logical :: lsolids=.false.
 
 #ifdef MPI
@@ -112,11 +113,11 @@ program LatticeBoltzmann
    print *, 'periodic_j_bc= ', periodic_j_bc
 
    ! Initialize MPI and domain decomposition
-   call mpi_decomp_init(ny_global=nyg, periodic_j_in=periodic_j_bc)
+   call mpi_decomp_init(periodic_j_bc)
 
-   if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' ny_local=', ny_local
+   if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' nyg=', nyg, ' ny=', ny
 
-   call halo_buffers_alloc()
+   call mpi_halo_buffers_alloc()
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -141,6 +142,11 @@ program LatticeBoltzmann
        stop 'needs fix airfoil routine for gpu'
    end select
    if (lsolids) call dump_elevation(lblanking)
+#ifdef MPI
+      if (mpi_rank == 0) call cylinder(lsolids,lblanking)
+      if (mpi_rank == 1) call city2(lsolids,lblanking)
+      if (mpi_rank == 2) call city2(lsolids,lblanking)
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Save grid geometry and blanking
@@ -149,7 +155,12 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
-   call seedmanagement(nt0)
+#ifdef MPI
+   ir=mpi_rank
+#else
+   ir=0
+#endif
+   call seedmanagement(nt0,ir)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting shapiro factors (no really used)
@@ -178,7 +189,7 @@ program LatticeBoltzmann
       fA=fB
 
 ! Generate turbulence forcing fields
-      if (inflowturbulence) call inflow_turbulence_compute(uu,vv,ww,rr,.true.,nrturb)
+      if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
    else
 ! Restart from restart file
       call readrestart(nt0,fA,theta,uu,vv,ww,rr)
@@ -206,7 +217,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) then
-         write(*,'(a,i6,a,f10.2,a)')'Iteration: ',it,' Time: ',real(it)*p2l%time,' s.'
+         if (ir==0) write(*,'(a,i6,a,f10.2,a)')'Iteration: ',it,' Time: ',real(it)*p2l%time,' s.'
       endif
 
 ! start time step with f1,rho,u,v,w given
@@ -234,7 +245,16 @@ program LatticeBoltzmann
 
 #ifdef MPI
 ! >>>>>>>>>>>>>>> MPI HALO EXCHANGE FOR DRIFT <<<<<<<<<<<<<<
-      call halo_exchange_j(f1)                  ! fills j=0 and j=ny_local+1 ghosts from neighbors
+      call mpi_halo_exchange_j(f1)
+      if (it==800) then
+      fH=f1
+      write(*,'(a,i4,10g15.7)') '    ghost north ny+1 =',mpi_rank, fH(1:5,100, ny+1 ,nz/2)
+      write(*,'(a,i4,10g15.7)') '    ghost north ny   =',mpi_rank, fH(1:5,100, ny   ,nz/2)
+      write(*,'(a,i4,10g15.7)') '    ghost south 1    =',mpi_rank, fH(1:5,100, 1    ,nz/2)
+      write(*,'(a,i4,10g15.7)') '    ghost south 0    =',mpi_rank, fH(1:5,100, 0    ,nz/2)
+      write(*,*)
+      endif
+
 #endif
 
 ! Drift of f1 returned in f2
@@ -266,7 +286,7 @@ program LatticeBoltzmann
 
 ! Updating input turbulence matrix
       if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence .and. ibnd==1) then
-         call inflow_turbulence_compute(uu,vv,ww,rr,.false.,nrturb)
+         call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
       endif
 
 ! Save restart file
@@ -281,7 +301,7 @@ program LatticeBoltzmann
    call cpustart()
    call saverestart(it-1,f1,theta,uu,vv,ww,rr)
    call cpufinish(16)
-   call cpuprint()
+   if (ir==0) call cpuprint()
 
    if (allocated(uu       ))  deallocate(uu            )
    if (allocated(vv       ))  deallocate(vv            )
@@ -292,8 +312,7 @@ program LatticeBoltzmann
    call testing(it,f1,f2)
 
 #ifdef MPI
-   call halo_buffers_free()
-!   call dev_deallocate_all()
+   call mpi_halo_buffers_free()
    call mpi_decomp_finalize()
 #endif
 end program LatticeBoltzmann

@@ -24,7 +24,7 @@ subroutine inipert(rho,u,v,w,uvel)
 
    allocate(rho_h(nx, ny, nz))
    call random_number(rho_h)
-   rho = rho_h  ! Copy to managed or device array
+   rho = rho_h
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>

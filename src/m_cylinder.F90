@@ -1,32 +1,18 @@
 module m_cylinder
 contains
-subroutine cylinder(lsolids,blanking)
-   use mod_dimensions
-   use m_tecfld
+subroutine cylinder(blanking)
+   use mod_dimensions, only : nx, nyg, nz
    implicit none
-   logical, intent(out)   :: lsolids
-   logical, intent(inout) :: blanking(0:nx+1,0:ny+1,0:nz+1)
-#ifdef _CUDA
-   attributes(device) :: blanking
-#endif
-   integer ipos
-   integer jpos
-   integer radius
-   integer i,j
+   logical, intent(inout) :: blanking(0:nx+1,0:nyg+1,0:nz+1)
+   integer :: i,j
+   integer, parameter :: radius = 7, ipos = 50, jpos = nyg/2
 
-   lsolids=.true.
+   blanking = .false.
 
-   radius=7
-   ipos=50
-   jpos=ny/2
-
-   do j=1,ny
-   do i=1,nx
-      if ( ((i-ipos)**2 + (j-jpos)**2 ) <  radius**2) blanking(i,j,0:nz+1) = .true.
-   enddo
-   enddo
-
-
-
+   do j=1,nyg
+      do i=1,nx
+         if ((i-ipos)**2 + (j-jpos)**2 < radius**2) blanking(i,j,:) = .true.
+      end do
+   end do
 end subroutine
 end module

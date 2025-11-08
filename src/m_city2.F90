@@ -1,17 +1,13 @@
 module m_city2
 contains
-subroutine city2(lsolids,blanking)
-   use mod_dimensions
+subroutine city2(blanking)
+   use mod_dimensions, only : nx, nyg, nz
    implicit none
-   logical, intent(out)   :: lsolids
-   logical, intent(inout) :: blanking(0:nx+1,0:ny+1,0:nz+1)
+   logical, intent(inout) :: blanking(0:nx+1,0:nyg+1,0:nz+1)
    integer, parameter :: nrb=20
    integer :: ipos(nrb)
    integer :: jpos(nrb)
    integer i,j,kpos,irad,ib
-#ifdef _CUDA
-   attributes(device) :: blanking
-#endif
 
    ipos(1)=60; jpos(1)=18
    ipos(2)=64; jpos(2)=jpos(1)+16
@@ -39,13 +35,11 @@ subroutine city2(lsolids,blanking)
 
    jpos(:)=jpos(:)+12
 
-   lsolids=.true.
-
 ! Building row one
    irad=4
    kpos=100
    do ib=1,nrb
-      do j=0,ny+1
+      do j=0,nyg+1
       do i=0,nx+1
          if ( (abs(i-ipos(ib)) < irad) .and. abs(j-jpos(ib)) < irad ) then
             blanking(i,j,1:min(kpos,nz)) = .true.

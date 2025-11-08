@@ -15,7 +15,7 @@ subroutine mpi_pack_jplane(f, j_plane, buf)
       attributes(device)  :: buf
 #endif
    integer :: i, k, l
-   integer(kind=8) :: idx, nxi
+   integer :: idx
 
 #ifdef _CUDA
    ! Cover i=0..nx+1, k=0..nz+1, l=1..nl  (CUDA Fortran indices are 1-based)
@@ -30,8 +30,7 @@ subroutine mpi_pack_jplane(f, j_plane, buf)
    do i=0,nx+1
    do l=1,nl
 #endif
-      nxi = int(nx+2,8)
-      idx = ( int(k,8)*nxi + int(i,8) )*int(nl,8) + int(l,8)   ! 1..plane_elems
+      idx = l + nl * ( i + (nx+2) * k )
       buf(idx) = f(l,i,j_plane,k)
 #ifndef _CUDA
       enddo

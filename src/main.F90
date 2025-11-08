@@ -37,6 +37,7 @@ program LatticeBoltzmann
    use m_save_uvw
    use m_seedmanagement
    use m_solids
+   use m_solid_objects_init
    use m_sphere
    use m_tecfld
    use m_turbines_apply
@@ -108,6 +109,7 @@ program LatticeBoltzmann
 ! Reading all input parameters
    call readinfile()
 
+   ir=0
 #ifdef MPI
    periodic_j_bc = (jbnd == 0)
    print *, 'periodic_j_bc= ', periodic_j_bc
@@ -117,8 +119,11 @@ program LatticeBoltzmann
 
    if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' nyg=', nyg, ' ny=', ny
 
+   ir=mpi_rank
+
    call mpi_halo_buffers_alloc()
 #endif
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Some initialization
@@ -128,38 +133,14 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Including solid bodies like cylinder and urban city as blanking of grid cells
-   lblanking = .false.
-
-   select case(trim(experiment))
-   case('city')
-      call city(lsolids,lblanking)
-   case('city2')
-      call city2(lsolids,lblanking)
-   case('cylinder')
-      call cylinder(lsolids,lblanking)
-   case('airfoil')
-!      call airfoil(lsolids,lblanking)
-       stop 'needs fix airfoil routine for gpu'
-   end select
-   if (lsolids) call dump_elevation(lblanking)
-#ifdef MPI
-      if (mpi_rank == 0) call cylinder(lsolids,lblanking)
-      if (mpi_rank == 1) call city2(lsolids,lblanking)
-      if (mpi_rank == 3) call city2(lsolids,lblanking)
-#endif
+   call solid_objects_init(lblanking, lsolids, trim(experiment), ir)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Save grid geometry and blanking
    call diag(1,0,rho,u,v,w,lblanking)
 
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
-#ifdef MPI
-   ir=mpi_rank
-#else
-   ir=0
-#endif
    call seedmanagement(nt0,ir)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

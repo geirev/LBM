@@ -134,6 +134,7 @@ m_save_uvw	m_save_uvw.F90	/^module
 m_seedmanagement	m_seedmanagement.F90	/^module
 m_set_random_seed3	m_set_random_seed3.F90	/^module
 m_solids	m_solids.F90	/^module
+m_solid_objects_init	m_solid_objects_init.F90	/^module
 m_sphere	m_sphere.F90	/^module
 m_string	m_string.F90	/^module
 m_tecfld	m_tecfld.F90	/^module
@@ -174,9 +175,10 @@ rhotest	m_rhotest.F90	/^module
 saverestart	m_saverestart.F90	/^module
 save_uvw	m_save_uvw.F90	/^module
 seedmanagement	m_seedmanagement.F90	/^module
-set_randoseed3	m_set_random_seed3.F90	/^module
+set_random_seed3	m_set_random_seed3.F90	/^module
 shapiro	mod_shapiro.F90	/^module
 solids	m_solids.F90	/^module
+solid_objects_init	m_solid_objects_init.F90	/^module
 sphere	m_sphere.F90	/^module
 string	m_string.F90	/^module
 tecfld	m_tecfld.F90	/^module

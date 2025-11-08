@@ -47,6 +47,7 @@ main.o:      m_rhotest.o
 main.o:      m_saverestart.o
 main.o:      m_save_uvw.o
 main.o:      m_seedmanagement.o
+main.o:      m_solid_objects_init.o
 main.o:      m_solids.o
 main.o:      m_sphere.o
 main.o:      m_tecfld.o
@@ -156,7 +157,6 @@ m_cube.o:      makefile
 m_cube.o:      mod_dimensions.o
 m_cylinder.o:      makefile
 m_cylinder.o:      mod_dimensions.o
-m_cylinder.o:      m_tecfld.o
 m_diag.o:      makefile
 m_diag.o:      m_mpi_decomp_init.o
 m_diag.o:      mod_dimensions.o
@@ -301,6 +301,13 @@ m_save_uvw.o:      m_readinfile.o
 m_seedmanagement.o:      makefile
 m_seedmanagement.o:      m_set_random_seed3.o
 m_set_random_seed3.o:      makefile
+m_solid_objects_init.o:      makefile
+m_solid_objects_init.o:      m_city2.o
+m_solid_objects_init.o:      m_city.o
+m_solid_objects_init.o:      m_cylinder.o
+m_solid_objects_init.o:      m_dump_elevation.o
+m_solid_objects_init.o:      m_mpi_decomp_init.o
+m_solid_objects_init.o:      mod_dimensions.o
 m_solids.o:      makefile
 m_solids.o:      mod_D3Q27setup.o
 m_solids.o:      mod_dimensions.o

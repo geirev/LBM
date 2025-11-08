@@ -80,6 +80,7 @@ subroutine testing(it,f,feq)
      print '(a,i4,a,g12.5,a,g12.5)','Total misfit ',ir,': Mean abs error=',fsum,' max error=',fmax
    else
       open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
+         print '(a,a)','Writing new:',trim(fname)
          f_h=f
          write(iunit)f_h
       close(iunit)

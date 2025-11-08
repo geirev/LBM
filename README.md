@@ -324,7 +324,7 @@ To run on multiple GPUs (4 in this case) using MPI:
 make -B CUDA=1 MPI=1
 mpirun -np 4 ./boltzmann
 ```
-Note the definition of `ny_global` vs `ny`.
+Note the definition of `ny_global` vs `ny` in mod_dimensions.F90.
 
 To run on multiple CPU cores (24 here) using MPI:
 ```bash

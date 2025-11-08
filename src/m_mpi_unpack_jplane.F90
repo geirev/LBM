@@ -15,7 +15,7 @@ subroutine mpi_unpack_jplane(f, j_plane, buf)
       attributes(device)  :: buf
 #endif
    integer :: i, k, l
-   integer(kind=8) :: idx, nxi
+   integer :: idx
 
 #ifdef _CUDA
    i = (blockIdx%x-1)*blockDim%x + threadIdx%x - 1
@@ -29,8 +29,7 @@ subroutine mpi_unpack_jplane(f, j_plane, buf)
    do i=0,nx+1
    do l=1,nl
 #endif
-      nxi = int(nx+2,8)
-      idx = ( int(k,8)*nxi + int(i,8) )*int(nl,8) + int(l,8)
+      idx = l + nl * ( i + (nx+2) * k )
       f(l,i,j_plane,k) = buf(idx)
 #ifndef _CUDA
       enddo

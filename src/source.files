@@ -77,6 +77,7 @@ F90SOURCE = \
 	m_save_uvw.F90\
 	m_seedmanagement.F90\
 	m_set_random_seed3.F90\
+	m_solid_objects_init.F90\
 	m_solids.F90\
 	m_sphere.F90\
 	m_string.F90\

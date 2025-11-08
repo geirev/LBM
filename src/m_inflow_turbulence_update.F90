@@ -18,9 +18,9 @@ subroutine inflow_turbulence_update(uu,vv,ww,rr,nrturb,lfirst)
    attributes(device) :: uu, vv, ww, rr
 #endif
 
+   real, allocatable :: uu_g(:,:,:), vv_g(:,:,:), ww_g(:,:,:), rr_g(:,:,:)
 #ifdef MPI
    integer :: ierr
-   real, allocatable :: uu_g(:,:,:), vv_g(:,:,:), ww_g(:,:,:), rr_g(:,:,:)
    ! packed send buffers on root only
    real, allocatable :: ubuf(:), vbuf(:), wbuf(:), rbuf(:)
    integer :: r, j0, j1, it, k, j, idx, chunk
@@ -28,8 +28,16 @@ subroutine inflow_turbulence_update(uu,vv,ww,rr,nrturb,lfirst)
 
 #ifndef MPI
    ! ------------------ Serial case: compute directly into local arrays ------------------
-   call inflow_turbulence_compute(uu,vv,ww,rr,ny,nz,nrturb,lfirst)
-   return
+      allocate(uu_g(ny,nz,0:nrturb))
+      allocate(vv_g(ny,nz,0:nrturb))
+      allocate(ww_g(ny,nz,0:nrturb))
+      allocate(rr_g(ny,nz,0:nrturb))
+      call inflow_turbulence_compute(uu_g,vv_g,ww_g,rr_g,ny,nz,nrturb,lfirst)
+      uu=uu_g
+      vv=vv_g
+      ww=ww_g
+      rr=rr_g
+      return
 #else
    ! ------------------ MPI case: rank 0 generates global, packs, then scatters ---------
    chunk = ny * nz * (nrturb + 1)

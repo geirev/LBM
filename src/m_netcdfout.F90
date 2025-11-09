@@ -10,12 +10,12 @@ contains
     character(len=*), intent(in) :: variables_string ! Variables to print separated by ,
     integer,          intent(in) :: num_of_variables ! Number of variables to print
 
-    real,     intent(in)             :: rho(nx,ny,nz)       ! fluid density
-    real,     intent(in)             :: u(nx,ny,nz)         ! x component of fluid velocity
-    real,     intent(in)             :: v(nx,ny,nz)         ! y component of fluid velocity
-    real,     intent(in)             :: w(nx,ny,nz)         ! z component of fluid velocity
+    real,     intent(in)             :: rho(0:nx+1,0:ny+1,0:nz+1)       ! fluid density
+    real,     intent(in)             :: u(0:nx+1,0:ny+1,0:nz+1)         ! x component of fluid velocity
+    real,     intent(in)             :: v(0:nx+1,0:ny+1,0:nz+1)         ! y component of fluid velocity
+    real,     intent(in)             :: w(0:nx+1,0:ny+1,0:nz+1)         ! z component of fluid velocity
     logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
-    real,     intent(in), optional   :: Ti(nx,ny,nz)        ! Turbulent kinetic energy
+    real,     intent(in), optional   :: Ti(0:nx+1,0:ny+1,0:nz+1)        ! Turbulent kinetic energy
 
     ! NetCDF variables
     integer :: ncid, varid_rho, varid_u, varid_v, varid_w, varid_Ti, varid_blank

@@ -23,10 +23,10 @@ subroutine turbines_forcing(rho,u,v,w,it)
    use m_wtime
    implicit none
    integer, intent(in) :: it
-   real, intent(inout) :: rho(nx,ny,nz)                     ! density
-   real, intent(inout) :: u(nx,ny,nz)                       ! velocity
-   real, intent(inout) :: v(nx,ny,nz)                       ! velocity
-   real, intent(inout) :: w(nx,ny,nz)                       ! velocity
+   real, intent(inout) :: rho(0:nx+1,0:ny+1,0:nz+1)                     ! density
+   real, intent(inout) ::   u(0:nx+1,0:ny+1,0:nz+1)                       ! velocity
+   real, intent(inout) ::   v(0:nx+1,0:ny+1,0:nz+1)                       ! velocity
+   real, intent(inout) ::   w(0:nx+1,0:ny+1,0:nz+1)                       ! velocity
 #ifdef _CUDA
    attributes(device)  :: rho
    attributes(device)  :: u

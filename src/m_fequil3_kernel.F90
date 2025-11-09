@@ -13,10 +13,10 @@ contains
    use mod_D3Q27setup, only : nl
    implicit none
    real, intent(out)    :: feq(nl,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)     :: rho(nx,ny,nz)
-   real, intent(in)     :: u(nx,ny,nz)
-   real, intent(in)     :: v(nx,ny,nz)
-   real, intent(in)     :: w(nx,ny,nz)
+   real, intent(in)     :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   w(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)     :: H2(3,3,nl)
    real, intent(in)     :: H3(3,3,3,nl)
    real, intent(in)     :: weights(nl)

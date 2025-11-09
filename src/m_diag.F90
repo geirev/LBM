@@ -13,9 +13,12 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    use m_wtime
    implicit none
    integer, intent(in)   :: filetype, it
-   real,    intent(in)   :: rho(nx,ny,nz), u(nx,ny,nz), v(nx,ny,nz), w(nx,ny,nz)
+   real,    intent(in)   :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)   ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)   ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)   ::   w(0:nx+1,0:ny+1,0:nz+1)
    logical, intent(in)   :: lblanking(0:nx+1,0:ny+1,0:nz+1)
-   real,    optional, intent(in) :: Ti(nx,ny,nz)
+   real,    optional, intent(in) :: Ti(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: rho, u, v, w, lblanking, Ti
 #endif
@@ -102,7 +105,7 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    ! -------------------------
    ! Host copies (needed by writers)
    ! -------------------------
-   allocate(u_h(nx,ny,nz), v_h(nx,ny,nz), w_h(nx,ny,nz), rho_h(nx,ny,nz))
+   allocate(u_h(0:nx+1,0:ny+1,0:nz+1), v_h(0:nx+1,0:ny+1,0:nz+1), w_h(0:nx+1,0:ny+1,0:nz+1), rho_h(0:nx+1,0:ny+1,0:nz+1))
    allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
 
    u_h         = u
@@ -112,7 +115,7 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    lblanking_h = lblanking
 
    if (present(Ti)) then
-      allocate(Ti_h(nx,ny,nz))
+      allocate(Ti_h(0:nx+1,0:ny+1,0:nz+1))
       Ti_h = Ti
    end if
 

@@ -21,9 +21,7 @@ subroutine testing(it,f,feq)
    integer iunit,i,j,k,l
    real fsum,fmax,eps,diff
    integer ir
-#ifdef MPI
    character(len=4) ctile
-#endif
    character(len=6) cit
    character(len=3) ext
    character(len=5) suffix
@@ -35,12 +33,11 @@ subroutine testing(it,f,feq)
 ! File names
 #ifdef MPI
    ir=mpi_rank
-   write(ctile,'(i4.4)') mpi_rank
-   suffix = '_' // trim(ctile)
 #else
    ir=0
-   suffix = ''
 #endif
+   write(ctile,'(i4.4)') ir
+   suffix = '_' // trim(ctile)
    ext='.uf'
    write(cit,'(i6.6)')it-1
 

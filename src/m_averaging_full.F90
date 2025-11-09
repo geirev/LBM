@@ -24,10 +24,10 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
    use cudafor
 #endif
    implicit none
-   real, intent(in)    :: u(nx,ny,nz)        ! x component of fluid velocity
-   real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
-   real, intent(in)    :: w(nx,ny,nz)        ! z component of fluid velocity
-   real, intent(in)    :: rho(nx,ny,nz)        ! z component of fluid velocity
+   real, intent(in)      :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   w(0:nx+1,0:ny+1,0:nz+1)
    logical, intent(in) :: lblanking(0:nx+1,0:ny+1,0:nz+1)  ! z component of fluid velocity
 #ifdef _CUDA
    attributes(device) :: u
@@ -47,13 +47,13 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
 
    if (ifirst == 1) then
       print '(a)','Starting averaging.'
-      allocate(  uave(nx,ny,nz) )
-      allocate(  vave(nx,ny,nz) )
-      allocate(  wave(nx,ny,nz) )
-      allocate( uave2(nx,ny,nz) )
-      allocate( vave2(nx,ny,nz) )
-      allocate( wave2(nx,ny,nz) )
-      allocate(    Ti(nx,ny,nz) )
+      allocate(  uave(0:nx+1,0:ny+1,0:nz+1) )
+      allocate(  vave(0:nx+1,0:ny+1,0:nz+1) )
+      allocate(  wave(0:nx+1,0:ny+1,0:nz+1) )
+      allocate( uave2(0:nx+1,0:ny+1,0:nz+1) )
+      allocate( vave2(0:nx+1,0:ny+1,0:nz+1) )
+      allocate( wave2(0:nx+1,0:ny+1,0:nz+1) )
+      allocate(    Ti(0:nx+1,0:ny+1,0:nz+1) )
 
       uave  =0.0; vave  =0.0; wave  =0.0; uave2 =0.0; vave2 =0.0; wave2 =0.0; Ti=0.0
       ifirst=0

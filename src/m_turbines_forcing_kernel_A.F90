@@ -10,10 +10,10 @@ contains
    use mod_dimensions,  only : nx,ny,nz
    use m_turbines_init, only : ieps
    implicit none
-   real, intent(in)     :: rho(nx,ny,nz)
-   real, intent(in)     :: u(nx,ny,nz)
-   real, intent(in)     :: v(nx,ny,nz)
-   real, intent(in)     :: w(nx,ny,nz)
+   real, intent(in)     :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   w(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)     :: force(0:ieps,ny,nz,3)
    real, intent(out)    :: du(-ieps:ieps,ny,nz)
    real, intent(out)    :: dv(-ieps:ieps,ny,nz)

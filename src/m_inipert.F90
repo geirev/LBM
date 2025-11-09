@@ -4,10 +4,10 @@ subroutine inipert(rho,u,v,w,uvel)
    use mod_dimensions
    use m_readinfile, only : rho0,udir
    implicit none
-   real, intent(inout)  :: rho(nx,ny,nz)
-   real, intent(inout)  :: u(nx,ny,nz)
-   real, intent(inout)  :: v(nx,ny,nz)
-   real, intent(inout)  :: w(nx,ny,nz)
+   real, intent(inout)  :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)  ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)  ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout)  ::   w(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)     :: uvel(nz)
 #ifdef _CUDA
    attributes(device) :: rho
@@ -22,9 +22,10 @@ subroutine inipert(rho,u,v,w,uvel)
    integer i,j,k
    real, allocatable :: rho_h(:,:,:)
 
-   allocate(rho_h(nx, ny, nz))
+   allocate(rho_h(1:nx, 1:ny, 1:nz))
    call random_number(rho_h)
-   rho = rho_h
+   rho(1:nx, 1:ny, 1:nz) = rho_h(1:nx, 1:ny, 1:nz)
+   deallocate(rho_h)
 
 #ifdef _CUDA
 !$cuf kernel do(3) <<<*,*>>>

@@ -10,9 +10,9 @@ contains
    use mod_dimensions, only : nx,ny,nz
    implicit none
    integer, value      :: kpos
-   real, intent(in)    :: u(nx,ny,nz)
-   real, intent(in)    :: v(nx,ny,nz)
-   real, intent(in)    :: w(nx,ny,nz)
+   real, intent(in)      ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   w(0:nx+1,0:ny+1,0:nz+1)
 
 
    real, intent(inout) :: uxave(nx,ny)

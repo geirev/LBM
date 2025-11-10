@@ -36,9 +36,9 @@ subroutine averaging_sec(u,v,w,lfinal,iradius)
    use cudafor
 #endif
    implicit none
-   real, intent(in)    :: u(nx,ny,nz)        ! x component of fluid velocity
-   real, intent(in)    :: v(nx,ny,nz)        ! y component of fluid velocity
-   real, intent(in)    :: w(nx,ny,nz)        ! z component of fluid velocity
+   real, intent(in)      ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   w(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: u
    attributes(device) :: v

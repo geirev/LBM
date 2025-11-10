@@ -215,7 +215,10 @@ m_inflow_turbulence_update.o:      makefile
 m_inflow_turbulence_update.o:      m_inflow_turbulence_compute.o
 m_inflow_turbulence_update.o:      m_mpi_decomp_init.o
 m_inflow_turbulence_update.o:      mod_dimensions.o
+m_inipert_kernel.o:      makefile
+m_inipert_kernel.o:      mod_dimensions.o
 m_inipert.o:      makefile
+m_inipert.o:      m_mpi_decomp_init.o
 m_inipert.o:      mod_dimensions.o
 m_inipert.o:      m_readinfile.o
 m_macrovars_kernel.o:      makefile

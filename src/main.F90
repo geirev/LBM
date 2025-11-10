@@ -70,10 +70,10 @@ program LatticeBoltzmann
    real         ::     fH(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
    real         ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
    logical      :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
-   real         ::         u(nx,ny,nz)             ! x component of fluid velocity
-   real         ::         v(nx,ny,nz)             ! y component of fluid velocity
-   real         ::         w(nx,ny,nz)             ! z component of fluid velocity
-   real         ::       rho(nx,ny,nz)             ! fluid density
+   real         ::         u(0:nx+1,0:ny+1,0:nz+1)             ! x component of fluid velocity
+   real         ::         v(0:nx+1,0:ny+1,0:nz+1)             ! y component of fluid velocity
+   real         ::         w(0:nx+1,0:ny+1,0:nz+1)             ! z component of fluid velocity
+   real         ::       rho(0:nx+1,0:ny+1,0:nz+1)             ! fluid density
    real         ::      uvel(nz)                   ! vertical u-velocity profile on device
 
    real, pointer:: f1(:,:,:,:), f2(:,:,:,:), tmp(:,:,:,:)
@@ -158,7 +158,7 @@ program LatticeBoltzmann
 
    if (nt0 == 0) then
 ! Intialization of macro variables
-      call inipert(rho,u,v,w,uvel)
+      call inipert(rho,u,v,w,uvel,ir)
 
 ! Initial diagnostics
       call diag(itecout,0,rho,u,v,w,lblanking)

@@ -10,9 +10,9 @@ contains
 subroutine predicted_measurements(u,v,w,it)
    use mod_dimensions
    implicit none
-   real, intent(in) :: u(nx,ny,nz)
-   real, intent(in) :: v(nx,ny,nz)
-   real, intent(in) :: w(nx,ny,nz)
+   real, intent(in) :: u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in) :: v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in) :: w(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) u,v,w
 #endif

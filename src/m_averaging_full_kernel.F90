@@ -9,18 +9,18 @@ contains
 #endif
    use mod_dimensions, only : nx,ny,nz
    implicit none
-   real, intent(in)    :: u(nx,ny,nz)
-   real, intent(in)    :: v(nx,ny,nz)
-   real, intent(in)    :: w(nx,ny,nz)
+   real, intent(in)      ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      ::   w(0:nx+1,0:ny+1,0:nz+1)
 
 
-   real, intent(inout) :: uave(nx,ny,nz)
-   real, intent(inout) :: vave(nx,ny,nz)
-   real, intent(inout) :: wave(nx,ny,nz)
+   real, intent(inout) ::  uave(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) ::  vave(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) ::  wave(0:nx+1,0:ny+1,0:nz+1)
 
-   real, intent(inout) :: uave2(nx,ny,nz)
-   real, intent(inout) :: vave2(nx,ny,nz)
-   real, intent(inout) :: wave2(nx,ny,nz)
+   real, intent(inout) :: uave2(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) :: vave2(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) :: wave2(0:nx+1,0:ny+1,0:nz+1)
 
    integer :: i, j, k
 

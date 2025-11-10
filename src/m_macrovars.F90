@@ -11,10 +11,10 @@ subroutine macrovars(rho,u,v,w,f)
    use m_macrovars_kernel
    implicit none
    real,    intent(in)  :: f(nl,0:nx+1,0:ny+1,0:nz+1)
-   real,    intent(out) :: rho(nx,ny,nz)
-   real,    intent(out) :: u(nx,ny,nz)
-   real,    intent(out) :: v(nx,ny,nz)
-   real,    intent(out) :: w(nx,ny,nz)
+   real,    intent(out) :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(out) ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(out) ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(out) ::   w(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: rho
@@ -27,9 +27,9 @@ subroutine macrovars(rho,u,v,w,f)
 
    call cpustart()
 #ifdef _CUDA
-   tx=ntx; bx=(nx+tx-1)/tx
-   ty=nty; by=(ny+ty-1)/ty
-   tz=ntz; bz=(nz+tz-1)/tz
+   tx=ntx; bx=(nx+2+tx-1)/tx
+   ty=nty; by=(ny+2+ty-1)/ty
+   tz=ntz; bz=(nz+2+tz-1)/tz
 #endif
    call macrovars_kernel&
 #ifdef _CUDA

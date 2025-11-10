@@ -5,9 +5,9 @@ subroutine save_uvw(it,u,v,w)
    use m_readinfile,   only : lmeasurements
    implicit none
    integer, intent(in)  :: it
-   real,    intent(in)  :: u(nx,ny,nz)
-   real,    intent(in)  :: v(nx,ny,nz)
-   real,    intent(in)  :: w(nx,ny,nz)
+   real,    intent(in)  :: u(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)  :: v(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)  :: w(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: u
    attributes(device) :: v
@@ -20,9 +20,9 @@ subroutine save_uvw(it,u,v,w)
    integer iunit
    if (.not. lmeasurements) return
 
-   u_h=u
-   v_h=v
-   w_h=w
+   u_h(1:nx,1:ny,1:nz)=u(1:nx,1:ny,1:nz)
+   v_h(1:nx,1:ny,1:nz)=v(1:nx,1:ny,1:nz)
+   w_h(1:nx,1:ny,1:nz)=w(1:nx,1:ny,1:nz)
 
    write(cit,'(i6.6)')it-1
    open(newunit=iunit,file='uvw'//cit//'.uf',form="unformatted", status='unknown')

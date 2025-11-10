@@ -158,7 +158,7 @@ program LatticeBoltzmann
 
    if (nt0 == 0) then
 ! Intialization of macro variables
-      call inipert(rho,u,v,w,uvel)
+      call inipert(rho,u,v,w,uvel,ir)
 
 ! Initial diagnostics
       call diag(itecout,0,rho,u,v,w,lblanking)

@@ -5,8 +5,8 @@ module mod_dimensions
 
 !windfarm big D=32
   integer, parameter :: nx = 200          ! grid dimension x-dir (east)
-  integer, parameter :: ny = 480          ! grid dimension y-dir (north)
-  integer, parameter :: ntiles = 1        ! Number of tiles in y direction
+  integer, parameter :: ny = 120          ! grid dimension y-dir (north)
+  integer, parameter :: ntiles = 4        ! Number of tiles in y direction
   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
   integer, parameter :: nz = 121          ! grid dimension z-dir (up)
 

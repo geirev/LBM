@@ -47,6 +47,7 @@ inflow_turbulence_forcing	m_inflow_turbulence_forcing.F90	/^module
 inflow_turbulence_init	m_inflow_turbulence_init.F90	/^module
 inflow_turbulence_update	m_inflow_turbulence_update.F90	/^module
 inipert	m_inipert.F90	/^module
+inipert_kernel	m_inipert_kernel.F90	/^module
 macrovars	m_macrovars.F90	/^module
 macrovars_kernel	m_macrovars_kernel.F90	/^module
 mkinfile	m_mkinfile.F90	/^module
@@ -107,6 +108,7 @@ m_inflow_turbulence_forcing	m_inflow_turbulence_forcing.F90	/^module
 m_inflow_turbulence_init	m_inflow_turbulence_init.F90	/^module
 m_inflow_turbulence_update	m_inflow_turbulence_update.F90	/^module
 m_inipert	m_inipert.F90	/^module
+m_inipert_kernel	m_inipert_kernel.F90	/^module
 m_macrovars	m_macrovars.F90	/^module
 m_macrovars_kernel	m_macrovars_kernel.F90	/^module
 m_mkinfile	m_mkinfile.F90	/^module

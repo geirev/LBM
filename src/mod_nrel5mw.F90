@@ -1,4 +1,3 @@
-module mod_nrel5mw
 ! https://forums.nrel.gov/t/aerodyn-output-file/352
 !  Element       RELM      Twist        DR       Chord      NFoil     Print?   Tip-loss   Hub-loss
 !      (-)        (m)      (deg)        (m)        (m)        (-)   (Yes/No)   constant   constant
@@ -19,40 +18,58 @@ module mod_nrel5mw
 !       15   56.16670    0.86300    2.73330    2.31300          8         No    0.18249   54.66670
 !       16   58.90000    0.37000    2.73330    2.08600          8         No    0.10441   57.40000
 !       17   61.63330    0.10600    2.73330    1.41900          8         No    0.03326   60.13330
+module mod_nrel5mw
+   implicit none
 
-   real, save ::  rotorradius = 62.940  ! (m)
-   real, save ::  hubradius    = 1.499   ! (m)
-   integer, parameter :: nrchords=17      ! number of chords along blade
+   ! ------------------------------
+   ! Constants / geometry
+   ! ------------------------------
+   real, save ::  rotorradius = 62.940
+   real, save ::  hubradius    = 1.499
+   integer, parameter :: nrchords=17
 
-! relm is the location of the center point of the element on the blade.
-! The blade starts at hubradius (1.5 m) and adding dr(1)/2=0.5*2.7333 gives the relm(1)=2.86667.
-! A blade segment then runs from relm(i)-dr(i)/2 to relm(i)+dr(i)/2 where the average width is chord(i)
+   real, save :: relm(nrchords)  = [ 2.86670, 5.60000, 8.33330, 11.75000, 15.85000, &
+                                     19.95000, 24.05000, 28.15000, 32.25000, 36.35000, &
+                                     40.45000, 44.55000, 48.65000, 52.75000, 56.16670, &
+                                     58.90000, 61.63330 ]
 
-   real, save :: relm(nrchords)    = [ 2.86670, 5.60000, 8.33330, 11.75000, 15.85000, 19.95000, 24.05000, 28.15000, 32.25000,&
-                                       36.35000, 40.45000, 44.55000, 48.65000, 52.75000, 56.16670, 58.90000, 61.63330 ]
+   real, save :: dc(nrchords)    = [ 2.73330, 2.73330, 2.73330, 4.10000, 4.10000, &
+                                     4.10000, 4.10000, 4.10000, 4.10000, 4.10000, &
+                                     4.10000, 4.10000, 4.10000, 4.10000, 2.73330, &
+                                     2.73330, 2.73330 ]
 
-   real, save :: dc(nrchords)      = [ 2.73330, 2.73330, 2.73330, 4.10000, 4.10000, 4.10000, 4.10000, 4.10000, 4.10000,&
-                                       4.10000, 4.10000, 4.10000, 4.10000, 4.10000, 2.73330, 2.73330, 2.73330 ]
+   real, save :: chord(nrchords) = [ 3.54200, 3.85400, 4.16700, 4.55700, 4.65200, 4.45800, &
+                                     4.24900, 4.00700, 3.74800, 3.50200, 3.25600, 3.01000, &
+                                     2.76400, 2.51800, 2.31300, 2.08600, 1.41900 ]
 
-   real, save :: chord(nrchords)   = [ 3.54200, 3.85400, 4.16700, 4.55700, 4.65200, 4.45800, 4.24900, 4.00700, 3.74800,&
-                                       3.50200, 3.25600, 3.01000, 2.76400, 2.51800, 2.31300, 2.08600, 1.41900]
+   integer, save :: nfoil(nrchords)= [ 1,1,2,3,4,4,5,6,6,7,7,8,8,8,8,8,8 ]
 
-!                                     cyl1 cyl1  cyl2  DU40  DU35  DU35  DU30 DU25  DU25  DU21 DU21  NACA64
-   integer, save :: nfoil(nrchords)= [   1,   1,    2,    3,    4,    4,    5,   6,    6,    7,   7, 8, 8, 8, 8, 8, 8 ]
+   real, save :: twist(nrchords)   = [ 13.3080,13.3080,13.3080,13.3080,11.4800,10.1620, &
+                                      9.0110,7.7950,6.5440,5.3610,4.1880,3.1250,2.3190, &
+                                      1.5260,0.8630,0.3700,0.1060 ]
 
-! A twist is added along the length of the blade to optimize the amount of energy harvested. Typically, 10° to 20° of twist is
-! included, with the twist at the tip being the highest. This produces a change in the apparent wind direction across the blade.
-   real, save :: twist(nrchords)   = [13.3080,13.3080,13.3080,13.3080,11.4800,10.1620, 9.0110, 7.7950,&
-                                       6.5440, 5.3610, 4.1880, 3.1250, 2.3190, 1.5260, 0.8630, 0.3700, 0.1060]
+   ! ------------------------------
+   ! Foil tables
+   ! ------------------------------
+   integer, parameter :: nrc = 8
 
-   integer, parameter :: nrc=8
-   integer nrang(nrc)
    type foildata
-      real deg
-      real cl
-      real cd
-      real cm
+      real :: deg
+      real :: cl
+      real :: cd
+      real :: cm
    end type
-   type(foildata) foil(150,nrc)
 
-end module
+   ! Host copies (read from file)
+   integer,          save :: nrang_h(nrc)
+   type(foildata),   save :: foil_h(150,nrc)
+
+   ! Device copies (used by GPU kernels)
+   integer,          save :: nrang(nrc)
+   type(foildata),   save :: foil(150,nrc)
+
+#ifdef _CUDA
+   attributes(device) :: nrang, foil
+#endif
+
+end module mod_nrel5mw

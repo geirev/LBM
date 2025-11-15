@@ -26,6 +26,10 @@ program LatticeBoltzmann
    use m_inflow_turbulence_update
    use m_inflow_turbulence_forcing
    use m_inflow_turbulence_init
+   use mod_turbines
+   use m_turbine_initialize
+   use m_turbine_forcing
+   use m_turbines_apply
    use m_inipert
    use m_macrovars
    use m_predicted_measurements
@@ -40,9 +44,6 @@ program LatticeBoltzmann
    use m_solid_objects_init
    use m_sphere
    use m_tecfld
-   use m_turbines_apply
-   use m_turbines_forcing
-   use m_turbines_init
    use m_uvelshear
    use m_vreman
    use m_wtime
@@ -67,7 +68,7 @@ program LatticeBoltzmann
 ! Main variables
    real, target ::     fA(nl,0:nx+1,0:ny+1,0:nz+1) ! density function
    real, target ::     fB(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
-   real         ::     fH(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
+   !real         ::     fH(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
    real         ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
    logical      :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
    real         ::         u(0:nx+1,0:ny+1,0:nz+1)             ! x component of fluid velocity
@@ -75,6 +76,10 @@ program LatticeBoltzmann
    real         ::         w(0:nx+1,0:ny+1,0:nz+1)             ! z component of fluid velocity
    real         ::       rho(0:nx+1,0:ny+1,0:nz+1)             ! fluid density
    real         ::      uvel(nz)                   ! vertical u-velocity profile on device
+   real         ::         u_h(0:nx+1,0:ny+1,0:nz+1)             ! x component of fluid velocity
+   real         ::         v_h(0:nx+1,0:ny+1,0:nz+1)             ! y component of fluid velocity
+   real         ::         w_h(0:nx+1,0:ny+1,0:nz+1)             ! z component of fluid velocity
+   real         ::       rho_h(0:nx+1,0:ny+1,0:nz+1)             ! fluid density
 
    real, pointer:: f1(:,:,:,:), f2(:,:,:,:), tmp(:,:,:,:)
 
@@ -128,7 +133,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Some initialization
    call hermite_polynomials()
-   if (nturbines > 0)      call turbines_init()
+   if (nturbines > 0)      call turbine_initialize()
    if (inflowturbulence)   call inflow_turbulence_init()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -173,7 +178,7 @@ program LatticeBoltzmann
       if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
    else
 ! Restart from restart file
-      call readrestart(nt0,fA,theta,uu,vv,ww,rr)
+      call readrestart(nt0,fA,turbines(1:nturbines)%theta,uu,vv,ww,rr)
       call macrovars(rho,u,v,w,fA)
 ! To ensure we have values in the boundary points first time we call boundarycond.
       fB=fA
@@ -203,8 +208,10 @@ program LatticeBoltzmann
 
 ! start time step with f1,rho,u,v,w given
 
-! [turbine_df = turbines_forcing(rho,u,v,w)]
-      if (nturbines > 0)      call turbines_forcing(rho,u,v,w,it)
+! [turbine_forcing = turbines_forcing(rho,u,v,w)]
+      if (nturbines > 0) then
+         call turbine_forcing(F_turb, turbines, rho, u, v, w)
+      endif
 
 ! [turbulence_df = turbulenceforcing(rho,u,v,w)]
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
@@ -213,7 +220,7 @@ program LatticeBoltzmann
       call postcoll(f1, tau, rho,u,v,w)
 
 ! [f1 = f1 + turbine_df]
-      if (nturbines > 0)      call turbines_apply(f1,turbine_df,tau)
+      if (nturbines > 0)      call turbines_apply(f1,F_turb,rho,u,v,w)
 
 ! [f1 = f1 + turbulence_df]
       if (inflowturbulence)   call inflow_turbulence_apply(f1,turbulence_df)
@@ -227,14 +234,14 @@ program LatticeBoltzmann
 #ifdef MPI
 ! >>>>>>>>>>>>>>> MPI HALO EXCHANGE FOR DRIFT <<<<<<<<<<<<<<
       call mpi_halo_exchange_j(f1)
-      if (it==800) then
-      fH=f1
-      write(*,'(a,i4,10g15.7)') '    ghost north ny+1 =',mpi_rank, fH(1:5,100, ny+1 ,nz/2)
-      write(*,'(a,i4,10g15.7)') '    ghost north ny   =',mpi_rank, fH(1:5,100, ny   ,nz/2)
-      write(*,'(a,i4,10g15.7)') '    ghost south 1    =',mpi_rank, fH(1:5,100, 1    ,nz/2)
-      write(*,'(a,i4,10g15.7)') '    ghost south 0    =',mpi_rank, fH(1:5,100, 0    ,nz/2)
-      write(*,*)
-      endif
+!      if (it==800) then
+!      fH=f1
+!      write(*,'(a,i4,10g15.7)') '    ghost north ny+1 =',mpi_rank, fH(1:5,100, ny+1 ,nz/2)
+!      write(*,'(a,i4,10g15.7)') '    ghost north ny   =',mpi_rank, fH(1:5,100, ny   ,nz/2)
+!      write(*,'(a,i4,10g15.7)') '    ghost south 1    =',mpi_rank, fH(1:5,100, 1    ,nz/2)
+!      write(*,'(a,i4,10g15.7)') '    ghost south 0    =',mpi_rank, fH(1:5,100, 0    ,nz/2)
+!      write(*,*)
+!      endif
 
 #endif
 
@@ -247,6 +254,7 @@ program LatticeBoltzmann
       f2 => tmp
 
 ! Compute updated macro variables
+      call mpi_halo_exchange_j(f1)
       call macrovars(rho,u,v,w,f1)
 
 ! Diagnostics
@@ -255,8 +263,8 @@ program LatticeBoltzmann
       call cpustart()
 ! Averaging for diagnostics similar to Asmuth paper for wind turbines
       if (laveturb .and. nturbines > 0) then
-         if (avestart < it .and. it < avesave) call averaging_sec(u,v,w,.false.,iradius)
-         if (it == avesave)                    call averaging_sec(u,v,w,.true.,iradius)
+         if (avestart < it .and. it < avesave) call averaging_sec(u,v,w,.false.,turbines(1)%iradius)
+         if (it == avesave)                    call averaging_sec(u,v,w,.true.,turbines(1)%iradius)
       endif
 
 ! Averaging for diagnostics
@@ -271,7 +279,7 @@ program LatticeBoltzmann
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f1,theta,uu,vv,ww,rr)
+      if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr)
       call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
@@ -280,7 +288,7 @@ program LatticeBoltzmann
 
 
    call cpustart()
-   call saverestart(it-1,f1,theta,uu,vv,ww,rr)
+   call saverestart(it-1,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr)
    call cpufinish(16)
    if (ir==0) call cpuprint()
 

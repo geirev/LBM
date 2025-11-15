@@ -9,7 +9,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 #endif
    implicit none
    integer, intent(in)  :: it
-   real,    intent(out) :: theta
+   real,    intent(out) :: theta(nturbines)
    real,    intent(out) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(out) :: uu(ny,nz,0:nrturb)
    real,    intent(out) :: vv(ny,nz,0:nrturb)
@@ -95,9 +95,10 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       inquire(file=trim(fname),exist=ex)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
-         open(newunit=iunit,file=trim(fname))
-            read(iunit,*)theta
+         open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
+            read(iunit)theta
          close(iunit)
+         print *,'read restart theta',theta
       else
          print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
          stop

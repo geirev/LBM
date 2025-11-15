@@ -24,7 +24,7 @@ contains
     print '(a,f8.2)',       "Total GPU Memory (GB): ", total_gb
     print '(a,f8.2)',       "Used  GPU Memory (GB): ", used_gb
     print '(a,f8.2)',       "Free  GPU Memory (GB): ", free_gb
-    print '(a,3i5,f8.2,a)', "Number of cells      : ", nx,ny,nz,real(nx*ny*nz)/1000000.0,' Million'
+    print '(a,3i5,f8.2,a)', "Number of cells      : ", nx,nyg,nz,real(nx*nyg*nz)/1000000.0,' Million'
     print *, "-------------------------------"
   end subroutine
 #endif

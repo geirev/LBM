@@ -3,7 +3,7 @@ module m_wtime
    use cudafor
 #endif
    implicit none
-   integer, parameter  :: nrtimes = 18
+   integer, parameter  :: nrtimes = 30
    real(kind(1.0D+00)) :: walltime(1:nrtimes) = 0.0D+00
    real(kind(1.0D+00)) :: tstart = 0.0D+00
    integer :: istat
@@ -64,6 +64,10 @@ subroutine cpuprint()
    print '(a,1x,f13.5)','final stuff        time =',walltime(16)
    print '(a,1x,f13.5)','compute_f(neq)     time =',walltime(17)
    print '(a,1x,f13.5)','post coll          time =',walltime(18)
+   print '(a,1x,f13.5)','21                 time =',walltime(21)
+   print '(a,1x,f13.5)','22                 time =',walltime(22)
+   print '(a,1x,f13.5)','23                 time =',walltime(23)
+   print '(a,1x,f13.5)','24                 time =',walltime(24)
    print '(a,1x,f13.5)','Total wall time    time =',sum(walltime(1:nrtimes))
    print '(a,1x,f13.5)','Total TS routines  time =',sum(walltime(1:nrtimes))-walltime(1)-walltime(14)-walltime(16)
 end subroutine

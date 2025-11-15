@@ -150,7 +150,7 @@ install:
 	cp $(BUILD)/$(TARGET) $(BINDIR)
 
 clean:
-	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a *.bc
+	cd $(BUILD) ; rm -rf *.o *.mod *.f90 *.cf90 rii_files lib*.a *.bc  $(SRC_FILE)
 
 new: depend source tags
 

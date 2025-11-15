@@ -9,7 +9,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 #endif
    implicit none
    integer, intent(in) :: it
-   real,    intent(in) :: theta
+   real,    intent(in) :: theta(nturbines)
    real,    intent(in) :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in) :: uu(ny,nz,0:nrturb)
    real,    intent(in) :: vv(ny,nz,0:nrturb)
@@ -71,9 +71,10 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    if (nturbines > 0) then
       prefix='theta'
       fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
-      open(newunit=iunit,file=trim(fname))
-         write(iunit,*)theta
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
+         write(iunit)theta
       close(iunit)
+      print *,'saverestart theta:',theta
    endif
 
    prefix='restart'

@@ -1,6 +1,5 @@
 
 F90SOURCE = \
-	m_actuatorline.F90\
 	main.F90\
 	m_airfoil.F90\
 	m_averaging_full.F90\
@@ -64,6 +63,7 @@ F90SOURCE = \
 	mod_fftw3.F90\
 	mod_nrel5mw.F90\
 	mod_shapiro.F90\
+	mod_turbines.F90\
 	m_postcoll.F90\
 	m_postcoll_kernel.F90\
 	m_predicted_measurements.F90\
@@ -88,17 +88,15 @@ F90SOURCE = \
 	m_tecplot.F90\
 	m_testing.F90\
 	m_testvar.F90\
+	m_turbine_bladeforce.F90\
+	m_turbine_deposit.F90\
+	m_turbine_extend_array.F90\
+	m_turbine_forcing.F90\
+	m_turbine_initialize.F90\
+	m_turbine_interpolation.F90\
+	m_turbine_points.F90\
 	m_turbines_apply.F90\
 	m_turbines_apply_kernel.F90\
-	m_turbines_compute_force.F90\
-	m_turbines_compute_force_kernel.F90\
-	m_turbines_forcing.F90\
-	m_turbines_forcing_kernel_A.F90\
-	m_turbines_forcing_kernel_B.F90\
-	m_turbines_forcing_kernel_C.F90\
-	m_turbines_init.F90\
-	m_turbines_print_blade.F90\
-	m_turbines_print_force.F90\
 	m_uvelshear.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\

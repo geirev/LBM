@@ -27,7 +27,7 @@ subroutine collisions(f,feq,tau)
    integer :: tx, ty, tz, bx, by, bz
 #endif
    integer, parameter :: ntot=(nx+2)*(ny+2)*(nz+2)
-   integer, parameter :: icpu=7
+   integer, parameter :: icpu=8
 
 
    call cpustart()

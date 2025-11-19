@@ -49,9 +49,12 @@ subroutine turbines_apply(f,F_turb,rho,u,v,w)
    inv6cs6 = 1.0/(6.0*cs6)
    ratio = inv6cs6 / inv2cs4
 #ifdef _CUDA
-   tx = ntx; bx = (t_imax - t_imin + 1 + tx - 1) / tx
-   ty = nty; by = (t_jmax - t_jmin + 1 + ty - 1) / ty
-   tz = ntz; bz = (t_kmax - t_kmin + 1 + tz - 1) / tz
+!   tx = ntx; bx = (t_imax - t_imin + 1 + tx - 1) / tx
+!   ty = nty; by = (t_jmax - t_jmin + 1 + ty - 1) / ty
+!   tz = ntz; bz = (t_kmax - t_kmin + 1 + tz - 1) / tz
+   tx = ntx; bx = (nx + tx - 1) / tx
+   ty = nty; by = (ny + ty - 1) / ty
+   tz = ntz; bz = (nz + tz - 1) / tz
 #endif
       call turbines_apply_kernel&
 #ifdef _CUDA

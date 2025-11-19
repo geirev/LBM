@@ -263,6 +263,6 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
    call nrelliftdrag(clift, cdrag, angattack, points(p)%foil)
 
    call turbine_compute_blade_force(Fvec(:,p), points(p), ux, utheta, dens, clift, cdrag)
-end subroutine turbine_point_forces_kernel
+end subroutine
 
 end module m_turbine_points

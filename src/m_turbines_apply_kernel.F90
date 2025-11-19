@@ -48,21 +48,27 @@ contains
    ! Map threads to (i,j,k)
    !-----------------------------------------------------------------
 #ifdef _CUDA
-   i = t_imin + (blockIdx%x - 1) * blockDim%x + threadIdx%x - 1
-   j = t_jmin + (blockIdx%y - 1) * blockDim%y + threadIdx%y - 1
-   k = t_kmin + (blockIdx%z - 1) * blockDim%z + threadIdx%z - 1
+!   i = t_imin + (blockIdx%x - 1) * blockDim%x + threadIdx%x - 1
+!   j = t_jmin + (blockIdx%y - 1) * blockDim%y + threadIdx%y - 1
+!   k = t_kmin + (blockIdx%z - 1) * blockDim%z + threadIdx%z - 1
+   i = (blockIdx%x - 1) * blockDim%x + threadIdx%x
+   j = (blockIdx%y - 1) * blockDim%y + threadIdx%y
+   k = (blockIdx%z - 1) * blockDim%z + threadIdx%z
 
    ! Interior points only (assumes ghost cells at 0 and nx+1 etc.)
+!   if (i < t_imin .or. i > t_imax) return
+!   if (j < t_jmin .or. j > t_jmax) return
+!   if (k < t_kmin .or. k > t_kmax) return
    if (i < 1 .or. i > nx) return
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
-   if (i < t_imin .or. i > t_imax) return
-   if (j < t_jmin .or. j > t_jmax) return
-   if (k < t_kmin .or. k > t_kmax) return
 #else
-   do k=t_kmin,t_kmax
-   do j=t_jmin,t_jmax
-   do i=t_imin,t_imax
+!   do k=t_kmin,t_kmax
+!   do j=t_jmin,t_jmax
+!   do i=t_imin,t_imax
+   do k=1,nz
+   do j=1,ny
+   do i=1,nx
 #endif
 
 

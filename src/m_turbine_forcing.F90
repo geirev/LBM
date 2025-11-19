@@ -115,7 +115,7 @@ subroutine turbine_forcing(F_turb_local, turbines_in, rho, u, v, w)
 
    call turbine_deposit(F_turb_local, points_global, Fvec_global, np, krad)
 
-   call turbines_bounding_box(points_global, np, krad)
+!   call turbines_bounding_box(points_global, np, krad)
 
    deallocate(Fvec_local, Fvec_global)
    deallocate(points_global)

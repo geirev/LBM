@@ -7,6 +7,7 @@ subroutine turbines_apply(f,F_turb,rho,u,v,w)
 #ifdef _CUDA
    use m_readinfile,    only : ntx,nty,ntz
 #endif
+   use mod_turbines, only : t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax
    use m_turbines_apply_kernel
    use m_wtime
    implicit none
@@ -48,15 +49,15 @@ subroutine turbines_apply(f,F_turb,rho,u,v,w)
    inv6cs6 = 1.0/(6.0*cs6)
    ratio = inv6cs6 / inv2cs4
 #ifdef _CUDA
-   tx=ntx; bx=(nx+tx-1)/tx
-   ty=nty; by=(ny+ty-1)/ty
-   tz=ntz; bz=(nz+tz-1)/tz
+   tx = ntx; bx = (t_imax - t_imin + 1 + tx - 1) / tx
+   ty = nty; by = (t_jmax - t_jmin + 1 + ty - 1) / ty
+   tz = ntz; bz = (t_kmax - t_kmin + 1 + tz - 1) / tz
 #endif
       call turbines_apply_kernel&
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          (f, rho, u, v, w, F_turb_dev,  inv1cs2, inv2cs4, ratio, ibgk)
+          (f, rho, u, v, w, F_turb_dev,  inv1cs2, inv2cs4, ratio, ibgk,t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax)
    call cpufinish(icpu)
 end subroutine
 end module

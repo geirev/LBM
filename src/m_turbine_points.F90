@@ -176,7 +176,6 @@ subroutine turbine_point_forces_gpu(points_global, rho, u, v, w, Fvec_local, np)
 
    integer :: tpb, nblocks, istat
 
-   print *,'turbine_point_forces_gpu: np= ',np
    if (np <= 0) then
       Fvec_local = 0.0
       return
@@ -197,7 +196,7 @@ subroutine turbine_point_forces_gpu(points_global, rho, u, v, w, Fvec_local, np)
    istat = cudaDeviceSynchronize()
 
    Fvec_local = Fvec_d
-   print '(a,3f13.5)','Fvec_local: ',Fvec_local(1:3,10)
+   !print '(a,3f13.5)','Fvec_local: ',Fvec_local(1:3,10)
 
    deallocate(points_d, Fvec_d)
 end subroutine turbine_point_forces_gpu
@@ -263,7 +262,6 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
 
    call nrelliftdrag(clift, cdrag, angattack, points(p)%foil)
 
-   if (p==10) print *,'cl cd ',clift,cdrag,angattack,points(p)%foil
    call turbine_compute_blade_force(Fvec(:,p), points(p), ux, utheta, dens, clift, cdrag)
 end subroutine turbine_point_forces_kernel
 

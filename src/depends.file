@@ -344,6 +344,7 @@ m_turbine_forcing.o:      mod_dimensions.o
 m_turbine_forcing.o:      mod_turbines.o
 m_turbine_forcing.o:      m_turbine_deposit.o
 m_turbine_forcing.o:      m_turbine_points.o
+m_turbine_forcing.o:      m_turbines_bounding_box.o
 m_turbine_forcing.o:      m_wtime.o
 m_turbine_initialize.o:      makefile
 m_turbine_initialize.o:      m_nrelreadfoil.o
@@ -366,9 +367,13 @@ m_turbines_apply_kernel.o:      mod_dimensions.o
 m_turbines_apply.o:      makefile
 m_turbines_apply.o:      mod_D3Q27setup.o
 m_turbines_apply.o:      mod_dimensions.o
+m_turbines_apply.o:      mod_turbines.o
 m_turbines_apply.o:      m_readinfile.o
 m_turbines_apply.o:      m_turbines_apply_kernel.o
 m_turbines_apply.o:      m_wtime.o
+m_turbines_bounding_box.o:      makefile
+m_turbines_bounding_box.o:      mod_dimensions.o
+m_turbines_bounding_box.o:      mod_turbines.o
 m_uvelshear.o:      makefile
 m_uvelshear.o:      mod_dimensions.o
 m_uvelshear.o:      m_readinfile.o

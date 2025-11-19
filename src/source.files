@@ -97,6 +97,7 @@ F90SOURCE = \
 	m_turbine_points.F90\
 	m_turbines_apply.F90\
 	m_turbines_apply_kernel.F90\
+	m_turbines_bounding_box.F90\
 	m_uvelshear.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\

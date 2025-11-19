@@ -50,11 +50,10 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 #endif
    ext='.uf'
    write(cit,'(i6.6)')it
-   print '(a,a)',' saverestart:',cit
+   print '(4a)',' saverestart: tile=',trim(ctile),' iteration=',trim(cit)
 
    directory='restart/'
    call system('mkdir -p '//trim(directory))
-   
 
    if (inflowturbulence) then
       prefix='turbulence'
@@ -74,7 +73,6 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
       open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
          write(iunit)theta
       close(iunit)
-      print *,'saverestart theta:',theta
    endif
 
    prefix='restart'

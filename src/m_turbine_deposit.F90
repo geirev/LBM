@@ -3,12 +3,6 @@
 !  Deposit smoothed actuator forces on the lattice
 !==============================================================
 module m_turbine_deposit
-   use mod_turbines
-   use mod_dimensions, only : nx, ny, nz, nyg
-#ifdef MPI
-   use m_mpi_decomp_init, only : j_start, j_end
-#endif
-   implicit none
 contains
 
 !--------------------------------------------------------------
@@ -21,11 +15,18 @@ contains
 !  CALL:
 !    call turbine_deposit(F_turb, points_global, Fvec_global, np)
 !--------------------------------------------------------------
-subroutine turbine_deposit(F_turb, points_global, Fvec_global, np)
+subroutine turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
+   use mod_turbines
+   use mod_dimensions, only : nx, ny, nz, nyg
+#ifdef MPI
+   use m_mpi_decomp_init, only : j_start, j_end
+#endif
+   implicit none
    real,          intent(inout) :: F_turb(3,0:nx+1,0:ny+1,0:nz+1)
    integer,       intent(in)    :: np
    type(point_t), intent(in)    :: points_global(np)
    real,          intent(in)    :: Fvec_global(3, np)
+   integer,       intent(inout) :: krad
 
    integer :: p, i0, j0, k0
    integer :: ii, jj, kk
@@ -35,11 +36,10 @@ subroutine turbine_deposit(F_turb, points_global, Fvec_global, np)
    real    :: sigma, epsilon
    real    :: xg, yg, zg
    real    :: Fp(3)
-   integer :: krad
 
    epsilon = 2.0
    sigma   = epsilon / sqrt(2.0)
-   krad    = ceiling(3.0 * sigma)
+   krad    = int(ceiling(3.0 * sigma))
 
    do p = 1, np
       xg = points_global(p)%xg

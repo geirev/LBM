@@ -4,7 +4,8 @@ contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-   subroutine turbines_apply_kernel(f, rho, u, v, w, F_turb, inv1cs2, inv2cs4, ratio, ibgk)
+   subroutine turbines_apply_kernel(f, rho, u, v, w, F_turb, inv1cs2, inv2cs4, ratio, ibgk,&
+                                    t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax)
 #ifdef _CUDA
    use cudafor
 #endif
@@ -24,6 +25,7 @@ contains
 
    real, value         :: inv1cs2, inv2cs4, ratio
    integer, value      :: ibgk
+   integer, value      :: t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax
 
    !-----------------------------------------------------------------
    ! Locals
@@ -46,19 +48,24 @@ contains
    ! Map threads to (i,j,k)
    !-----------------------------------------------------------------
 #ifdef _CUDA
-   i = (blockIdx%x - 1) * blockDim%x + threadIdx%x
-   j = (blockIdx%y - 1) * blockDim%y + threadIdx%y
-   k = (blockIdx%z - 1) * blockDim%z + threadIdx%z
-#else
-   ! For CPU testing / OpenMP, you can loop explicitly over i,j,k
-   ! and ignore this section.
-   return
-#endif
+   i = t_imin + (blockIdx%x - 1) * blockDim%x + threadIdx%x - 1
+   j = t_jmin + (blockIdx%y - 1) * blockDim%y + threadIdx%y - 1
+   k = t_kmin + (blockIdx%z - 1) * blockDim%z + threadIdx%z - 1
 
    ! Interior points only (assumes ghost cells at 0 and nx+1 etc.)
    if (i < 1 .or. i > nx) return
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
+   if (i < t_imin .or. i > t_imax) return
+   if (j < t_jmin .or. j > t_jmax) return
+   if (k < t_kmin .or. k > t_kmax) return
+#else
+   do k=t_kmin,t_kmax
+   do j=t_jmin,t_jmax
+   do i=t_imin,t_imax
+#endif
+
+
 
    !-----------------------------------------------------------------
    ! Read local force and skip if zero
@@ -190,6 +197,11 @@ contains
       f(l,i,j,k) = f(l,i,j,k) + (feq1 - feq0)
 
    enddo
+#ifndef _CUDA
+   enddo
+   enddo
+   enddo
+#endif
 
    end subroutine
 

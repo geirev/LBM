@@ -81,6 +81,8 @@ module mod_turbines
    real,            allocatable :: Fvec_local(:,:)   ! (3, np)
    real,            allocatable :: Fvec_global(:,:)  ! (3, np)
 
+   integer t_imin,t_imax,t_jmin,t_jmax,t_kmin,t_kmax
+
    integer :: ierr
 
 end module mod_turbines

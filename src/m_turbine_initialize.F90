@@ -45,8 +45,8 @@ subroutine turbine_initialize()
       turbines(n)%radius  = radius / p2l%length
       turbines(n)%iradius = nint(turbines(n)%radius)
 
-      print '(a,f8.2,i4)', 'Rotor radius=   ', turbines(n)%radius,  turbines(n)%iradius
-      print '(a,f8.2)',    'Rotor diameter=', 2.0 * turbines(n)%radius
+!      print '(a,f8.2,i4)', 'Rotor radius=   ', turbines(n)%radius,  turbines(n)%iradius
+!      print '(a,f8.2)',    'Rotor diameter=', 2.0 * turbines(n)%radius
 
       ! Blade discretization
       turbines(n)%nblades = 3
@@ -67,7 +67,6 @@ subroutine turbine_initialize()
       turbines(n)%tiploss    = itiploss
    end do
 
-   print *, 'iradius =', turbines(1)%iradius
 
    ! Load airfoil tables for all foils used
    call nrelreadfoil()

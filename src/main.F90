@@ -232,17 +232,7 @@ program LatticeBoltzmann
       call boundarycond(f1,f2,uvel)
 
 #ifdef MPI
-! >>>>>>>>>>>>>>> MPI HALO EXCHANGE FOR DRIFT <<<<<<<<<<<<<<
       call mpi_halo_exchange_j(f1)
-!      if (it==800) then
-!      fH=f1
-!      write(*,'(a,i4,10g15.7)') '    ghost north ny+1 =',mpi_rank, fH(1:5,100, ny+1 ,nz/2)
-!      write(*,'(a,i4,10g15.7)') '    ghost north ny   =',mpi_rank, fH(1:5,100, ny   ,nz/2)
-!      write(*,'(a,i4,10g15.7)') '    ghost south 1    =',mpi_rank, fH(1:5,100, 1    ,nz/2)
-!      write(*,'(a,i4,10g15.7)') '    ghost south 0    =',mpi_rank, fH(1:5,100, 0    ,nz/2)
-!      write(*,*)
-!      endif
-
 #endif
 
 ! Drift of f1 returned in f2

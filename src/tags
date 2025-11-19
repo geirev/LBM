@@ -146,6 +146,7 @@ m_testing	m_testing.F90	/^module
 m_testvar	m_testvar.F90	/^module
 m_turbines_apply	m_turbines_apply.F90	/^module
 m_turbines_apply_kernel	m_turbines_apply_kernel.F90	/^module
+m_turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 m_turbine_bladeforce	m_turbine_bladeforce.F90	/^module
 m_turbine_deposit	m_turbine_deposit.F90	/^module
 m_turbine_extend_array	m_turbine_extend_array.F90	/^module
@@ -189,6 +190,7 @@ testvar	m_testvar.F90	/^module
 turbines	mod_turbines.F90	/^module
 turbines_apply	m_turbines_apply.F90	/^module
 turbines_apply_kernel	m_turbines_apply_kernel.F90	/^module
+turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 turbine_bladeforce	m_turbine_bladeforce.F90	/^module
 turbine_deposit	m_turbine_deposit.F90	/^module
 turbine_extend_array	m_turbine_extend_array.F90	/^module

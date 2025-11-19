@@ -24,6 +24,7 @@ subroutine turbine_forcing(F_turb_local, turbines_in, rho, u, v, w)
    use mod_turbines
    use m_turbine_points
    use m_turbine_deposit
+   use m_turbines_bounding_box
    use m_wtime
 #ifdef MPI
    use m_mpi_decomp_init, only : j_start, j_end, mpi_rank
@@ -50,6 +51,7 @@ subroutine turbine_forcing(F_turb_local, turbines_in, rho, u, v, w)
 
    integer :: np,i
    real, allocatable :: rho_h(:,:,:), u_h(:,:,:), v_h(:,:,:), w_h(:,:,:)
+   integer krad
 
    call cpustart()
 
@@ -65,6 +67,7 @@ subroutine turbine_forcing(F_turb_local, turbines_in, rho, u, v, w)
       F_turb_local = 0.0
       return
    end if
+
 
    ! 3. Allocate global force vectors in mod_turbines
    if (allocated(Fvec_local))  deallocate(Fvec_local)
@@ -110,7 +113,9 @@ subroutine turbine_forcing(F_turb_local, turbines_in, rho, u, v, w)
    ! 6. Clear local forcing field and deposit smoothed forces
    F_turb_local = 0.0
 
-   call turbine_deposit(F_turb_local, points_global, Fvec_global, np)
+   call turbine_deposit(F_turb_local, points_global, Fvec_global, np, krad)
+
+   call turbines_bounding_box(points_global, np, krad)
 
    deallocate(Fvec_local, Fvec_global)
    deallocate(points_global)

@@ -244,7 +244,9 @@ program LatticeBoltzmann
       f2 => tmp
 
 ! Compute updated macro variables
+#ifdef MPI
       call mpi_halo_exchange_j(f1)
+#endif
       call macrovars(rho,u,v,w,f1)
 
 ! Diagnostics

@@ -22,11 +22,14 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    attributes(device) :: ww
    attributes(device) :: rr
 #endif
-   real, allocatable  :: f_h(:,:,:,:)
-   real, allocatable  :: uu_h(:,:,:)
-   real, allocatable  :: vv_h(:,:,:)
-   real, allocatable  :: ww_h(:,:,:)
-   real, allocatable  :: rr_h(:,:,:)
+
+#ifdef _CUDA
+   real, allocatable :: f_h(:,:,:,:)
+   real, allocatable :: uu_h(:,:,:)
+   real, allocatable :: vv_h(:,:,:)
+   real, allocatable :: ww_h(:,:,:)
+   real, allocatable :: rr_h(:,:,:)
+#endif
 
    logical ex
    integer :: i,j,k,l,n
@@ -40,22 +43,22 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    character(len=10) prefix
    character(len=10)  directory
    character(len=100) fname
+   integer ir
 
-   allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
-   allocate(uu_h(ny,nz,0:nrturb)        )
-   allocate(vv_h(ny,nz,0:nrturb)        )
-   allocate(ww_h(ny,nz,0:nrturb)        )
-   allocate(rr_h(ny,nz,0:nrturb)        )
+
+   ir=0
 
 ! File names
 #ifdef MPI
    write(ctile,'(i4.4)') mpi_rank
    suffix = '_' // trim(ctile)
 #else
+   write(ctile,'(i4.4)') ir
    suffix = ''
 #endif
    ext='.uf'
    write(cit,'(i6.6)')it
+   print '(4a)',' readrestart: tile=',trim(ctile),' iteration=',trim(cit)
 
    directory='restart/'
    call system('mkdir -p '//trim(directory))
@@ -70,12 +73,20 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
             read(iunit,err=998)j,k,l
             rewind(iunit)
             if ((j==ny).and.(k==nz).and.(l==nrturb)) then
+#ifdef _CUDA
+               if (.not. allocated(uu_h)) allocate(uu_h(ny,nz,0:nrturb))
+               if (.not. allocated(vv_h)) allocate(vv_h(ny,nz,0:nrturb))
+               if (.not. allocated(ww_h)) allocate(ww_h(ny,nz,0:nrturb))
+               if (.not. allocated(rr_h)) allocate(rr_h(ny,nz,0:nrturb))
                read(iunit,err=998)j,k,l,uu_h,vv_h,ww_h,rr_h
                uu=uu_h
                vv=vv_h
                ww=ww_h
                rr=rr_h
-
+               deallocate(uu_h,vv_h,ww_h,rr_h)
+#else
+               read(iunit,err=998)ny,nz,nrturb,uu,vv,ww,rr
+#endif
             else
                print '(a)','readrestart: Attempting to read incompatable turbulence restart file'
                print '(a,4i6)','readrestart: Dimensions in restart file are:',j,k,l
@@ -96,7 +107,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
          open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
-            read(iunit)theta
+            read(iunit,err=998)theta
          close(iunit)
          print *,'read restart theta',theta
       else
@@ -111,18 +122,23 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    if (ex) then
       print '(3a)','reading: ',trim(fname)
       open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
-         read(iunit)i,j,k,n,f_h
-         f=f_h
+         read(iunit)i,j,k,l
+         rewind(iunit)
+         if ((i==nx).and.(j==ny).and.(k==nz).and.(l==nl)) then
+#ifdef _CUDA
+            allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
+            read(iunit,err=998)i,j,k,l,f_h
+            f=f_h
+            deallocate(f_h)
+#else
+            read(iunit,err=998)i,j,k,l,f
+#endif
+         endif
       close(iunit)
    else
       print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
       stop
    endif
-   deallocate(f_h)
-   deallocate(uu_h)
-   deallocate(vv_h)
-   deallocate(ww_h)
-   deallocate(rr_h)
    return
    998 stop 'readrestart: error during read of turbulence restart field'
 

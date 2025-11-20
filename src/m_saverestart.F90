@@ -35,24 +35,20 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
    integer iunit
    character(len=4) ctile
    character(len=3)   ext
-   character(len=5)   suffix
    character(len=10)  prefix
    character(len=10)  directory
    character(len=100) fname
    integer ir
 
    if (lnodump) return
-   ir=0
-
 
 ! File names
+   ir=0
 #ifdef MPI
-   write(ctile,'(i4.4)') mpi_rank
-   suffix = '_' // trim(ctile)
-#else
-   write(ctile,'(i4.4)') ir
-   suffix = ''
+   ir=mpi_rank
 #endif
+   write(ctile,'(i4.4)')ir
+
    ext='.uf'
    write(cit,'(i6.6)')it
    print '(4a)',' saverestart: tile=',trim(ctile),' iteration=',trim(cit)
@@ -62,7 +58,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    if (inflowturbulence) then
       prefix='turbulence'
-      fname = trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname = trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
       open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
 #ifdef _CUDA
          if (.not. allocated(uu_h)) allocate(uu_h(ny,nz,0:nrturb))
@@ -83,14 +79,14 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr)
 
    if (nturbines > 0) then
       prefix='theta'
-      fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
       open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
          write(iunit)theta
       close(iunit)
    endif
 
    prefix='restart'
-   fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
    open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
 #ifdef _CUDA
    if (.not. allocated(f_h)) allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))

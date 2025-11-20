@@ -72,7 +72,6 @@ contains
 #endif
 
 
-
    !-----------------------------------------------------------------
    ! Read local force and skip if zero
    !-----------------------------------------------------------------
@@ -80,7 +79,12 @@ contains
    Fy = F_turb(2,i,j,k)
    Fz = F_turb(3,i,j,k)
 
-   if (Fx == 0.0 .and. Fy == 0.0 .and. Fz == 0.0) return
+   if (Fx == 0.0 .and. Fy == 0.0 .and. Fz == 0.0)&
+#ifdef _CUDA
+   return
+#else
+   cycle
+#endif
 
    !-----------------------------------------------------------------
    ! Original density and velocity

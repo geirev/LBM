@@ -47,6 +47,7 @@ module m_readinfile
    real turbrpm            ! Imposed turbine RPM
    real tipspeedratio      ! Imposed tipspeed ratio
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
+   real, allocatable ::  yaw(:),tilt(:)          ! Turbine yaw and tilt
    integer  ihrr           ! Option (1) for regularized R(fneq) scheme
    integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
    integer  ivreman        ! Option (1) for subgridscale mixing using Vreman
@@ -129,17 +130,22 @@ subroutine readinfile()
 
       read(10,*,err=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
-         allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines))
+         allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines), yaw(n), tilt(n))
          read(10,*,err=100)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
          read(10,*,err=100)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
          read(10,*,err=100)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
          read(10,*,err=100)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
+!         do n=1,nturbines
+!            read(10,'(a)',err=100)ver
+!            read(10,*,err=100)ipos(n)
+!            read(10,*,err=100)jpos(n)
+!            read(10,*,err=100)kpos(n)
+!            print '(a,i4,a,3i4)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n)
+!         enddo
          do n=1,nturbines
             read(10,'(a)',err=100)ver
-            read(10,*,err=100)ipos(n)
-            read(10,*,err=100)jpos(n)
-            read(10,*,err=100)kpos(n)
-            print '(a,i4,a,3i4)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n)
+            read(10,*,err=100)ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
+            print '(a,i4,a,3i4,2f10.2)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
          enddo
       else
          print '(a)','Running without wind turbines'

@@ -24,20 +24,17 @@ subroutine testing(it,f,feq)
    character(len=4) ctile
    character(len=6) cit
    character(len=3) ext
-   character(len=5) suffix
    character(len=10) prefix
    character(len=10)  directory
    character(len=100) fname
 
    if (.not. ltesting) return
 ! File names
+   ir=0
 #ifdef MPI
    ir=mpi_rank
-#else
-   ir=0
 #endif
    write(ctile,'(i4.4)') ir
-   suffix = '_' // trim(ctile)
    ext='.uf'
    write(cit,'(i6.6)')it-1
 
@@ -47,7 +44,7 @@ subroutine testing(it,f,feq)
    call system('mkdir -p '//trim(directory))
    prefix='testing'
 
-   fname = trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   fname = trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       open(newunit=iunit,file=trim(fname),form="unformatted", status='old')

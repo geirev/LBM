@@ -88,13 +88,17 @@ F90SOURCE = \
 	m_tecplot.F90\
 	m_testing.F90\
 	m_testvar.F90\
-	m_turbine_bladeforce.F90\
+	m_turbine_compute_bladeforce.F90\
 	m_turbine_deposit.F90\
+	m_turbine_distribute_points.F90\
 	m_turbine_extend_array.F90\
 	m_turbine_forcing.F90\
 	m_turbine_initialize.F90\
 	m_turbine_interpolation.F90\
-	m_turbine_points.F90\
+	m_turbine_point_forces.F90\
+	m_turbine_point_forces_gpu.F90\
+	m_turbine_point_forces_kernel.F90\
+	m_turbine_rotor_basis.F90\
 	m_turbines_apply.F90\
 	m_turbines_apply_kernel.F90\
 	m_turbines_bounding_box.F90\

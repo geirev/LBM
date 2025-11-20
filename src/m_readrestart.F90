@@ -35,27 +35,20 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    integer :: i,j,k,l,n
    character(len=6) cit
    integer iunit
-#ifdef MPI
    character(len=4) ctile
-#endif
    character(len=3) ext
-   character(len=5) suffix
    character(len=10) prefix
    character(len=10)  directory
    character(len=100) fname
    integer ir
 
-
-   ir=0
-
 ! File names
+   ir=0
 #ifdef MPI
-   write(ctile,'(i4.4)') mpi_rank
-   suffix = '_' // trim(ctile)
-#else
-   write(ctile,'(i4.4)') ir
-   suffix = ''
+   ir=mpi_rank
 #endif
+   write(ctile,'(i4.4)')ir
+
    ext='.uf'
    write(cit,'(i6.6)')it
    print '(4a)',' readrestart: tile=',trim(ctile),' iteration=',trim(cit)
@@ -65,7 +58,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 
    if (inflowturbulence) then
       prefix='turbulence'
-      fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
       inquire(file=trim(fname),exist=ex)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
@@ -85,7 +78,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
                rr=rr_h
                deallocate(uu_h,vv_h,ww_h,rr_h)
 #else
-               read(iunit,err=998)ny,nz,nrturb,uu,vv,ww,rr
+               read(iunit,err=998)j,k,l,uu,vv,ww,rr
 #endif
             else
                print '(a)','readrestart: Attempting to read incompatable turbulence restart file'
@@ -102,7 +95,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
 
    if (nturbines > 0) then
       prefix='theta'
-      fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+      fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
       inquire(file=trim(fname),exist=ex)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
@@ -117,7 +110,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    endif
 
    prefix='restart'
-   fname =  trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       print '(3a)','reading: ',trim(fname)

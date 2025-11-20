@@ -18,15 +18,15 @@ LD  = gfortran
 F90 = gfortran
 F77 = gfortran
 else
-ifdef MPI
-LD  = mpif90
-F90 = mpif90
-F77 = mpif90
-else
 LD  = nvfortran
 F90 = nvfortran
 F77 = nvfortran
 endif
+
+ifdef MPI
+LD  = mpif90
+F90 = mpif90
+F77 = mpif90
 endif
 
 ################################# FFLAGS

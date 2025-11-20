@@ -4,8 +4,8 @@ module mod_dimensions
 ! ny is the tile dimension, while nyg is an ntiles*ny the global dimension in the y-direction.
 
 !windfarm big D=32
-  integer, parameter :: nx = 110          !928          ! grid dimension x-dir (east)
-  integer, parameter :: ny = 120          ! grid dimension y-dir (north)
+  integer, parameter :: nx = 928           !110          !928          ! grid dimension x-dir (east)
+  integer, parameter :: ny = 120          ! Local-tile grid dimension y-dir (north)
   integer, parameter :: ntiles = 4        ! Number of tiles in y direction
   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
   integer, parameter :: nz = 121          ! grid dimension z-dir (up)

@@ -31,7 +31,7 @@ contains
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
 #else
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(u, v, w, rho, rho0, uvel, udir, stddev, pi, rho_local)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k) SHARED(u, v, w, rho, rho0, uvel, udir, stddev, rho_local)
    do k=1,nz
    do j=1,ny
    do i=1,nx

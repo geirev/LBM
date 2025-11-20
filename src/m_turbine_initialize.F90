@@ -4,7 +4,7 @@
 !==============================================================
 module m_turbine_initialize
    use mod_turbines
-   use m_readinfile, only : nturbines, p2l, ipos, jpos, kpos, turbrpm, pitchangle, tipspeedratio, itiploss
+   use m_readinfile, only : nturbines, p2l, ipos, jpos, kpos, yaw, tilt, turbrpm, pitchangle, tipspeedratio, itiploss
    use m_nrelreadfoil
    implicit none
 contains
@@ -60,8 +60,8 @@ subroutine turbine_initialize()
 
       ! Orientation & dynamics
       turbines(n)%theta      = 0.0
-      turbines(n)%yaw        = 0.0
-      turbines(n)%tilt       = 0.0
+      turbines(n)%yaw        = (yaw(n)/360.0)*pi2
+      turbines(n)%tilt       = (tilt(n)/360.0)*pi2
       turbines(n)%omegand    = omega * p2l%time
       turbines(n)%pitchangle = pitchangle
       turbines(n)%tiploss    = itiploss

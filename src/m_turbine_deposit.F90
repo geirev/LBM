@@ -16,10 +16,10 @@ contains
 !    call turbine_deposit(F_turb, points_global, Fvec_global, np)
 !--------------------------------------------------------------
 subroutine turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
-   use mod_turbines
+   use mod_turbines, only : point_t
    use mod_dimensions, only : nx, ny, nz, nyg
 #ifdef MPI
-   use m_mpi_decomp_init, only : j_start, j_end
+   use m_mpi_decomp_init, only : j_start, j_end, mpi_rank
 #endif
    implicit none
    real,          intent(inout) :: F_turb(3,0:nx+1,0:ny+1,0:nz+1)

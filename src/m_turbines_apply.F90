@@ -39,6 +39,7 @@ subroutine turbines_apply(f,F_turb,rho,u,v,w)
    real :: inv6cs6
    real :: ratio
    integer, parameter :: icpu=8
+
    call cpustart()
    if (.not. allocated(F_turb_dev)) allocate(F_turb_dev(3,0:nx+1,0:ny+1,0:nz+1))
    F_turb_dev=F_turb
@@ -58,9 +59,9 @@ subroutine turbines_apply(f,F_turb,rho,u,v,w)
 #endif
       call turbines_apply_kernel&
 #ifdef _CUDA
-          &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          (f, rho, u, v, w, F_turb_dev,  inv1cs2, inv2cs4, ratio, ibgk,t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax)
+         &(f, rho, u, v, w, F_turb_dev,  inv1cs2, inv2cs4, ratio, ibgk,t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax)
    call cpufinish(icpu)
 end subroutine
 end module

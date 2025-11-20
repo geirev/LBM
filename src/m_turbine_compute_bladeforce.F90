@@ -1,36 +1,5 @@
-!==============================================================
-!  m_turbine_bladeforce.F90
-!  Rotor basis and blade force projection (CPU/GPU unified)
-!==============================================================
-module m_turbine_bladeforce
-   use mod_turbines, only : point_t
-   implicit none
+module m_turbine_compute_bladeforce
 contains
-
-!--------------------------------------------------------------
-!  subroutine turbine_rotor_basis
-!
-!  PURPOSE:
-!    Build orthonormal basis for the rotor:
-!      e_axis : rotor axis (unit)
-!      e1, e2 : in-plane orthonormal vectors
-!
-!  yaw  : rotation about z-axis
-!  tilt : pitch of rotor axis
-!--------------------------------------------------------------
-#ifdef _CUDA
-attributes(host,device) &
-#endif
-subroutine turbine_rotor_basis(yaw, tilt, e_axis, e1, e2)
-   implicit none
-   real, intent(in)  :: yaw, tilt
-   real, intent(out) :: e_axis(3), e1(3), e2(3)
-
-   e_axis = (/ cos(yaw)*cos(tilt),  sin(yaw)*cos(tilt), -sin(tilt) /)
-   e1     = (/ -sin(yaw),           cos(yaw),            0.0       /)
-   e2     = (/ -cos(yaw)*sin(tilt), -sin(yaw)*sin(tilt), -cos(tilt) /)
-end subroutine turbine_rotor_basis
-
 
 !--------------------------------------------------------------
 !  subroutine turbine_compute_blade_force
@@ -51,7 +20,9 @@ end subroutine turbine_rotor_basis
 #ifdef _CUDA
 attributes(host,device) &
 #endif
-subroutine turbine_compute_blade_force(Fvec, point, u_ax, u_tan_rel, dens, cl, cd)
+subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd)
+   use mod_turbines, only : point_t
+   use m_turbine_rotor_basis
    implicit none
    type(point_t), intent(in) :: point
    real, intent(in)          :: u_ax, u_tan_rel
@@ -92,6 +63,5 @@ subroutine turbine_compute_blade_force(Fvec, point, u_ax, u_tan_rel, dens, cl, c
    ! Lift and drag decomposition in (e_axis, e_tan) plane
    Fvec = L * (cosphi * e_axis + sinphi * e_tan) - &
           D * (sinphi * e_axis - cosphi * e_tan)
-end subroutine turbine_compute_blade_force
-
-end module m_turbine_bladeforce
+end subroutine
+end module

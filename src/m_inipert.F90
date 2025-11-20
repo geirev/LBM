@@ -116,7 +116,7 @@ subroutine inipert(rho,u,v,w,uvel,ir)
 !$cuf kernel do(3) 
 #else
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, k) &
-!$OMP SHARED(rho, u, v, w, rho0, uvel, stddev, udir, pi)
+!$OMP SHARED(rho, u, v, w, rho0, uvel, udir)
 #endif
    do k=1,nz
       do j=1,ny

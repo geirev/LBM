@@ -38,6 +38,7 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    character(len=4)   :: ext
    character(len=200) :: fname
    integer, parameter :: icpu = 14
+   integer ir
 
    if (lnodump) return
    if (.not. (mod(it,iout)==0 .or. it==nt1 .or. ((it<=iprt1 .or. it>=iprt2) .and. mod(it,dprt)==0))) return
@@ -83,12 +84,11 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    ! -------------------------
    ! Build filename pieces
    ! -------------------------
+   ir=0
 #ifdef MPI
-   write(ctile,'(i4.4)') mpi_rank
-   suffix = '_' // trim(ctile)
-#else
-   suffix = ''
+   ir=mpi_rank
 #endif
+   write(ctile,'(i4.4)')ir
 
 #ifdef NETCDF
    prefix = 'out'
@@ -100,7 +100,7 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    directory='output/'
 
    call system('mkdir -p '//trim(directory))
-   fname = trim(directory) // trim(prefix) // trim(suffix) // '_' // trim(cit) // trim(ext)
+   fname = trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
 
    ! -------------------------
    ! Host copies (needed by writers)

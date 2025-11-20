@@ -1,16 +1,35 @@
 # Lattice-Boltzmann-Model
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
-## Relese notes:
-**The latest pushes have been major upgrades. Speedup is now around 100 on GPU relative a single CPU core.**
+## Release notes:
+** (Dec 2025): The current version has upgraded the code to allow for MPI paralleization.**
+  - To use MPI, compile with MPI=1. (```make -B MPI=1 CUDA=1``` for multiple GPU boards, and ```make -B MPI=1``` for multiple CPUs).
+    The MPI parallelization should scale almost linearly on multiple CPUs and GPUs, and is much more efficient than using OPEN-MP.
+  - The MPI paralleization splits the model domain into a number of tiles in the ```j```-direction.
+  - Edit mod_dimensions where ```ny``` is now the local tile dimension, and ```nyg``` is the global grid dimension in the ```j```-direction.
+    And note that ```nyg = nrtiles x ny```.
+  - I have completely rewritten the actuatorline model for the MPI parallelization, where blades and forces can intersect tail boundaries.
+    You can also add a tilt and yaw angle to the rotor in the infile.in (not yet tested).
+  - Restart and diagnostic files now include the tile number in the file name, e.g., ```tec_0002_020050.plt``` and ```restart_0002_020050.uf```
+    which refer to a diagnostic file and a restart file for tile number 2 at the timestep 20050. For plotting you will now have to read multiple
+    files per timestep. For consistency, all runs, also without MPI parallelizaiton include a tile number in the file name (0000 in the non MPI case).
+  - To start an MPI simulation to run on 4 GPUs or 4 CPUs, type
+```bash
+   ulimit -s unlimited (when running on CPUs)
+   mpirun -np 4 boltzmann
+```
+
+
+
+** (Oct 2025) The latest pushes have been major upgrades. Speedup is now around 100 on GPU relative a single CPU core.**
   - The code uses pointers to switch beteen f1 and f2 every second timestep. This allows for a significant simplification
     for the implementation of boundary conditions and reduces the load on the GPU for the postcoll routine.
   - postcoll now replaces fequil2, regularization, vreman and collisions, which are all done in one common kernel.
   - The actuatorline model was a mess, and I have now cleaned it up and tested it again.
   - I have changed the format of the infile.in. Also, if there is no infile.in present, Boltzmann will generate one for you.
-  - I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole distribution function 
-    f in a file at the end of the simulation e.g., testing000200.uf if you run 200 time-steps. All subsequent 200 time-steps runs will then compute the
-    difference between the latest simulations and the reference testing000200.uf file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-05) are acceptable in
+  - I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole distribution function
+    f in a file at the end of the simulation e.g., ```testing000200.uf``` if you run 200 time-steps. All subsequent 200 time-steps runs will then compute the
+    difference between the latest simulations and the reference ```testing000200.uf``` file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-05) are acceptable in
     sigle precision.
 
 ## License
@@ -186,7 +205,7 @@ Some editing of paths and makefile may be necessary in this case.
 For gpu compilation run 'nvidia-smi' or 'lshw -C display' to find you gpu-card.
 Then check the compute capability of your gpu in the table
 [https://developer.nvidia.com/cuda-gpus](https://developer.nvidia.com/cuda-gpus).
-Note also the link to the old/legacy GPU cards in the link 
+Note also the link to the old/legacy GPU cards in the link
 [https://developer.nvidia.com/cuda-legacy-gpus] (https://developer.nvidia.com/cuda-legacy-gpus), and also be aware that some old GPU cards
 may require you to install older versions than nvhpc-25-7.
 
@@ -231,6 +250,16 @@ make -B MP=1
 nvfortran compilation for CUDA GPU in single precision and D3Q27 lattice
 ```bash
 make -B CUDA=1
+```
+
+nvfortran compilation for CUDA GPU in single precision and D3Q27 lattice with MPI parallelization
+```bash
+make -B CUDA=1 MPI=1
+```
+
+nvfortran compilation for MPI paralleization on CPUs in single precision and D3Q27 lattice
+```bash
+make -B MPI=1
 ```
 
 Compilation for CUDA GPU in double precision and D3Q27 lattice
@@ -329,6 +358,7 @@ Note the definition of `ny_global` vs `ny` in mod_dimensions.F90.
 To run on multiple CPU cores (24 here) using MPI:
 ```bash
 make -B MPI=1
+ulimit -s unlimited
 mpirun -np 24 --bind-to core ./boltzmann
 ```
 Note the definition of `ny_global` vs `ny`.
@@ -353,7 +383,7 @@ nvprof boltzmann
 which gives a detailed listing of the CPU time used by each kernel.
 
 To obtain more realistic profiling, removing the device to host copying which starts dominating for short GPU runs, set
-`lnodump` to `true` and  `ltiming` to `false` in `infile.in`. This avoids writing dianostic and restart files and 
+`lnodump` to `true` and  `ltiming` to `false` in `infile.in`. This avoids writing dianostic and restart files and
 eliminates all the syncs before and after kernal lauches which the profiling
 reacts on but which has little impact on the total simulation time.
 

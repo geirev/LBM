@@ -6,6 +6,7 @@ subroutine postcoll(f, tau, rho, u, v, w)
    use mod_D3Q27setup
    use m_readinfile
    use m_readinfile, only : ibgk,ihrr
+   use m_mechanical_ablvisc, only : ablvisc
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz, ivreman,kinevisc,smagorinsky
 #endif
@@ -31,6 +32,10 @@ subroutine postcoll(f, tau, rho, u, v, w)
 
    real :: const           ! c in Vreman 2004 Eq (5)
    real :: eps
+   real :: ablvisc_d(nz)
+#ifdef _CUDA
+   attributes(device) :: ablvisc_d
+#endif
 
    real, parameter :: inv1cs2 = 1.0/(cs2)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
@@ -40,6 +45,7 @@ subroutine postcoll(f, tau, rho, u, v, w)
 
    const=2.5*smagorinsky**2
    eps = sqrt(tiny(1.0))
+   ablvisc_d=ablvisc
 
    call cpustart()
 #ifdef _CUDA
@@ -51,7 +57,7 @@ subroutine postcoll(f, tau, rho, u, v, w)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(f, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman)
+        &(f, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman, ablvisc_d)
 
 
    call cpufinish(icpu)

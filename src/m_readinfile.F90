@@ -51,6 +51,8 @@ module m_readinfile
    integer  ihrr           ! Option (1) for regularized R(fneq) scheme
    integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
    integer  ivreman        ! Option (1) for subgridscale mixing using Vreman
+   integer  iablvisc       ! Atmospheric boundary layer mixing (0-none, 1-mechanical layer, 2-buoyancy scheme)
+   real     ablheight      ! Height of atmospheric boundary layer
    real smagorinsky        ! smagorinsky constant (0.15) used in subgridscale mixing
    logical ltiming         ! true for timing of kernels. Should be false to avoid syncs
 
@@ -89,6 +91,7 @@ subroutine readinfile()
       read(10,*,err=100)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
       read(10,*,err=100)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
       read(10,*,err=100)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
+      read(10,*,err=100)iablvisc,ablheight ; print '(a,i1,a,f10.4)','ABL: iablvisc     = ',iablvisc,' ablheight=',ablheight
 
       read(10,'(a)',err=100)ver
 

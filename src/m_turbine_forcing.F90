@@ -49,6 +49,15 @@ subroutine turbine_forcing(F_turb, turbines_in, rho, u, v, w)
 
    call cpustart()
 ! 1. Update turbine azimuth
+!  if (tipspeed /= 0.0) then
+!     compute new turbrpm for each turbine
+!     do n=1,nrturbines
+!        turbrpm=f(u,tipspeedratio)
+!        omega = pi2 * turbrpm / 60.0
+!        turbines(n)%omegand    = omega * p2l%time
+!     enddo
+!  endif
+
    turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
 
 ! 2. Construct global actuator point locations and blade data stored in points_global(np)

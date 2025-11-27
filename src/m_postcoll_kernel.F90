@@ -4,7 +4,7 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine postcoll_kernel(f, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman)
+   subroutine postcoll_kernel(f, tau, rho, u, v, w, inv1cs2, inv2cs4, inv6cs6, eps, kinevisc, const, ibgk, ihrr, ivreman, ablvisc)
 #ifdef _CUDA
    use cudafor
 #endif
@@ -13,10 +13,11 @@ contains
    implicit none
    real, intent(inout)  :: f(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout)  :: tau(0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)      :: rho(0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)      ::   u(0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)      ::   v(0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)      ::   w(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     :: rho(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   u(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   v(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     ::   w(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)     :: ablvisc(nz)
    real, value          :: inv1cs2
    real, value          :: inv2cs4
    real, value          :: inv6cs6
@@ -230,7 +231,11 @@ contains
          else
             eddyvisc=0.0
          endif
-         tau(i,j,k) = 3.0*(kinevisc + eddyvisc) + 0.5
+
+
+
+
+         tau(i,j,k) = 3.0*(kinevisc + eddyvisc + ablvisc(k)) + 0.5
       endif
 
 

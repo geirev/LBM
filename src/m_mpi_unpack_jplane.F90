@@ -3,11 +3,11 @@ contains
 #ifdef _CUDA
 attributes(global) &
 #endif
-subroutine mpi_unpack_jplane(f, j_plane, buf)
+subroutine mpi_unpack_jplane(f, j_plane, buf, nl)
    use mod_dimensions, only : nx, ny, nz
-   use mod_D3Q27setup, only : nl
    implicit none
    integer, value :: j_plane
+   integer, value :: nl
    real :: f(nl,0:nx+1,0:ny+1,0:nz+1)   ! (l,i,j,k)
    real :: buf(nl*(nx+2)*(nz+2))       ! linearized (i,k,l); size = nl*(nx+2)*(nz+2)
 #ifdef _CUDA

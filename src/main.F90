@@ -2,6 +2,8 @@ program LatticeBoltzmann
 #ifdef _CUDA
    use cudafor
 #endif
+   use m_mechanical_ablvisc
+   use m_advection
    use m_airfoil
    use m_testing
    use m_postcoll
@@ -55,7 +57,6 @@ program LatticeBoltzmann
 #ifdef MPI
    use mpi
    use m_mpi_decomp_init
-   use m_mpi_halo_buffers
    use m_mpi_halo_exchange_j
    use m_mpi_decomp_finalize
 #endif
@@ -81,7 +82,11 @@ program LatticeBoltzmann
    real         ::         w_h(0:nx+1,0:ny+1,0:nz+1)             ! z component of fluid velocity
    real         ::       rho_h(0:nx+1,0:ny+1,0:nz+1)             ! fluid density
 
+   real, target, allocatable  :: tracerA(:,:,:,:)
+   real, target, allocatable  :: tracerB(:,:,:,:)
+
    real, pointer:: f1(:,:,:,:), f2(:,:,:,:), tmp(:,:,:,:)
+   real, pointer:: t1(:,:,:,:), t2(:,:,:,:), tr_tmp(:,:,:,:)
 
 #ifdef _CUDA
    attributes(device) :: f1
@@ -96,10 +101,16 @@ program LatticeBoltzmann
    attributes(device) :: w
    attributes(device) :: rho
    attributes(device) :: uvel
+
+   attributes(device) :: tracerA
+   attributes(device) :: tracerB
+   attributes(device) :: t1
+   attributes(device) :: t2
+   attributes(device) :: tr_tmp
 #endif
 
    real,    dimension(:),       allocatable :: uvel_h      ! vertical u-velocity profile on host
-   integer :: it,ir
+   integer :: it,ir,i
    logical :: lsolids=.false.
 
 #ifdef MPI
@@ -110,9 +121,15 @@ program LatticeBoltzmann
    call printdefines()
    call cpustart()
 
+   if (ntracer > 0) then
+      allocate(tracerA(ntracer,0:nx+1,0:ny+1,0:nz+1))
+      allocate(tracerB(ntracer,0:nx+1,0:ny+1,0:nz+1))
+   endif
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Reading all input parameters
    call readinfile()
+
 
    ir=0
 #ifdef MPI
@@ -126,8 +143,10 @@ program LatticeBoltzmann
 
    ir=mpi_rank
 
-   call mpi_halo_buffers_alloc()
+!   call mpi_halo_buffers_alloc()
 #endif
+
+   call mechanical_ablvisc(ir)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -174,6 +193,14 @@ program LatticeBoltzmann
       call boundarycond(fB,fA,uvel)
       fA=fB
 
+! tracer initialization
+      if (ntracer > 0) then
+         do i=1,ntracer
+            tracerA(i,:,:,:)=rho(:,:,:)
+            tracerB(i,:,:,:)=rho(:,:,:)
+         enddo
+      endif
+
 ! Generate turbulence forcing fields
       if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
    else
@@ -191,11 +218,13 @@ program LatticeBoltzmann
    if (ir == 0) call gpu_meminfo('time stepping')
 #endif
 
-
 ! initialize pointers
    f1 => fA
    f2 => fB
-
+   if (ntracer > 0) then
+      t1 => tracerA
+      t2 => tracerB
+   endif
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -232,22 +261,33 @@ program LatticeBoltzmann
       call boundarycond(f1,f2,uvel)
 
 #ifdef MPI
-      call mpi_halo_exchange_j(f1)
+      call mpi_halo_exchange_j(f1,nl)
 #endif
 
 ! Drift of f1 returned in f2
       call drift(f2,f1)
 
-! Swap such that f2 becomes f1 in next time step
+! Swap such that f2,t2 becomes f1,t1 in next time step
       tmp   => f1
       f1  => f2
       f2 => tmp
 
-! Compute updated macro variables
+! Compute updated macro variables and copy to halos for printing
 #ifdef MPI
-      call mpi_halo_exchange_j(f1)
+      call mpi_halo_exchange_j(f1,nl)
 #endif
       call macrovars(rho,u,v,w,f1)
+
+! tracer advection returns updated tracer in t2
+      if (ntracer > 0) then
+#ifdef MPI
+         call mpi_halo_exchange_j(t1,ntracer)
+#endif
+         call advection(t2,t1,u,v,w,tau)
+         tr_tmp => t1
+         t1 => t2
+         t2 => tr_tmp
+      endif
 
 ! Diagnostics
       call diag(itecout,it,rho,u,v,w,lblanking)
@@ -293,7 +333,6 @@ program LatticeBoltzmann
    call testing(it,f1,f2)
 
 #ifdef MPI
-   call mpi_halo_buffers_free()
    call mpi_decomp_finalize()
 #endif
 end program LatticeBoltzmann

@@ -6,7 +6,6 @@ module m_mpi_halo_buffers
    use cudafor
 #endif
    use mod_dimensions, only: nx, ny, nz
-   use mod_D3Q27setup, only: nl
    use m_mpi_decomp_init,  only: north, south
    implicit none
    ! Contiguous device buffers for one full j-plane
@@ -20,8 +19,9 @@ module m_mpi_halo_buffers
  !  integer(kind=8) :: plane_elems = 0
    integer :: plane_elems = 0
 contains
-   subroutine mpi_halo_buffers_alloc()
+   subroutine mpi_halo_buffers_alloc(nl)
       implicit none
+      integer, intent(in) :: nl
       !plane_elems = int(nl,8)*int(nx+2,8)*int(nz+2,8)
       plane_elems = nl*(nx+2)*(nz+2)
       allocate(snd_south(plane_elems), rcv_south(plane_elems))

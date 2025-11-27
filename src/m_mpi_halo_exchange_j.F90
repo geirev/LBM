@@ -1,6 +1,6 @@
 module m_mpi_halo_exchange_j
 contains
-subroutine mpi_halo_exchange_j(f)
+subroutine mpi_halo_exchange_j(f,nl)
 #ifdef MPI
    use mpi
    use m_mpi_pack_jplane
@@ -11,9 +11,9 @@ subroutine mpi_halo_exchange_j(f)
    use cudafor
 #endif
    use mod_dimensions, only : nx, ny, nz
-   use mod_D3Q27setup, only : nl
    use m_mpi_decomp_init, only : north, south, mpi_nprocs, mpi_rank
    implicit none
+   integer, intent(in) :: nl
    real :: f(nl,0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
    attributes(device) :: f
@@ -25,6 +25,7 @@ subroutine mpi_halo_exchange_j(f)
    integer :: count_i, mpi_rtype
 #endif
 
+   call mpi_halo_buffers_alloc(nl)
 ! Everything is handled in the boundarycond routine for serial code
 #ifdef MPI
    if (mpi_nprocs == 1) return
@@ -44,13 +45,13 @@ subroutine mpi_halo_exchange_j(f)
 #ifdef _CUDA
    &<<<G,B>>>&
 #endif
-   (f, 1,  snd_south)
+   (f, 1,  snd_south, nl)
 
    call mpi_pack_jplane &
 #ifdef _CUDA
    &<<<G,B>>>&
 #endif
-   (f, ny, snd_north)
+   (f, ny, snd_north, nl)
 
    ! datatype must match your REAL kind
    if (kind(snd_south(1)) == kind(1.0d0)) then
@@ -102,7 +103,7 @@ subroutine mpi_halo_exchange_j(f)
 #ifdef _CUDA
       &<<<G,B>>>&
 #endif
-      (f, 0, rcv_south)
+      (f, 0, rcv_south, nl)
    end if
 
 !!!!!!!!!!!!!!!!!!! North unpack
@@ -111,12 +112,13 @@ subroutine mpi_halo_exchange_j(f)
 #ifdef _CUDA
       &<<<G,B>>>&
 #endif
-      (f, ny+1, rcv_north)
+      (f, ny+1, rcv_north, nl)
    endif
 
 #ifdef _CUDA
    istat = cudaDeviceSynchronize(); if (istat/=0) print*,'unpack sync err=',istat
 #endif
+   call mpi_halo_buffers_free()
 
 end subroutine
 end module

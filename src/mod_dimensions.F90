@@ -9,6 +9,7 @@ module mod_dimensions
   integer, parameter :: ntiles = 4        ! Number of tiles in y direction
   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
   integer, parameter :: nz = 121          ! grid dimension z-dir (up)
+  integer, parameter :: ntracer = 1       ! Number of tracer fields (potential temperature etc)
 
 !windfarm
 !  integer, parameter :: nx = 928          ! grid dimension x-dir (east)

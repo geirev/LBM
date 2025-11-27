@@ -1,5 +1,7 @@
 
 F90SOURCE = \
+	m_advection.F90\
+	m_advection_kernel.F90\
 	main.F90\
 	m_airfoil.F90\
 	m_averaging_full.F90\
@@ -49,6 +51,7 @@ F90SOURCE = \
 	m_inipert_kernel.F90\
 	m_macrovars.F90\
 	m_macrovars_kernel.F90\
+	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
 	m_mpi_decomp_finalize.F90\
 	m_mpi_decomp_init.F90\

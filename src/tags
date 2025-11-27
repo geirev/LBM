@@ -1,3 +1,5 @@
+advection	m_advection.F90	/^module
+advection_kernel	m_advection_kernel.F90	/^module
 airfoil	m_airfoil.F90	/^module
 averaging_full	m_averaging_full.F90	/^module
 averaging_full_kernel	m_averaging_full_kernel.F90	/^module
@@ -49,6 +51,7 @@ inipert	m_inipert.F90	/^module
 inipert_kernel	m_inipert_kernel.F90	/^module
 macrovars	m_macrovars.F90	/^module
 macrovars_kernel	m_macrovars_kernel.F90	/^module
+mechanical_ablvisc	m_mechanical_ablvisc.F90	/^module
 mkinfile	m_mkinfile.F90	/^module
 mod_D3Q27setup	mod_D3Q27setup.F90	/^module
 mod_dimensions	mod_dimensions.F90	/^module
@@ -62,6 +65,8 @@ mpi_halo_buffers	m_mpi_halo_buffers.F90	/^module
 mpi_halo_exchange_j	m_mpi_halo_exchange_j.F90	/^module
 mpi_pack_jplane	m_mpi_pack_jplane.F90	/^module
 mpi_unpack_jplane	m_mpi_unpack_jplane.F90	/^module
+m_advection	m_advection.F90	/^module
+m_advection_kernel	m_advection_kernel.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
 m_averaging_full	m_averaging_full.F90	/^module
 m_averaging_full_kernel	m_averaging_full_kernel.F90	/^module
@@ -110,6 +115,7 @@ m_inipert	m_inipert.F90	/^module
 m_inipert_kernel	m_inipert_kernel.F90	/^module
 m_macrovars	m_macrovars.F90	/^module
 m_macrovars_kernel	m_macrovars_kernel.F90	/^module
+m_mechanical_ablvisc	m_mechanical_ablvisc.F90	/^module
 m_mkinfile	m_mkinfile.F90	/^module
 m_mpi_decomp_finalize	m_mpi_decomp_finalize.F90	/^module
 m_mpi_decomp_init	m_mpi_decomp_init.F90	/^module

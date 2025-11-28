@@ -2,7 +2,7 @@ module m_tecout
 implicit none
 
 contains
-subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanking,rho,u,v,w,Ti)
+subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanking,rho,u,v,w,tracer,Ti)
    use mod_dimensions
    use m_tecplot
    use m_readinfile
@@ -20,6 +20,7 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    real,     intent(in)             :: u(0:nx+1,0:ny+1,0:nz+1)         ! x component of fluid velocity
    real,     intent(in)             :: v(0:nx+1,0:ny+1,0:nz+1)         ! y component of fluid velocity
    real,     intent(in)             :: w(0:nx+1,0:ny+1,0:nz+1)         ! z component of fluid velocity
+   real,     intent(in)             :: tracer(:,:,:,:)                   ! tracer variables
    logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
    real,     intent(in), optional   :: Ti(0:nx+1,0:ny+1,0:nz+1)        ! Turbulent kinetic enery
 
@@ -40,7 +41,7 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
 #endif
 
    physics_time=real(it)
-   print '(5a,f10.2)','tecout: ',trim(filename),' ',trim(variables_string),' iteration=',physics_time
+   print '(5a,f10.2)','tecout: "',trim(filename),'" (',trim(variables_string),') iteration=',physics_time
 
    if ((filetype == 0) .or. (filetype == 1)) then
       allocate(blanking(nx,ny+1,nz))
@@ -105,6 +106,11 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
       dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   u(1:nx,1:ny+1,1:nz)
       dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   v(1:nx,1:ny+1,1:nz)
       dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   w(1:nx,1:ny+1,1:nz)
+      if (ntracer > 0) then
+         do i=1,ntracer
+            dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   tracer(i,1:nx,1:ny+1,1:nz)
+         enddo
+      endif
       if (present(Ti)) then
          dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  = Ti(1:nx,1:ny+1,1:nz)
       endif

@@ -37,7 +37,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    !print *,'mpi: ', mpi_rank, south, north, mpi_nprocs, MPI_PROC_NULL
 
 #ifdef _CUDA
-   B = dim3(16,8,4)
+   B = dim3(256,1,1)
    G = dim3( ((nx+2)+B%x-1)/B%x, ((nz+2)+B%y-1)/B%y, (nl+B%z-1)/B%z )
 #endif
 
@@ -62,16 +62,6 @@ subroutine mpi_halo_exchange_j(f,nl)
 
    ! count must be default integer
    count_i = int(plane_elems, kind=4)
-
-!!   ! recv what we need for our ghosts
-!!   call MPI_Irecv(rcv_south, count_i, mpi_rtype, south, 201, MPI_COMM_WORLD, req(1), ierr)
-!!   call MPI_Irecv(rcv_north, count_i, mpi_rtype, north, 200, MPI_COMM_WORLD, req(3), ierr)
-!!
-!!   ! send our boundaries out
-!!   call MPI_Isend(snd_south, count_i, mpi_rtype, south, 200, MPI_COMM_WORLD, req(2), ierr)
-!!   call MPI_Isend(snd_north, count_i, mpi_rtype, north, 201, MPI_COMM_WORLD, req(4), ierr)
-!!
-!!   call MPI_Waitall(4, req, MPI_STATUSES_IGNORE, ierr)
 
 #ifdef _CUDA
    istat = cudaDeviceSynchronize()

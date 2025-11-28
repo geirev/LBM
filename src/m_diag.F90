@@ -1,6 +1,6 @@
 module m_diag
 contains
-subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
+subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
    use mod_dimensions
    use m_readinfile, only : iout, iprt1, iprt2, dprt, nt1, lnodump
    use m_tecout
@@ -17,14 +17,15 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    real,    intent(in)   ::   u(0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in)   ::   v(0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in)   ::   w(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)   :: tracer(:,:,:,:)
    logical, intent(in)   :: lblanking(0:nx+1,0:ny+1,0:nz+1)
    real,    optional, intent(in) :: Ti(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(device) :: rho, u, v, w, lblanking, Ti
+   attributes(device) :: rho, u, v, w, tracer, lblanking, Ti
 #endif
 
    ! Host scratch
-   real,    allocatable :: u_h(:,:,:), v_h(:,:,:), w_h(:,:,:), rho_h(:,:,:), Ti_h(:,:,:)
+   real,    allocatable :: u_h(:,:,:), v_h(:,:,:), w_h(:,:,:), rho_h(:,:,:), tracer_h(:,:,:,:), Ti_h(:,:,:)
    logical, allocatable :: lblanking_h(:,:,:)
 
    ! Output bookkeeping
@@ -36,9 +37,10 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    character(len=3)   :: prefix
    character(len=10)  :: directory
    character(len=4)   :: ext
+   character(len=2)   :: ctag2
    character(len=200) :: fname
    integer, parameter :: icpu = 14
-   integer ir
+   integer ir,l
 
    if (lnodump) return
    if (.not. (mod(it,iout)==0 .or. it==nt1 .or. ((it<=iprt1 .or. it>=iprt2) .and. mod(it,dprt)==0))) return
@@ -49,41 +51,45 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    ! Decide "cit", variables, num_of_vars
    ! -------------------------
    select case (filetype)
-   case (0,3)   ! Full field with indices
-      if (present(Ti)) then
-         cit         = 'F_AVERAGE'
-         variables   = 'i,j,k,blanking,rho,u,v,w,Ti'
-         num_of_vars = 9
-      else
-         write(cit,'(a1,i6.6)') 'F', it
-         variables   = 'i,j,k,blanking,rho,u,v,w'
-         num_of_vars = 8
-      end if
-
    case (1)     ! Grid only
       cit         = 'GRID'
       variables   = 'i,j,k,blanking'
       num_of_vars = 4
 
+   case (0,3)   ! Full field with indices and netcdf
+      write(cit,'(a1,i6.6)') 'F', it
+      variables   = 'i,j,k,blanking,rho,u,v,w'
+      num_of_vars = 8
+
    case (2)     ! Solution (no indices)
-      if (present(Ti)) then
-         cit         = '_AVERAGE'
-         variables   = 'rho,u,v,w,Ti'
-         num_of_vars = 5
-      else
-         write(cit,'(i6.6)') it
-         variables   = 'rho,u,v,w'
-         num_of_vars = 4
-      end if
+      write(cit,'(i6.6)') it
+      variables   = 'rho,u,v,w'
+      num_of_vars = 4
 
    case default
       print *, 'diag filetype:', filetype
       stop 'invalid filetype in diag'
    end select
+   if (filetype /=1) then
+      if (present(Ti)) then
+         cit         = '_AVERAGE'
+         variables=trim(variables)//',Ti'
+         num_of_vars=num_of_vars+1
+      endif
 
-   ! -------------------------
-   ! Build filename pieces
-   ! -------------------------
+      if (ntracer > 0) then
+         do l=1,ntracer
+            write(ctag2,'(i2.2)')l
+            variables=trim(variables)//',tracer_'//ctag2
+            num_of_vars=num_of_vars+1
+         enddo
+      endif
+   endif
+
+
+! -------------------------
+! Build filename pieces
+! -------------------------
    ir=0
 #ifdef MPI
    ir=mpi_rank
@@ -102,9 +108,9 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    call system('mkdir -p '//trim(directory))
    fname = trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
 
-   ! -------------------------
-   ! Host copies (needed by writers)
-   ! -------------------------
+! -------------------------
+! Host copies (needed by writers)
+! -------------------------
    allocate(u_h(0:nx+1,0:ny+1,0:nz+1), v_h(0:nx+1,0:ny+1,0:nz+1), w_h(0:nx+1,0:ny+1,0:nz+1), rho_h(0:nx+1,0:ny+1,0:nz+1))
    allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
 
@@ -113,6 +119,11 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
    w_h         = w
    rho_h       = rho
    lblanking_h = lblanking
+
+   if (ntracer > 0) then 
+      allocate(tracer_h(ntracer,0:nx+1,0:ny+1,0:nz+1))
+      tracer_h=tracer
+   endif
 
    if (present(Ti)) then
       allocate(Ti_h(0:nx+1,0:ny+1,0:nz+1))
@@ -125,18 +136,18 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
       stop 'Unstable simulation'
    end if
 
-   ! -------------------------
-   ! Single, non-duplicated writer dispatch
-   ! -------------------------
+! -------------------------
+! Single, non-duplicated writer dispatch
+! -------------------------
    select case (filetype)
 
    case (0,1,2)
       if (present(Ti)) then
          call tecout(filetype, trim(fname), it, trim(variables), num_of_vars, &
-                     lblanking_h, rho_h, u_h, v_h, w_h, Ti_h)
+                     lblanking_h, rho_h, u_h, v_h, w_h, tracer_h, Ti_h)
       else
          call tecout(filetype, trim(fname), it, trim(variables), num_of_vars, &
-                     lblanking_h, rho_h, u_h, v_h, w_h)
+                     lblanking_h, rho_h, u_h, v_h, w_h, tracer_h)
       end if
 
    case (3)
@@ -155,12 +166,10 @@ subroutine diag(filetype,it,rho,u,v,w,lblanking,Ti)
 
    end select
 
-   ! -------------------------
-   ! Cleanup
-   ! -------------------------
    deallocate(u_h, v_h, w_h, rho_h)
    if (allocated(lblanking_h)) deallocate(lblanking_h)
    if (allocated(Ti_h))        deallocate(Ti_h)
+   if (allocated(tracer_h))    deallocate(tracer_h)
 
    call cpufinish(icpu)
 end subroutine

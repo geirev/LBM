@@ -3,7 +3,7 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir)
+subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer)
 ! Inflow outflow boundary conditions in i-direction.
 #ifdef _CUDA
    use cudafor
@@ -13,6 +13,7 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir)
 
    implicit none
    real, intent(inout):: f(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout):: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
    real, value   :: udir
    real, value   :: rho0
@@ -51,6 +52,10 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir)
          do l=1,nl
             f(l,nx+1,j,k)=f(l,nx,j,k)                                 ! 0th order extrapolation
          enddo
+         if (ntracer > 0) then
+            tracer(:,0,j,k)=1.0
+            tracer(:,nx+1,j,k)=tracer(:,nx,j,k)
+         endif
 #ifndef _CUDA
       enddo
       enddo

@@ -143,7 +143,6 @@ program LatticeBoltzmann
 
    ir=mpi_rank
 
-!   call mpi_halo_buffers_alloc()
 #endif
 
    call mechanical_ablvisc(ir)
@@ -161,7 +160,7 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Save grid geometry and blanking
-   call diag(1,0,rho,u,v,w,lblanking)
+   call diag(1,0,rho,u,v,w,tracerA,lblanking)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
@@ -184,31 +183,37 @@ program LatticeBoltzmann
 ! Intialization of macro variables
       call inipert(rho,u,v,w,uvel,ir)
 
+! tracer initialization
+      if (ntracer > 0) then
+         do i=1,ntracer
+            tracerA(i,0:nx+1,0:ny+1,0:nz+1)=1.0
+            tracerA(i,100:110,110:120,0:nz+1)=2.0
+            tracerA(i,150:160,50:60,0:nz+1)=2.0
+         enddo
+#ifdef MPI
+         call mpi_halo_exchange_j(tracerA,ntracer)
+#endif
+      endif
+
 ! Initial diagnostics
-      call diag(itecout,0,rho,u,v,w,lblanking)
+      call diag(itecout,0,rho,u,v,w,tracerA,lblanking)
 
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(fB,rho,u,v,w)
       call fillghosts(fB)
-      call boundarycond(fB,fA,uvel)
+      call boundarycond(fB,fA,uvel,tracerA)
       fA=fB
-
-! tracer initialization
-      if (ntracer > 0) then
-         do i=1,ntracer
-            tracerA(i,:,:,:)=rho(:,:,:)
-            tracerB(i,:,:,:)=rho(:,:,:)
-         enddo
-      endif
+      if (ntracer > 0) tracerB=tracerA
 
 ! Generate turbulence forcing fields
       if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
    else
 ! Restart from restart file
-      call readrestart(nt0,fA,turbines(1:nturbines)%theta,uu,vv,ww,rr)
+      call readrestart(nt0,fA,turbines(1:nturbines)%theta,uu,vv,ww,rr,tracerA)
       call macrovars(rho,u,v,w,fA)
 ! To ensure we have values in the boundary points first time we call boundarycond.
       fB=fA
+      if (ntracer > 0) tracerB=tracerA
    endif
    tau = 3.0*kinevisc + 0.5 ! static and constant tau also for ghost zones in case they are used
 
@@ -258,7 +263,7 @@ program LatticeBoltzmann
       if (lsolids) call solids(f1,lblanking)
 
 ! [f1 and f2 updated with boundary conditions]
-      call boundarycond(f1,f2,uvel)
+      call boundarycond(f1,f2,uvel,t1)
 
 #ifdef MPI
       call mpi_halo_exchange_j(f1,nl)
@@ -290,7 +295,10 @@ program LatticeBoltzmann
       endif
 
 ! Diagnostics
-      call diag(itecout,it,rho,u,v,w,lblanking)
+#ifdef MPI
+         call mpi_halo_exchange_j(t1,ntracer)
+#endif
+      call diag(itecout,it,rho,u,v,w,t1,lblanking)
 
       call cpustart()
 ! Averaging for diagnostics similar to Asmuth paper for wind turbines
@@ -301,8 +309,8 @@ program LatticeBoltzmann
 
 ! Averaging for diagnostics
       if (laveraging) then
-         if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,lblanking,.false.)
-         if (it == avesave)                    call averaging_full(u,v,w,rho,lblanking,.true.)
+         if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,t1,lblanking,.false.)
+         if (it == avesave)                    call averaging_full(u,v,w,rho,t1,lblanking,.true.)
       endif
 
 ! Updating input turbulence matrix
@@ -311,7 +319,7 @@ program LatticeBoltzmann
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr)
+      if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,t1)
       call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
@@ -320,7 +328,7 @@ program LatticeBoltzmann
 
 
    call cpustart()
-   call saverestart(it-1,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr)
+   call saverestart(it-1,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,t1)
    call cpufinish(16)
    if (ir==0) call cpuprint()
 
@@ -328,6 +336,8 @@ program LatticeBoltzmann
    if (allocated(vv       ))  deallocate(vv            )
    if (allocated(ww       ))  deallocate(ww            )
    if (allocated(rr       ))  deallocate(rr            )
+   if (allocated(tracerA  ))  deallocate(tracerA       )
+   if (allocated(tracerB  ))  deallocate(tracerB       )
 
    call save_uvw(it,u,v,w)
    call testing(it,f1,f2)

@@ -1,6 +1,6 @@
 module m_boundarycond
 contains
-subroutine boundarycond(f1,f2,uvel)
+subroutine boundarycond(f1,f2,uvel,tracer)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir
@@ -24,10 +24,12 @@ subroutine boundarycond(f1,f2,uvel)
    implicit none
    real, intent(inout):: f1(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout):: f2(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout):: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
 #ifdef _CUDA
    attributes(device) :: f1
    attributes(device) :: f2
+   attributes(device) :: tracer
    attributes(device) :: uvel
 #endif
    integer, parameter :: icpu=11
@@ -48,7 +50,8 @@ subroutine boundarycond(f1,f2,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,rho0,udir)
+      &(f1,uvel,rho0,udir,tracer)
+
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -78,7 +81,20 @@ subroutine boundarycond(f1,f2,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1)
+      &(f1,nl)
+
+      if (ntracer > 0) then
+#ifdef _CUDA
+      tx=512; bx=(ntracer*(nx+2)+tx-1)/tx
+      ty=1; by=1
+      tz=1; bz=(nz+2+tz-1)/tz
+#endif
+      call boundary_j_periodic_kernel&
+#ifdef _CUDA
+      &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+      &(tracer,ntracer)
+      endif
    endif
 
 ! Periodic boundary conditions in k-direction.
@@ -257,7 +273,20 @@ subroutine boundarycond(f1,f2,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1)
+      &(f1,nl)
+
+      if (ntracer > 0) then
+#ifdef _CUDA
+      tx=512; bx=(ntracer*(nx+2)+tx-1)/tx
+      ty=1; by=1
+      tz=1; bz=(nz+2+tz-1)/tz
+#endif
+      call boundary_j_periodic_kernel&
+#ifdef _CUDA
+      &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+      &(tracer,ntracer)
+      endif
    endif
 
    if (kbnd==0) then

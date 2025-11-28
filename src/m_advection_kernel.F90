@@ -32,7 +32,7 @@ contains
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
 #else
-!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(idx,i,l,j,k,dtx,dty,dtz,diff,uu,vv,ww,tt) SHARED(u,v,w,tracerin.tracerout,tau,weights)
+!$OMP PARALLEL DO COLLAPSE(3) PRIVATE(idx,i,l,j,k,dtx,dty,dtz,diff,uu,vv,ww,tt) SHARED(u,v,w,tracerin,tracerout,tau,weights)
    do k = 1, nz
    do j = 1, ny
    do idx = ntracer+1, ntracer*(nx+1)
@@ -43,7 +43,7 @@ contains
       uu=u(i,j,k)
       vv=v(i,j,k)
       ww=w(i,j,k)
-      tt=(tau(i,j,k)-0.5)/3.0
+      tt=min( (tau(i,j,k)-0.5)/3.0 , 0.16)
 
 !--------------------------------------------------------------
 ! (1) Predictor stage: θ* = θ^n + dt * RHS(θ^n)

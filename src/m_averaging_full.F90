@@ -11,7 +11,7 @@ module m_averaging_full
 #endif
 
 contains
-subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
+subroutine averaging_full(u,v,w,rho,tracer,lblanking,lfinal)
    use mod_dimensions
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
@@ -28,12 +28,13 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
    real, intent(in)      ::   u(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)      ::   v(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)      ::   w(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)      :: tracer(:,:,:,:)
    logical, intent(in) :: lblanking(0:nx+1,0:ny+1,0:nz+1)  ! z component of fluid velocity
 #ifdef _CUDA
    attributes(device) :: u
    attributes(device) :: v
    attributes(device) :: w
-   attributes(device) :: lblanking,rho
+   attributes(device) :: lblanking,rho,tracer
 #endif
    logical, intent(in) :: lfinal
 
@@ -85,7 +86,7 @@ subroutine averaging_full(u,v,w,rho,lblanking,lfinal)
 #endif
           &(uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
 
-      call diag(itecout,0,rho,uave,vave,wave,lblanking,Ti)
+      call diag(itecout,0,rho,uave,vave,wave,tracer,lblanking,Ti)
 
       deallocate( uave , vave , wave , uave2 , vave2 , wave2 , Ti)
       print '(a)','Done with averaging.'

@@ -119,7 +119,6 @@ m_boundary_j_closed_kernel.o:      makefile
 m_boundary_j_closed_kernel.o:      mod_D3Q27setup.o
 m_boundary_j_closed_kernel.o:      mod_dimensions.o
 m_boundary_j_periodic_kernel.o:      makefile
-m_boundary_j_periodic_kernel.o:      mod_D3Q27setup.o
 m_boundary_j_periodic_kernel.o:      mod_dimensions.o
 m_boundary_k_closed_kernel.o:      makefile
 m_boundary_k_closed_kernel.o:      mod_D3Q27setup.o

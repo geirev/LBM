@@ -1,6 +1,6 @@
 module m_readrestart
 contains
-subroutine readrestart(it,f,theta,uu,vv,ww,rr)
+subroutine readrestart(it,f,theta,uu,vv,ww,rr,tracer)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb
@@ -15,12 +15,14 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    real,    intent(out) :: vv(ny,nz,0:nrturb)
    real,    intent(out) :: ww(ny,nz,0:nrturb)
    real,    intent(out) :: rr(ny,nz,0:nrturb)
+   real,    intent(out) :: tracer(:,:,:,:)
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: uu
    attributes(device) :: vv
    attributes(device) :: ww
    attributes(device) :: rr
+   attributes(device) :: tracer
 #endif
 
 #ifdef _CUDA
@@ -29,18 +31,20 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
    real, allocatable :: vv_h(:,:,:)
    real, allocatable :: ww_h(:,:,:)
    real, allocatable :: rr_h(:,:,:)
+   real, allocatable :: tracer_h(:,:,:,:)
 #endif
 
    logical ex
    integer :: i,j,k,l,n
-   character(len=6) cit
    integer iunit
+   integer ir
+
+   character(len=6) cit
    character(len=4) ctile
    character(len=3) ext
    character(len=10) prefix
    character(len=10)  directory
    character(len=100) fname
-   integer ir
 
 ! File names
    ir=0
@@ -88,7 +92,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
             endif
          close(iunit)
       else
-         print '(a)','readrestart: No restart file for inflow turbulence fields available','turbulence'//cit//'.uf'
+         print '(a)','readrestart: No restart file for inflow turbulence fields available',trim(fname)
          stop
       endif
    endif
@@ -104,7 +108,29 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
          close(iunit)
          print *,'read restart theta',theta
       else
-         print '(a)','readrestart: No restart file for theta avaialble','theta'//cit//'.dat'
+         print '(a)','readrestart: No restart file for theta avaialble:',trim(fname)
+         stop
+      endif
+   endif
+
+   if (ntracer > 0) then
+      prefix='tracer'
+      fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
+      inquire(file=trim(fname),exist=ex)
+      print '(3a)','reading: ',trim(fname)
+      if (ex) then
+         open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
+#ifdef _CUDA
+         if (.not. allocated(tracer_h)) allocate(tracer_h(ntracer,0:nx+1,0:ny+1,0:nz+1))
+         read(iunit)n,tracer_h
+         tracer=tracer_h
+         deallocate(tracer_h)
+#else
+         read(iunit)n,tracer
+#endif
+         close(iunit)
+      else
+         print '(a)','readrestart: No restart file for tracer avaialble:',trim(fname)
          stop
       endif
    endif
@@ -129,7 +155,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr)
          endif
       close(iunit)
    else
-      print '(3a)','readrestart: restart file does not exist: restart'//cit//'.uf'
+      print '(3a)','readrestart: restart file does not exist: ',trim(fname)
       stop
    endif
    return

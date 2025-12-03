@@ -21,7 +21,6 @@ contains
    if (i < 1 .or. i > nx) return
    if (k < 1 .or. k > nz) return
 #endif
-   j = 1
    if (jplane == 1 ) then
       jghost=0
    elseif (jplane == ny)  then
@@ -35,6 +34,7 @@ contains
 #endif
       do l = 1, nl
          if ((jplane == 1 .and. cys(l) < 0) .or. (jplane == ny .and. cys(l) > 0)) then
+            ! setting both incoming (m) and outgoing (l) populations at the ghost node.
             do m = 1, nl
                if (cxs(m) == opt*cxs(l) .and. cys(m) == -cys(l) .and. czs(m) ==  opt*czs(l)) then
                  f1(m,i,jghost,k)=f2(l,i,jghost,k)

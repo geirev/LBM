@@ -1,9 +1,9 @@
 module m_saverestart
 contains
-subroutine saverestart(it,f,theta,uu,vv,ww,rr,tracer)
+subroutine saverestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile, only : inflowturbulence,nturbines,nrturb,lnodump
+   use m_readinfile, only : inflowturbulence,nturbines,nrturb,lnodump,iablvisc
 #ifdef MPI
    use m_mpi_decomp_init, only : mpi_rank
 #endif
@@ -15,6 +15,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,tracer)
    real,    intent(in)  :: vv(ny,nz,0:nrturb)
    real,    intent(in)  :: ww(ny,nz,0:nrturb)
    real,    intent(in)  :: rr(ny,nz,0:nrturb)
+   real,    intent(in)  :: pottemp(:,:,:)
    real,    intent(in)  :: tracer(:,:,:,:)
 #ifdef _CUDA
    attributes(device) :: f
@@ -23,6 +24,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,tracer)
    attributes(device) :: ww
    attributes(device) :: rr
    attributes(device) :: tracer
+   attributes(device) :: pottemp
 #endif
 
 #ifdef _CUDA
@@ -32,6 +34,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,tracer)
    real, allocatable :: ww_h(:,:,:)
    real, allocatable :: rr_h(:,:,:)
    real, allocatable :: tracer_h(:,:,:,:)
+   real, allocatable :: pottemp_h(:,:,:)
 #endif
 
    integer            iunit
@@ -92,6 +95,21 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,tracer)
          deallocate(tracer_h)
 #else
          write(iunit)ntracer,tracer
+#endif
+      close(iunit)
+   endif
+
+   if (iablvisc == 2) then
+      prefix='pottemp'
+      fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
+#ifdef _CUDA
+         if (.not. allocated(pottemp_h)) allocate(pottemp_h(0:nx+1,0:ny+1,0:nz+1))
+         pottemp_h=pottemp
+         write(iunit)pottemp_h
+         deallocate(pottemp_h)
+#else
+         write(iunit)pottemp
 #endif
       close(iunit)
    endif

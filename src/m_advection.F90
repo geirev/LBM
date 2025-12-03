@@ -1,17 +1,18 @@
 module m_advection
 contains
-subroutine advection(tempout,tempin,u,v,w,tau)
+subroutine advection(tempout,tempin,u,v,w,tau,n)
 ! f enter routine in feq following collisions
 ! f is returned in f
-   use mod_dimensions, only : nx, ny, nz, ntracer
+   use mod_dimensions, only : nx, ny, nz
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
    use m_wtime
    use m_advection_kernel
    implicit none
-   real, intent(inout) :: tempin (ntracer,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout) :: tempout(ntracer,0:nx+1,0:ny+1,0:nz+1)
+   integer, intent(in) :: n
+   real, intent(inout) :: tempin (n,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) :: tempout(n,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: u(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: v(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: w(0:nx+1,0:ny+1,0:nz+1)
@@ -36,7 +37,7 @@ subroutine advection(tempout,tempin,u,v,w,tau)
    weights=weights_h
 
 #ifdef _CUDA
-   tx=ntx; bx=(ntracer*nx+tx-1)/tx
+   tx=ntx; bx=(n*nx+tx-1)/tx
    ty=nty; by=(ny+ty-1)/ty
    tz=ntz; bz=(nz+tz-1)/tz
 #endif
@@ -44,7 +45,7 @@ subroutine advection(tempout,tempin,u,v,w,tau)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(tempin, tempout, u, v, w, weights, tau)
+        &(tempin, tempout, u, v, w, weights, tau, n)
    call cpufinish(icpu)
 
 end subroutine

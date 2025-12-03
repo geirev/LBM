@@ -53,7 +53,7 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer)
             f(l,nx+1,j,k)=f(l,nx,j,k)                                 ! 0th order extrapolation
          enddo
          if (ntracer > 0) then
-            tracer(:,0,j,k)=1.0
+!            tracer(:,0,j,k)=1.0
             tracer(:,nx+1,j,k)=tracer(:,nx,j,k)
          endif
 #ifndef _CUDA

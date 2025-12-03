@@ -4,16 +4,17 @@ contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-   subroutine advection_kernel(tracerin, tracerout, u, v, w, weights, tau)
+   subroutine advection_kernel(tracerin, tracerout, u, v, w, weights, tau, n)
 #ifdef _CUDA
    use cudafor
 #endif
-   use mod_dimensions, only : nx, ny, nz, ntracer
+   use mod_dimensions, only : nx, ny, nz
    implicit none
 
    ! f and feq flattened in (l,i), explicit dims in j,k
-   real, intent(in)  :: tracerin (ntracer*(nx+2), 0:ny+1, 0:nz+1)
-   real, intent(out) :: tracerout(ntracer*(nx+2), 0:ny+1, 0:nz+1)
+   integer, value    :: n
+   real, intent(in)  :: tracerin (n*(nx+2), 0:ny+1, 0:nz+1)
+   real, intent(out) :: tracerout(n*(nx+2), 0:ny+1, 0:nz+1)
    real, intent(in)  :: u(0:nx+1, 0:ny+1, 0:nz+1)
    real, intent(in)  :: v(0:nx+1, 0:ny+1, 0:nz+1)
    real, intent(in)  :: w(0:nx+1, 0:ny+1, 0:nz+1)
@@ -28,17 +29,17 @@ contains
    j   = threadIdx%y + (blockIdx%y - 1) * blockDim%y
    k   = threadIdx%z + (blockIdx%z - 1) * blockDim%z
 
-   if (idx .le. ntracer .or. idx > ntracer*(nx+1)) return
+   if (idx .le. n .or. idx > n*(nx+1)) return
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
 #else
 !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(idx,i,l,j,k,dtx,dty,dtz,diff,uu,vv,ww,tt) SHARED(u,v,w,tracerin,tracerout,tau,weights)
    do k = 1, nz
    do j = 1, ny
-   do idx = ntracer+1, ntracer*(nx+1)
+   do idx = n+1, n*(nx+1)
 #endif
-      l  = mod(idx-1, ntracer) + 1
-      i  = (idx-1)/ntracer
+      l  = mod(idx-1, n) + 1
+      i  = (idx-1)/n
 
       uu=u(i,j,k)
       vv=v(i,j,k)
@@ -49,16 +50,16 @@ contains
 ! (1) Predictor stage: θ* = θ^n + dt * RHS(θ^n)
 !--------------------------------------------------------------
 ! RHS advection
-      dtx=tracerin(idx+ntracer,j  ,k  )   - tracerin(idx-ntracer,j  ,k  )
-      dty=tracerin(idx        ,j+1,k  )   - tracerin(idx        ,j-1,k  )
-      dtz=tracerin(idx        ,j  ,k+1)   - tracerin(idx        ,j  ,k-1)
+      dtx=tracerin(idx+n,j  ,k  )   - tracerin(idx-n ,j  ,k  )
+      dty=tracerin(idx  ,j+1,k  )   - tracerin(idx   ,j-1,k  )
+      dtz=tracerin(idx  ,j  ,k+1)   - tracerin(idx   ,j  ,k-1)
 
 ! RHS diffusion
       diff=0.0
       do kk=-1,1
       do jj=-1,1
       do ii=-1,1
-         diff = diff + weights(ii,jj,kk)*tracerin(idx+ii*ntracer,j+jj,k+kk)
+         diff = diff + weights(ii,jj,kk)*tracerin(idx+ii*n,j+jj,k+kk)
       end do
       end do
       end do
@@ -72,16 +73,16 @@ contains
 !--------------------------------------------------------------
 
 ! RHS advection
-      dtx=tracerout(idx+ntracer,j  ,k  )   - tracerout(idx-ntracer,j  ,k  )
-      dty=tracerout(idx        ,j+1,k  )   - tracerout(idx        ,j-1,k  )
-      dtz=tracerout(idx        ,j  ,k+1)   - tracerout(idx        ,j  ,k-1)
+      dtx=tracerout(idx+n,j  ,k  )   - tracerout(idx-n,j  ,k  )
+      dty=tracerout(idx  ,j+1,k  )   - tracerout(idx  ,j-1,k  )
+      dtz=tracerout(idx  ,j  ,k+1)   - tracerout(idx  ,j  ,k-1)
 
 ! RHS diffusion
       diff=0.0
       do kk=-1,1
       do jj=-1,1
       do ii=-1,1
-         diff = diff + weights(ii,jj,kk)*tracerout(idx+ii*ntracer,j+jj,k+kk)
+         diff = diff + weights(ii,jj,kk)*tracerout(idx+ii*n,j+jj,k+kk)
       end do
       end do
       end do

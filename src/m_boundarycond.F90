@@ -1,9 +1,20 @@
 module m_boundarycond
+! Important: periodic BCs in j-direction must be applied
+! before AND after closed BCs in k-direction.
+!
+! First application ensures that j-ghost cells are correct
+! before bounce-back in k-direction.
+!
+! Second application ensures that the updated k=0,k=nz+1
+! boundary populations are correctly wrapped in j-direction,
+!
+! maintaining consistency at edges and corners.
+! Same logic applies if periodic in ks-direction  and closed in j-direction.
 contains
-subroutine boundarycond(f1,f2,uvel,tracer)
+subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir
+   use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir,iablvisc
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
@@ -16,27 +27,35 @@ subroutine boundarycond(f1,f2,uvel,tracer)
    use m_boundary_j_periodic_kernel
    use m_boundary_k_periodic_kernel
 
+   use m_boundary_i_closed_kernel
    use m_boundary_j_closed_kernel
    use m_boundary_k_closed_kernel
 
-   use m_boundary_closed_edges
+   use m_boundary_i_j_edges
+   use m_boundary_i_k_edges
+   use m_boundary_j_k_edges
+
+   use m_boundary_closed_corners
 
    implicit none
    real, intent(inout):: f1(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout):: f2(nl,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout):: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout):: tracer(:,:,:,:) !(ntracer,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout):: pottemp(:,:,:) !(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
 #ifdef _CUDA
    attributes(device) :: f1
    attributes(device) :: f2
    attributes(device) :: tracer
+   attributes(device) :: pottemp
    attributes(device) :: uvel
 #endif
    integer, parameter :: icpu=11
+   integer :: opt_i, opt_j, opt_k
 #ifdef _CUDA
    integer :: tx, ty, tz, bx, by, bz
 #endif
-
+   
    call cpustart()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! i-inflow boundary condition
@@ -85,15 +104,28 @@ subroutine boundarycond(f1,f2,uvel,tracer)
 
       if (ntracer > 0) then
 #ifdef _CUDA
-      tx=512; bx=(ntracer*(nx+2)+tx-1)/tx
-      ty=1; by=1
-      tz=1; bz=(nz+2+tz-1)/tz
+         tx=512; bx=(ntracer*(nx+2)+tx-1)/tx
+         ty=1; by=1
+         tz=1; bz=(nz+2+tz-1)/tz
 #endif
-      call boundary_j_periodic_kernel&
+         call boundary_j_periodic_kernel&
 #ifdef _CUDA
-      &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(tracer,ntracer)
+         &(tracer,ntracer)
+      endif
+
+      if (iablvisc > 0) then
+#ifdef _CUDA
+         tx=512; bx=((nx+2)+tx-1)/tx
+         ty=1; by=1
+         tz=1; bz=(nz+2+tz-1)/tz
+#endif
+         call boundary_j_periodic_kernel&
+#ifdef _CUDA
+         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+         &(pottemp,1)
       endif
    endif
 
@@ -113,134 +145,99 @@ subroutine boundarycond(f1,f2,uvel,tracer)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Closed boundary conditions in i-direction (at the sides i=1 and i=nx)
-   if ((ibnd==11).or.(ibnd==12)) then
-      stop 'No-slip bounce-back condition for i=1 not implemented'
-   elseif ((ibnd==11).or.(ibnd==21)) then
-      stop 'No-slip bounce-back condition for i=nx not implemented'
-   elseif ((ibnd==22).or.(ibnd==21)) then
-      stop 'Free-slip bounce-back condition for i=1 not implemented'
-   elseif ((ibnd==22).or.(ibnd==12)) then
-      stop 'Free-slip bounce-back condition for i=nx not implemented'
+! Setting up for closed boundaries
+! i-direction
+   if    (ibnd == 11 .or. ibnd == 12) then
+      opt_i = -1     ! no slip
+   elseif(ibnd == 21 .or. ibnd == 22) then
+      opt_i = +1     ! free slip
+   else
+      opt_i = 0      ! not closed
    endif
 
+   if (opt_i /= 0) then
+#ifdef _CUDA
+      tx=1; bx=1
+      ty=nty;  by=(ny+ty-1)/ty
+      tz=ntz;  bz=(nz+tz-1)/tz
+#endif
+
+      call boundary_i_closed_kernel&
+#ifdef _CUDA
+           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+           &(f1,f2,1,opt_i)
+
+      call boundary_i_closed_kernel&
+#ifdef _CUDA
+           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+           &(f1,f2,nx,opt_i)
+   endif
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! No-slip
-   if ((jbnd==11).or.(jbnd==12)) then
+! j-direction
+   if    (jbnd == 11 .or. jbnd == 12) then
+      opt_j = -1
+   elseif(jbnd == 21 .or. jbnd == 22) then
+      opt_j = +1
+   else
+      opt_j = 0
+   endif
+
+   if (opt_j /= 0) then
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=1; by=1
       tz=ntz; bz=(nz+tz-1)/tz
 #endif
+
       call boundary_j_closed_kernel&
 #ifdef _CUDA
            &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-           &(f1,f2,1,-1)
-   endif
+           &(f1,f2,1,opt_j)
 
-   if ((jbnd==11).or.(jbnd==21)) then
-! No-slip bounce-back condition for j=ny
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=1; by=1
-      tz=ntz; bz=(nz+tz-1)/tz
-#endif
       call boundary_j_closed_kernel&
 #ifdef _CUDA
            &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-           &(f1,f2,ny,-1)
+           &(f1,f2,ny,opt_j)
    endif
 
-   if ((kbnd==11).or.(kbnd==12)) then
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! k-direction
+   if    (kbnd == 11 .or. kbnd == 12) then
+      opt_k = -1
+   elseif(kbnd == 21 .or. kbnd == 22) then
+      opt_k = +1
+   else
+      opt_k = 0
+   endif
+
+   if (opt_k /= 0) then
 ! No-slip bounce-back condition for k=1
 #ifdef _CUDA
       tx=ntx; bx=(nx+tx-1)/tx
       ty=nty; by=(ny+ty-1)/ty
       tz=1; bz=1
 #endif
+
       call boundary_k_closed_kernel&
 #ifdef _CUDA
            &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-           &(f1,f2,1,-1)
-   endif
+           &(f1,f2,1,opt_k)
 
-   if ((kbnd==11).or.(kbnd==21)) then
-! No-slip bounce-back condition for k=nz
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=1; bz=1
-#endif
       call boundary_k_closed_kernel&
 #ifdef _CUDA
            &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-           &(f1,f2,nz,-1)
+           &(f1,f2,nz,opt_k)
    endif
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Free slip
-
-
-   if ((jbnd==22).or.(jbnd==21)) then
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=1; by=1
-      tz=ntz; bz=(nz+tz-1)/tz
-#endif
-      call boundary_j_closed_kernel&
-#ifdef _CUDA
-           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-           &(f1,f2,1,1)
-   endif
-
-   if ((jbnd==22).or.(jbnd==12)) then
-! Free-slip bounce-back condition for j=ny
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=1; by=1
-      tz=ntz; bz=(nz+tz-1)/tz
-#endif
-      call boundary_j_closed_kernel&
-#ifdef _CUDA
-           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-           &(f1,f2,ny,1)
-   endif
-
-   if ((kbnd==22).or.(kbnd==21)) then
-! Free-slip bounce-back condition for k=1
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=1; bz=1
-#endif
-      call boundary_k_closed_kernel&
-#ifdef _CUDA
-           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-           &(f1,f2,1,1)
-   endif
-
-   if ((kbnd==22).or.(kbnd==12)) then
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=1; bz=1
-#endif
-      call boundary_k_closed_kernel&
-#ifdef _CUDA
-           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-           &(f1,f2,nz,1)
-   endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Update edges for inflow conditions
@@ -287,6 +284,19 @@ subroutine boundarycond(f1,f2,uvel,tracer)
 #endif
       &(tracer,ntracer)
       endif
+
+      if (iablvisc > 0) then
+#ifdef _CUDA
+         tx=512; bx=((nx+2)+tx-1)/tx
+         ty=1; by=1
+         tz=1; bz=(nz+2+tz-1)/tz
+#endif
+         call boundary_j_periodic_kernel&
+#ifdef _CUDA
+         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+         &(pottemp,1)
+      endif
    endif
 
    if (kbnd==0) then
@@ -302,16 +312,65 @@ subroutine boundarycond(f1,f2,uvel,tracer)
       &(f1)
    endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Bounce-back edges in case of closed boundaries in both y and z directions and when at least one direction has no slip boundaries
-   if ((jbnd == 11 .and. kbnd > 10) .or. (jbnd > 10 .and. kbnd == 11)) then
-      call boundary_closed_edges(f1,f2,-1)
+
+!======================================================================
+!  Edges and corners for closed boundaries (i,j,k)
+!
+!  Rule:
+!     - Only process edges if both directions are closed ( > 10 )
+!     - Free-slip only if *both* directions are free-slip (== 22)
+!     - Otherwise no-slip
+!======================================================================
+
+!-------------------------------------------------------------
+! 1. j–k edges and jk-corners
+!-------------------------------------------------------------
+   if (jbnd>10 .and. kbnd>10) then
+
+      if (jbnd==22 .and. kbnd==22) then
+         print *, "JK edges: free-slip"
+         call boundary_j_k_edges(f1,f2,1)
+      else
+         print *, "JK edges: no-slip"
+         call boundary_j_k_edges(f1,f2,-1)
+      endif
+
    endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Freeslip bounce-back edges in case of closed free-slip boundaries in both y and z directions
-   if  (jbnd == 22 .and. kbnd == 22) then
-      call boundary_closed_edges(f1,f2,1)
+
+!-------------------------------------------------------------
+! 2. i–j edges and ij-corners
+!-------------------------------------------------------------
+   if (ibnd>10 .and. jbnd>10) then
+
+      if (ibnd==22 .and. jbnd==22) then
+         print *, "IJ edges: free-slip"
+         call boundary_i_j_edges(f1,f2,1)        ! NEW routine
+      else
+         print *, "IJ edges: no-slip"
+         call boundary_i_j_edges(f1,f2,-1)       ! NEW routine
+      endif
+
+   endif
+
+
+!-------------------------------------------------------------
+! 3. i–k edges and ik-corners
+!-------------------------------------------------------------
+   if (ibnd>10 .and. kbnd>10) then
+
+      if (ibnd==22 .and. kbnd==22) then
+         print *, "IK edges: free-slip"
+         call boundary_i_k_edges(f1,f2,1)        ! NEW routine
+      else
+         print *, "IK edges: no-slip"
+         call boundary_i_k_edges(f1,f2,-1)       ! NEW routine
+      endif
+
+   endif
+
+   if (ibnd>10 .and. jbnd>10 .and. kbnd > 10) then
+      call boundary_closed_corners(f1,f2,-1)
    endif
 
    call cpufinish(icpu)

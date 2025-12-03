@@ -25,7 +25,7 @@ subroutine inipert(rho,u,v,w,uvel,ir)
 #endif
 
    ! Parameters
-   real, parameter :: stddev = 1.0e-5
+   real, parameter :: stddev = 0.0e-5
    real, parameter :: pi     = 3.1415927410125732
 
    ! Host working arrays

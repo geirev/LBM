@@ -53,6 +53,7 @@ module m_readinfile
    integer  ivreman        ! Option (1) for subgridscale mixing using Vreman
    integer  iablvisc       ! Atmospheric boundary layer mixing (0-none, 1-mechanical layer, 2-buoyancy scheme)
    real     ablheight      ! Height of atmospheric boundary layer
+   integer  istable        ! stability of abl (1=stable, 0=neutral, and -1=unstable)
    real smagorinsky        ! smagorinsky constant (0.15) used in subgridscale mixing
    logical ltiming         ! true for timing of kernels. Should be false to avoid syncs
 
@@ -65,6 +66,7 @@ subroutine readinfile()
    logical ex
    real gridrn
    integer n
+
 
 ! reading input data
    inquire(file='infile.in',exist=ex)
@@ -91,7 +93,12 @@ subroutine readinfile()
       read(10,*,err=100)ibgk               ; print '(a,i1)',      'BGK order of feq  = ',ibgk
       read(10,*,err=100)ihrr               ; print '(a,i1)',      'HRR regularization= ',ihrr
       read(10,*,err=100)ivreman,smagorinsky; print '(a,i1,a,f10.4)','Vreman mixing     = ',ivreman,' Smagorinsky=',smagorinsky
-      read(10,*,err=100)iablvisc,ablheight ; print '(a,i1,a,f10.4)','ABL: iablvisc     = ',iablvisc,' ablheight=',ablheight
+
+      read(10,'(a)',err=100)ver
+
+      read(10,*,err=100)iablvisc           ; print '(a,i1)',      'ABL: iablvisc     = ',iablvisc
+      read(10,*,err=100)ablheight          ; print '(a,f10.4)',   'ABL: ablheight    = ',ablheight
+      read(10,*,err=100)istable            ; print '(a,i1)',      'ABL: stability    = ',istable
 
       read(10,'(a)',err=100)ver
 

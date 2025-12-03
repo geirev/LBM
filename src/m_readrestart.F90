@@ -1,9 +1,9 @@
 module m_readrestart
 contains
-subroutine readrestart(it,f,theta,uu,vv,ww,rr,tracer)
+subroutine readrestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile, only : inflowturbulence,nturbines,nrturb
+   use m_readinfile, only : inflowturbulence,nturbines,nrturb,iablvisc
 #ifdef MPI
    use m_mpi_decomp_init, only : mpi_rank
 #endif
@@ -16,6 +16,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,tracer)
    real,    intent(out) :: ww(ny,nz,0:nrturb)
    real,    intent(out) :: rr(ny,nz,0:nrturb)
    real,    intent(out) :: tracer(:,:,:,:)
+   real,    intent(out) :: pottemp(:,:,:)
 #ifdef _CUDA
    attributes(device) :: f
    attributes(device) :: uu
@@ -23,6 +24,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,tracer)
    attributes(device) :: ww
    attributes(device) :: rr
    attributes(device) :: tracer
+   attributes(device) :: pottemp
 #endif
 
 #ifdef _CUDA
@@ -32,6 +34,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,tracer)
    real, allocatable :: ww_h(:,:,:)
    real, allocatable :: rr_h(:,:,:)
    real, allocatable :: tracer_h(:,:,:,:)
+   real, allocatable :: pottemp_h(:,:,:)
 #endif
 
    logical ex
@@ -109,6 +112,28 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,tracer)
          print *,'read restart theta',theta
       else
          print '(a)','readrestart: No restart file for theta avaialble:',trim(fname)
+         stop
+      endif
+   endif
+
+   if (iablvisc == 2) then
+      prefix='pottemp'
+      fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
+      inquire(file=trim(fname),exist=ex)
+      print '(3a)','reading: ',trim(fname)
+      if (ex) then
+         open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
+#ifdef _CUDA
+         if (.not. allocated(pottemp_h)) allocate(pottemp_h(0:nx+1,0:ny+1,0:nz+1))
+         read(iunit)pottemp_h
+         pottemp=pottemp_h
+         deallocate(pottemp_h)
+#else
+         read(iunit)pottemp
+#endif
+         close(iunit)
+      else
+         print '(a)','readrestart: No restart file for potential temperature avaialble:',trim(fname)
          stop
       endif
    endif

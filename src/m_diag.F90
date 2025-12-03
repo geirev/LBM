@@ -1,8 +1,8 @@
 module m_diag
 contains
-subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
+subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
    use mod_dimensions
-   use m_readinfile, only : iout, iprt1, iprt2, dprt, nt1, lnodump
+   use m_readinfile, only : iout, iprt1, iprt2, dprt, nt1, lnodump, iablvisc
    use m_tecout
 #ifdef NETCDF
    use m_netcdfout
@@ -17,15 +17,16 @@ subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
    real,    intent(in)   ::   u(0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in)   ::   v(0:nx+1,0:ny+1,0:nz+1)
    real,    intent(in)   ::   w(0:nx+1,0:ny+1,0:nz+1)
+   real,    intent(in)   :: pottemp(:,:,:)
    real,    intent(in)   :: tracer(:,:,:,:)
    logical, intent(in)   :: lblanking(0:nx+1,0:ny+1,0:nz+1)
    real,    optional, intent(in) :: Ti(0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(device) :: rho, u, v, w, tracer, lblanking, Ti
+   attributes(device) :: rho, u, v, w, tracer, lblanking, Ti, pottemp
 #endif
 
    ! Host scratch
-   real,    allocatable :: u_h(:,:,:), v_h(:,:,:), w_h(:,:,:), rho_h(:,:,:), tracer_h(:,:,:,:), Ti_h(:,:,:)
+   real,    allocatable :: u_h(:,:,:), v_h(:,:,:), w_h(:,:,:), rho_h(:,:,:), pottemp_h(:,:,:),  tracer_h(:,:,:,:), Ti_h(:,:,:)
    logical, allocatable :: lblanking_h(:,:,:)
 
    ! Output bookkeeping
@@ -77,6 +78,11 @@ subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
          num_of_vars=num_of_vars+1
       endif
 
+      if (iablvisc == 2) then
+         variables=trim(variables)//',pottemp'
+         num_of_vars=num_of_vars+1
+      endif
+
       if (ntracer > 0) then
          do l=1,ntracer
             write(ctag2,'(i2.2)')l
@@ -113,21 +119,45 @@ subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
 ! -------------------------
    allocate(u_h(0:nx+1,0:ny+1,0:nz+1), v_h(0:nx+1,0:ny+1,0:nz+1), w_h(0:nx+1,0:ny+1,0:nz+1), rho_h(0:nx+1,0:ny+1,0:nz+1))
    allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
+   u_h=0.0
+   u_h(1:nx,1:ny,1:nz)         = u(1:nx,1:ny,1:nz)
+   u_h(1:nx,ny+1,1:nz)         = u_h(1:nx,ny,1:nz)
 
-   u_h         = u
-   v_h         = v
-   w_h         = w
-   rho_h       = rho
-   lblanking_h = lblanking
+   v_h=0.0
+   v_h(1:nx,1:ny,1:nz)         = v(1:nx,1:ny,1:nz)
+   v_h(1:nx,ny+1,1:nz)         = v_h(1:nx,ny,1:nz)
+
+   w_h=0.0
+   w_h(1:nx,1:ny,1:nz)         = w(1:nx,1:ny,1:nz)
+   w_h(1:nx,ny+1,1:nz)         = w_h(1:nx,ny,1:nz)
+
+   rho_h=0.0
+   rho_h(1:nx,1:ny,1:nz)       = rho(1:nx,1:ny,1:nz)
+   rho_h(1:nx,ny+1,1:nz)       = rho_h(1:nx,ny,1:nz)
+
+   lblanking_h=.false.
+   lblanking_h(1:nx,1:ny,1:nz) = lblanking(1:nx,1:ny,1:nz)
+   lblanking_h(1:nx,ny+1,1:nz) = lblanking_h(1:nx,ny,1:nz)
+
+   if (iablvisc == 2) then
+      allocate(pottemp_h(0:nx+1,0:ny+1,0:nz+1))
+      pottemp_h=0.0
+      pottemp_h(1:nx,1:ny,1:nz)= pottemp(1:nx,1:ny,1:nz)
+      pottemp_h(1:nx,ny+1,1:nz)= pottemp_h(1:nx,ny,1:nz)
+   endif
 
    if (ntracer > 0) then 
       allocate(tracer_h(ntracer,0:nx+1,0:ny+1,0:nz+1))
-      tracer_h=tracer
+      tracer_h=0.0
+      tracer_h(:,1:nx,1:ny,1:nz) = tracer(:,1:nx,1:ny,1:nz)
+      tracer_h(:,1:nx,ny+1,1:nz) = tracer_h(:,1:nx,ny,1:nz)
    endif
 
    if (present(Ti)) then
       allocate(Ti_h(0:nx+1,0:ny+1,0:nz+1))
-      Ti_h = Ti
+      Ti_h=0.0
+      Ti_h(1:nx,1:ny,1:nz)     = Ti(1:nx,1:ny,1:nz)
+      Ti_h(1:nx,ny+1,1:nz)     = Ti_h(1:nx,ny,1:nz)
    end if
 
    if (minval(rho_h) < 0.0) then
@@ -144,10 +174,10 @@ subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
    case (0,1,2)
       if (present(Ti)) then
          call tecout(filetype, trim(fname), it, trim(variables), num_of_vars, &
-                     lblanking_h, rho_h, u_h, v_h, w_h, tracer_h, Ti_h)
+                     lblanking_h, rho_h, u_h, v_h, w_h, pottemp_h, tracer_h, Ti_h)
       else
          call tecout(filetype, trim(fname), it, trim(variables), num_of_vars, &
-                     lblanking_h, rho_h, u_h, v_h, w_h, tracer_h)
+                     lblanking_h, rho_h, u_h, v_h, w_h, pottemp_h, tracer_h)
       end if
 
    case (3)
@@ -170,6 +200,7 @@ subroutine diag(filetype,it,rho,u,v,w,tracer,lblanking,Ti)
    if (allocated(lblanking_h)) deallocate(lblanking_h)
    if (allocated(Ti_h))        deallocate(Ti_h)
    if (allocated(tracer_h))    deallocate(tracer_h)
+   if (allocated(pottemp_h))   deallocate(pottemp_h)
 
    call cpufinish(icpu)
 end subroutine

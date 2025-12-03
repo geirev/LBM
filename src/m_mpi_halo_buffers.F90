@@ -20,16 +20,22 @@ module m_mpi_halo_buffers
    integer :: plane_elems = 0
 contains
    subroutine mpi_halo_buffers_alloc(nl)
+      use mod_dimensions, only: nx,nz
       implicit none
       integer, intent(in) :: nl
       !plane_elems = int(nl,8)*int(nx+2,8)*int(nz+2,8)
       plane_elems = nl*(nx+2)*(nz+2)
-      allocate(snd_south(plane_elems), rcv_south(plane_elems))
-      allocate(snd_north(plane_elems), rcv_north(plane_elems))
+      if (.not.allocated(snd_south)) allocate(snd_south(plane_elems))
+      if (.not.allocated(rcv_south)) allocate(rcv_south(plane_elems))
+      if (.not.allocated(snd_north)) allocate(snd_north(plane_elems))
+      if (.not.allocated(rcv_north)) allocate(rcv_north(plane_elems))
    end subroutine
    subroutine mpi_halo_buffers_free()
       implicit none
-      if (allocated(snd_south)) deallocate(snd_south, rcv_south, snd_north, rcv_north)
+      if (allocated(snd_south)) deallocate(snd_south)
+      if (allocated(rcv_south)) deallocate(rcv_south)
+      if (allocated(snd_north)) deallocate(snd_north)
+      if (allocated(rcv_north)) deallocate(rcv_north)
    end subroutine
 end module
 

@@ -5,7 +5,7 @@ contains
 !      3) Compute per-point forces (CPU or GPU)
 !      4) MPI_Allreduce to accumulate tile contributions
 !      5) Deposit smoothed forces on local F_turb
-subroutine turbine_forcing(F_turb, turbines_in, rho, u, v, w)
+subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 #ifdef MPI
    use mpi
 #endif
@@ -27,18 +27,21 @@ subroutine turbine_forcing(F_turb, turbines_in, rho, u, v, w)
    use cudafor
 #endif
    implicit none
-   real,            intent(inout) :: F_turb(3,0:nx+1,0:ny+1,0:nz+1) ! Output forcing field on this tile
+   real,            intent(inout) :: external_forcing(3,0:nx+1,0:ny+1,0:nz+1) ! Output forcing field on this tile
    type(turbine_t), intent(inout) :: turbines_in(:)                 ! Turbine configuration
    real,            intent(in)    :: rho(0:nx+1,0:ny+1,0:nz+1)
    real,            intent(in)    :: u  (0:nx+1,0:ny+1,0:nz+1)
    real,            intent(in)    :: v  (0:nx+1,0:ny+1,0:nz+1)
    real,            intent(in)    :: w  (0:nx+1,0:ny+1,0:nz+1)
 #ifdef _CUDA
-   attributes(device) :: rho,u,v,w
+   attributes(device) :: rho,u,v,w,external_forcing
 #endif
 
+   real,            allocatable :: F_turb(:,:,:,:)
    real,            allocatable :: Fvec_local(:,:)   ! (3, np)
    real,            allocatable :: Fvec_global(:,:)  ! (3, np)
+
+   real,            allocatable :: Fturb(:,:)  ! (3, np)
 
    integer :: np,i,ierr
    real, allocatable :: rho_h(:,:,:), u_h(:,:,:), v_h(:,:,:), w_h(:,:,:)
@@ -88,12 +91,15 @@ subroutine turbine_forcing(F_turb, turbines_in, rho, u, v, w)
 
    call cpustart()
 ! 6. Clear local forcing field and deposit smoothed forces
+   allocate(F_turb(3,0:nx+1,0:ny+1,0:nz+1))
    F_turb = 0.0
    call turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
 !   call turbines_bounding_box(points_global, np, krad)
+   external_forcing=F_turb
 
    deallocate(Fvec_local, Fvec_global)
    deallocate(points_global)
+   deallocate(F_turb)
 
    call cpufinish(24)
 end subroutine turbine_forcing

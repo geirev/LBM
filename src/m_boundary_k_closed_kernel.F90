@@ -21,7 +21,6 @@ contains
    if (i < 1 .or. i > nx) return
    if (j < 1 .or. j > ny) return
 #endif
-   k=1
    if (kplane == 1 ) then
       kghost=0
    elseif (kplane == nz)  then
@@ -29,12 +28,13 @@ contains
    endif
 
 #ifndef _CUDA
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, k, l, m) SHARED(f1,f2, cxs, cys, czs, kghost, kplane, opt)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i, j, l, m) SHARED(f1,f2, cxs, cys, czs, kghost, kplane, opt)
    do j=1,ny
    do i=1,nx
 #endif
       do l = 1, nl
          if ((kplane == 1 .and. czs(l) < 0) .or. (kplane == nz .and. czs(l) > 0)) then
+            ! setting both incoming (m) and outgoing (l) populations at the ghost node.
             do m = 1, nl
                if (cxs(m) == opt*cxs(l) .and. cys(m) == opt*cys(l) .and. czs(m) == -czs(l)) then
                  f1(m,i,j,kghost) = f2(l,i,j, kghost)

@@ -4,7 +4,7 @@ contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-   subroutine turbines_apply_kernel(f, rho, u, v, w, F_turb, inv1cs2, inv2cs4, ratio, ibgk,&
+   subroutine turbines_apply_kernel(f, rho, u, v, w, external_forcing, inv1cs2, inv2cs4, ratio, ibgk,&
                                     t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax)
 #ifdef _CUDA
    use cudafor
@@ -21,7 +21,7 @@ contains
    real, intent(in)    ::   u(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    ::   v(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    ::   w(0:nx+1,0:ny+1,0:nz+1)
-   real, intent(in)    :: F_turb(3,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    :: external_forcing(3,0:nx+1,0:ny+1,0:nz+1)
 
    real, value         :: inv1cs2, inv2cs4, ratio
    integer, value      :: ibgk
@@ -75,9 +75,9 @@ contains
    !-----------------------------------------------------------------
    ! Read local force and skip if zero
    !-----------------------------------------------------------------
-   Fx = F_turb(1,i,j,k)
-   Fy = F_turb(2,i,j,k)
-   Fz = F_turb(3,i,j,k)
+   Fx = external_forcing(1,i,j,k)
+   Fy = external_forcing(2,i,j,k)
+   Fz = external_forcing(3,i,j,k)
 
    if (Fx == 0.0 .and. Fy == 0.0 .and. Fz == 0.0)&
 #ifdef _CUDA

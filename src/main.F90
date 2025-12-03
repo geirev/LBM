@@ -3,7 +3,10 @@ program LatticeBoltzmann
    use cudafor
 #endif
    use m_mechanical_ablvisc
+   use m_abl_initialize
    use m_advection
+   use m_buoyancy_forcing
+   use m_buoyancy_forcing_apply
    use m_airfoil
    use m_testing
    use m_postcoll
@@ -85,8 +88,14 @@ program LatticeBoltzmann
    real, target, allocatable  :: tracerA(:,:,:,:)
    real, target, allocatable  :: tracerB(:,:,:,:)
 
+   real, target, allocatable  :: pottempA(:,:,:)
+   real, target, allocatable  :: pottempB(:,:,:)
+
+   real,         allocatable  :: external_forcing(:,:,:,:)
+
    real, pointer:: f1(:,:,:,:), f2(:,:,:,:), tmp(:,:,:,:)
    real, pointer:: t1(:,:,:,:), t2(:,:,:,:), tr_tmp(:,:,:,:)
+   real, pointer:: p1(:,:,:), p2(:,:,:), pt_tmp(:,:,:)
 
 #ifdef _CUDA
    attributes(device) :: f1
@@ -102,11 +111,9 @@ program LatticeBoltzmann
    attributes(device) :: rho
    attributes(device) :: uvel
 
-   attributes(device) :: tracerA
-   attributes(device) :: tracerB
-   attributes(device) :: t1
-   attributes(device) :: t2
-   attributes(device) :: tr_tmp
+   attributes(device) :: tracerA,tracerB,t1,t2,tr_tmp
+   attributes(device) :: pottempA,pottempB,p1,p2,pt_tmp
+   attributes(device) :: external_forcing
 #endif
 
    real,    dimension(:),       allocatable :: uvel_h      ! vertical u-velocity profile on host
@@ -121,31 +128,35 @@ program LatticeBoltzmann
    call printdefines()
    call cpustart()
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Reading all input parameters
+   call readinfile()
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Some additional allocations
+
    if (ntracer > 0) then
       allocate(tracerA(ntracer,0:nx+1,0:ny+1,0:nz+1))
       allocate(tracerB(ntracer,0:nx+1,0:ny+1,0:nz+1))
    endif
 
+   if (iablvisc == 2) then
+      allocate(pottempA(0:nx+1,0:ny+1,0:nz+1))
+      allocate(pottempA(0:nx+1,0:ny+1,0:nz+1))
+   endif
+
+   allocate(external_forcing(3,0:nx+1,0:ny+1,0:nz+1))
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Reading all input parameters
-   call readinfile()
-
-
+! Initialize MPI and domain decomposition
    ir=0
 #ifdef MPI
    periodic_j_bc = (jbnd == 0)
-   print *, 'periodic_j_bc= ', periodic_j_bc
-
-   ! Initialize MPI and domain decomposition
    call mpi_decomp_init(periodic_j_bc)
-
    if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' nyg=', nyg, ' ny=', ny
-
    ir=mpi_rank
-
 #endif
-
-   call mechanical_ablvisc(ir)
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -160,14 +171,14 @@ program LatticeBoltzmann
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Save grid geometry and blanking
-   call diag(1,0,rho,u,v,w,tracerA,lblanking)
+   call diag(1,0,rho,u,v,w,pottempA,tracerA,lblanking)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! setting seed to seed.orig if file exist and nt0=0, otherwise generate new seed
    call seedmanagement(nt0,ir)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! setting shapiro factors (no really used)
+! setting shapiro factors (not used)
 !   call shfact(nshapiro,sh)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -179,41 +190,56 @@ program LatticeBoltzmann
    uvel=uvel_h
    deallocate(uvel_h)
 
+
    if (nt0 == 0) then
 ! Intialization of macro variables
       call inipert(rho,u,v,w,uvel,ir)
 
 ! tracer initialization
-      if (ntracer > 0) then
-         do i=1,ntracer
-            tracerA(i,0:nx+1,0:ny+1,0:nz+1)=1.0
-            tracerA(i,100:110,110:120,0:nz+1)=2.0
-            tracerA(i,150:160,50:60,0:nz+1)=2.0
-         enddo
-#ifdef MPI
-         call mpi_halo_exchange_j(tracerA,ntracer)
-#endif
+      if (ntracer >= 1) then
+            tracerA(1,0:nx+1,0:ny+1,0:nz+1)=1.0
+            tracerA(1,100:110,110:120,0:nz+1)=2.0
+            tracerA(1,150:160,50:60,0:nz+1)=2.0
       endif
 
-! Initial diagnostics
-      call diag(itecout,0,rho,u,v,w,tracerA,lblanking)
+! Initialization if mechanical or full atmospheric boundary layer
+      call mechanical_ablvisc(ir)
+      if (iablvisc == 2) then
+         call abl_initialize(pottempA,ir)
+      endif
 
+#ifdef MPI
+      if (ntracer > 0) then
+         call mpi_halo_exchange_j(tracerA,ntracer)
+      endif
+      if (iablvisc == 2) then
+         call mpi_halo_exchange_j(pottempA,1)
+      endif
+#endif
+
+! Initial diagnostics
+      call diag(itecout,0,rho,u,v,w,pottempA,tracerA,lblanking)
+
+      print *,'finsihed diag',ir
 ! Inititialization with equilibrium distribution from u,v,w, and rho
       call fequil3(fB,rho,u,v,w)
       call fillghosts(fB)
-      call boundarycond(fB,fA,uvel,tracerA)
       fA=fB
+      call boundarycond(fB,fA,uvel,tracerA,pottempA)
+      call boundarycond(fA,fB,uvel,tracerA,pottempA)
       if (ntracer > 0) tracerB=tracerA
+      if (iablvisc == 2) pottempB=pottempA
 
 ! Generate turbulence forcing fields
       if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
    else
 ! Restart from restart file
-      call readrestart(nt0,fA,turbines(1:nturbines)%theta,uu,vv,ww,rr,tracerA)
+      call readrestart(nt0,fA,turbines(1:nturbines)%theta,uu,vv,ww,rr,pottempA,tracerA)
       call macrovars(rho,u,v,w,fA)
 ! To ensure we have values in the boundary points first time we call boundarycond.
       fB=fA
       if (ntracer > 0) tracerB=tracerA
+      if (iablvisc == 2) pottempB=pottempA
    endif
    tau = 3.0*kinevisc + 0.5 ! static and constant tau also for ghost zones in case they are used
 
@@ -226,10 +252,15 @@ program LatticeBoltzmann
 ! initialize pointers
    f1 => fA
    f2 => fB
+   if (iablvisc == 2) then
+      p1 => pottempA
+      p2 => pottempB
+   endif
    if (ntracer > 0) then
       t1 => tracerA
       t2 => tracerB
    endif
+
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -242,10 +273,10 @@ program LatticeBoltzmann
 
 ! start time step with f1,rho,u,v,w given
 
-! [turbine_forcing = turbines_forcing(F_turb, turbines, rho, u, v, w)]
-      if (nturbines > 0) then
-         call turbine_forcing(F_turb, turbines, rho, u, v, w)
-      endif
+! External forcing
+      external_forcing=0.0
+      if (nturbines > 0)      call turbine_forcing(external_forcing, turbines, rho, u, v, w)
+      if (iablvisc == 2)      call buoyancy_forcing(external_forcing,p1)
 
 ! [turbulence_df = turbulenceforcing(rho,u,v,w)]
       if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
@@ -253,17 +284,19 @@ program LatticeBoltzmann
 ! [f1,tau = post collision(f1,rho,u,v,w] (returns post collision density and tau for forcing)
       call postcoll(f1, tau, rho,u,v,w)
 
-! [f1 = f1 + turbine_df]
-      if (nturbines > 0)      call turbines_apply(f1,F_turb,rho,u,v,w)
 
 ! [f1 = f1 + turbulence_df]
       if (inflowturbulence)   call inflow_turbulence_apply(f1,turbulence_df)
+
+! [f1 = f1 + external forcing]
+      if (nturbines > 0 .or. iablvisc==2) call turbines_apply(f1,external_forcing,rho,u,v,w)
+
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(f1,lblanking)
 
 ! [f1 and f2 updated with boundary conditions]
-      call boundarycond(f1,f2,uvel,t1)
+      call boundarycond(f1,f2,uvel,t1,p1)
 
 #ifdef MPI
       call mpi_halo_exchange_j(f1,nl)
@@ -283,12 +316,23 @@ program LatticeBoltzmann
 #endif
       call macrovars(rho,u,v,w,f1)
 
+! pottemp advection returns updated pottemp in p2
+      if (iablvisc == 2) then
+#ifdef MPI
+         call mpi_halo_exchange_j(p1,1)
+#endif
+         call advection(p2,p1,u,v,w,tau,1)
+         pt_tmp => p1
+         p1 => p2
+         p2 => pt_tmp
+      endif
+
 ! tracer advection returns updated tracer in t2
       if (ntracer > 0) then
 #ifdef MPI
          call mpi_halo_exchange_j(t1,ntracer)
 #endif
-         call advection(t2,t1,u,v,w,tau)
+         call advection(t2,t1,u,v,w,tau,ntracer)
          tr_tmp => t1
          t1 => t2
          t2 => tr_tmp
@@ -297,8 +341,9 @@ program LatticeBoltzmann
 ! Diagnostics
 #ifdef MPI
          call mpi_halo_exchange_j(t1,ntracer)
+         call mpi_halo_exchange_j(p1,ntracer)
 #endif
-      call diag(itecout,it,rho,u,v,w,t1,lblanking)
+      call diag(itecout,it,rho,u,v,w,p1,t1,lblanking)
 
       call cpustart()
 ! Averaging for diagnostics similar to Asmuth paper for wind turbines
@@ -309,8 +354,8 @@ program LatticeBoltzmann
 
 ! Averaging for diagnostics
       if (laveraging) then
-         if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,t1,lblanking,.false.)
-         if (it == avesave)                    call averaging_full(u,v,w,rho,t1,lblanking,.true.)
+         if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,p1,t1,lblanking,.false.)
+         if (it == avesave)                    call averaging_full(u,v,w,rho,p1,t1,lblanking,.true.)
       endif
 
 ! Updating input turbulence matrix
@@ -319,7 +364,7 @@ program LatticeBoltzmann
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,t1)
+      if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,p1,t1)
       call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
@@ -328,7 +373,7 @@ program LatticeBoltzmann
 
 
    call cpustart()
-   call saverestart(it-1,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,t1)
+   call saverestart(it-1,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,p1,t1)
    call cpufinish(16)
    if (ir==0) call cpuprint()
 

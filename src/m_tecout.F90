@@ -2,12 +2,12 @@ module m_tecout
 implicit none
 
 contains
-subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanking,rho,u,v,w,tracer,Ti)
+subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanking,rho,u,v,w, pottemp, tracer,Ti)
    use mod_dimensions
    use m_tecplot
    use m_readinfile
 #ifdef MPI
-   use m_mpi_decomp_init, only : j_start
+   use m_mpi_decomp_init, only : j_start,mpi_rank
 #endif
    implicit none
    character(len=*), intent(in) :: filename         ! Output filename
@@ -20,7 +20,8 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    real,     intent(in)             :: u(0:nx+1,0:ny+1,0:nz+1)         ! x component of fluid velocity
    real,     intent(in)             :: v(0:nx+1,0:ny+1,0:nz+1)         ! y component of fluid velocity
    real,     intent(in)             :: w(0:nx+1,0:ny+1,0:nz+1)         ! z component of fluid velocity
-   real,     intent(in)             :: tracer(:,:,:,:)                   ! tracer variables
+   real,     intent(in)             :: tracer(:,:,:,:)                 ! tracer variables
+   real,     intent(in)             :: pottemp(:,:,:)                ! potential temperature
    logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
    real,     intent(in), optional   :: Ti(0:nx+1,0:ny+1,0:nz+1)        ! Turbulent kinetic enery
 
@@ -34,20 +35,26 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    real(kind=4), allocatable :: your_datas(:,:,:,:)
    real(kind=4) :: physics_time
    real :: xyz(3)
-   integer dd
+   integer dd,nyy
    real, allocatable :: blanking(:,:,:)
 #ifndef MPI
    integer :: j_start=1
+#endif
+#ifdef MPI
+   print *,'tecout: j_start',j_start,mpi_rank
+   nyy=ny+1
+#else
+   nyy=ny
 #endif
 
    physics_time=real(it)
    print '(5a,f10.2)','tecout: "',trim(filename),'" (',trim(variables_string),') iteration=',physics_time
 
    if ((filetype == 0) .or. (filetype == 1)) then
-      allocate(blanking(nx,ny+1,nz))
+      allocate(blanking(nx,nyy,nz))
       blanking=0.0
       do k=1,nz
-      do j=1,ny+1
+      do j=1,nyy
       do i=1,nx
          if (lblanking(i,j,k)) blanking(i,j,k)=1.0
       enddo
@@ -55,7 +62,7 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
       enddo
    endif
 
-   allocate(your_datas(nx,ny+1,nz,num_of_variables))
+   allocate(your_datas(nx,nyy,nz,num_of_variables))
    allocate(locations(num_of_variables))
    allocate(type_list(num_of_variables))
    allocate(shared_list(num_of_variables))
@@ -71,7 +78,7 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    ! call init subroutine first
    ! nx, ny, nz means the dimension of the data
    ! 'x,y,z,u,v,w' is a string contains names of variables, must be divided by ','
-   call plt_file%init(filename,nx,ny+1,nz,filetype,'LBM3D output',filetype,trim(variables_string))
+   call plt_file%init(filename,nx,nyy,nz,filetype,'LBM3D output',filetype,trim(variables_string))
 
    ! for each zone, call the two subroutines
    ! physics_time can be any value, it will only be used when there are more than 1 zone in a file.
@@ -84,7 +91,7 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
 ! static grid data
    if ((filetype == 0) .or. (filetype == 1)) then
       do k = 1, nz
-         do j = 1, ny+1
+         do j = 1, nyy
             do i = 1, nx
                your_datas(i,j,k,1) = real(i - 1)
                your_datas(i,j,k,2) = real(j_start + j - 1)
@@ -102,17 +109,20 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
 ! solution data
    if ((filetype == 0) .or. (filetype == 2)) then
       if (filetype == 2) dd=0
-      dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  = rho(1:nx,1:ny+1,1:nz)
-      dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   u(1:nx,1:ny+1,1:nz)
-      dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   v(1:nx,1:ny+1,1:nz)
-      dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   w(1:nx,1:ny+1,1:nz)
+      dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  = rho(1:nx,1:nyy,1:nz)
+      dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  =   u(1:nx,1:nyy,1:nz)
+      dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  =   v(1:nx,1:nyy,1:nz)
+      dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  =   w(1:nx,1:nyy,1:nz)
+      if (iablvisc == 2) then
+            dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  =   pottemp(1:nx,1:nyy,1:nz)
+      endif
       if (ntracer > 0) then
          do i=1,ntracer
-            dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  =   tracer(i,1:nx,1:ny+1,1:nz)
+            dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  =   tracer(i,1:nx,1:nyy,1:nz)
          enddo
       endif
       if (present(Ti)) then
-         dd=dd+1; your_datas(1:nx,1:ny+1,1:nz,dd)  = Ti(1:nx,1:ny+1,1:nz)
+         dd=dd+1; your_datas(1:nx,1:nyy,1:nz,dd)  = Ti(1:nx,1:nyy,1:nz)
       endif
    endif
 

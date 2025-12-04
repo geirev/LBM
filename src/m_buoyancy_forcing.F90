@@ -8,6 +8,7 @@ subroutine buoyancy_forcing(external_forcing,pottemp)
 #endif
    use m_readinfile,    only : p2l
    use m_buoyancy_forcing_kernel
+   use  m_abl_initialize, only : pottemp0
    use m_wtime
    implicit none
    integer, parameter  :: ntot=(nx+2)*(ny+2)*(nz+2)
@@ -28,7 +29,6 @@ subroutine buoyancy_forcing(external_forcing,pottemp)
    integer, parameter :: icpu=8
 
    call cpustart()
-   theta0=300.0
    g=9.81
    scaling=g*p2l%time**2/p2l%length
 
@@ -41,7 +41,7 @@ subroutine buoyancy_forcing(external_forcing,pottemp)
 #ifdef _CUDA
          &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-         &(external_forcing, pottemp, scaling, theta0)
+         &(external_forcing, pottemp, scaling, pottemp0)
    call cpufinish(icpu)
 end subroutine
 end module

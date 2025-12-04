@@ -20,8 +20,8 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanki
    real,     intent(in)             :: u(0:nx+1,0:ny+1,0:nz+1)         ! x component of fluid velocity
    real,     intent(in)             :: v(0:nx+1,0:ny+1,0:nz+1)         ! y component of fluid velocity
    real,     intent(in)             :: w(0:nx+1,0:ny+1,0:nz+1)         ! z component of fluid velocity
-   real,     intent(in)             :: tracer(:,:,:,:)                 ! tracer variables
-   real,     intent(in)             :: pottemp(:,:,:)                ! potential temperature
+   real,     intent(in)             :: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)                 ! tracer variables
+   real,     intent(in)             :: pottemp(0:nx+1,0:ny+1,0:nz+1)                ! potential temperature
    logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
    real,     intent(in), optional   :: Ti(0:nx+1,0:ny+1,0:nz+1)        ! Turbulent kinetic enery
 

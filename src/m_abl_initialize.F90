@@ -1,4 +1,5 @@
 module m_abl_initialize
+   real, parameter :: pottemp0    = 300.0    ! typical θ at surface [K]
 contains
 subroutine abl_initialize(pottemp,ir)
 ! Initialize potential temperature profile for ABL
@@ -18,7 +19,6 @@ subroutine abl_initialize(pottemp,ir)
 
 ! Physical parameters
    real :: dz
-   real :: pottemp0       ! surface potential temperature
    real :: gamma_s      ! stable lapse rate (K/m)
    real :: gamma_n      ! neutral residual gradient
    real :: delta_cbl    ! inversion jump for unstable CBL
@@ -29,7 +29,6 @@ subroutine abl_initialize(pottemp,ir)
 
 ! Choose default parameters
    dz        = p2l%length
-   pottemp0    = 300.0    ! typical θ at surface [K]
    gamma_s   = 0.015    ! 15 K/km = 0.015 K/m
    gamma_n   = 0.001    ! 1 K/km  = 0.001 K/m
    delta_cbl = 2.0      ! CBL inversion jump [K]
@@ -64,6 +63,7 @@ subroutine abl_initialize(pottemp,ir)
       case default
          stop 'unvalid value for istable'
       end select
+
    enddo
 
    pottemp(:,:,:)=pottemp_h(:,:,:)

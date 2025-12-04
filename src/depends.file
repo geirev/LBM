@@ -132,7 +132,6 @@ m_boundary_i_k_edges.o:      makefile
 m_boundary_i_k_edges.o:      mod_D3Q27setup.o
 m_boundary_i_k_edges.o:      mod_dimensions.o
 m_boundary_i_periodic_kernel.o:      makefile
-m_boundary_i_periodic_kernel.o:      mod_D3Q27setup.o
 m_boundary_i_periodic_kernel.o:      mod_dimensions.o
 m_boundary_j_closed_kernel.o:      makefile
 m_boundary_j_closed_kernel.o:      mod_D3Q27setup.o
@@ -156,6 +155,7 @@ m_buoyancy_forcing_apply.o:      m_turbines_apply_kernel.o
 m_buoyancy_forcing_apply.o:      m_wtime.o
 m_buoyancy_forcing_kernel.o:      makefile
 m_buoyancy_forcing_kernel.o:      mod_dimensions.o
+m_buoyancy_forcing.o:      m_abl_initialize.o
 m_buoyancy_forcing.o:      makefile
 m_buoyancy_forcing.o:      m_buoyancy_forcing_kernel.o
 m_buoyancy_forcing.o:      mod_dimensions.o

@@ -38,7 +38,7 @@ contains
       if (k == 0 .or. k == nz+1) cycle
 #endif
 
-      external_forcing(3,idx) = external_forcing(3,idx) + scaling * (pottemp(idx) - theta0) / theta0
+      external_forcing(3,idx) = external_forcing(3,idx) - scaling * (pottemp(idx) - theta0) / theta0
 
 #ifndef _CUDA
    end do

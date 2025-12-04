@@ -351,11 +351,16 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,rho0,udir,tracer,jbnd,kbnd,taperj,taperk)
+      &(f1,uvel,rho0,udir,tracer,pottemp,iablvisc,jbnd,kbnd,taperj,taperk)
 
 ! Update edges for inflow conditions
     !  call boundary_i_inflow_edges(f1,f2)
    endif
+
+
+
+
+
 
 ! Update edges for inflow conditions for periodic boundary conditions in i-direction
    if (ibnd==0) then

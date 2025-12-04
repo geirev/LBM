@@ -63,8 +63,17 @@ subroutine abl_initialize(pottemp,ir)
       case default
          stop 'unvalid value for istable'
       end select
-
    enddo
+!   pottemp_h=300.0
+!   do k=0,nz+1
+!   do j=0,ny+1
+!   do i=0,nx+1
+!      if (( (i-nx/2)**2 + (j-ny/2)**2 + (k-nz/2)**2)  < 10**2 ) then
+!         pottemp_h(i,j,k)=301.0
+!      endif
+!   enddo
+!   enddo
+!   enddo
 
    pottemp(:,:,:)=pottemp_h(:,:,:)
 

@@ -21,6 +21,8 @@ subroutine abl_initialize(pottemp,ir)
    real :: dz
    real :: gamma_s      ! stable lapse rate (K/m)
    real :: gamma_n      ! neutral residual gradient
+   real :: gamma_cbl    ! unstable residual gradient
+   real :: gamma_top    ! gradient above BL
    real :: delta_cbl    ! inversion jump for unstable CBL
    integer :: i,j,k,is
    real :: z
@@ -31,7 +33,10 @@ subroutine abl_initialize(pottemp,ir)
    dz        = p2l%length
    gamma_s   = 0.015    ! 15 K/km = 0.015 K/m
    gamma_n   = 0.001    ! 1 K/km  = 0.001 K/m
+   gamma_cbl = 0.001
+   gamma_top = 0.005
    delta_cbl = 2.0      ! CBL inversion jump [K]
+
 
    ! Loop and fill pottemp
    do k = 0, nz+1
@@ -44,7 +49,7 @@ subroutine abl_initialize(pottemp,ir)
          if (z <= ablheight) then
             pottemp_h(:,:,k) = pottemp0 + gamma_s * z
          else
-            pottemp_h(:,:,k) = pottemp0 + gamma_s * ablheight + 0.005 * (z - ablheight)
+            pottemp_h(:,:,k) = pottemp0 + gamma_s * ablheight + gamma_top * (z - ablheight)
          endif
 
 !  NEUTRAL ABL: θ nearly constant, weak background slope
@@ -54,10 +59,10 @@ subroutine abl_initialize(pottemp,ir)
 !  UNSTABLE / CONVECTIVE ABL: well-mixed layer + inversion
       case (-1)
          if (z <= ablheight) then
-            pottemp_h(:,:,k) = pottemp0                      ! well mixed
+            pottemp_h(:,:,k) = pottemp0 + gamma_cbl*z
          else
             ! linear inversion above h
-            pottemp_h(:,:,k) = pottemp0 + delta_cbl + 0.005*(z - ablheight)
+            pottemp_h(:,:,k) = pottemp0 + gamma_cbl*ablheight + delta_cbl + gamma_top*(z - ablheight)
          end if
 
       case default

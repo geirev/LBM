@@ -1,0 +1,38 @@
+module m_theta_profile_reduce
+!=====================================================================
+! Kernel 2: Final reduction and normalization:
+!   theta_mean(k) = theta_part(k) / N_selected_points
+!=====================================================================
+contains
+
+#ifdef _CUDA
+attributes(global) &
+#endif
+subroutine theta_profile_reduce(theta_part, theta_mean, nsel)
+   use mod_dimensions, only : nz
+#ifdef _CUDA
+   use cudafor
+#endif
+   implicit none
+
+   real, intent(in)    :: theta_part(0:nz+1)
+   real, intent(inout) :: theta_mean(0:nz+1)
+   integer, value      :: nsel
+
+   integer :: k
+
+#ifdef _CUDA
+   k = threadIdx%x + (blockIdx%x-1)*blockDim%x
+   if (k < 1 .or. k > nz) return
+
+   theta_mean(k) = theta_part(k) / real(nsel)
+#else
+   do k = 1, nz
+      theta_mean(k) = theta_part(k) / real(nsel)
+   end do
+#endif
+
+end subroutine
+end module
+
+

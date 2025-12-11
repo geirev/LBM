@@ -29,13 +29,10 @@ F90SOURCE = \
 	m_boundary_j_periodic_kernel.F90\
 	m_boundary_k_closed_kernel.F90\
 	m_boundary_k_periodic_kernel.F90\
-	m_buoyancy_forcing_apply.F90\
 	m_buoyancy_forcing.F90\
 	m_buoyancy_forcing_kernel.F90\
 	m_city2.F90\
 	m_city.F90\
-	m_collisions.F90\
-	m_collisions_kernel.F90\
 	m_compute_f.F90\
 	m_compute_f_kernel.F90\
 	m_compute_fneq.F90\
@@ -50,6 +47,8 @@ F90SOURCE = \
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\
 	m_fillghosts.F90\
+	m_forcings_apply.F90\
+	m_forcings_apply_kernel.F90\
 	m_gpu_meminfo.F90\
 	m_inflow_turbulence_apply.F90\
 	m_inflow_turbulence_compute.F90\
@@ -62,12 +61,6 @@ F90SOURCE = \
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
-	m_mpi_decomp_finalize.F90\
-	m_mpi_decomp_init.F90\
-	m_mpi_halo_buffers.F90\
-	m_mpi_halo_exchange_j.F90\
-	m_mpi_pack_jplane.F90\
-	m_mpi_unpack_jplane.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\
@@ -100,6 +93,7 @@ F90SOURCE = \
 	m_tecplot.F90\
 	m_testing.F90\
 	m_testvar.F90\
+	m_theta_fluxbc_kernel.F90\
 	m_turbine_compute_bladeforce.F90\
 	m_turbine_deposit.F90\
 	m_turbine_distribute_points.F90\
@@ -111,8 +105,6 @@ F90SOURCE = \
 	m_turbine_point_forces_gpu.F90\
 	m_turbine_point_forces_kernel.F90\
 	m_turbine_rotor_basis.F90\
-	m_turbines_apply.F90\
-	m_turbines_apply_kernel.F90\
 	m_turbines_bounding_box.F90\
 	m_uvelshear.F90\
 	m_vreman.F90\

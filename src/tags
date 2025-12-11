@@ -27,12 +27,9 @@ boundary_j_periodic_kernel	m_boundary_j_periodic_kernel.F90	/^module
 boundary_k_closed_kernel	m_boundary_k_closed_kernel.F90	/^module
 boundary_k_periodic_kernel	m_boundary_k_periodic_kernel.F90	/^module
 buoyancy_forcing	m_buoyancy_forcing.F90	/^module
-buoyancy_forcing_apply	m_buoyancy_forcing_apply.F90	/^module
 buoyancy_forcing_kernel	m_buoyancy_forcing_kernel.F90	/^module
 city	m_city.F90	/^module
 city2	m_city2.F90	/^module
-collisions	m_collisions.F90	/^module
-collisions_kernel	m_collisions_kernel.F90	/^module
 compute_f	m_compute_f.F90	/^module
 compute_fneq	m_compute_fneq.F90	/^module
 compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
@@ -50,6 +47,8 @@ fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 fequil3_kernel	m_fequil3_kernel.F90	/^module
 fftw3	mod_fftw3.F90	/^module
 fillghosts	m_fillghosts.F90	/^module
+forcings_apply	m_forcings_apply.F90	/^module
+forcings_apply_kernel	m_forcings_apply_kernel.F90	/^module
 gpu_meminfo	m_gpu_meminfo.F90	/^module
 inflow_turbulence_apply	m_inflow_turbulence_apply.F90	/^module
 inflow_turbulence_compute	m_inflow_turbulence_compute.F90	/^module
@@ -103,12 +102,9 @@ m_boundary_j_periodic_kernel	m_boundary_j_periodic_kernel.F90	/^module
 m_boundary_k_closed_kernel	m_boundary_k_closed_kernel.F90	/^module
 m_boundary_k_periodic_kernel	m_boundary_k_periodic_kernel.F90	/^module
 m_buoyancy_forcing	m_buoyancy_forcing.F90	/^module
-m_buoyancy_forcing_apply	m_buoyancy_forcing_apply.F90	/^module
 m_buoyancy_forcing_kernel	m_buoyancy_forcing_kernel.F90	/^module
 m_city	m_city.F90	/^module
 m_city2	m_city2.F90	/^module
-m_collisions	m_collisions.F90	/^module
-m_collisions_kernel	m_collisions_kernel.F90	/^module
 m_compute_f	m_compute_f.F90	/^module
 m_compute_fneq	m_compute_fneq.F90	/^module
 m_compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
@@ -123,6 +119,8 @@ m_fequil3	m_fequil3.F90	/^module
 m_fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 m_fequil3_kernel	m_fequil3_kernel.F90	/^module
 m_fillghosts	m_fillghosts.F90	/^module
+m_forcings_apply	m_forcings_apply.F90	/^module
+m_forcings_apply_kernel	m_forcings_apply_kernel.F90	/^module
 m_gpu_meminfo	m_gpu_meminfo.F90	/^module
 m_inflow_turbulence_apply	m_inflow_turbulence_apply.F90	/^module
 m_inflow_turbulence_compute	m_inflow_turbulence_compute.F90	/^module
@@ -168,8 +166,7 @@ m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
 m_testing	m_testing.F90	/^module
 m_testvar	m_testvar.F90	/^module
-m_turbines_apply	m_turbines_apply.F90	/^module
-m_turbines_apply_kernel	m_turbines_apply_kernel.F90	/^module
+m_theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 m_turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 m_turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 m_turbine_deposit	m_turbine_deposit.F90	/^module
@@ -215,9 +212,8 @@ tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module
 testing	m_testing.F90	/^module
 testvar	m_testvar.F90	/^module
+theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 turbines	mod_turbines.F90	/^module
-turbines_apply	m_turbines_apply.F90	/^module
-turbines_apply_kernel	m_turbines_apply_kernel.F90	/^module
 turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 turbine_deposit	m_turbine_deposit.F90	/^module

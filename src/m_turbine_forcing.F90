@@ -41,7 +41,6 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    real,            allocatable :: Fvec_local(:,:)   ! (3, np)
    real,            allocatable :: Fvec_global(:,:)  ! (3, np)
 
-   real,            allocatable :: Fturb(:,:)  ! (3, np)
 
    integer :: np,i,ierr
    real, allocatable :: rho_h(:,:,:), u_h(:,:,:), v_h(:,:,:), w_h(:,:,:)
@@ -99,7 +98,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 
    deallocate(Fvec_local, Fvec_global)
    deallocate(points_global)
-   deallocate(F_turb)
+!   deallocate(F_turb)
 
    call cpufinish(24)
 end subroutine turbine_forcing

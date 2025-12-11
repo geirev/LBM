@@ -1,14 +1,14 @@
-module m_turbines_apply
+module m_forcings_apply
 contains
-subroutine turbines_apply(f,external_forcing,rho,u,v,w)
+subroutine forcings_apply(f,external_forcing,rho,u,v,w)
    use mod_dimensions,  only : nx,ny,nz
    use mod_D3Q27setup,  only : nl,cs2,cs4,cs6
-   use m_readinfile   , only : ipos,nturbines,ibgk
+   use m_readinfile   , only : ibgk
 #ifdef _CUDA
    use m_readinfile,    only : ntx,nty,ntz
 #endif
    use mod_turbines, only : t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax
-   use m_turbines_apply_kernel
+   use m_forcings_apply_kernel
    use m_wtime
    implicit none
    real, intent(inout) :: f(nl,0:nx+1,0:ny+1,0:nz+1)        ! distribution
@@ -37,7 +37,7 @@ subroutine turbines_apply(f,external_forcing,rho,u,v,w)
    real :: inv2cs6
    real :: inv6cs6
    real :: ratio
-   integer, parameter :: icpu=8
+   integer, parameter :: icpu=7
 
    call cpustart()
 
@@ -54,7 +54,7 @@ subroutine turbines_apply(f,external_forcing,rho,u,v,w)
    ty = nty; by = (ny + ty - 1) / ty
    tz = ntz; bz = (nz + tz - 1) / tz
 #endif
-      call turbines_apply_kernel&
+      call forcings_apply_kernel&
 #ifdef _CUDA
          &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif

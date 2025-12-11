@@ -98,7 +98,7 @@ subroutine readinfile()
 
       read(10,*,err=100)iablvisc           ; print '(a,i1)',      'ABL: iablvisc     = ',iablvisc
       read(10,*,err=100)ablheight          ; print '(a,f10.4)',   'ABL: ablheight    = ',ablheight
-      read(10,*,err=100)istable            ; print '(a,i1)',      'ABL: stability    = ',istable
+      read(10,*,err=100)istable            ; print '(a,i3)',      'ABL: stability    = ',istable
 
       read(10,'(a)',err=100)ver
 

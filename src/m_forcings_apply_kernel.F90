@@ -1,10 +1,10 @@
-module m_turbines_apply_kernel
+module m_forcings_apply_kernel
 contains
 
 #ifdef _CUDA
    attributes(global) &
 #endif
-   subroutine turbines_apply_kernel(f, rho, u, v, w, external_forcing, inv1cs2, inv2cs4, ratio, ibgk,&
+   subroutine forcings_apply_kernel(f, rho, u, v, w, external_forcing, inv1cs2, inv2cs4, ratio, ibgk,&
                                     t_imin,t_imax, t_jmin,t_jmax, t_kmin,t_kmax)
 #ifdef _CUDA
    use cudafor

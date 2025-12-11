@@ -6,7 +6,6 @@ program LatticeBoltzmann
    use m_abl_initialize
    use m_advection
    use m_buoyancy_forcing
-   use m_buoyancy_forcing_apply
    use m_airfoil
    use m_testing
    use m_postcoll
@@ -34,7 +33,7 @@ program LatticeBoltzmann
    use mod_turbines
    use m_turbine_initialize
    use m_turbine_forcing
-   use m_turbines_apply
+   use m_forcings_apply
    use m_inipert
    use m_macrovars
    use m_predicted_measurements
@@ -289,7 +288,7 @@ program LatticeBoltzmann
       if (inflowturbulence)   call inflow_turbulence_apply(f1,turbulence_df)
 
 ! [f1 = f1 + external forcing]
-      if (nturbines > 0 .or. iablvisc==2) call turbines_apply(f1,external_forcing,rho,u,v,w)
+      if (nturbines > 0 .or. iablvisc==2) call forcings_apply(f1,external_forcing,rho,u,v,w)
 
 
 ! Bounce back boundary on fixed walls within the fluid
@@ -321,7 +320,7 @@ program LatticeBoltzmann
 #ifdef MPI
          call mpi_halo_exchange_j(p1,1)
 #endif
-         call advection(p2,p1,u,v,w,tau,1)
+         call advection(p2,p1,u,v,w,tau,1,1)
          pt_tmp => p1
          p1 => p2
          p2 => pt_tmp
@@ -332,7 +331,7 @@ program LatticeBoltzmann
 #ifdef MPI
          call mpi_halo_exchange_j(t1,ntracer)
 #endif
-         call advection(t2,t1,u,v,w,tau,ntracer)
+         call advection(t2,t1,u,v,w,tau,ntracer,0)
          tr_tmp => t1
          t1 => t2
          t2 => tr_tmp

@@ -57,7 +57,7 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
       variables   = 'i,j,k,blanking'
       num_of_vars = 4
 
-   case (0,3)   ! Full field with indices and netcdf
+   case (0,3)   ! Full field with indices (also for netcdf)
       write(cit,'(a1,i6.6)') 'F', it
       variables   = 'i,j,k,blanking,rho,u,v,w'
       num_of_vars = 8
@@ -72,14 +72,14 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
       stop 'invalid filetype in diag'
    end select
    if (filetype /=1) then
-      if (present(Ti)) then
-         cit         = '_AVERAGE'
-         variables=trim(variables)//',Ti'
+      if (iablvisc == 2) then
+         variables=trim(variables)//',pottemp'
          num_of_vars=num_of_vars+1
       endif
 
-      if (iablvisc == 2) then
-         variables=trim(variables)//',pottemp'
+      if (present(Ti)) then
+         cit         = 'AVERAGE'
+         variables=trim(variables)//',Ti'
          num_of_vars=num_of_vars+1
       endif
 
@@ -146,7 +146,7 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
       pottemp_h(1:nx,ny+1,1:nz)= pottemp_h(1:nx,ny,1:nz)
    endif
 
-   if (ntracer > 0) then 
+   if (ntracer > 0) then
       allocate(tracer_h(ntracer,0:nx+1,0:ny+1,0:nz+1))
       tracer_h=0.0
       tracer_h(:,1:nx,1:ny,1:nz) = tracer(:,1:nx,1:ny,1:nz)

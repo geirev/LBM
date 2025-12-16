@@ -5,6 +5,7 @@ program LatticeBoltzmann
    use m_mechanical_ablvisc
    use m_abl_initialize
    use m_advection
+   use m_heatflux
    use m_buoyancy_forcing
    use m_airfoil
    use m_testing
@@ -320,7 +321,8 @@ program LatticeBoltzmann
 #ifdef MPI
          call mpi_halo_exchange_j(p1,1)
 #endif
-         call advection(p2,p1,u,v,w,tau,1,1)
+         call heatflux(p2,p1)
+         call advection(p2,p1,u,v,w,tau,1)
          pt_tmp => p1
          p1 => p2
          p2 => pt_tmp
@@ -331,7 +333,7 @@ program LatticeBoltzmann
 #ifdef MPI
          call mpi_halo_exchange_j(t1,ntracer)
 #endif
-         call advection(t2,t1,u,v,w,tau,ntracer,0)
+         call advection(t2,t1,u,v,w,tau,ntracer)
          tr_tmp => t1
          t1 => t2
          t2 => tr_tmp

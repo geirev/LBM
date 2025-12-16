@@ -4,16 +4,9 @@
 !==============================================================
 module m_turbine_deposit
 contains
-
 !--------------------------------------------------------------
-!  subroutine turbine_deposit
-!
-!  PURPOSE:
 !    Deposit global point forces Fvec_global onto the
 !    tile-local forcing field F_turb using a Gaussian stencil.
-!
-!  CALL:
-!    call turbine_deposit(F_turb, points_global, Fvec_global, np)
 !--------------------------------------------------------------
 subroutine turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
    use mod_turbines, only : point_t

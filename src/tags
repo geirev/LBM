@@ -50,6 +50,7 @@ fillghosts	m_fillghosts.F90	/^module
 forcings_apply	m_forcings_apply.F90	/^module
 forcings_apply_kernel	m_forcings_apply_kernel.F90	/^module
 gpu_meminfo	m_gpu_meminfo.F90	/^module
+heatflux	m_heatflux.F90	/^module
 inflow_turbulence_apply	m_inflow_turbulence_apply.F90	/^module
 inflow_turbulence_compute	m_inflow_turbulence_compute.F90	/^module
 inflow_turbulence_forcing	m_inflow_turbulence_forcing.F90	/^module
@@ -122,6 +123,7 @@ m_fillghosts	m_fillghosts.F90	/^module
 m_forcings_apply	m_forcings_apply.F90	/^module
 m_forcings_apply_kernel	m_forcings_apply_kernel.F90	/^module
 m_gpu_meminfo	m_gpu_meminfo.F90	/^module
+m_heatflux	m_heatflux.F90	/^module
 m_inflow_turbulence_apply	m_inflow_turbulence_apply.F90	/^module
 m_inflow_turbulence_compute	m_inflow_turbulence_compute.F90	/^module
 m_inflow_turbulence_forcing	m_inflow_turbulence_forcing.F90	/^module

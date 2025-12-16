@@ -165,7 +165,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       print '(3a)','reading: ',trim(fname)
-      open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
+      open(newunit=iunit,file=trim(fname),form="unformatted", status='old')
          read(iunit)i,j,k,l
          rewind(iunit)
          if ((i==nx).and.(j==ny).and.(k==nz).and.(l==nl)) then

@@ -20,9 +20,15 @@ contains
    real, intent(inout) :: vave2(0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout) :: wave2(0:nx+1,0:ny+1,0:nz+1)
 
-   real, intent(out)   ::    Ti(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) ::    Ti(0:nx+1,0:ny+1,0:nz+1)
+   real Ti2
 
    integer :: i, j, k
+
+   if (iave == 0) then
+      print *,'iave=0'
+      return
+   endif
 
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x - 1) * blockDim%x
@@ -32,7 +38,7 @@ contains
    if (j > ny) return
    if (i > nx) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k) SHARED(uave,vave,wave,uave2,vave2,wave2,Ti,iave,uini)
+!$OMP PARALLEL DO PRIVATE(i,j,k,Ti2) SHARED(uave,vave,wave,uave2,vave2,wave2,Ti,iave,uini)
    do k=1,nz
    do j=1,ny
    do i=1,nx
@@ -45,8 +51,15 @@ contains
       vave2(i,j,k)=vave2(i,j,k)/real(iave)
       wave2(i,j,k)=wave2(i,j,k)/real(iave)
 
-      Ti(i,j,k)=uave2(i,j,k)-uave(i,j,k)**2 + vave2(i,j,k)-vave(i,j,k)**2 + wave2(i,j,k)-wave(i,j,k)**2
-      Ti(i,j,k)=sqrt(Ti(i,j,k)/3.0)  !/uini
+!      Ti(i,j,k)=uave2(i,j,k)-uave(i,j,k)**2 + vave2(i,j,k)-vave(i,j,k)**2 + wave2(i,j,k)-wave(i,j,k)**2
+!      Ti(i,j,k)=sqrt(Ti(i,j,k)/3.0)  !/uini
+
+      Ti2 = ( &
+          max(uave2(i,j,k) - uave(i,j,k)**2, 0.0) + &
+          max(vave2(i,j,k) - vave(i,j,k)**2, 0.0) + &
+          max(wave2(i,j,k) - wave(i,j,k)**2, 0.0) ) / 3.0
+
+         Ti(i,j,k) = sqrt(max(Ti2, 0.0))
 
       !uave(i,j,k)=uave(i,j,k)/uini
       !vave(i,j,k)=vave(i,j,k)/uini

@@ -2,26 +2,44 @@
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
 ## Release notes:
-** (Dec 2025): The current version has upgraded the code to allow for MPI paralleization.**
+### (Dec 2025): Code upgraded to allow for MPI parallelization and buoyancy forcing
+**MPI parallelization**
   - To use MPI, compile with MPI=1. (```make -B MPI=1 CUDA=1``` for multiple GPU boards, and ```make -B MPI=1``` for multiple CPUs).
     The MPI parallelization should scale almost linearly on multiple CPUs and GPUs, and is much more efficient than using OPEN-MP.
-  - The MPI paralleization splits the model domain into a number of tiles in the ```j```-direction.
+  - The MPI parallelization splits the model domain into a number of tiles in the ```j```-direction.
   - Edit mod_dimensions where ```ny``` is now the local tile dimension, and ```nyg``` is the global grid dimension in the ```j```-direction.
     And note that ```nyg = nrtiles x ny```.
-  - I have completely rewritten the actuatorline model for the MPI parallelization, where blades and forces can intersect tail boundaries.
-    You can also add a tilt and yaw angle to the rotor in the infile.in (not yet tested).
-  - Restart and diagnostic files now include the tile number in the file name, e.g., ```tec_0002_020050.plt``` and ```restart_0002_020050.uf```
-    which refer to a diagnostic file and a restart file for tile number 2 at the timestep 20050. For plotting you will now have to read multiple
-    files per timestep. For consistency, all runs, also without MPI parallelizaiton include a tile number in the file name (0000 in the non MPI case).
+  - I have completely rewritten the actuatorline model for MPI parallelization, allowing blades and forces to intersect tile boundaries.
+    You can also add a tilt and yaw angle to the rotor in the infile.in where the format for turbines is slightly updated.
+  - Restart and diagnostic files now include the tile number in the file name, e.g., ```tec_0002_020050.plt``` and ```restart_0002_020050.uf```,
+    which refer to a diagnostic file and a restart file for tile number 2 at the timestep 20050. For plotting, you will now have to read multiple
+    files per timestep. For consistency, all runs, also without MPI parallelization, include a tile number in the file name (0000 in the non-MPI case).
+    Due to the larger number of output files, I am now dumping them in directories: output, restart, and testing
   - To start an MPI simulation to run on 4 GPUs or 4 CPUs, type
 ```bash
    ulimit -s unlimited (when running on CPUs)
    mpirun -np 4 boltzmann
 ```
 
+**Buoyancy forcing**
+  - infile.in now includes additional lines specifying if buoyancy forcing is included and if the atmospheric boundary layer is stable, neutral, or unstable.
+```bash
+ # Atmospheric boundary layer
+ 2                ! iablvisc      : mode for ABL (0-none, 1-mechanical layer, 2-bouyancy scheme)
+ 400.0            ! ablheight     : height of ABL in meters
+ 1                ! istable       : Stability of ABL when iablvisc=2 (1=stable, 0=netural, -1=unstable)
+```
+  - When including buoyancy forcing, the model includes an additional macroscopic potential temperature variable that is advected and diffused by solving
+    an advection-diffusion equation using an RK2 method with upstream spatial differences for the advection term. Input to the advection-diffusion solver is
+    the macroscopic fluid velocities and the eddy diffusivity calculated from tau, but with some constraints introduced for stability.
+  - The buoyancy force is a global force applied in every grid point (which adds to the computational cost).
+  - The stable case uses Dirichlet boundary conditions on inflow and the closed boundaries, and a radiation condition for the outflow.
+  - The unstable case uses periodic conditions in the x direction, a Neumann condition for heat flux on the surface boundary, and a Dirichlet condition for
+    constant temperature at the top boundary.
 
 
-** (Oct 2025) The latest pushes have been major upgrades. Speedup is now around 100 on GPU relative a single CPU core.**
+
+### (Oct 2025) The latest pushes have been major upgrades. Speedup is now around 100 on GPU relative a single CPU core.
   - The code uses pointers to switch beteen f1 and f2 every second timestep. This allows for a significant simplification
     for the implementation of boundary conditions and reduces the load on the GPU for the postcoll routine.
   - postcoll now replaces fequil2, regularization, vreman and collisions, which are all done in one common kernel.
@@ -151,15 +169,21 @@ sudo apt-get -y install gfortran
 ```
 
 ### NVIDIA CUDA NVfortran
-nvidia Cuda fortran compiler and utilities installation (get the latest version, nvhpc-25-9 is just for illustration).
+Nvidia Cuda fortran compiler and utilities installation (get the latest version, nvhpc-25-11 is just for illustration).
 ```bash
 curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
 echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
 sudo apt-get update -y
-sudo apt-get install -y nvhpc-25-9
+sudo apt-get install -y nvhpc-25-11
 sudo apt install nvidia-cuda-toolkit
 ```
-and add the following in your .bachrc file
+
+Nvidia CUDA toolkit and drivers can be installed from
+```bash
+https://developer.nvidia.com/cuda-downloads
+```
+
+Add the following in your .bachrc file
 ```bash
 # path to executable
 PATH="$PATH:$HOME/bin"
@@ -173,7 +197,7 @@ export LD_LIBRARY_PATH=$NVHPC/Linux_x86_64/2025/math_libs/lib64:$LD_LIBRARY_PATH
 Optionally, you can compile with OPEN-MPI to run on multiple GPUs by installing
 ```bash
 sudo apt install openmpi-bin libopenmpi-dev
-```bash
+```
 and add the following in your .bachrc file
 ```bash
 export PATH="$PATH:$HOME/bin"

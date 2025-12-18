@@ -27,7 +27,7 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbn
    real, intent(in)    :: taperk(nz)
    real, value         :: udir
    real, value         :: rho0
-   integer, value         :: iablvisc
+   integer, value      :: iablvisc
    integer, value      :: jbnd
    integer, value      :: kbnd
 

@@ -14,7 +14,7 @@ contains
 subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir,iablvisc
+   use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir,iablvisc,istable
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
@@ -352,6 +352,20 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
       &(f1,uvel,rho0,udir,tracer,pottemp,iablvisc,jbnd,kbnd,taperj,taperk)
+
+! Periodic bnd cond for pottemp in unstable case
+      if (iablvisc > 0 .and. istable == -1) then
+#ifdef _CUDA
+         tx=1  ; bx=1
+         ty=32 ; by=(ny+2+ty-1)/ty
+         tz=8  ; bz=(nz+2+tz-1)/tz
+#endif
+         call boundary_i_periodic_kernel&
+#ifdef _CUDA
+         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+         &(pottemp,1)
+      endif
 
 ! Update edges for inflow conditions
     !  call boundary_i_inflow_edges(f1,f2)

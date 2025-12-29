@@ -1,6 +1,40 @@
 # Lattice-Boltzmann-Model
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
 
+The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP or MPI multicore, a single GPU, or multiple GPUs using MPI, with optimization primarily for the GPU and multiple
+GPUs.  The code runs in single precision as default but a flag copiles a double precision version.
+
+The collision operator is a single relaxation time with relaxation to a third-order Hermite expansion of the equilibrium distribution
+similar to the approach taken by [Jacob et al (2018)](https://hal.science/hal-02114308) and
+[Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization using finite differences that I did not yet need.
+It is also possible to use the code for viscous flow without regularization and turbulence closure, and using a second-order BGK expansion.
+
+The turbulence closure scheme is the one described by [Vreman (2004)](https://doi.org/10.1063/1.1785131).
+
+The model boundary conditions are periodic or closed no-slip or free-slip two-timestep bounceback in the i-, j-, and k-directions. Additionally, there are inflow-outflow conditions
+in the i-direction.
+
+The code allows for inserting solid bodies within the model domain to simulate, e.g., flow around an airfoil or a cylinder.
+
+Additionally, there is a complete implementation of an actuator line model for the NREL-5Mw wind turbine on an arbitrary rotor plane, and it is possible to include multiple
+turbines at any location of the model domain.
+
+Inflow turbulence is mimicked or introduced at a section inside the inflow boundary at i=1 (typically at the slice i=10) by applying a smooth in space
+and time, pseudo-random force on the fluid.
+
+The model also allows including buoyancy forcing by advecting potential potential temperature as a passive tracer.
+
+The forcing function for the inflow turbulence, the turbines, and the buoyancy forcing is the one of Kupershtokh (2009).
+
+<p align="center">
+<img src="example/stable.png" width="500">
+</p>
+
+<p align="center">
+<img src="example/city.png" width="500">
+</p>
+
+
 ## Release notes:
 ### (Dec 2025): Code upgraded to allow for MPI parallelization and buoyancy forcing
 **MPI parallelization**
@@ -70,31 +104,7 @@ This project is dual-licensed to accommodate both academic/research and commerci
 Academic/research users can use the software freely under the Academic License.
 Commercial users must obtain a commercial license before using the software in any for-profit or proprietary project.
 
-## Introduction
-
-The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP multicore, or a GPU, with optimization primarily for the GPU.
-
-The code runs in single precision as default but a flag copiles a double precision version.
-
-The collision operator is a single relaxation time with relaxation to a third-order Hermite expansion of the Equilibrium distribution
-similar to the approach taken by [Jacob et al (2018)](https://hal.science/hal-02114308) and
-[Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization using finite differences that I did not yet need.
-It is also possible to use the code for viscous flow without regularization and turbulence closure, and using a second-order BGK expansion.
-
-The turbulence closure scheme is the one described by [Vreman (2004)](https://doi.org/10.1063/1.1785131).
-
-The model boundary conditions are periodic or inflow-outflow in the i-direction, periodic or closed no-slip or free-slip two-timestep bounceback in the j- and k-
-directions.
-
-The code allows for inserting solid bodies within the model domain to simulate, e.g., flow around an airfoil or a cylinder.
-
-Additionally, there is a complete implementation of an actuator line model for the NREL-5Mw wind turbine, and it is possible to include multiple
-turbines at any location of the model domain.
-
-Inflow turbulence is mimicked or introduced at a section inside the inflow boundary at i=1 (typically at the slice i=10) by applying a smooth in space
-and time, pseudo-random force on the fluid.
-
-The forcing function for the inflow turbulence and the turbines is that of Kupershtokh (2009).
+## A note on the forcing function
 
 Previously, for the turbine forcing, it was also possible to run with the forcing formulations of Guo et al (2002). However, when using regularization, we
 project the non-equilibrium distribution onto the third-order Hermite polynomials. The significant difference between the Guo scheme's equilibrium
@@ -106,15 +116,6 @@ computation of f=feq +R(fneq) and extra computation of fneq= f-feq(u+du). It is 
 locations, but for now, it is not worth the effort.
 
 
-
-
-<p align="center">
-<img src="example/windturbine.png" width="300">
-</p>
-
-<p align="center">
-<img src="example/city.png" width="300">
-</p>
 
 ---
 
@@ -169,19 +170,11 @@ sudo apt-get -y install gfortran
 ```
 
 ### NVIDIA CUDA NVfortran
-Nvidia Cuda fortran compiler and utilities installation (get the latest version, nvhpc-25-11 is just for illustration).
-```bash
-curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
-echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
-sudo apt-get update -y
-sudo apt-get install -y nvhpc-25-11
-sudo apt install nvidia-cuda-toolkit
-```
+Nvidia Cuda fortran compiler and utilities installation:
 
-Nvidia CUDA toolkit and drivers can be installed from
-```bash
-https://developer.nvidia.com/cuda-downloads
-```
+Install the NVIDIA HPC SDK from [https://developer.nvidia.com/hpc-sdk-downloads](https://developer.nvidia.com/hpc-sdk-downloads)
+
+Nvidia CUDA toolkit and drivers can be installed from [https://developer.nvidia.com/cuda-downloads](https://developer.nvidia.com/cuda-downloads)
 
 Add the following in your .bachrc file
 ```bash

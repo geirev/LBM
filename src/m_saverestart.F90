@@ -3,7 +3,7 @@ contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile, only : inflowturbulence,nturbines,nrturb,lnodump,iablvisc
+   use m_readinfile, only : inflowturbulence,nturbines,nrturb,ldump,iablvisc
 #ifdef MPI
    use m_mpi_decomp_init, only : mpi_rank
 #endif
@@ -47,7 +47,7 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    character(len=10)  directory
    character(len=100) fname
 
-   if (lnodump) return
+   if (.not.ldump) return
 
 ! File names
    ir=0

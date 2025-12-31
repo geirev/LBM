@@ -2,7 +2,7 @@ module m_diag
 contains
 subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
    use mod_dimensions
-   use m_readinfile, only : iout, iprt1, iprt2, dprt, nt1, lnodump, iablvisc
+   use m_readinfile, only : iout, iprt1, iprt2, dprt, nt1, ldump, iablvisc
    use m_tecout
 #ifdef NETCDF
    use m_netcdfout
@@ -43,7 +43,7 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
    integer, parameter :: icpu = 14
    integer ir,l
 
-   if (lnodump) return
+   if (.not.ldump) return
    if (.not. (mod(it,iout)==0 .or. it==nt1 .or. ((it<=iprt1 .or. it>=iprt2) .and. mod(it,dprt)==0))) return
 
    call cpustart()

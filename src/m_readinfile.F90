@@ -29,7 +29,7 @@ module m_readinfile
    integer :: ntx          ! Number of threads per block in x-direction
    integer :: nty          ! Number of threads per block in y-direction
    integer :: ntz          ! Number of threads per block in z-direction
-   logical :: lnodump      ! No dumping to disk while analysing performance
+   logical :: ldump        ! Dumping diagnostic files to disk
    logical :: lmeasurements! Used in data assimilation experiments
 
    type physconv
@@ -83,7 +83,7 @@ subroutine readinfile()
 
       read(10,*,err=100)ltiming            ; print '(a,tr7,l1)',  'ltiming           = ',ltiming
       read(10,*,err=100)ltesting           ; print '(a,tr7,l1)',  'ltesting          = ',ltesting
-      read(10,*,err=100)lnodump            ; print '(a,tr7,l1)',  'lnodump           = ',lnodump
+      read(10,*,err=100)ldump              ; print '(a,tr7,l1)',  'ldump             = ',ldump
       read(10,*,err=100)ntx,nty,ntz        ; print '(a,3i4)',     'threads per block = ',ntx,nty,ntz
       read(10,*,err=100)lmeasurements      ; print '(a,tr7,l1)',  'lmeasurements     = ',lmeasurements
 

@@ -172,6 +172,8 @@ m_theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 m_turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 m_turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 m_turbine_deposit	m_turbine_deposit.F90	/^module
+m_turbine_deposit_gpu	m_turbine_deposit_gpu.F90	/^module
+m_turbine_deposit_gpu_kernel	m_turbine_deposit_gpu_kernel.F90	/^module
 m_turbine_distribute_points	m_turbine_distribute_points.F90	/^module
 m_turbine_extend_array	m_turbine_extend_array.F90	/^module
 m_turbine_forcing	m_turbine_forcing.F90	/^module
@@ -219,6 +221,8 @@ turbines	mod_turbines.F90	/^module
 turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 turbine_deposit	m_turbine_deposit.F90	/^module
+turbine_deposit_gpu	m_turbine_deposit_gpu.F90	/^module
+turbine_deposit_gpu_kernel	m_turbine_deposit_gpu_kernel.F90	/^module
 turbine_distribute_points	m_turbine_distribute_points.F90	/^module
 turbine_extend_array	m_turbine_extend_array.F90	/^module
 turbine_forcing	m_turbine_forcing.F90	/^module

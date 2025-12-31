@@ -103,6 +103,8 @@ F90SOURCE = \
 	m_theta_fluxbc_kernel.F90\
 	m_turbine_compute_bladeforce.F90\
 	m_turbine_deposit.F90\
+	m_turbine_deposit_gpu.F90\
+	m_turbine_deposit_gpu_kernel.F90\
 	m_turbine_distribute_points.F90\
 	m_turbine_extend_array.F90\
 	m_turbine_forcing.F90\

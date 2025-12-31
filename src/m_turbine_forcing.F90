@@ -9,7 +9,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 #ifdef MPI
    use mpi
 #endif
-   use mod_dimensions, only : nx, ny, nz
+   use mod_dimensions, only : nx, ny, nz, nyg
    use mod_turbines, only : turbine_t,point_t,points_global
 
    use m_turbine_distribute_points
@@ -17,6 +17,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    use m_turbine_point_forces
 
    use m_turbine_deposit
+   use m_turbine_deposit_gpu
 
    use m_turbines_bounding_box
    use m_wtime
@@ -41,10 +42,19 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    real,            allocatable :: Fvec_local(:,:)   ! (3, np)
    real,            allocatable :: Fvec_global(:,:)  ! (3, np)
 
+   real,            allocatable :: xg_h(:),yg_h(:),zg_h(:) ! (np)
+#ifdef _CUDA
+   real, device,    allocatable :: xg(:),yg(:),zg(:) ! (np)
+#endif
+#ifdef _CUDA
+   real, device,    allocatable :: Fvec(:,:)         ! (3, np)
+#else
+   real,            allocatable :: Fvec(:,:)         ! (3, np)
+#endif
+   logical :: lgpu=.true.
 
-   integer :: np,i,ierr
+   integer :: p,np,i,ierr
    real, allocatable :: rho_h(:,:,:), u_h(:,:,:), v_h(:,:,:), w_h(:,:,:)
-   integer krad
 #ifndef MPI
    integer :: mpi_rank=0
 #endif
@@ -66,6 +76,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    if (allocated(points_global)) deallocate(points_global)
    call turbine_distribute_points(turbines_in, points_global)
    np = size(points_global)
+
    call cpufinish(21)
 
    call cpustart()
@@ -74,6 +85,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    if (allocated(Fvec_global)) deallocate(Fvec_global); allocate(Fvec_global(3, np))
    Fvec_local  = 0.0
    Fvec_global = 0.0
+
 
 ! 4. Compute point forces directly on device
    call turbine_point_forces_gpu(points_global, rho, u, v, w, Fvec_local, np)
@@ -88,19 +100,46 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 #endif
    call cpufinish(23)
 
-   call cpustart()
 ! 6. Clear local forcing field and deposit smoothed forces
-   allocate(F_turb(3,0:nx+1,0:ny+1,0:nz+1))
-   F_turb = 0.0
-   call turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
-!   call turbines_bounding_box(points_global, np, krad)
-   external_forcing=F_turb
+   call cpustart()
+!-----------------------------------------------------------------------------------
+#ifdef _CUDA
+! device computation
+      if (.not.allocated(xg_h)) allocate(xg_h(np))
+      if (.not.allocated(yg_h)) allocate(yg_h(np))
+      if (.not.allocated(zg_h)) allocate(zg_h(np))
+      do p=1,np
+         xg_h(p)=points_global(p)%xg
+         yg_h(p)=points_global(p)%yg
+         zg_h(p)=points_global(p)%zg
+      enddo
+
+      if (.not.allocated(xg)) allocate(xg(np))
+      if (.not.allocated(yg)) allocate(yg(np))
+      if (.not.allocated(zg)) allocate(zg(np))
+      xg=xg_h
+      yg=yg_h
+      zg=zg_h
+      if (.not.allocated(fvec)) allocate(fvec(3,np))
+      fvec=fvec_global
+      call turbine_deposit_gpu(external_forcing, xg, yg, zg, fvec, np)
+      !print *,'sums =',mpi_rank,sum(external_forcing(:,1:nx,1:ny,1:nz)),sum(Fvec_global(:,:))
+      !deallocate(fvec,xg,yg,zg)
+!---------------------------------------------------------------------------------
+#else
+! host computation
+      allocate(F_turb(3,0:nx+1,0:ny+1,0:nz+1))
+      F_turb = 0.0
+      call turbine_deposit(F_turb, points_global, Fvec_global, np)
+      external_forcing=F_turb
+      deallocate(F_turb)
+#endif
+!-----------------------------------------------------------------------------------
 
    deallocate(Fvec_local, Fvec_global)
    deallocate(points_global)
-!   deallocate(F_turb)
-
    call cpufinish(24)
+
 end subroutine turbine_forcing
 
 end module m_turbine_forcing

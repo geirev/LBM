@@ -379,6 +379,11 @@ m_theta_fluxbc_kernel.o:      mod_dimensions.o
 m_turbine_compute_bladeforce.o:      makefile
 m_turbine_compute_bladeforce.o:      mod_turbines.o
 m_turbine_compute_bladeforce.o:      m_turbine_rotor_basis.o
+m_turbine_deposit_gpu_kernel.o:      makefile
+m_turbine_deposit_gpu.o:      makefile
+m_turbine_deposit_gpu.o:      m_mpi_decomp_init.o
+m_turbine_deposit_gpu.o:      mod_dimensions.o
+m_turbine_deposit_gpu.o:      m_turbine_deposit_gpu_kernel.o
 m_turbine_deposit.o:      makefile
 m_turbine_deposit.o:      m_mpi_decomp_init.o
 m_turbine_deposit.o:      mod_dimensions.o
@@ -394,6 +399,7 @@ m_turbine_forcing.o:      makefile
 m_turbine_forcing.o:      m_mpi_decomp_init.o
 m_turbine_forcing.o:      mod_dimensions.o
 m_turbine_forcing.o:      mod_turbines.o
+m_turbine_forcing.o:      m_turbine_deposit_gpu.o
 m_turbine_forcing.o:      m_turbine_deposit.o
 m_turbine_forcing.o:      m_turbine_distribute_points.o
 m_turbine_forcing.o:      m_turbine_point_forces_gpu.o

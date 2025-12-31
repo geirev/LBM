@@ -161,8 +161,8 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
    end if
 
    if (minval(rho_h) < 0.0) then
-      print *,'iter=',it,'  minmaxrho=',minval(rho_h),' -- ',maxval(rho_h)
-      print *,'iter=',it,'  minmaxloc=',minloc(rho_h),' -- ',maxloc(rho_h)
+      print '(a,i2,a,i6,a,g13.5,a,g13.5)','diag: mpi_rank=',ir,' iter=',it,'  minmaxrho=',minval(rho_h),' -- ',maxval(rho_h)
+      print '(a,i2,a,i6,a,3i4,a,3i4)',    'diag: mpi_rank=',ir,' iter=',it,'  minmaxloc=',minloc(rho_h),' -- ',maxloc(rho_h)
       stop 'Unstable simulation'
    end if
 

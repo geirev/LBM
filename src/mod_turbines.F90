@@ -59,9 +59,6 @@ module mod_turbines
    type(turbine_t), allocatable :: turbines(:)
    type(point_t),   allocatable :: points_global(:)
 
-! Storage for forcing on lattice nodes
-   real                         :: F_turb(3,0:nx+1,0:ny+1,0:nz+1)
-
 ! point block limits (not used yet)
    integer t_imin,t_imax,t_jmin,t_jmax,t_kmin,t_kmax
 end module mod_turbines

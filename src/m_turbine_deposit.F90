@@ -1,14 +1,10 @@
-!==============================================================
-!  m_turbine_deposit.F90
-!  Deposit smoothed actuator forces on the lattice
-!==============================================================
 module m_turbine_deposit
 contains
 !--------------------------------------------------------------
 !    Deposit global point forces Fvec_global onto the
 !    tile-local forcing field F_turb using a Gaussian stencil.
 !--------------------------------------------------------------
-subroutine turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
+subroutine turbine_deposit(F_turb, points_global, Fvec_global, np)
    use mod_turbines, only : point_t
    use mod_dimensions, only : nx, ny, nz, nyg
 #ifdef MPI
@@ -19,7 +15,6 @@ subroutine turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
    integer,       intent(in)    :: np
    type(point_t), intent(in)    :: points_global(np)
    real,          intent(in)    :: Fvec_global(3, np)
-   integer,       intent(inout) :: krad
 
    integer :: p, i0, j0, k0
    integer :: ii, jj, kk
@@ -29,10 +24,11 @@ subroutine turbine_deposit(F_turb, points_global, Fvec_global, np, krad)
    real    :: sigma, epsilon
    real    :: xg, yg, zg
    real    :: Fp(3)
+   integer :: krad
 
    epsilon = 2.0
    sigma   = epsilon / sqrt(2.0)
-   krad    = int(ceiling(3.0 * sigma))
+   krad    = min(5,int(ceiling(3.0*sigma)))
 
    do p = 1, np
       xg = points_global(p)%xg

@@ -37,7 +37,7 @@ FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
 FFLAGS = -c -Ofast -mcmodel=large -march=native -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math
 else
 ifdef CUDA
-FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=fp 
+FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=divz,inv,ovf
 FFLAGS+= -gpu=lineinfo  -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
 else
 FFLAGS = -c -Ofast           -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast

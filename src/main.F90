@@ -142,7 +142,7 @@ program LatticeBoltzmann
 
    if (iablvisc == 2) then
       allocate(pottempA(0:nx+1,0:ny+1,0:nz+1))
-      allocate(pottempA(0:nx+1,0:ny+1,0:nz+1))
+      allocate(pottempB(0:nx+1,0:ny+1,0:nz+1))
    endif
 
    allocate(external_forcing(3,0:nx+1,0:ny+1,0:nz+1))

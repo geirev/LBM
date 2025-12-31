@@ -71,7 +71,14 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
   - The unstable case uses periodic conditions in the x direction, a Neumann condition for heat flux on the surface boundary, and a Dirichlet condition for
     constant temperature at the top boundary.
 
+**Notes**
+  - The forcing_apply currently uses only second order Hermite expansion for saving some cpu time. Revert to 3rd order in case of instabilities
+    related to strong forces leading to high Mach numbers.
 
+  - Note also the minor change in infile.in where I replaced lnodump with ldump and where ldum needs to be true for saving diagnostics and restart files.
+```bash
+ T                ! ldump         : Saving of diagnostics and restarts files
+```
 
 ### (Oct 2025) The latest pushes have been major upgrades. Speedup is now around 100 on GPU relative a single CPU core.
   - The code uses pointers to switch beteen f1 and f2 every second timestep. This allows for a significant simplification

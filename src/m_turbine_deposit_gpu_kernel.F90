@@ -32,6 +32,7 @@ subroutine turbine_deposit_gpu_kernel( F_turb, xg, yg, zg, Fvec, np, nx, ny, nz,
   real    :: dx, dy, dz, r2, w, arg
   real    :: sum_local, sumW
   real    :: old
+#ifdef _CUDA
   real, shared :: shsum(tpb)
 
   p   = blockIdx%x
@@ -126,6 +127,7 @@ subroutine turbine_deposit_gpu_kernel( F_turb, xg, yg, zg, Fvec, np, nx, ny, nz,
 
      idx = idx + stride
   end do
+#endif
 
 end subroutine
 end module

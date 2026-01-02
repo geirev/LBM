@@ -17,7 +17,6 @@ program LatticeBoltzmann
    use m_boundarycond
    use m_city
    use m_city2
-   use m_collisions
    use m_compute_f
    use m_compute_fneq
    use m_cube

@@ -61,7 +61,7 @@ contains
    ratio = inv6cs6 / inv2cs4
 !$OMP PARALLEL DO collapse(3) DEFAULT(NONE) &
 !$OMP  PRIVATE(i,j,k,l,p,q,r,vel,dens,cu,tmpeq,tmpneq,A2,A3,vratio,alpha,alphamag,beta,Bbeta,eddyvisc,tautmp,fac)&
-!$OMP  SHARED(f,rho,u,v,w,H2,H3,cxs,cys,czs,weights,inv1cs2,inv2cs4,inv6cs6,ratio,ibgk,ihrr,ivreman,eps,kinevisc,const,tau)
+!$OMP  SHARED(f,rho,u,v,w,H2,H3,cxs,cys,czs,weights,inv1cs2,inv2cs4,inv6cs6,ratio,ibgk,ihrr,ivreman,eps,kinevisc,const,tau,ablvisc)
    do k=1,nz
    do j=1,ny
    do i=1,nx

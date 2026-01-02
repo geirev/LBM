@@ -44,7 +44,7 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    real, intent(inout):: pottemp(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
 
-   real, taperj(ny),taperk(nz)!, real, dist, x, width
+   real :: taperj(ny),taperk(nz)!, real, dist, x, width
    real, parameter   :: pi=3.1415927410125732
 #ifdef _CUDA
    attributes(device) :: f1

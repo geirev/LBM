@@ -27,16 +27,20 @@ The model also allows including buoyancy forcing by advecting potential potentia
 The forcing function for the inflow turbulence, the turbines, and the buoyancy forcing is the one of Kupershtokh (2009).
 
 <p align="center">
-<img src="example/stable.png" width="500">
+<img src="example/stable.png" width="600">
 </p>
 
 <p align="center">
-<img src="example/city.png" width="500">
+<img src="example/city.png" width="600">
 </p>
 
 
 ## Release notes:
-### (Dec 2025): Code upgraded to allow for MPI parallelization and buoyancy forcing
+### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
+**Previous version
+  - As this release is a major upgrade, I may have introduced some issus. The previous operatinal code is stored under the ```version_gpu``` branch.
+  - The Netcdf diagnostics dump needs an update for use with MPI tiles and the Buoyancy (potential temperature) variable.
+
 **MPI parallelization**
   - To use MPI, compile with MPI=1. (```make -B MPI=1 CUDA=1``` for multiple GPU boards, and ```make -B MPI=1``` for multiple CPUs).
     The MPI parallelization should scale almost linearly on multiple CPUs and GPUs, and is much more efficient than using OPEN-MP.

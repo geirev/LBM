@@ -1,18 +1,20 @@
 # Lattice-Boltzmann-Model
 This repository contains a 3D implementation of a Lattice-Boltzmann model on a D3Q19 or D3Q27 lattice for high Reynolds number flow.
+I (Geir Evensen) have received support from [EQUINOR](https://www.equinor.com), the [UrbanAIR](https://www.urbanair-project.eu/) project,
+and [NORCE](https://www.norceresearch.no) while developing the code.
 
-The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP or MPI multicore, a single GPU, or multiple GPUs using MPI, with optimization primarily for the GPU and multiple
-GPUs.  The code runs in single precision as default but a flag copiles a double precision version.
+The code, NVIDIA's CUDA Fortran, runs on a single core, an OPEN-MP or MPI multicore, a single GPU, or multiple GPUs using MPI, with optimization primarily for the GPU
+and multiple GPUs.  The code runs in single precision as default but a flag copiles a double precision version.
 
-The collision operator is a single relaxation time with relaxation to a third-order Hermite expansion of the equilibrium distribution
-similar to the approach taken by [Jacob et al (2018)](https://hal.science/hal-02114308) and
-[Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization using finite differences that I did not yet need.
-It is also possible to use the code for viscous flow without regularization and turbulence closure, and using a second-order BGK expansion.
+The collision operator is a single relaxation time with relaxation to a third-order Hermite expansion of the equilibrium distribution similar to the approach taken by
+[Jacob et al (2018)](https://hal.science/hal-02114308) and [Feng et al, (2018)](https://doi.org/10.1029/2020MS002107), but excluding the hybrid regularization using
+finite differences that I did not yet need.  It is also possible to use the code for viscous flow without regularization and turbulence closure, and using a
+second-order BGK expansion.
 
 The turbulence closure scheme is the one described by [Vreman (2004)](https://doi.org/10.1063/1.1785131).
 
-The model boundary conditions are periodic or closed no-slip or free-slip two-timestep bounceback in the i-, j-, and k-directions. Additionally, there are inflow-outflow conditions
-in the i-direction.
+The model boundary conditions are periodic or closed no-slip or free-slip two-timestep bounceback in the i-, j-, and k-directions. Additionally, there are
+inflow-outflow conditions in the i-direction.
 
 The code allows for inserting solid bodies within the model domain to simulate, e.g., flow around an airfoil or a cylinder.
 
@@ -38,7 +40,7 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 ## Release notes:
 ### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
 **Previous version
-  - As this release is a major upgrade, I may have introduced some issus. The previous operatinal code is stored under the ```version_gpu``` branch.
+  - As this release is a major upgrade, I may have introduced some issus. The previous operational code is stored under the ```version_gpu``` branch.
   - The Netcdf diagnostics dump needs an update for use with MPI tiles and the Buoyancy (potential temperature) variable.
 
 **MPI parallelization**
@@ -54,14 +56,14 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
     files per timestep. For consistency, all runs, also without MPI parallelization, include a tile number in the file name (0000 in the non-MPI case).
     Due to the larger number of output files, I am now dumping them in directories: output, restart, and testing
   - To start an MPI simulation to run on 4 GPUs or 4 CPUs, type
-```bash
+```text
    ulimit -s unlimited (when running on CPUs)
    mpirun -np 4 boltzmann
 ```
 
 **Buoyancy forcing**
   - infile.in now includes additional lines specifying if buoyancy forcing is included and if the atmospheric boundary layer is stable, neutral, or unstable.
-```bash
+```text
  # Atmospheric boundary layer
  2                ! iablvisc      : mode for ABL (0-none, 1-mechanical layer, 2-bouyancy scheme)
  400.0            ! ablheight     : height of ABL in meters
@@ -80,7 +82,7 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
     related to strong forces leading to high Mach numbers.
 
   - Note also the minor change in infile.in where I replaced lnodump with ldump and where ldum needs to be true for saving diagnostics and restart files.
-```bash
+```text
  T                ! ldump         : Saving of diagnostics and restarts files
 ```
 

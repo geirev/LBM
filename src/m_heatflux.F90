@@ -28,12 +28,16 @@ subroutine heatflux(tempout,tempin)
 
    select case (istable)
    case (-1)
-      q= 0.1       ! K m/s   0.05-0.1 for moderate, 0.2 -0.3 for strong
-      !consider making the wall heating depend on local κ/tt to get a truly constant physical flux.
-      kappa= 5.0  ! m^2/s (eddy diffusivity)
-      q=q/p2l%vel
-      kappa=kappa/(p2l%vel*p2l%length)
-      heating=q/kappa
+    !  q= 0.1       ! K m/s   0.05-0.1 for moderate, 0.2 -0.3 for strong
+    !  !consider making the wall heating depend on local κ/tt to get a truly constant physical flux.
+    !  kappa= 5.0  ! m^2/s (eddy diffusivity)
+    !  q=q/p2l%vel
+    !  kappa=kappa/(p2l%vel*p2l%length)
+    !  heating=q/kappa
+      ! heating = (q/p2l%vel) / (kappa/(p2l%vel*p2l%length))
+      !         = 0.1 * p2l%length / 5.0
+      ! GPU(O2) note: Simplified to avoid NVFortran CUDA-O2 optimizer issues on server
+      heating = 0.02 * p2l%length
    case default
       return
    end select

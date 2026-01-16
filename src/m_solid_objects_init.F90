@@ -134,7 +134,7 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    end if
    deallocate(recvbuf, blank_host)
 
-#endif  ! MPI
+#endif
 
 end subroutine
 end module

@@ -340,8 +340,8 @@ program LatticeBoltzmann
 
 ! Diagnostics
 #ifdef MPI
-         call mpi_halo_exchange_j(t1,ntracer)
-         call mpi_halo_exchange_j(p1,ntracer)
+      if (ntracer > 0) call mpi_halo_exchange_j(t1,ntracer)
+      if (iablvisc == 2) call mpi_halo_exchange_j(p1,1)
 #endif
       call diag(itecout,it,rho,u,v,w,p1,t1,lblanking)
 

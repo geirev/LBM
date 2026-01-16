@@ -38,7 +38,7 @@ FFLAGS = -c -Ofast -mcmodel=large -march=native -std=gnu -fimplicit-none -frecur
 else
 ifdef CUDA
 FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=divz,inv,ovf
-FFLAGS+= -gpu=lineinfo  -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
+FFLAGS+= -gpu=lineinfo  -gpu=cc80,unroll,ptxinfo -Minfo=accel -cuda
 else
 FFLAGS = -c -Ofast           -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast
 endif
@@ -81,7 +81,7 @@ endif
 ################################# LINKFLAGS
 LINKFLAGS =
 ifdef CUDA
-LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays
+LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays -gpu=cc80
 endif
 
 ifdef MP
@@ -89,13 +89,13 @@ LINKFLAGS+= -fopenmp
 endif
 
 ifdef MPI
-LINKFLAGS+= -lmpi
+LINKFLAGS+= ###-lmpi
 endif
 
 F77FLG =
 F90FLG =
 
-LIBS =  -L$(HOME)/prog/nvhpc/hpc_sdk/Linux_x86_64/24.5/math_libs/lib64
+LIBS =  
 ifdef DP
 LIBS+= -lfftw3
 else

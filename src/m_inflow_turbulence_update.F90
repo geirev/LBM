@@ -21,26 +21,30 @@ subroutine inflow_turbulence_update(uu,vv,ww,rr,nrturb,lfirst)
    real, allocatable :: uu_g(:,:,:), vv_g(:,:,:), ww_g(:,:,:), rr_g(:,:,:)
 #ifdef MPI
    integer :: ierr
-   ! packed send buffers on root only
+   ! packed send buffers
    real, allocatable :: ubuf(:), vbuf(:), wbuf(:), rbuf(:)
    integer :: r, j0, j1, it, k, j, idx, chunk
 #endif
 
 #ifndef MPI
    ! ------------------ Serial case: compute directly into local arrays ------------------
-      allocate(uu_g(ny,nz,0:nrturb))
-      allocate(vv_g(ny,nz,0:nrturb))
-      allocate(ww_g(ny,nz,0:nrturb))
-      allocate(rr_g(ny,nz,0:nrturb))
-      call inflow_turbulence_compute(uu_g,vv_g,ww_g,rr_g,ny,nz,nrturb,lfirst)
-      uu=uu_g
-      vv=vv_g
-      ww=ww_g
-      rr=rr_g
-      return
+   allocate(uu_g(ny,nz,0:nrturb))
+   allocate(vv_g(ny,nz,0:nrturb))
+   allocate(ww_g(ny,nz,0:nrturb))
+   allocate(rr_g(ny,nz,0:nrturb))
+   call inflow_turbulence_compute(uu_g,vv_g,ww_g,rr_g,ny,nz,nrturb,lfirst)
+   uu = uu_g
+   vv = vv_g
+   ww = ww_g
+   rr = rr_g
+   return
 #else
    ! ------------------ MPI case: rank 0 generates global, packs, then scatters ---------
    chunk = ny * nz * (nrturb + 1)
+
+   ! *** CHANGE 1: allocate send buffers on ALL ranks, not just root ***
+   allocate(ubuf(chunk*mpi_nprocs), vbuf(chunk*mpi_nprocs), &
+            wbuf(chunk*mpi_nprocs), rbuf(chunk*mpi_nprocs))
 
    if (mpi_rank == 0) then
       allocate(uu_g(nyg,nz,0:nrturb))
@@ -49,9 +53,6 @@ subroutine inflow_turbulence_update(uu,vv,ww,rr,nrturb,lfirst)
       allocate(rr_g(nyg,nz,0:nrturb))
 
       call inflow_turbulence_compute(uu_g,vv_g,ww_g,rr_g,nyg,nz,nrturb,lfirst)
-
-      allocate(ubuf(chunk*mpi_nprocs), vbuf(chunk*mpi_nprocs), &
-               wbuf(chunk*mpi_nprocs), rbuf(chunk*mpi_nprocs))
 
       ! Pack each rank's (j0:j1, 1:nz, 0:nrturb) tile contiguously: j-fastest, then k, then t
       do r = 0, mpi_nprocs-1
@@ -117,11 +118,13 @@ subroutine inflow_turbulence_update(uu,vv,ww,rr,nrturb,lfirst)
    call MPI_Scatter(wbuf, chunk, MPI_REAL, ww, chunk, MPI_REAL, 0, MPI_COMM_WORLD, ierr)
    call MPI_Scatter(rbuf, chunk, MPI_REAL, rr, chunk, MPI_REAL, 0, MPI_COMM_WORLD, ierr)
 
+   ! *** CHANGE 2: deallocate send buffers on ALL ranks, and globals only on root ***
+   deallocate(ubuf, vbuf, wbuf, rbuf)
    if (mpi_rank == 0) then
-      deallocate(uu_g, vv_g, ww_g, rr_g, ubuf, vbuf, wbuf, rbuf)
+      deallocate(uu_g, vv_g, ww_g, rr_g)
    end if
 #endif
 
 end subroutine inflow_turbulence_update
-end module
+end module m_inflow_turbulence_update
 

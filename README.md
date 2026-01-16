@@ -24,7 +24,7 @@ turbines at any location of the model domain.
 Inflow turbulence is mimicked or introduced at a section inside the inflow boundary at i=1 (typically at the slice i=10) by applying a smooth in space
 and time, pseudo-random force on the fluid.
 
-The model also allows including buoyancy forcing by advecting potential potential temperature as a passive tracer.
+The model also allows including buoyancy forcing by advecting potential temperature as a passive tracer.
 
 The forcing function for the inflow turbulence, the turbines, and the buoyancy forcing is the one of Kupershtokh (2009).
 
@@ -39,7 +39,7 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 
 ## Release notes:
 ### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
-**Previous version
+**Previous version**
   - As this release is a major upgrade, I may have introduced some issus. The previous operational code is stored under the ```version_gpu``` branch.
   - The Netcdf diagnostics dump needs an update for use with MPI tiles and the Buoyancy (potential temperature) variable.
 
@@ -79,9 +79,9 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 
 **Notes**
   - The forcing_apply currently uses only second order Hermite expansion for saving some cpu time. Revert to 3rd order in case of instabilities
-    related to strong forces leading to high Mach numbers.
+    related to strong forces.
 
-  - Note also the minor change in infile.in where I replaced lnodump with ldump and where ldum needs to be true for saving diagnostics and restart files.
+  - Note also the minor change in infile.in where I replaced lnodump with ldump and where ldump needs to be true for saving diagnostics and restart files.
 ```text
  T                ! ldump         : Saving of diagnostics and restarts files
 ```
@@ -91,11 +91,11 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
     for the implementation of boundary conditions and reduces the load on the GPU for the postcoll routine.
   - postcoll now replaces fequil2, regularization, vreman and collisions, which are all done in one common kernel.
   - The actuatorline model was a mess, and I have now cleaned it up and tested it again.
-  - I have changed the format of the infile.in. Also, if there is no infile.in present, Boltzmann will generate one for you.
+  - I have changed the format of the infile.in. Also, if there is no infile.in present, running boltzmann will generate one for you.
   - I have developed a relatively robust test environment. If you activate ltesting in infile.in the code will dump the whole distribution function
     f in a file at the end of the simulation e.g., ```testing000200.uf``` if you run 200 time-steps. All subsequent 200 time-steps runs will then compute the
     difference between the latest simulations and the reference ```testing000200.uf``` file. A tolerance of (RMSE=0.1E-06 and MAXERR=0.1E-05) are acceptable in
-    sigle precision.
+    single precision.
 
 ## License
 

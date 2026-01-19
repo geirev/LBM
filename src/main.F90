@@ -131,6 +131,16 @@ program LatticeBoltzmann
    call readinfile()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Initialize MPI and domain decomposition
+   ir=0
+#ifdef MPI
+   periodic_j_bc = (jbnd == 0)
+   call mpi_decomp_init(periodic_j_bc)
+   if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' nyg=', nyg, ' ny=', ny
+   ir=mpi_rank
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! allocations
 
    allocate(    fA(nl,0:nx+1,0:ny+1,0:nz+1))
@@ -159,16 +169,6 @@ program LatticeBoltzmann
 
    allocate(external_forcing(3,0:nx+1,0:ny+1,0:nz+1))
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Initialize MPI and domain decomposition
-   ir=0
-#ifdef MPI
-   periodic_j_bc = (jbnd == 0)
-   call mpi_decomp_init(periodic_j_bc)
-   if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' nyg=', nyg, ' ny=', ny
-   ir=mpi_rank
-#endif
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -69,20 +69,19 @@ program LatticeBoltzmann
 !   real sh(0:nshapiro)
 
 ! Main variables
-   real, target ::     fA(nl,0:nx+1,0:ny+1,0:nz+1) ! density function
-   real, target ::     fB(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
-   !real         ::     fH(nl,0:nx+1,0:ny+1,0:nz+1) ! equilibrium density function
-   real         ::       tau(0:nx+1,0:ny+1,0:nz+1) ! relaxation time scale
-   logical      :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking solids grid points
-   real         ::         u(0:nx+1,0:ny+1,0:nz+1)             ! x component of fluid velocity
-   real         ::         v(0:nx+1,0:ny+1,0:nz+1)             ! y component of fluid velocity
-   real         ::         w(0:nx+1,0:ny+1,0:nz+1)             ! z component of fluid velocity
-   real         ::       rho(0:nx+1,0:ny+1,0:nz+1)             ! fluid density
-   real         ::      uvel(nz)                   ! vertical u-velocity profile on device
-   real         ::         u_h(0:nx+1,0:ny+1,0:nz+1)             ! x component of fluid velocity
-   real         ::         v_h(0:nx+1,0:ny+1,0:nz+1)             ! y component of fluid velocity
-   real         ::         w_h(0:nx+1,0:ny+1,0:nz+1)             ! z component of fluid velocity
-   real         ::       rho_h(0:nx+1,0:ny+1,0:nz+1)             ! fluid density
+   real, target, allocatable  ::     fA( :,:,:,:) ! density function
+   real, target, allocatable  ::     fB( :,:,:,:) ! equilibrium density function
+   real,         allocatable  ::       tau(:,:,:) ! relaxation time scale
+   logical,      allocatable  :: lblanking(:,:,:) ! blanking solids grid points
+   real,         allocatable  ::         u(:,:,:) ! x component of fluid velocity
+   real,         allocatable  ::         v(:,:,:) ! y component of fluid velocity
+   real,         allocatable  ::         w(:,:,:) ! z component of fluid velocity
+   real,         allocatable  ::       rho(:,:,:) ! fluid density
+   real,         allocatable  ::      uvel(:)     ! vertical u-velocity profile on device
+   real,         allocatable  ::       u_h(:,:,:) ! x component of fluid velocity
+   real,         allocatable  ::       v_h(:,:,:) ! y component of fluid velocity
+   real,         allocatable  ::       w_h(:,:,:) ! z component of fluid velocity
+   real,         allocatable  ::     rho_h(:,:,:) ! fluid density
 
    real, target, allocatable  :: tracerA(:,:,:,:)
    real, target, allocatable  :: tracerB(:,:,:,:)
@@ -132,7 +131,21 @@ program LatticeBoltzmann
    call readinfile()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Some additional allocations
+! allocations
+
+   allocate(    fA(nl,0:nx+1,0:ny+1,0:nz+1))
+   allocate(    fB(nl,0:nx+1,0:ny+1,0:nz+1))
+   allocate(      tau(0:nx+1,0:ny+1,0:nz+1))
+   allocate(lblanking(0:nx+1,0:ny+1,0:nz+1))
+   allocate(        u(0:nx+1,0:ny+1,0:nz+1))
+   allocate(        v(0:nx+1,0:ny+1,0:nz+1))
+   allocate(        w(0:nx+1,0:ny+1,0:nz+1))
+   allocate(      rho(0:nx+1,0:ny+1,0:nz+1))
+   allocate(     uvel(nz)                  )
+   allocate(      u_h(0:nx+1,0:ny+1,0:nz+1))
+   allocate(      v_h(0:nx+1,0:ny+1,0:nz+1))
+   allocate(      w_h(0:nx+1,0:ny+1,0:nz+1))
+   allocate(    rho_h(0:nx+1,0:ny+1,0:nz+1))
 
    if (ntracer > 0) then
       allocate(tracerA(ntracer,0:nx+1,0:ny+1,0:nz+1))

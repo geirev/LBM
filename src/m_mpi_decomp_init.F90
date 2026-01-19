@@ -61,13 +61,17 @@ contains
 
       dev  = mod(mpi_rank, ngpu)
       ierr = cudaSetDevice(dev)
+      write(*,'(3(A,I3))') 'RANK ', mpi_rank, ' using GPU ', dev,' of ',ngpu
+      call flush(6)
       if (ierr /= 0) then
          write(*,*) "Rank", mpi_rank, "cudaSetDevice(",dev,") failed, ierr=", ierr
+         call flush(6)
          call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
       end if
 
       write(*,*) "Number of GPUs visible per node: ", ngpu
       write(*,*) "Rank", mpi_rank, "using GPU", dev
+      call flush(6)
 #endif
 #endif
 

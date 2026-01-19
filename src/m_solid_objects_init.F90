@@ -10,6 +10,7 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    use mpi
    use m_mpi_decomp_init, only : mpi_rank, mpi_nprocs
 #endif
+
    implicit none
    logical, intent(inout) :: lsolids
    logical, intent(inout) :: blanking_local(0:nx+1,0:ny+1,0:nz+1)
@@ -22,11 +23,12 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    logical, allocatable :: blanking_global(:,:,:)
 
 #ifdef MPI
-   integer :: ierr
+   integer :: ierr,errlen,ierr2
    logical, allocatable :: sendbuf(:), recvbuf(:)
    integer :: i,j,k,r,idx
    integer :: j0, j1, chunk
    logical, allocatable :: blank_host(:,:,:)
+   character(len=MPI_MAX_ERROR_STRING) :: errstr
 #endif
 
    ! Global mask always on host
@@ -98,6 +100,14 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    call MPI_Scatter(sendbuf, chunk, MPI_LOGICAL, &
                     recvbuf, chunk, MPI_LOGICAL, &
                     0, MPI_COMM_WORLD, ierr)
+#ifdef MPI
+   if (ierr /= MPI_SUCCESS) then
+      call MPI_Error_string(ierr, errstr, errlen, ierr2)
+      write(*,*) 'Rank', mpi_rank, 'MPI_Scatter in m_solid_objects_init failed: ', trim(errstr)
+      call flush(6)
+      call MPI_Abort(MPI_COMM_WORLD, ierr, ierr)
+   end if
+#endif
 
    !---------------------------------------------------------------
    ! Unpack received subdomain into local host mirror

@@ -270,10 +270,8 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    if (jbnd>10 .and. kbnd>10) then
 
       if (jbnd==22 .and. kbnd==22) then
-         print *, "JK edges: free-slip"
          call boundary_j_k_edges(f1,f2,1)
       else
-         print *, "JK edges: no-slip"
          call boundary_j_k_edges(f1,f2,-1)
       endif
 
@@ -286,10 +284,8 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    if (ibnd>10 .and. jbnd>10) then
 
       if (ibnd==22 .and. jbnd==22) then
-         print *, "IJ edges: free-slip"
          call boundary_i_j_edges(f1,f2,1)        ! NEW routine
       else
-         print *, "IJ edges: no-slip"
          call boundary_i_j_edges(f1,f2,-1)       ! NEW routine
       endif
 
@@ -302,17 +298,14 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    if (ibnd>10 .and. kbnd>10) then
 
       if (ibnd==22 .and. kbnd==22) then
-         print *, "IK edges: free-slip"
          call boundary_i_k_edges(f1,f2,1)        ! NEW routine
       else
-         print *, "IK edges: no-slip"
          call boundary_i_k_edges(f1,f2,-1)       ! NEW routine
       endif
 
    endif
 
    if (ibnd>10 .and. jbnd>10 .and. kbnd > 10) then
-      print *, "closed corners"
       call boundary_closed_corners(f1,f2,-1)
    endif
 

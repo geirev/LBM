@@ -67,6 +67,8 @@ subroutine readinfile()
    real gridrn
    integer n
 
+   inquire(file='main.F90',exist=ex)
+   if (ex) stop 'You are executing boltzmann in the src/ catalog'
 
 ! reading input data
    inquire(file='infile.in',exist=ex)

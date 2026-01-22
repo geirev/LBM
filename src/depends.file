@@ -282,6 +282,7 @@ m_mpi_halo_exchange_j.o:      m_mpi_halo_buffers.o
 m_mpi_halo_exchange_j.o:      m_mpi_pack_jplane.o
 m_mpi_halo_exchange_j.o:      m_mpi_unpack_jplane.o
 m_mpi_halo_exchange_j.o:      mod_dimensions.o
+m_mpi_halo_exchange_j.o:      m_wtime.o
 m_mpi_pack_jplane.o:      makefile
 m_mpi_pack_jplane.o:      mod_dimensions.o
 m_mpi_unpack_jplane.o:      makefile

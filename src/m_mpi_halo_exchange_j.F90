@@ -11,6 +11,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    use cudafor
 #endif
    use mod_dimensions, only : nx, ny, nz
+   use m_wtime
    use m_mpi_decomp_init, only : north, south, mpi_nprocs, mpi_rank
    implicit none
    integer, intent(in) :: nl
@@ -18,12 +19,14 @@ subroutine mpi_halo_exchange_j(f,nl)
 #ifdef _CUDA
    attributes(device) :: f
    type(dim3) :: B, G
-   integer :: istat
+   integer :: istat2
 #endif
 #ifdef MPI
    integer :: ierr, req(4)
    integer :: count_i, mpi_rtype
 #endif
+   integer, parameter :: icpu=25
+   call cpustart()
 
    call mpi_halo_buffers_alloc(nl)
 ! Everything is handled in the boundarycond routine for serial code
@@ -64,7 +67,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    count_i = int(plane_elems, kind=4)
 
 #ifdef _CUDA
-   istat = cudaDeviceSynchronize()
+   istat2 = cudaDeviceSynchronize()
 #endif
 
    if (south /= MPI_PROC_NULL) then
@@ -84,7 +87,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    call MPI_Waitall(4, req, MPI_STATUSES_IGNORE, ierr)
 
 #ifdef _CUDA
-   istat = cudaDeviceSynchronize()
+   istat2 = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!! South unpack
@@ -106,9 +109,11 @@ subroutine mpi_halo_exchange_j(f,nl)
    endif
 
 #ifdef _CUDA
-   istat = cudaDeviceSynchronize(); if (istat/=0) print*,'unpack sync err=',istat
+   istat2 = cudaDeviceSynchronize(); if (istat2/=0) print*,'unpack sync err=',istat2
 #endif
    call mpi_halo_buffers_free()
+
+   call cpufinish(icpu)
 
 end subroutine
 end module

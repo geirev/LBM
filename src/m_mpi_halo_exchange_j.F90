@@ -24,11 +24,12 @@ subroutine mpi_halo_exchange_j(f,nl)
 #ifdef MPI
    integer :: ierr, req(4)
    integer :: count_i, mpi_rtype
+   integer :: plane_elems
 #endif
    integer, parameter :: icpu=25
    call cpustart()
 
-   call mpi_halo_buffers_alloc(nl)
+!   call mpi_halo_buffers_alloc(nl)
 ! Everything is handled in the boundarycond routine for serial code
 #ifdef MPI
    if (mpi_nprocs == 1) return
@@ -64,6 +65,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    end if
 
    ! count must be default integer
+   plane_elems = nl*(nx+2)*(nz+2)
    count_i = int(plane_elems, kind=4)
 
 #ifdef _CUDA
@@ -87,7 +89,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    call MPI_Waitall(4, req, MPI_STATUSES_IGNORE, ierr)
 
 #ifdef _CUDA
-   istat2 = cudaDeviceSynchronize()
+!   istat2 = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!! South unpack
@@ -109,9 +111,8 @@ subroutine mpi_halo_exchange_j(f,nl)
    endif
 
 #ifdef _CUDA
-   istat2 = cudaDeviceSynchronize(); if (istat2/=0) print*,'unpack sync err=',istat2
+!   istat2 = cudaDeviceSynchronize(); if (istat2/=0) print*,'unpack sync err=',istat2
 #endif
-   call mpi_halo_buffers_free()
 
    call cpufinish(icpu)
 

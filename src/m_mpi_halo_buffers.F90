@@ -17,13 +17,12 @@ module m_mpi_halo_buffers
    attributes(device)  :: rcv_north
 #endif
  !  integer(kind=8) :: plane_elems = 0
-   integer :: plane_elems = 0
 contains
    subroutine mpi_halo_buffers_alloc(nl)
       use mod_dimensions, only: nx,nz
       implicit none
       integer, intent(in) :: nl
-      !plane_elems = int(nl,8)*int(nx+2,8)*int(nz+2,8)
+      integer :: plane_elems
       plane_elems = nl*(nx+2)*(nz+2)
       if (.not.allocated(snd_south)) allocate(snd_south(plane_elems))
       if (.not.allocated(rcv_south)) allocate(rcv_south(plane_elems))

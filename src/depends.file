@@ -39,6 +39,7 @@ main.o:      m_macrovars.o
 main.o:      m_mechanical_ablvisc.o
 main.o:      m_mpi_decomp_finalize.o
 main.o:      m_mpi_decomp_init.o
+main.o:      m_mpi_halo_buffers.o
 main.o:      m_mpi_halo_exchange_j.o
 main.o:      mod_D3Q27setup.o
 main.o:      mod_dimensions.o

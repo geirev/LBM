@@ -59,6 +59,7 @@ program LatticeBoltzmann
 #ifdef MPI
    use mpi
    use m_mpi_decomp_init
+   use m_mpi_halo_buffers
    use m_mpi_halo_exchange_j
    use m_mpi_decomp_finalize
 #endif
@@ -136,8 +137,8 @@ program LatticeBoltzmann
 #ifdef MPI
    periodic_j_bc = (jbnd == 0)
    call mpi_decomp_init(periodic_j_bc)
-   if (mpi_rank == 0) print *, 'MPI ranks=', mpi_nprocs, ' nyg=', nyg, ' ny=', ny
    ir=mpi_rank
+   call mpi_halo_buffers_alloc(nl)
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -322,10 +323,6 @@ program LatticeBoltzmann
       f1  => f2
       f2 => tmp
 
-! Compute updated macro variables and copy to halos for printing
-#ifdef MPI
-      call mpi_halo_exchange_j(f1,nl)
-#endif
       call macrovars(rho,u,v,w,f1)
 
 ! pottemp advection returns updated pottemp in p2
@@ -351,10 +348,14 @@ program LatticeBoltzmann
          t2 => tr_tmp
       endif
 
-! Diagnostics
+! Update halos for diagnostics
 #ifdef MPI
-      if (ntracer > 0)   call mpi_halo_exchange_j(t1,ntracer)
+      call mpi_halo_exchange_j(u,1)
+      call mpi_halo_exchange_j(v,1)
+      call mpi_halo_exchange_j(w,1)
+      call mpi_halo_exchange_j(rho,1)
       if (iablvisc == 2) call mpi_halo_exchange_j(p1,1)
+      if (ntracer > 0)   call mpi_halo_exchange_j(t1,ntracer)
 #endif
       call diag(itecout,it,rho,u,v,w,p1,t1,lblanking)
 
@@ -402,6 +403,7 @@ program LatticeBoltzmann
 
 #ifdef MPI
    call mpi_decomp_finalize()
+   call mpi_halo_buffers_free()
 #endif
 end program LatticeBoltzmann
 

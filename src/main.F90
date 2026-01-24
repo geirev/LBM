@@ -348,14 +348,16 @@ program LatticeBoltzmann
          t2 => tr_tmp
       endif
 
-! Update halos for diagnostics
 #ifdef MPI
-      call mpi_halo_exchange_j(u,1)
-      call mpi_halo_exchange_j(v,1)
-      call mpi_halo_exchange_j(w,1)
-      call mpi_halo_exchange_j(rho,1)
-      if (iablvisc == 2) call mpi_halo_exchange_j(p1,1)
-      if (ntracer > 0)   call mpi_halo_exchange_j(t1,ntracer)
+! Update halos for diagnostics (double check if actually needed)
+      if (ldump .and. (mod(it,iout)==0 .or. it==nt1 .or. ((it<=iprt1 .or. it>=iprt2) .and. mod(it,dprt)==0))) then
+         call mpi_halo_exchange_j(u,1)
+         call mpi_halo_exchange_j(v,1)
+         call mpi_halo_exchange_j(w,1)
+         call mpi_halo_exchange_j(rho,1)
+         if (iablvisc == 2) call mpi_halo_exchange_j(p1,1)
+         if (ntracer > 0)   call mpi_halo_exchange_j(t1,ntracer)
+      endif
 #endif
       call diag(itecout,it,rho,u,v,w,p1,t1,lblanking)
 

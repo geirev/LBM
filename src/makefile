@@ -172,7 +172,7 @@ $(SRC_FILE): $(wildcard $(SRC_DIR)/*.F90) $(wildcard $(SRC_DIR)/*.F)
 	../bin/mksource.sh  > $@
 	sed -i.bak '/ cudafor/d' $@  && rm $@.bak
 	sed -i.bak '/ mpi.o/d' $@ && rm $@.bak
-	sed -i.bak '/netcdf/d' $@ && rm $@.bak
+	sed -i.bak '/netcdf.o/d' $@ && rm $@.bak
 ifndef MPI
 	sed -i.bak '/mpi/d' $@ && rm $@.bak
 endif
@@ -182,7 +182,7 @@ $(DEP_FILE): $(SRC_FILE)
 	@if [ -f $@ ]; then cp $@ $@.old; fi
 	../bin/mkdepend.pl | sort -u > $@
 	sed -i.bak '/ cudafor/d;/ mpi.o/d' $@ && rm $@.bak
-	sed -i.bak '/netcdf/d' $@ && rm $@.bak
+	sed -i.bak '/netcdf.o/d' $@ && rm $@.bak
 ifndef MPI
 	sed -i.bak '/mpi/d' $@ && rm $@.bak
 endif

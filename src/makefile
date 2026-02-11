@@ -31,10 +31,16 @@ endif
 
 ################################# FFLAGS
 ifdef GFORTRAN
-FFLAGS = -c -g -mcmodel=large -O2 -std=gnu -fimplicit-none -frecursive \
+FFLAGS = -c -g -O2 -std=gnu -fimplicit-none -frecursive \
           -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
           -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow
-FFLAGS = -c -Ofast -mcmodel=large -march=native -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math
+FFLAGS = -c -Ofast -march=native -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math
+
+# Specific for Ubuntu gfortran, not supported on mac
+ifeq ($(shell uname), Linux)
+FFLAGS += -mcmodel=large
+endif
+
 else
 ifdef CUDA
 FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=divz,inv,ovf
@@ -94,6 +100,7 @@ endif
 
 F77FLG =
 F90FLG =
+
 
 LIBS =
 ifdef DP
@@ -162,26 +169,22 @@ timer.o: timer.c
 # Always regenerate these before any other target
 $(SRC_FILE): $(wildcard $(SRC_DIR)/*.F90) $(wildcard $(SRC_DIR)/*.F)
 	@echo ">>> Updating source.files"
-	../bin/mksource.sh | sort -u > $@
-	sed -i '/ cudafor/d' $@
-	sed -i '/ mpi.o/d' $@
-ifndef NETCDF
-	sed -i '/netcdf/d' $@
-endif
+	../bin/mksource.sh  > $@
+	sed -i.bak '/ cudafor/d' $@  && rm $@.bak
+	sed -i.bak '/ mpi.o/d' $@ && rm $@.bak
+	sed -i.bak '/netcdf/d' $@ && rm $@.bak
 ifndef MPI
-	sed -i '/mpi/d' $@
+	sed -i.bak '/mpi/d' $@ && rm $@.bak
 endif
 
 $(DEP_FILE): $(SRC_FILE)
 	@echo ">>> Checking dependencies..."
 	@if [ -f $@ ]; then cp $@ $@.old; fi
 	../bin/mkdepend.pl | sort -u > $@
-	sed -i '/ cudafor/d;/ mpi.o/d' $@
-ifndef NETCDF
-	sed -i '/netcdf/d' $@
-endif
+	sed -i.bak '/ cudafor/d;/ mpi.o/d' $@ && rm $@.bak
+	sed -i.bak '/netcdf/d' $@ && rm $@.bak
 ifndef MPI
-	sed -i '/mpi/d' $@
+	sed -i.bak '/mpi/d' $@ && rm $@.bak
 endif
 	@if [ -f $@.old ]; then \
 		if ! cmp -s $@ $@.old; then \

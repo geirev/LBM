@@ -16,10 +16,11 @@ contains
     real,     intent(in)             :: v(0:nx+1,0:ny+1,0:nz+1)         ! y component of fluid velocity
     real,     intent(in)             :: w(0:nx+1,0:ny+1,0:nz+1)         ! z component of fluid velocity
     real,     intent(in)             :: pottemp(0:nx+1,0:ny+1,0:nz+1)   ! potential temperature
+    logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
     real,     intent(in), optional   :: Ti(0:nx+1,0:ny+1,0:nz+1)        ! Turbulent kinetic energy
 
     ! NetCDF variables
-    integer :: ncid, varid_rho, varid_u, varid_v, varid_w, varid_Ti, varid_blank
+    integer :: ncid, varid_rho, varid_u, varid_v, varid_w, varid_Ti, varid_blank, varid_pottemp
     integer :: dimids(3)
     integer :: ierr
     real :: blanking(nx,ny,nz)

@@ -78,7 +78,10 @@ program LatticeBoltzmann
    real,         allocatable  ::         v(:,:,:) ! y component of fluid velocity
    real,         allocatable  ::         w(:,:,:) ! z component of fluid velocity
    real,         allocatable  ::       rho(:,:,:) ! fluid density
-   real,         allocatable  ::      uvel(:)     ! vertical u-velocity profile on device
+   real,         allocatable  ::      uvel(:)     ! actual vertical u inflow velocity on device
+   real,         allocatable  ::      uvel_shear(:) ! normalized vertical u-velocity profile on device
+   real,         allocatable  ::      uvel_time(:)  ! normalized time variability of inflow velocity on device
+   real,         allocatable  ::      udir_time(:)  ! normalized time variability of inflow velocity direction on device
    real,         allocatable  ::       u_h(:,:,:) ! x component of fluid velocity
    real,         allocatable  ::       v_h(:,:,:) ! y component of fluid velocity
    real,         allocatable  ::       w_h(:,:,:) ! z component of fluid velocity
@@ -109,13 +112,15 @@ program LatticeBoltzmann
    attributes(device) :: w
    attributes(device) :: rho
    attributes(device) :: uvel
+   !attributes(device) :: uvel_shear
+   !attributes(device) :: uvel_time
+   !attributes(device) :: udir_time
 
    attributes(device) :: tracerA,tracerB,t1,t2,tr_tmp
    attributes(device) :: pottempA,pottempB,p1,p2,pt_tmp
    attributes(device) :: external_forcing
 #endif
 
-   real,    dimension(:),       allocatable :: uvel_h      ! vertical u-velocity profile on host
    integer :: it,ir,i
    logical :: lsolids=.false.
 
@@ -153,6 +158,9 @@ program LatticeBoltzmann
    allocate(        w(0:nx+1,0:ny+1,0:nz+1))
    allocate(      rho(0:nx+1,0:ny+1,0:nz+1))
    allocate(     uvel(nz)                  )
+   allocate(     uvel_shear(nz)            )
+   allocate(     uvel_time(nt0:nt1)        )
+   allocate(     udir_time(nt0:nt1)        )
    allocate(      u_h(0:nx+1,0:ny+1,0:nz+1))
    allocate(      v_h(0:nx+1,0:ny+1,0:nz+1))
    allocate(      w_h(0:nx+1,0:ny+1,0:nz+1))
@@ -197,11 +205,12 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Initialization requires specification of u,v,w, and rho to compute feq
 
-! Inflow velocity shear stored in uvel as read from file in uvelshare
-   allocate(uvel_h(nz))
-   call uvelshear(uvel_h)
-   uvel=uvel_h
-   deallocate(uvel_h)
+! Inflow velocity shear profile is read from file and stored in uvel_shear
+   call uvelshear(uvel_shear,uvel_time,udir_time,nt0,nt1)
+
+
+   uvel=uini*uvel_time(nt0)*uvel_shear
+   udir=udir_time(nt0)
 
 
    if (nt0 == 0) then
@@ -265,14 +274,10 @@ program LatticeBoltzmann
 ! initialize pointers
    f1 => fA
    f2 => fB
-   if (iablvisc == 2) then
-      p1 => pottempA
-      p2 => pottempB
-   endif
-   if (ntracer > 0) then
-      t1 => tracerA
-      t2 => tracerB
-   endif
+   p1 => pottempA
+   p2 => pottempB
+   t1 => tracerA
+   t2 => tracerB
 
 
 
@@ -309,6 +314,8 @@ program LatticeBoltzmann
       if (lsolids) call solids(f1,lblanking)
 
 ! [f1 and f2 updated with boundary conditions]
+      uvel=uini*uvel_time(it)*uvel_shear
+      udir=udir_time(it)
       call boundarycond(f1,f2,uvel,t1,p1)
 
 #ifdef MPI

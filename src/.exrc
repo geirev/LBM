@@ -1,2 +1,2 @@
-map  :!make CUDA=1 MPI=1
+map  :!make CUDA=1
 

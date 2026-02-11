@@ -42,12 +42,12 @@ contains
          logical :: seen
 #endif
 
+      integer :: ngpu
 #ifdef _CUDA
-      integer :: ngpu, dev
 #else
+#endif
       integer :: dev
       dev = -1
-#endif
 
       periodic_j = periodic_j_in
 

@@ -1,8 +1,9 @@
 #ifdef NETCDF
 module m_netcdfout
 contains
-  subroutine netcdfout(filename, it, variables_string, num_of_variables, lblanking, rho, u, v, w, Ti)
+  subroutine netcdfout(filename, it, variables_string, num_of_variables, lblanking, rho, u, v, w, pottemp, Ti)
     use netcdf
+    use m_readinfile, only : iablvisc
     use mod_dimensions
     implicit none
     character(len=*), intent(in) :: filename         ! Output filename
@@ -14,7 +15,7 @@ contains
     real,     intent(in)             :: u(0:nx+1,0:ny+1,0:nz+1)         ! x component of fluid velocity
     real,     intent(in)             :: v(0:nx+1,0:ny+1,0:nz+1)         ! y component of fluid velocity
     real,     intent(in)             :: w(0:nx+1,0:ny+1,0:nz+1)         ! z component of fluid velocity
-    logical,  intent(in)             :: lblanking(0:nx+1,0:ny+1,0:nz+1) ! blanking
+    real,     intent(in)             :: pottemp(0:nx+1,0:ny+1,0:nz+1)   ! potential temperature
     real,     intent(in), optional   :: Ti(0:nx+1,0:ny+1,0:nz+1)        ! Turbulent kinetic energy
 
     ! NetCDF variables
@@ -49,6 +50,8 @@ contains
     ierr = nf90_def_var(ncid, "v", nf90_real, dimids, varid_v)
     ierr = nf90_def_var(ncid, "w", nf90_real, dimids, varid_w)
     ierr = nf90_def_var(ncid, "blanking", nf90_real, dimids, varid_blank)
+    if (iablvisc == 2) ierr = nf90_def_var(ncid, "pottemp", nf90_real, dimids, varid_pottemp)
+
     if (present(Ti)) then
       ierr = nf90_def_var(ncid, "Ti", nf90_real, dimids, varid_Ti)
     end if
@@ -62,6 +65,7 @@ contains
     ierr = nf90_put_var(ncid, varid_v, v)
     ierr = nf90_put_var(ncid, varid_w, w)
     ierr = nf90_put_var(ncid, varid_blank, blanking)
+    ierr = nf90_put_var(ncid, varid_pottemp, pottemp)
     if (present(Ti)) then
       ierr = nf90_put_var(ncid, varid_Ti, Ti)
     end if

@@ -184,10 +184,10 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
 #ifdef NETCDF
       if (present(Ti)) then
          call netcdfout(trim(fname), it, trim(variables), num_of_vars, &
-                        lblanking_h, rho_h, u_h, v_h, w_h, Ti_h)
+                        lblanking_h, rho_h, u_h, v_h, w_h, pottemp_h, Ti_h)
       else
          call netcdfout(trim(fname), it, trim(variables), num_of_vars, &
-                        lblanking_h, rho_h, u_h, v_h, w_h)
+                        lblanking_h, rho_h, u_h, v_h, w_h, pottemp_h)
       end if
 #else
       print *, 'filetype=3 requires compiling with NETCDF'

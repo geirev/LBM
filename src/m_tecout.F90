@@ -5,7 +5,7 @@ contains
 subroutine tecout(filetype,filename,it,variables_string,num_of_variables,lblanking,rho,u,v,w, pottemp, tracer,Ti)
    use mod_dimensions
    use m_tecplot
-   use m_readinfile
+   use m_readinfile, only : iablvisc
 #ifdef MPI
    use m_mpi_decomp_init, only : j_start,mpi_rank
 #endif

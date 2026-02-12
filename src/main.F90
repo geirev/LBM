@@ -15,8 +15,6 @@ program LatticeBoltzmann
    use m_averaging_sec
    use m_fillghosts
    use m_boundarycond
-   use m_city
-   use m_city2
    use m_compute_f
    use m_compute_fneq
    use m_cube

@@ -4,7 +4,7 @@ subroutine dump_elevation(lblanking)
    use mod_dimensions
    use m_tecfld
    implicit none
-   logical, intent(in)  :: lblanking(0:nx,0:ny,0:nz)
+   logical, intent(in)  :: lblanking(0:nx+1,0:ny+1,0:nz+1)
    logical, allocatable :: lblanking_h(:,:,:)
    real, allocatable    :: elevation(:,:)
    integer i,j,k
@@ -12,7 +12,7 @@ subroutine dump_elevation(lblanking)
    attributes(device) :: lblanking
 #endif
 
-   allocate(lblanking_h(0:nx,0:ny,0:nz))
+   allocate(lblanking_h(0:nx+1,0:ny+1,0:nz+1))
    lblanking_h=lblanking
 
    allocate(elevation(nx,ny))

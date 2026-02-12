@@ -30,6 +30,7 @@ buoyancy_forcing	m_buoyancy_forcing.F90	/^module
 buoyancy_forcing_kernel	m_buoyancy_forcing_kernel.F90	/^module
 city	m_city.F90	/^module
 city2	m_city2.F90	/^module
+city3	m_city3.F90	/^module
 compute_f	m_compute_f.F90	/^module
 compute_fneq	m_compute_fneq.F90	/^module
 compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
@@ -106,6 +107,7 @@ m_buoyancy_forcing	m_buoyancy_forcing.F90	/^module
 m_buoyancy_forcing_kernel	m_buoyancy_forcing_kernel.F90	/^module
 m_city	m_city.F90	/^module
 m_city2	m_city2.F90	/^module
+m_city3	m_city3.F90	/^module
 m_compute_f	m_compute_f.F90	/^module
 m_compute_fneq	m_compute_fneq.F90	/^module
 m_compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module

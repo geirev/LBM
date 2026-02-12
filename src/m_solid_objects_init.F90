@@ -5,6 +5,7 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    use m_cylinder
    use m_city
    use m_city2
+   use m_city3
    use m_dump_elevation
 #ifdef MPI
    use mpi
@@ -42,25 +43,20 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
       select case(trim(experiment))
       case('city')
          call city(blanking_global)
+         lsolids=.true.
       case('city2')
          call city2(blanking_global)
+         lsolids=.true.
+      case('city3')
+         call city3(blanking_global)
+         lsolids=.true.
       case('cylinder')
          call cylinder(blanking_global)
+         lsolids=.true.
       case('airfoil')
          stop 'needs fix airfoil routine for gpu'
       end select
    end if
-
-   select case(trim(experiment))
-   case('city')
-      lsolids=.true.
-   case('city2')
-      lsolids=.true.
-   case('cylinder')
-      lsolids=.true.
-   case('airfoil')
-      stop 'needs fix airfoil routine for gpu'
-   end select
 
 #ifndef MPI
    !-------------------- SERIAL CASE -------------------------

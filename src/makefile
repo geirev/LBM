@@ -3,7 +3,7 @@ BUILD   := ../build
 VPATH   := $(SRC_DIR):$(BUILD)
 HOME    := $(HOME)
 BINDIR  := $(HOME)/bin
-NCFDIR  := $(HOME)/.netcdf/netcdf-f
+NCFDIR  := $(HOME)
 
 DEP_FILE := depends.file
 SRC_FILE := source.files
@@ -29,26 +29,55 @@ F90 = mpif90
 F77 = mpif90
 endif
 
-################################# FFLAGS
+
+
+##################################################################
+# 1. AUTOMATIC DETECTION of system and architecture
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
+
+# If we are on macOS, we MUST use GFortran options, not NVIDIA
+ifeq ($(UNAME_S), Darwin)
+    GFORTRAN = 1
+endif
+
+##################################################################
+# 2. COMPILER FLAG LOGIC
 ifdef GFORTRAN
-FFLAGS = -c -g -O2 -std=gnu -fimplicit-none -frecursive \
-          -fmax-errors=10  -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Werror -Wunused \
-          -frange-check  -pedantic -pedantic-errors -ffpe-trap=invalid,zero,overflow
-FFLAGS = -c -Ofast -march=native -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math
+    # Base flags supported by all gfortran versions
+    # Note: We use -cpp instead of -Mpreprocess for gfortran
+    BASE_FLAGS = -c -Ofast -std=gnu -fimplicit-none -frecursive -Wno-tabs -fno-protect-parens -ffast-math -cpp
 
-# Specific for Ubuntu gfortran, not supported on mac
-ifeq ($(shell uname), Linux)
-FFLAGS += -mcmodel=large
-endif
+    ifeq ($(UNAME_S), Darwin)
+        # --- MACOS SPECIFIC ---
+
+        # 1. Fix Architecture Flag
+        # Apple Silicon (arm64) needs -mcpu=native. Intel needs -march=native.
+        ifeq ($(UNAME_M), arm64)
+             ARCH_FLAG = -mcpu=native
+        else
+             ARCH_FLAG = -march=native
+        endif
+
+        # 3. Construct Final Flags
+        # -fallow-argument-mismatch is CRITICAL for gfortran >= 10
+        FFLAGS = $(BASE_FLAGS) $(ARCH_FLAG) -fallow-argument-mismatch -mtune=native #$(NC_FLAGS)
+    else
+        # --- LINUX SPECIFIC ---
+        FFLAGS = $(BASE_FLAGS) -march=native -mcmodel=large
+    endif
 
 else
-ifdef CUDA
-FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -traceback -Ktrap=divz,inv,ovf
-FFLAGS+= -gpu=lineinfo  -gpu=cc80,unroll,ptxinfo -Minfo=accel -cuda
-else
-FFLAGS = -c -Ofast           -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast
+    # --- nvfortran and CUDA flags
+    ifdef CUDA
+        FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
+                 -Mlarge_arrays -Mfma -traceback -Ktrap=divz,inv,ovf \
+                 -gpu=lineinfo -gpu=cc80,unroll,ptxinfo -Minfo=accel -cuda
+    else
+        FFLAGS = -c -Ofast -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast
+    endif
 endif
-endif
+
 
 ifdef DP
 ifdef GFORTRAN

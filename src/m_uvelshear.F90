@@ -41,10 +41,10 @@ subroutine uvelshear(uvel_shear,uvel_time,udir_time,nt0,nt1)
 
 
    uvel_time(:)=1.0
-   udir_time(:)=udir
    do k=nt0,nt1
       udir_time(k)=0.0 + 20.0*sin(real(k)*pi*2.0/real(nt1-nt0))
    enddo
+   udir_time(:)=udir
 
 
 

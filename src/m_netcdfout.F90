@@ -61,14 +61,14 @@ contains
     ierr = nf90_enddef(ncid)
 
     ! Write data
-    ierr = nf90_put_var(ncid, varid_rho, rho)
-    ierr = nf90_put_var(ncid, varid_u, u)
-    ierr = nf90_put_var(ncid, varid_v, v)
-    ierr = nf90_put_var(ncid, varid_w, w)
-    ierr = nf90_put_var(ncid, varid_blank, blanking)
-    ierr = nf90_put_var(ncid, varid_pottemp, pottemp)
+    ierr = nf90_put_var(ncid, varid_rho, rho(1:nx,1:ny,1:nz))
+    ierr = nf90_put_var(ncid, varid_u, u(1:nx,1:ny,1:nz))
+    ierr = nf90_put_var(ncid, varid_v, v(1:nx,1:ny,1:nz))
+    ierr = nf90_put_var(ncid, varid_w, w(1:nx,1:ny,1:nz))
+    ierr = nf90_put_var(ncid, varid_blank, blanking(1:nx,1:ny,1:nz))
+    if (iablvisc == 2) ierr = nf90_put_var(ncid, varid_pottemp, pottemp(1:nx,1:ny,1:nz))
     if (present(Ti)) then
-      ierr = nf90_put_var(ncid, varid_Ti, Ti)
+      ierr = nf90_put_var(ncid, varid_Ti, Ti(1:nx,1:ny,1:nz))
     end if
 
     ! Close file

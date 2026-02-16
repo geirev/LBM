@@ -144,6 +144,8 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
       pottemp_h=0.0
       pottemp_h(1:nx,1:ny,1:nz)= pottemp(1:nx,1:ny,1:nz)
       pottemp_h(1:nx,ny+1,1:nz)= pottemp_h(1:nx,ny,1:nz)
+   else
+      allocate(pottemp_h(1,1,1))
    endif
 
    if (ntracer > 0) then
@@ -151,6 +153,8 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
       tracer_h=0.0
       tracer_h(:,1:nx,1:ny,1:nz) = tracer(:,1:nx,1:ny,1:nz)
       tracer_h(:,1:nx,ny+1,1:nz) = tracer_h(:,1:nx,ny,1:nz)
+   else
+      allocate(tracer_h(1,1,1,1))
    endif
 
    if (present(Ti)) then
@@ -158,6 +162,8 @@ subroutine diag(filetype,it,rho,u,v,w,pottemp,tracer,lblanking,Ti)
       Ti_h=0.0
       Ti_h(1:nx,1:ny,1:nz)     = Ti(1:nx,1:ny,1:nz)
       Ti_h(1:nx,ny+1,1:nz)     = Ti_h(1:nx,ny,1:nz)
+   else
+      allocate(Ti_h(1,1,1))
    end if
 
    if (minval(rho_h) < 0.0) then

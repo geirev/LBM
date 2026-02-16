@@ -13,6 +13,7 @@ subroutine uvelshear(uvel_shear,uvel_time,udir_time,nt0,nt1)
    real z(nz)
    integer k,kk
    logical ex
+   real, parameter   :: pi=3.1415927410125732
    real,    dimension(:),       allocatable :: uvel_h      ! temporary vertical u-velocity profile on host
 
 
@@ -41,6 +42,10 @@ subroutine uvelshear(uvel_shear,uvel_time,udir_time,nt0,nt1)
 
    uvel_time(:)=1.0
    udir_time(:)=udir
+   do k=nt0,nt1
+      udir_time(k)=0.0 + 20.0*sin(real(k)*pi*2.0/real(nt1-nt0))
+   enddo
+
 
 
 

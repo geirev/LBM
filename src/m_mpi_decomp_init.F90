@@ -52,15 +52,34 @@ contains
       periodic_j = periodic_j_in
 
 #ifdef MPI
+      ! Initialize the MPI environment (must be called first)
       call MPI_Init(ierr)
-      call MPI_Comm_rank(MPI_COMM_WORLD, mpi_rank,   ierr)
+
+      ! Get the global rank (process ID) within MPI_COMM_WORLD
+      call MPI_Comm_rank(MPI_COMM_WORLD, mpi_rank, ierr)
+
+      ! Get the total number of processes in MPI_COMM_WORLD
       call MPI_Comm_size(MPI_COMM_WORLD, mpi_nprocs, ierr)
 
+      ! Get the name of the processor (node) running this rank
       call MPI_Get_processor_name(host, hostlen, ierr)
 
+      ! Create a communicator grouping ranks that share memory (same node)
       call MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, shmcomm, ierr)
+
+      ! Get the rank within the shared-memory (node-local) communicator
       call MPI_Comm_rank(shmcomm, shm_rank, ierr)
+
+      ! Get the number of ranks on this shared-memory domain (node)
       call MPI_Comm_size(shmcomm, shm_size, ierr)
+
+      print *, '----------------------------------------'
+      print *, 'Global rank        : ', mpi_rank
+      print *, 'Total MPI processes: ', mpi_nprocs
+      print *, 'Host name          : ', trim(host)
+      print *, 'Shared-memory rank : ', shm_rank
+      print *, 'Ranks on this node : ', shm_size
+      print *, '----------------------------------------'
 
       ! 1) Enforce that MPI layout matches compile-time tiling
       if (mpi_nprocs /= ntiles) then
@@ -77,9 +96,7 @@ contains
          end if
          call MPI_Abort(MPI_COMM_WORLD, 3, ierr)
       end if
-#endif
 
-#ifdef MPI
 #ifdef _CUDA
       ierr = cudaGetDeviceCount(ngpu)
       if (ierr /= 0 .or. ngpu <= 0) then
@@ -87,6 +104,7 @@ contains
          call flush(6)
          call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
       end if
+      print '(2(a,i0))','irank=',mpi_rank,' ngpu=',ngpu
 
       dev  = mod(shm_rank, ngpu)
       ierr = cudaSetDevice(dev)
@@ -95,6 +113,7 @@ contains
          call flush(6)
          call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
       end if
+      print '(2(a,i0))','irank=',mpi_rank,' dev=',dev
 #else
       dev = -1
       ngpu = 0
@@ -151,6 +170,7 @@ contains
 #endif
       call MPI_Allreduce(ngpu_node, ngpu_node, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
 
+      print *, '----------------------------------------'
       if (mpi_rank == 0) then
          write(*,'(5(a,i0))') 'MPI overview: ranks=', mpi_nprocs,' nyg=', nyg, ' ny=', ny, &
               '  nodes=', nnodes, '  gpus_per_node=', ngpu_node

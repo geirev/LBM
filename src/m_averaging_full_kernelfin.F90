@@ -3,14 +3,13 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine averaging_full_kernelfin(uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
+   subroutine averaging_full_kernelfin(uave, vave, wave, uave2, vave2, wave2, Ti, iave)
 #ifdef _CUDA
    use cudafor
 #endif
    use mod_dimensions, only : nx,ny,nz
    implicit none
    integer, value      :: iave
-   real,    value      :: uini
 
    real, intent(inout) ::  uave(0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout) ::  vave(0:nx+1,0:ny+1,0:nz+1)
@@ -38,7 +37,7 @@ contains
    if (j > ny) return
    if (i > nx) return
 #else
-!$OMP PARALLEL DO PRIVATE(i,j,k,Ti2) SHARED(uave,vave,wave,uave2,vave2,wave2,Ti,iave,uini)
+!$OMP PARALLEL DO PRIVATE(i,j,k,Ti2) SHARED(uave,vave,wave,uave2,vave2,wave2,Ti,iave)
    do k=1,nz
    do j=1,ny
    do i=1,nx
@@ -51,9 +50,6 @@ contains
       vave2(i,j,k)=vave2(i,j,k)/real(iave)
       wave2(i,j,k)=wave2(i,j,k)/real(iave)
 
-!      Ti(i,j,k)=uave2(i,j,k)-uave(i,j,k)**2 + vave2(i,j,k)-vave(i,j,k)**2 + wave2(i,j,k)-wave(i,j,k)**2
-!      Ti(i,j,k)=sqrt(Ti(i,j,k)/3.0)  !/uini
-
       Ti2 = ( &
           max(uave2(i,j,k) - uave(i,j,k)**2, 0.0) + &
           max(vave2(i,j,k) - vave(i,j,k)**2, 0.0) + &
@@ -61,9 +57,6 @@ contains
 
          Ti(i,j,k) = sqrt(max(Ti2, 0.0))
 
-      !uave(i,j,k)=uave(i,j,k)/uini
-      !vave(i,j,k)=vave(i,j,k)/uini
-      !wave(i,j,k)=wave(i,j,k)/uini
 #ifndef _CUDA
     enddo
     enddo

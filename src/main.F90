@@ -46,7 +46,7 @@ program LatticeBoltzmann
    use m_solid_objects_init
    use m_sphere
    use m_tecfld
-   use m_uvelshear
+   use m_inflow
    use m_vreman
    use m_wtime
    use mod_D3Q27setup
@@ -204,11 +204,9 @@ program LatticeBoltzmann
 ! Initialization requires specification of u,v,w, and rho to compute feq
 
 ! Inflow velocity shear profile is read from file and stored in uvel_shear
-   call uvelshear(uvel_shear,uvel_time,udir_time,nt0,nt1)
-
-
-   uvel=uini*uvel_time(nt0)*uvel_shear
-   udir=udir_time(nt0)
+   call inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
+   uvel(:) = uvel_time(nt0)*uvel_shear(:)
+   udir = udir_time(nt0)
 
 
    if (nt0 == 0) then
@@ -312,7 +310,7 @@ program LatticeBoltzmann
       if (lsolids) call solids(f1,lblanking)
 
 ! [f1 and f2 updated with boundary conditions]
-      uvel=uini*uvel_time(it)*uvel_shear
+      uvel(:)=uvel_time(it)*uvel_shear(:)
       udir=udir_time(it)
       call boundarycond(f1,f2,uvel,t1,p1)
 

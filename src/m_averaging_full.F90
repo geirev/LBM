@@ -16,7 +16,7 @@ subroutine averaging_full(u,v,w,rho,pottemp,tracer,lblanking,lfinal)
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
-   use m_readinfile, only : uini,itecout
+   use m_readinfile, only : itecout
    use m_averaging_full_kernel
    use m_averaging_full_kernelfin
    use m_diag
@@ -85,7 +85,7 @@ subroutine averaging_full(u,v,w,rho,pottemp,tracer,lblanking,lfinal)
 #ifdef _CUDA
           &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-          &(uave, vave, wave, uave2, vave2, wave2, Ti, uini, iave)
+          &(uave, vave, wave, uave2, vave2, wave2, Ti, iave)
 
       call diag(itecout,0,rho,uave,vave,wave,pottemp,tracer,lblanking,Ti)
 

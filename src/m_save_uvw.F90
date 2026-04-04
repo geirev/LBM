@@ -24,7 +24,7 @@ subroutine save_uvw(it,u,v,w)
    v_h(1:nx,1:ny,1:nz)=v(1:nx,1:ny,1:nz)
    w_h(1:nx,1:ny,1:nz)=w(1:nx,1:ny,1:nz)
 
-   write(cit,'(i6.6)')it-1
+   write(cit,'(i6.6)')it
    open(newunit=iunit,file='uvw'//cit//'.uf',form="unformatted", status='unknown')
          write(iunit)u_h,v_h,w_h
    close(iunit)

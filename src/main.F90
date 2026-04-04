@@ -386,7 +386,10 @@ program LatticeBoltzmann
       if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,p1,t1)
       call cpufinish(15)
 
-      if (lmeasurements .and. mod(it,1000)==0) call predicted_measurements(u,v,w,it)
+      if (lmeasurements .and. mod(it,1000)==0) then
+         call predicted_measurements(u,v,w,it)
+         call save_uvw(it,u,v,w)
+      endif
 
    enddo
 
@@ -403,7 +406,6 @@ program LatticeBoltzmann
    if (allocated(tracerA  ))  deallocate(tracerA       )
    if (allocated(tracerB  ))  deallocate(tracerB       )
 
-   call save_uvw(it,u,v,w)
    call testing(it,f1,f2)
 
 #ifdef MPI

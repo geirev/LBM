@@ -3,6 +3,7 @@ type measurement
    character(len=1)c
    integer i
    integer j
+   integer k
    real d
 end type
 
@@ -30,6 +31,11 @@ subroutine predicted_measurements(u,v,w,it)
    if (.not.ex) then
       print *,'The file measurement_loc.in does not exist'
       print *,'Are you sure lmeasurents should be true in infile,in?'
+      print *,'In case you need it I am saving a template file measurement_loc.temp'
+      open(newunit=iunit,file='measurement_loc.temp')
+        write(iunit,*)' 10 10 1 u'
+        write(iunit,*)' 10 10 2 v'
+      close(iunit)
       stop
    endif
 
@@ -40,19 +46,19 @@ subroutine predicted_measurements(u,v,w,it)
         m=m+1
       enddo
       100 nrobs=m
-      print *,'nrobs=',nrobs
+      print *,'Number of measurements per time is ',nrobs
       if (allocated(obs)) deallocate(obs); allocate(obs(nrobs))
       rewind(iunit)
       do m=1,nrobs
-        read(iunit,*)obs(m)%i, obs(m)%j, obs(m)%c
+        read(iunit,*)obs(m)%i, obs(m)%j, obs(m)%k, obs(m)%c
       enddo
    close(iunit)
 
    do m=1,nrobs
       if (obs(m)%c == 'u') then
-         obs(m)%d=u(obs(m)%i,obs(m)%j,1)
+         obs(m)%d=u(obs(m)%i,obs(m)%j,obs(m)%k)
       elseif (obs(m)%c == 'v') then
-         obs(m)%d=v(obs(m)%i,obs(m)%j,1)
+         obs(m)%d=v(obs(m)%i,obs(m)%j,obs(m)%k)
       else
          print *,'invalid variable identifier'
       endif
@@ -62,7 +68,7 @@ subroutine predicted_measurements(u,v,w,it)
    fname='measurements_'//cit//'.dat'
    open(newunit=iunit,file=trim(fname), status='unknown', action='write')
       do m=1,nrobs
-         write(iunit,'(i5,tr1,a1,i4,i4,f10.5)')m,obs(m)%c,obs(m)%i,obs(m)%j,obs(m)%d
+         write(iunit,'(i5,tr1,a1,3i4,f10.5)')m,obs(m)%c,obs(m)%i,obs(m)%j,obs(m)%k,obs(m)%d
       enddo
    close(iunit)
 
@@ -73,7 +79,7 @@ subroutine predicted_measurements(u,v,w,it)
       write(iunit,'(a)')'VARIABLES = "num" "i" "j" "k" "value"'
       write(iunit,'(a,i8,a)')' ZONE  F=POINT, I= ', nrobs,' J=  1, K=1'
       do m=1,nrobs
-         write(iunit,'(i5,tr1,i4,i4,a,f10.5)')m,obs(m)%i,obs(m)%j,' 1 ',obs(m)%d
+         write(iunit,'(i5,tr1,3i4,f10.5)')m,obs(m)%i,obs(m)%j,obs(m)%k,obs(m)%d
       enddo
    close(iunit)
 

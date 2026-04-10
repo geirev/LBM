@@ -193,6 +193,7 @@ m_drift.o:      m_readinfile.o
 m_drift.o:      m_wtime.o
 m_dump_elevation.o:      makefile
 m_dump_elevation.o:      mod_dimensions.o
+m_dump_elevation.o:      m_readinfile.o
 m_dump_elevation.o:      m_tecfld.o
 m_fequil3_block_kernel.o:      makefile
 m_fequil3_block_kernel.o:      mod_D3Q27setup.o

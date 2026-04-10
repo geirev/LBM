@@ -72,7 +72,7 @@ else
     ifdef CUDA
         FFLAGS = -c -O2 -g -lineinfo -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium \
                  -Mlarge_arrays -Mfma -traceback -Ktrap=divz,inv,ovf \
-                 -gpu=lineinfo -gpu=cc80,unroll,ptxinfo -Minfo=accel -cuda
+                 -gpu=lineinfo -gpu=cc120,unroll,ptxinfo -Minfo=accel -cuda
     else
         FFLAGS = -c -Ofast -Mpreprocess -Mcache_align -Mlfs -mcmodel=medium -Mlarge_arrays -Mfma -fast
     endif
@@ -116,7 +116,7 @@ endif
 ################################# LINKFLAGS
 LINKFLAGS =
 ifdef CUDA
-LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays -gpu=cc80
+LINKFLAGS+= -cuda -mcmodel=medium -Mlarge_arrays -gpu=cc120
 endif
 
 ifdef MP

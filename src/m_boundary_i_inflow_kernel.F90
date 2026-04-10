@@ -76,11 +76,12 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbn
       !-----------------------------------------------------------
       ! 2) General x-bounce mapping on ghost plane i=0
       !
-      !    Idea (mimicking your tmp-swap logic in a robust way):
+      !    Idea (mimicking a tmp-swap logic in a robust way):
       !    - for directions with cxs <= 0: keep fghost(l) as is
       !    - for directions with cxs > 0 (incoming from ghost to fluid):
       !         f(l,0,j,k) := fghost(l_opp)
-      !      where l_opp has cxs = -cxs(l), same cys,czs.
+      !      where l_opp has cxs = -cxs(l),  cys=-cys(l), czs=-czs(l)
+      !      Of course we assume no vertical component to the inflow so the czs should not matter.
       !
       !    This gives "one-timestep bounce-back" behaviour for x,
       !    without relying on even/odd indexing or pair ordering.
@@ -93,8 +94,8 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbn
             ! find opposite direction in x
             do m = 1, nl
                if (cxs(m) == -cxs(l) .and. &
-                   cys(m) ==  cys(l) .and. &
-                   czs(m) ==  czs(l)) then
+                   cys(m) == -cys(l) .and. &
+                   czs(m) == -czs(l)) then
                   f(l,0,j,k) = fghost(m)
                   exit
                endif

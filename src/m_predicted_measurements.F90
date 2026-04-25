@@ -21,7 +21,7 @@ subroutine predicted_measurements(u,v,w,it)
    integer nrobs
    type(measurement), allocatable :: obs(:)
    character(len=100) fname
-   character(len=5) cit
+   character(len=6) cit
    integer iunit
    integer m,ii
    logical ex
@@ -64,7 +64,7 @@ subroutine predicted_measurements(u,v,w,it)
       endif
    enddo
 
-   write(cit,'(i5.5)')it
+   write(cit,'(i6.6)')it
    fname='measurements_'//cit//'.dat'
    open(newunit=iunit,file=trim(fname), status='unknown', action='write')
       do m=1,nrobs
@@ -72,7 +72,6 @@ subroutine predicted_measurements(u,v,w,it)
       enddo
    close(iunit)
 
-   write(cit,'(i5.5)')it
    fname='measurement_locations.dat'
    open(newunit=iunit,file=trim(fname), status='unknown', action='write')
       write(iunit,'(a)')'TITLE = "Measurement locations"'

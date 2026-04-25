@@ -1,6 +1,6 @@
 module m_heatflux
 contains
-subroutine heatflux(tempout,tempin)
+subroutine heatflux(pottemp)
 ! f enter routine in feq following collisions
 ! f is returned in f
    use mod_dimensions, only : nx, ny, nz
@@ -11,12 +11,10 @@ subroutine heatflux(tempout,tempin)
    use m_readinfile, only : iablvisc,istable,p2l
    use m_theta_fluxbc_kernel
    implicit none
-   real, intent(inout) :: tempin (0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout) :: tempout(0:nx+1,0:ny+1,0:nz+1)
+   real, intent(inout) :: pottemp(0:nx+1,0:ny+1,0:nz+1)
 
 #ifdef _CUDA
-   attributes(device) :: tempin
-   attributes(device) :: tempout
+   attributes(device) :: pottemp
    integer :: tx, ty, tz, bx, by, bz
 #endif
    integer i,j,k
@@ -54,18 +52,7 @@ subroutine heatflux(tempout,tempin)
 #ifdef _CUDA
         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-        &(tempin, heating)
-
-#ifdef _CUDA
-      tx=ntx; bx=(nx+tx-1)/tx
-      ty=nty; by=(ny+ty-1)/ty
-      tz=1; bz=1
-#endif
-      call theta_fluxbc_kernel&
-#ifdef _CUDA
-        &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-        &(tempout, heating)
+        &(pottemp, heating)
    endif
 
 end subroutine

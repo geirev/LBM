@@ -5,6 +5,8 @@ program LatticeBoltzmann
    use m_mechanical_ablvisc
    use m_abl_initialize
    use m_advection
+   use m_advection_predictor
+   use m_advection_corrector
    use m_heatflux
    use m_buoyancy_forcing
    use m_airfoil
@@ -88,9 +90,11 @@ program LatticeBoltzmann
    real,         allocatable  ::     rho_h(:,:,:) ! fluid density
 
    real, target, allocatable  :: tracerA(:,:,:,:)
+   real, target, allocatable  :: tracerS(:,:,:,:)
    real, target, allocatable  :: tracerB(:,:,:,:)
 
    real, target, allocatable  :: pottempA(:,:,:)
+   real, target, allocatable  :: pottempS(:,:,:)
    real, target, allocatable  :: pottempB(:,:,:)
 
    real,         allocatable  :: external_forcing(:,:,:,:)
@@ -116,8 +120,8 @@ program LatticeBoltzmann
    !attributes(device) :: uvel_time
    !attributes(device) :: udir_time
 
-   attributes(device) :: tracerA,tracerB,t1,t2,tr_tmp
-   attributes(device) :: pottempA,pottempB,p1,p2,pt_tmp
+   attributes(device) :: tracerA,tracerS,tracerB,t1,t2,tr_tmp
+   attributes(device) :: pottempA,pottempS,pottempB,p1,p2,pt_tmp
    attributes(device) :: external_forcing
 #endif
 
@@ -168,11 +172,13 @@ program LatticeBoltzmann
 
    if (ntracer > 0) then
       allocate(tracerA(ntracer,0:nx+1,0:ny+1,0:nz+1))
+      allocate(tracerS(ntracer,0:nx+1,0:ny+1,0:nz+1))
       allocate(tracerB(ntracer,0:nx+1,0:ny+1,0:nz+1))
    endif
 
    if (iablvisc == 2) then
       allocate(pottempA(0:nx+1,0:ny+1,0:nz+1))
+      allocate(pottempS(0:nx+1,0:ny+1,0:nz+1))
       allocate(pottempB(0:nx+1,0:ny+1,0:nz+1))
    endif
 
@@ -251,11 +257,13 @@ program LatticeBoltzmann
       if (ntracer > 0) then
          call boundarycond_tracer(tracerA)
          tracerB=tracerA
+         tracerS=tracerA
       endif
 
       if (iablvisc == 2) then
          call boundarycond_pottemp(pottempA)
          pottempB=pottempA
+         pottempS=pottempA
       endif
 
 ! Generate turbulence forcing fields
@@ -266,8 +274,14 @@ program LatticeBoltzmann
       call macrovars(rho,u,v,w,fA)
 ! To ensure we have values in the boundary points first time we call boundarycond.
       fB=fA
-      if (ntracer > 0) tracerB=tracerA
-      if (iablvisc == 2) pottempB=pottempA
+      if (ntracer > 0) then
+         tracerB=tracerA
+         tracerS=tracerA
+      endif
+      if (iablvisc == 2) then
+         pottempB=pottempA
+         pottempS=pottempA
+      endif
    endif
    tau = 3.0*kinevisc + 0.5 ! static and constant tau also for ghost zones in case they are used
 
@@ -338,14 +352,27 @@ program LatticeBoltzmann
 
       call macrovars(rho,u,v,w,f1)
 
-! pottemp advection returns updated pottemp in p2
+! pottemp advection returns updated potential temperature in p2
       if (iablvisc == 2) then
+         ! p1 is old potential temperature field
          call boundarycond_pottemp(p1)
+         call heatflux(p1)
 #ifdef MPI
          call mpi_halo_exchange_j(p1,1)
 #endif
-         call heatflux(p2,p1)
-         call advection(p2,p1,u,v,w,tau,1)
+         ! pottempS is predictor field
+         call advection_predictor(pottempS,p1,u,v,w,tau,1)
+
+         ! Predictor ghost cells must be valid before corrector
+         call boundarycond_pottemp(pottempS)
+         call heatflux(pottempS)
+#ifdef MPI
+         call mpi_halo_exchange_j(pottempS,1)
+#endif
+         ! p2 is updated potential temperature (corrector) field
+         call advection_corrector(p2,pottempS,p1,u,v,w,tau,1)
+
+         ! swap for next time step making p1 current
          pt_tmp => p1
          p1 => p2
          p2 => pt_tmp
@@ -357,7 +384,13 @@ program LatticeBoltzmann
 #ifdef MPI
          call mpi_halo_exchange_j(t1,ntracer)
 #endif
-         call advection(t2,t1,u,v,w,tau,ntracer)
+         call advection_predictor(tracerS,t1,u,v,w,tau,ntracer)
+
+         call boundarycond_tracer(tracerS)
+#ifdef MPI
+         call mpi_halo_exchange_j(tracerS,ntracer)
+#endif
+         call advection_corrector(t2,tracerS,t1,u,v,w,tau,ntracer)
          tr_tmp => t1
          t1 => t2
          t2 => tr_tmp

@@ -1,7 +1,11 @@
 F90SOURCE = \
 	m_abl_initialize.F90\
+	m_advection_corrector.F90\
+	m_advection_corrector_kernel.F90\
 	m_advection.F90\
 	m_advection_kernel.F90\
+	m_advection_predictor.F90\
+	m_advection_predictor_kernel.F90\
 	main.F90\
 	m_airfoil.F90\
 	m_averaging_full.F90\
@@ -65,6 +69,12 @@ F90SOURCE = \
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
+	m_mpi_decomp_finalize.F90\
+	m_mpi_decomp_init.F90\
+	m_mpi_halo_buffers.F90\
+	m_mpi_halo_exchange_j.F90\
+	m_mpi_pack_jplane.F90\
+	m_mpi_unpack_jplane.F90\
 	m_netcdfout.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\

@@ -13,6 +13,8 @@ averaging_sec_kernelfin2	m_averaging_sec_kernelfin2.F90	/^module
 bilin	m_bilin.F90	/^module
 bilin_gpu	m_bilin_gpu.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
+boundarycond_pottemp	m_boundarycond_pottemp.F90	/^module
+boundarycond_tracer	m_boundarycond_tracer.F90	/^module
 boundary_closed_corners	m_boundary_closed_corners.F90	/^module
 boundary_closed_edges	m_boundary_closed_edges.F90	/^module
 boundary_i_closed_kernel	m_boundary_i_closed_kernel.F90	/^module
@@ -91,6 +93,8 @@ m_averaging_sec_kernelfin2	m_averaging_sec_kernelfin2.F90	/^module
 m_bilin	m_bilin.F90	/^module
 m_bilin_gpu	m_bilin_gpu.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
+m_boundarycond_pottemp	m_boundarycond_pottemp.F90	/^module
+m_boundarycond_tracer	m_boundarycond_tracer.F90	/^module
 m_boundary_closed_corners	m_boundary_closed_corners.F90	/^module
 m_boundary_closed_edges	m_boundary_closed_edges.F90	/^module
 m_boundary_i_closed_kernel	m_boundary_i_closed_kernel.F90	/^module

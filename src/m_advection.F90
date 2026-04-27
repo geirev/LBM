@@ -1,8 +1,6 @@
 module m_advection
 contains
 subroutine advection(tempout,tempin,u,v,w,tau,n)
-! f enter routine in feq following collisions
-! f is returned in f
    use mod_dimensions, only : nx, ny, nz
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz

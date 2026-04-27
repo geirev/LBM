@@ -17,6 +17,8 @@ F90SOURCE = \
 	m_boundary_closed_corners.F90\
 	m_boundary_closed_edges.F90\
 	m_boundarycond.F90\
+	m_boundarycond_pottemp.F90\
+	m_boundarycond_tracer.F90\
 	m_boundary_i_closed_kernel.F90\
 	m_boundary_i_inflow_edges.F90\
 	m_boundary_i_inflow_kernel.F90\

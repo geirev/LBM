@@ -3,16 +3,17 @@ contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine boundary_k_periodic_kernel(f)
+   subroutine boundary_k_periodic_kernel(f,nl)
 #ifdef _CUDA
    use cudafor
 #endif
    use mod_dimensions, only : nx,ny,nz
-   use mod_D3Q27setup, only : nl
    implicit none
-   integer, parameter     :: ntot=nl*(nx+2)
-   real, intent(inout) :: f(ntot,ny+2,nz+2)
+   integer, value :: nl
+   real, intent(inout) :: f(nl*(nx+2),ny+2,nz+2)
    integer :: i, j
+   integer :: ntot
+   ntot=nl*(nx+2)
 #ifdef _CUDA
    i = threadIdx%x + (blockIdx%x-1)*blockDim%x
    j = threadIdx%y + (blockIdx%y-1)*blockDim%y

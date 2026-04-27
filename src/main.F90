@@ -15,6 +15,8 @@ program LatticeBoltzmann
    use m_averaging_sec
    use m_fillghosts
    use m_boundarycond
+   use m_boundarycond_tracer
+   use m_boundarycond_pottemp
    use m_compute_f
    use m_compute_fneq
    use m_cube
@@ -243,10 +245,18 @@ program LatticeBoltzmann
       call fequil3(fB,rho,u,v,w)
       call fillghosts(fB)
       fA=fB
-      call boundarycond(fB,fA,uvel,tracerA,pottempA)
-      call boundarycond(fA,fB,uvel,tracerA,pottempA)
-      if (ntracer > 0) tracerB=tracerA
-      if (iablvisc == 2) pottempB=pottempA
+      call boundarycond(fB,fA,uvel)
+      call boundarycond(fA,fB,uvel)
+
+      if (ntracer > 0) then
+         call boundarycond_tracer(tracerA)
+         tracerB=tracerA
+      endif
+
+      if (iablvisc == 2) then
+         call boundarycond_pottemp(pottempA)
+         pottempB=pottempA
+      endif
 
 ! Generate turbulence forcing fields
       if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
@@ -312,7 +322,7 @@ program LatticeBoltzmann
 ! [f1 and f2 updated with boundary conditions]
       uvel(:)=uvel_time(it)*uvel_shear(:)
       udir=udir_time(it)
-      call boundarycond(f1,f2,uvel,t1,p1)
+      call boundarycond(f1,f2,uvel)
 
 #ifdef MPI
       call mpi_halo_exchange_j(f1,nl)
@@ -330,6 +340,7 @@ program LatticeBoltzmann
 
 ! pottemp advection returns updated pottemp in p2
       if (iablvisc == 2) then
+         call boundarycond_pottemp(p1)
 #ifdef MPI
          call mpi_halo_exchange_j(p1,1)
 #endif
@@ -342,6 +353,7 @@ program LatticeBoltzmann
 
 ! tracer advection returns updated tracer in t2
       if (ntracer > 0) then
+         call boundarycond_tracer(t1)
 #ifdef MPI
          call mpi_halo_exchange_j(t1,ntracer)
 #endif

@@ -11,10 +11,10 @@ module m_boundarycond
 ! maintaining consistency at edges and corners.
 ! Same logic applies if periodic in ks-direction  and closed in j-direction.
 contains
-subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
+subroutine boundarycond(f1,f2,uvel)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir,iablvisc,istable
+   use m_readinfile,   only : ibnd,jbnd,kbnd,rho0,udir,istable
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
@@ -40,8 +40,6 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
    implicit none
    real, intent(inout):: f1(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout):: f2(nl,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout):: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout):: pottemp(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
 
    real :: taperj(ny),taperk(nz)!, real, dist, x, width
@@ -49,8 +47,6 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #ifdef _CUDA
    attributes(device) :: f1
    attributes(device) :: f2
-   attributes(device) :: tracer
-   attributes(device) :: pottemp
    attributes(device) :: uvel
    attributes(device) :: taperj,taperk
 #endif
@@ -78,31 +74,6 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #endif
       &(f1,nl)
 
-      if (ntracer > 0) then
-#ifdef _CUDA
-         tx=1;  bx=1
-         ty=32; by=(ny+2+ty-1)/ty
-         tz=8;  bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_i_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(tracer,ntracer)
-      endif
-
-      if (iablvisc > 0) then
-#ifdef _CUDA
-         tx=1  ; bx=1
-         ty=32 ; by=(ny+2+ty-1)/ty
-         tz=8  ; bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_i_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(pottemp,1)
-      endif
    endif
 
 ! Periodic boundary conditions in j-direction.
@@ -118,31 +89,7 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #endif
       &(f1,nl)
 
-      if (ntracer > 0) then
-#ifdef _CUDA
-      tx=256; bx=(nx+2+tx-1)/tx
-      ty=1;   by=1
-      tz=1;   bz=(nz+2+tz-1)/tz
-#endif
-      call boundary_j_periodic_kernel&
-#ifdef _CUDA
-      &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-      &(tracer,ntracer)
-      endif
 
-      if (iablvisc > 0) then
-#ifdef _CUDA
-         tx=256; bx=(nx+2+tx-1)/tx
-         ty=1;   by=1
-         tz=1;   bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_j_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(pottemp,1)
-      endif
    endif
 
    if (kbnd==0) then
@@ -155,7 +102,7 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1)
+      &(f1,nl)
    endif
 
 
@@ -344,28 +291,11 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,rho0,udir,tracer,pottemp,iablvisc,jbnd,kbnd,taperj,taperk)
-
-! Periodic bnd cond for pottemp in unstable case
-      if (iablvisc > 0 .and. istable == -1) then
-#ifdef _CUDA
-         tx=1  ; bx=1
-         ty=32 ; by=(ny+2+ty-1)/ty
-         tz=8  ; bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_i_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(pottemp,1)
-      endif
+      &(f1,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
 
 ! Update edges for inflow conditions
     !  call boundary_i_inflow_edges(f1,f2)
    endif
-
-
-
 
 
 
@@ -382,31 +312,7 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #endif
       &(f1,nl)
 
-      if (ntracer > 0) then
-#ifdef _CUDA
-         tx=1;  bx=1
-         ty=32; by=(ny+2+ty-1)/ty
-         tz=8;  bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_i_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(tracer,ntracer)
-      endif
 
-      if (iablvisc > 0) then
-#ifdef _CUDA
-         tx=1  ; bx=1
-         ty=32 ; by=(ny+2+ty-1)/ty
-         tz=8  ; bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_i_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(pottemp,1)
-      endif
    endif
 
 ! Periodic boundary conditions in j-direction.
@@ -422,31 +328,6 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #endif
       &(f1,nl)
 
-      if (ntracer > 0) then
-#ifdef _CUDA
-      tx=256; bx=(nx+2+tx-1)/tx
-      ty=1;   by=1
-      tz=1;   bz=(nz+2+tz-1)/tz
-#endif
-      call boundary_j_periodic_kernel&
-#ifdef _CUDA
-      &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-      &(tracer,ntracer)
-      endif
-
-      if (iablvisc > 0) then
-#ifdef _CUDA
-         tx=256; bx=(nx+2+tx-1)/tx
-         ty=1;   by=1
-         tz=1;   bz=(nz+2+tz-1)/tz
-#endif
-         call boundary_j_periodic_kernel&
-#ifdef _CUDA
-         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
-#endif
-         &(pottemp,1)
-      endif
    endif
 
    if (kbnd==0) then
@@ -459,7 +340,7 @@ subroutine boundarycond(f1,f2,uvel,tracer,pottemp)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
-      &(f1)
+      &(f1,nl)
    endif
 
 

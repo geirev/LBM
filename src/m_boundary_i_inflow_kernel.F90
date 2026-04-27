@@ -3,7 +3,7 @@ contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbnd,kbnd,taperj,taperk)
+subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
 ! Inflow / outflow boundary conditions in i-direction.
 !
 !  - Inflow imposed at ghost plane i=0 using a Krüger-type formula
@@ -20,14 +20,11 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbn
 
    implicit none
    real, intent(inout) :: f     (nl,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout) :: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)
-   real, intent(inout) :: pottemp(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: uvel  (nz)
    real, intent(in)    :: taperj(ny)
    real, intent(in)    :: taperk(nz)
    real, value         :: udir
    real, value         :: rho0
-   integer, value      :: iablvisc
    integer, value      :: jbnd
    integer, value      :: kbnd
 
@@ -48,7 +45,7 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbn
    if (k < 1 .or. k > nz) return
 #else
 !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(j,k,l,m,ka,wl,cxl,cyl,uu,fghost) &
-!$OMP& SHARED(f,tracer,uvel,rho0,udir)
+!$OMP& SHARED(f,uvel,rho0,udir)
    do k = 1, nz
    do j = 1, ny
 #endif
@@ -110,13 +107,6 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,tracer,pottemp,iablvisc,jbn
          f(l,nx+1,j,k) = f(l,nx,j,k)
       enddo
 
-      if (ntracer > 0) then
-         tracer(:,nx+1,j,k) = tracer(:,nx,j,k)
-      endif
-
-      if (iablvisc == 2) then
-         pottemp(nx+1,j,k) = pottemp(nx,j,k)
-      endif
 
 #ifndef _CUDA
    enddo

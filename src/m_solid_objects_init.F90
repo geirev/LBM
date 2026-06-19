@@ -6,6 +6,7 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    use m_city
    use m_city2
    use m_city3
+   use m_read_bathymetry
    use m_dump_elevation
 #ifdef MPI
    use mpi
@@ -49,6 +50,9 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
          lsolids=.true.
       case('city3')
          call city3(blanking_global)
+         lsolids=.true.
+      case('barcelona_4m')
+         call read_bathymetry(blanking_global)
          lsolids=.true.
       case('cylinder')
          call cylinder(blanking_global)

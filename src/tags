@@ -167,6 +167,7 @@ m_printdefines	m_printdefines.F90	/^module
 m_pseudo2D	m_pseudo2D.F90	/^module
 m_readinfile	m_readinfile.F90	/^module
 m_readrestart	m_readrestart.F90	/^module
+m_read_bathymetry	m_read_bathymetry.F90	/^module
 m_regularization	m_regularization.F90	/^module
 m_regularization_kernel	m_regularization_kernel.F90	/^module
 m_rhotest	m_rhotest.F90	/^module
@@ -213,6 +214,7 @@ printdefines	m_printdefines.F90	/^module
 pseudo2D	m_pseudo2D.F90	/^module
 readinfile	m_readinfile.F90	/^module
 readrestart	m_readrestart.F90	/^module
+read_bathymetry	m_read_bathymetry.F90	/^module
 regularization	m_regularization.F90	/^module
 regularization_kernel	m_regularization_kernel.F90	/^module
 rhotest	m_rhotest.F90	/^module

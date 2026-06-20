@@ -51,8 +51,14 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
       case('city3')
          call city3(blanking_global)
          lsolids=.true.
+      case('barcelona_2m')
+         call read_bathymetry(blanking_global,'2m')
+         lsolids=.true.
+      case('barcelona_3m')
+         call read_bathymetry(blanking_global,'3m')
+         lsolids=.true.
       case('barcelona_4m')
-         call read_bathymetry(blanking_global)
+         call read_bathymetry(blanking_global,'4m')
          lsolids=.true.
       case('cylinder')
          call cylinder(blanking_global)

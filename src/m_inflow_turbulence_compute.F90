@@ -58,7 +58,7 @@ subroutine inflow_turbulence_compute(uu,vv,ww,rr,ny_here,nz,nrturb,lfirst)
       ww(:,:,i)=ww(:,:,i)/varw
       rr(:,:,i)=rr(:,:,i)/varr
    enddo
-!   call tecfld('turb',ny_here,nz,nrturb,uu)
+!   call tecfld('tec_turb',ny_here,nz,nrturb,uu)
 end subroutine
 end module
 

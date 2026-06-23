@@ -195,6 +195,7 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Including solid bodies like cylinder and urban city as blanking of grid cells
    call solid_objects_init(lblanking, lsolids, trim(experiment), ir)
+   if (lsolids) call dump_elevation(lblanking)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Save grid geometry and blanking

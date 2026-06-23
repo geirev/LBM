@@ -29,11 +29,11 @@ The model also allows including buoyancy forcing by advecting potential temperat
 The forcing function for the inflow turbulence, the turbines, and the buoyancy forcing is the one of Kupershtokh (2009).
 
 <p align="center">
-<img src="example/stable.png" width="600">
+<img src="plots/stable.png" width="600">
 </p>
 
 <p align="center">
-<img src="example/city.png" width="600">
+<img src="plots/city.png" width="600">
 </p>
 
 
@@ -328,7 +328,7 @@ and the gpu card is "Nvidia RTX 5090."
 
 
 <p align="center">
-<img src="doc/gpu.png" width="500">
+<img src="plots/gpu.png" width="500">
 </p>
 
 This plot clearly shows that GPU is the optimal choice for heavy simulations, while CPU scaling beyond 10-16 cores is inefficient.
@@ -341,7 +341,7 @@ Start by defining the required grid dimensions in the src/mod_dimensions.F90 fil
 Create a separate catalog preferably on a large scratch disk or work area, e.g.,
 ```bash
 mkdir rundir
-cd cd rundir
+cd rundir
 ulimit -s unlimited
 boltzmann
 ```
@@ -355,9 +355,7 @@ The example infile.in corresponds to a  2D city case with flow through the city,
 the city2 case in mod_dimensions.F90. You can also use this grid for the cylinder case by changing `city2` to `cyliner` in the infile.in.
 For more realistic 3D runs increase the number of vertical grid points.
 
-The example/run.sh script may be required for large grids, as it sets ulimit -s unlimited and it also defines the number of cores used in OPEN-MP simuilations.
-
-The example/uvel.orig file defines an atmospheric boundary layer if it is found in the run direcotry.
+The plots/uvel.orig file defines an atmospheric boundary layer if it is found in the run direcotry.
 
 In summary to execute the code on a single core:
 ```bash

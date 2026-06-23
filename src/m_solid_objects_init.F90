@@ -7,7 +7,6 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
    use m_city2
    use m_city3
    use m_read_bathymetry
-   use m_dump_elevation
 #ifdef MPI
    use mpi
    use m_mpi_decomp_init, only : mpi_rank, mpi_nprocs
@@ -34,45 +33,44 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
 #endif
 
    ! Global mask always on host
-   allocate(blanking_global(0:nx+1,0:nyg+1,0:nz+1))
-   blanking_global = .false.
+   if (ir == 0) then
+      allocate(blanking_global(0:nx+1,0:nyg+1,0:nz+1))
+      blanking_global = .false.
+   endif
 
    !-----------------------------------------------------------
    ! Build global geometry on ir==0 (and rank 0 in MPI case)
    !-----------------------------------------------------------
-   if (ir == 0) then
-      select case(trim(experiment))
-      case('city')
-         call city(blanking_global)
-         lsolids=.true.
-      case('city2')
-         call city2(blanking_global)
-         lsolids=.true.
-      case('city3')
-         call city3(blanking_global)
-         lsolids=.true.
-      case('barcelona_2m')
-         call read_bathymetry(blanking_global,'2m')
-         lsolids=.true.
-      case('barcelona_3m')
-         call read_bathymetry(blanking_global,'3m')
-         lsolids=.true.
-      case('barcelona_4m')
-         call read_bathymetry(blanking_global,'4m')
-         lsolids=.true.
-      case('cylinder')
-         call cylinder(blanking_global)
-         lsolids=.true.
-      case('airfoil')
-         stop 'needs fix airfoil routine for gpu'
-      end select
-   end if
+   select case(trim(experiment))
+   case('city')
+      if (ir == 0) call city(blanking_global)
+      lsolids=.true.
+   case('city2')
+      if (ir == 0) call city2(blanking_global)
+      lsolids=.true.
+   case('city3')
+      if (ir == 0) call city3(blanking_global)
+      lsolids=.true.
+   case('barcelona_2m')
+      if (ir == 0) call read_bathymetry(blanking_global,'2m')
+      lsolids=.true.
+   case('barcelona_3m')
+      if (ir == 0) call read_bathymetry(blanking_global,'3m')
+      lsolids=.true.
+   case('barcelona_4m')
+      if (ir == 0) call read_bathymetry(blanking_global,'4m')
+      lsolids=.true.
+   case('cylinder')
+      if (ir == 0) call cylinder(blanking_global)
+      lsolids=.true.
+   case('airfoil')
+      stop 'needs fix airfoil routine for gpu'
+   end select
+
 
 #ifndef MPI
    !-------------------- SERIAL CASE -------------------------
-   if (ny /= nyg) stop 'check ny and nyg: must be equal without MPI'
    blanking_local = blanking_global
-   if (lsolids) call dump_elevation(blanking_local)
    deallocate(blanking_global)
    return
 #else
@@ -142,11 +140,10 @@ subroutine solid_objects_init(blanking_local, lsolids, experiment, ir)
 
    blanking_local = blank_host
 
+
    ! Clean up
    if (mpi_rank == 0) then
       deallocate(blanking_global, sendbuf)
-   else
-      deallocate(blanking_global)
    end if
    deallocate(recvbuf, blank_host)
 

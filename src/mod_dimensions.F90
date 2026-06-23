@@ -18,12 +18,12 @@ module mod_dimensions
 !  integer, parameter :: nz = 96           ! grid dimension z-dir (up)
 
 !city2
- integer, parameter :: nx = 200          ! grid dimension x-dir (east)
- integer, parameter :: ny = 120          ! grid dimension y-dir (north)
- integer, parameter :: ntiles = 1        ! Number of tiles in y direction
- integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
- integer, parameter :: nz = 2            ! grid dimension z-dir (up)
- integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+  integer, parameter :: nx = 200          ! grid dimension x-dir (east)
+  integer, parameter :: ny = 120          ! grid dimension y-dir (north)
+  integer, parameter :: ntiles = 1        ! Number of tiles in y direction
+  integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+  integer, parameter :: nz = 2            ! grid dimension z-dir (up)
+  integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !city3
 ! integer, parameter :: nx = 52           ! grid dimension x-dir (east)
@@ -34,10 +34,12 @@ module mod_dimensions
 ! integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !cylinder and airfoil
-!  integer, parameter :: nx = 400          ! grid dimension x-dir (east)
-!  integer, parameter :: ny = 100          ! grid dimension y-dir (north)
-!  integer, parameter :: nyg =100          ! grid dimension y-dir (north)
-!  integer, parameter :: nz = 5            ! grid dimension z-dir (up)
+! integer, parameter :: nx = 400          !nx = 400  grid dimension x-dir (east)
+! integer, parameter :: ny = 50           !ny = 100  grid dimension y-dir (north)
+! integer, parameter :: nz = 5            !nz = 5    grid dimension z-dir (up)
+! integer, parameter :: ntiles = 2        ! Number of tiles in y direction
+! integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+! integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 ! mini
 !  integer, parameter :: nx = 3            ! grid dimension x-dir (east)
@@ -54,11 +56,11 @@ module mod_dimensions
 ! integer, parameter :: ntracer = 0        ! Number of tracer fields (potential temperature etc)
 
 !Barcelona_2m
-! integer, parameter :: nx = 453           ! 225 grid dimension x-dir (east)
-! integer, parameter :: ny = 437           ! 218 grid dimension y-dir (north)
-! integer, parameter :: nz = 67            ! 32 grid dimension z-dir (up)
-! integer, parameter :: ntiles = 1         ! Number of tiles in y direction
-! integer, parameter :: nyg = ntiles*ny    ! global grid dimension y-dir (north)
-! integer, parameter :: ntracer = 0        ! Number of tracer fields (potential temperature etc)
+!  integer, parameter :: nx = 453           ! 225 grid dimension x-dir (east)
+!  integer, parameter :: ny = 437           ! 218 grid dimension y-dir (north)
+!  integer, parameter :: nz = 67            ! 32 grid dimension z-dir (up)
+!  integer, parameter :: ntiles = 1         ! Number of tiles in y direction
+!  integer, parameter :: nyg = ntiles*ny    ! global grid dimension y-dir (north)
+!  integer, parameter :: ntracer = 0        ! Number of tracer fields (potential temperature etc)
 
 end module

@@ -3,7 +3,6 @@ module m_airfoil
 contains
 subroutine airfoil(lsolids,blanking)
    use mod_dimensions
-   use m_tecfld
    implicit none
    logical, intent(inout)  :: blanking(0:nx+1,0:ny+1,0:nz+1)
    logical, intent(inout) :: lsolids
@@ -94,7 +93,6 @@ subroutine airfoil(lsolids,blanking)
       enddo
 
 
-   call tecfld('elevation',nx,ny,1,elevation)
 
    deallocate(elevation)
 

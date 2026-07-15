@@ -55,7 +55,7 @@ subroutine dump_elevation(lblanking)
    write(ctile,'(i4.4)')ir
 
    fname=trim(directory)//'tec_elevation'//trim(ctile)
-   print *,'Elevation: ',ir,mpi_rank,mpi_nprocs,trim(fname)
+   print *,'Elevation: ',trim(fname)
    call tecfld(trim(fname),'elevation',nx,ny,1,elevation,ir,np)
 
 #ifndef MPI

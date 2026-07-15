@@ -14,7 +14,7 @@ second-order BGK expansion.
 The turbulence closure scheme is the one described by [Vreman (2004)](https://doi.org/10.1063/1.1785131).
 
 The model boundary conditions are periodic or closed no-slip or free-slip two-timestep bounceback in the i-, j-, and k-directions. Additionally, there are
-inflow-outflow conditions in the i-direction.
+inflow-outflow conditions in the i and j -directions.
 
 The code allows for inserting solid bodies within the model domain to simulate, e.g., flow around an airfoil or a cylinder.
 

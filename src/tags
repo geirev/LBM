@@ -28,6 +28,7 @@ boundary_i_j_edges	m_boundary_i_j_edges.F90	/^module
 boundary_i_k_edges	m_boundary_i_k_edges.F90	/^module
 boundary_i_periodic_kernel	m_boundary_i_periodic_kernel.F90	/^module
 boundary_j_closed_kernel	m_boundary_j_closed_kernel.F90	/^module
+boundary_j_inflow_kernel	m_boundary_j_inflow_kernel.F90	/^module
 boundary_j_k_edges	m_boundary_j_k_edges.F90	/^module
 boundary_j_periodic_kernel	m_boundary_j_periodic_kernel.F90	/^module
 boundary_k_closed_kernel	m_boundary_k_closed_kernel.F90	/^module
@@ -112,6 +113,7 @@ m_boundary_i_j_edges	m_boundary_i_j_edges.F90	/^module
 m_boundary_i_k_edges	m_boundary_i_k_edges.F90	/^module
 m_boundary_i_periodic_kernel	m_boundary_i_periodic_kernel.F90	/^module
 m_boundary_j_closed_kernel	m_boundary_j_closed_kernel.F90	/^module
+m_boundary_j_inflow_kernel	m_boundary_j_inflow_kernel.F90	/^module
 m_boundary_j_k_edges	m_boundary_j_k_edges.F90	/^module
 m_boundary_j_periodic_kernel	m_boundary_j_periodic_kernel.F90	/^module
 m_boundary_k_closed_kernel	m_boundary_k_closed_kernel.F90	/^module

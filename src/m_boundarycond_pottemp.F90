@@ -74,6 +74,23 @@ subroutine boundarycond_pottemp(pottemp)
       endif
    endif
 
+! j-inflow boundary condition
+   if (jbnd==1) then
+! Periodic bnd cond for pottemp in unstable case
+      if (istable == -1) then
+#ifdef _CUDA
+         tx=1  ; bx=1
+         ty=32 ; by=(ny+2+ty-1)/ty
+         tz=8  ; bz=(nz+2+tz-1)/tz
+#endif
+         call boundary_j_periodic_kernel&
+#ifdef _CUDA
+         &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+         &(pottemp,1)
+      endif
+   endif
+
 ! Update edges for inflow conditions for periodic boundary conditions in i-direction
    if (ibnd==0) then
 #ifdef _CUDA

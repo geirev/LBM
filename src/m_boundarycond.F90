@@ -21,7 +21,7 @@ subroutine boundarycond(f1,f2,uvel)
    use m_wtime
 
    use m_boundary_i_inflow_kernel
-   use m_boundary_i_inflow_edges
+   use m_boundary_j_inflow_kernel
 
    use m_boundary_i_periodic_kernel
    use m_boundary_j_periodic_kernel
@@ -42,13 +42,13 @@ subroutine boundarycond(f1,f2,uvel)
    real, intent(inout):: f2(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)   :: uvel(nz)
 
-   real :: taperj(ny),taperk(nz)!, real, dist, x, width
+   real :: taperi(nx),taperj(ny),taperk(nz)!, real, dist, x, width
    real, parameter   :: pi=3.1415927410125732
 #ifdef _CUDA
    attributes(device) :: f1
    attributes(device) :: f2
    attributes(device) :: uvel
-   attributes(device) :: taperj,taperk
+   attributes(device) :: taperi,taperj,taperk
 #endif
    integer, parameter :: icpu=11
    integer :: opt_i1, opt_j1, opt_k1
@@ -292,11 +292,45 @@ subroutine boundarycond(f1,f2,uvel)
       &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
 #endif
       &(f1,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
-
-! Update edges for inflow conditions
-    !  call boundary_i_inflow_edges(f1,f2)
    endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! j-inflow boundary condition
+   if (jbnd==1) then
+!      width=4.0
+!      do i=1,nx
+!         dist=min(abs(i-1),abs(nx-i))
+!         if (dist >= width) then
+!            taperi(i) = 1.0
+!         else
+!            x = dist / width
+!            taperi(i) = cos(0.5*pi*x)**2
+!         endif
+!      enddo
+!      do k=1,nz
+!         dist=min(abs(k-1),abs(nz-k))
+!         if (dist >= width) then
+!            taperk(k) = 1.0
+!         else
+!            x = dist / width
+!            taperk(k) = cos(0.5*pi*x)**2
+!         endif
+!      enddo
+      taperi=1.0
+      taperk=1.0
+
+
+#ifdef _CUDA
+      tx=1;   bx=1
+      ty=8;   by=(nx+ty-1)/ty
+      tz=8;   bz=(nz+tz-1)/tz
+#endif
+      call boundary_j_inflow_kernel&
+#ifdef _CUDA
+      &<<<dim3(bx,by,bz), dim3(tx,ty,tz)>>>&
+#endif
+      &(f1,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
+   endif
 
 
 ! Update edges for inflow conditions for periodic boundary conditions in i-direction

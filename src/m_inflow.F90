@@ -18,6 +18,7 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
    real, allocatable :: tdata(:),uvel_tdata(:),udir_tdata(:)
    real, parameter   :: pi=3.1415927410125732
    real,    dimension(:),       allocatable :: uvel_h      ! temporary vertical u-velocity profile on host
+   real dangle
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Vertical inflow velocity profile read from file
@@ -64,30 +65,50 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
          enddo
       close(10)
 
-      do i=nt0,nt1
+      do i = nt0, nt1
          t = real(i-1)*p2l%time
          if (t <= tdata(1)) then
             uvel_time(i) = uvel_tdata(1)
-            udir_time(i) = udir_tdata(1)
-         else if (t >= tdata(nrtdata)) then
+            udir_time(i) = modulo(udir_tdata(1),360.0)
+         elseif (t >= tdata(nrtdata)) then
             uvel_time(i) = uvel_tdata(nrtdata)
-            udir_time(i) = udir_tdata(nrtdata)
+            udir_time(i) = modulo(udir_tdata(nrtdata),360.0)
          else
-            do k=1,nrtdata-1
+            do k = 1, nrtdata-1
                if (t >= tdata(k) .and. t <= tdata(k+1)) then
-                  tmp = (t - tdata(k)) / (tdata(k+1) - tdata(k))
-                  uvel_time(i) = uvel_tdata(k) + tmp*(uvel_tdata(k+1) - uvel_tdata(k))
-                  udir_time(i) = udir_tdata(k) + tmp*(udir_tdata(k+1) - udir_tdata(k))
+                  tmp = (t-tdata(k))/(tdata(k+1)-tdata(k))
+                  uvel_time(i) = uvel_tdata(k) + tmp * &
+                       (uvel_tdata(k+1)-uvel_tdata(k))
+                  ! Shortest signed angular change in [-180,180).
+                  dangle = modulo(udir_tdata(k+1)-udir_tdata(k)+180.0, &
+                                  360.0)-180.0
+                  udir_time(i) = modulo(udir_tdata(k)+tmp*dangle,360.0)
                   exit
                endif
             enddo
          endif
       enddo
-   endif
 
-!   do k=nt0,nt1
-!      udir_time(k)=0.0 + 20.0*sin(real(k)*pi*2.0/real(nt1-nt0))
-!   enddo
+!!      do i=nt0,nt1
+!!         t = real(i-1)*p2l%time
+!!         if (t <= tdata(1)) then
+!!            uvel_time(i) = uvel_tdata(1)
+!!            udir_time(i) = udir_tdata(1)
+!!         else if (t >= tdata(nrtdata)) then
+!!            uvel_time(i) = uvel_tdata(nrtdata)
+!!            udir_time(i) = udir_tdata(nrtdata)
+!!         else
+!!            do k=1,nrtdata-1
+!!               if (t >= tdata(k) .and. t <= tdata(k+1)) then
+!!                  tmp = (t - tdata(k)) / (tdata(k+1) - tdata(k))
+!!                  uvel_time(i) = uvel_tdata(k) + tmp*(uvel_tdata(k+1) - uvel_tdata(k))
+!!                  udir_time(i) = udir_tdata(k) + tmp*(udir_tdata(k+1) - udir_tdata(k))
+!!                  exit
+!!               endif
+!!            enddo
+!!         endif
+!!      enddo
+     endif
 
 
    return

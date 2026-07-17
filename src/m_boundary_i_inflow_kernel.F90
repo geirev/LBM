@@ -34,6 +34,10 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
    real :: uu
    ! Local buffer for ghost distributions at i=0
    real :: fghost(nl)
+   real :: uxdir, uydir
+   real, parameter :: dir_tol = 1.0e-4
+   real, parameter :: switch_tol = 0.02
+   real :: alphai, alphaj
 
    i = 1   ! interior inflow plane
 
@@ -44,12 +48,19 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
    if (j < 1 .or. j > ny) return
    if (k < 1 .or. k > nz) return
 #else
-!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(j,k,l,m,ka,wl,cxl,cyl,uu,fghost) &
-!$OMP& SHARED(f,uvel,rho0,udir)
+!$OMP PARALLEL DO COLLAPSE(2) &
+!$OMP& PRIVATE(j,k,l,m,ka,wl,cxl,cyl,uu,fghost,uxdir,uydir) &
+!$OMP& SHARED(f,uvel,rho0,udir,taperj,taperk)
    do k = 1, nz
    do j = 1, ny
 #endif
-      if (cos(udir*pi/180.0) > 0.0) then
+      uxdir = cos(udir*pi/180.0)
+      uydir = sin(udir*pi/180.0)
+      alphai = min(1.0, abs(uxdir)/switch_tol)
+      alphaj = min(1.0, abs(uydir)/switch_tol)
+
+      !inflow at i=1 and outflow at i=nx
+      if (uxdir > dir_tol) then
 
          !-----------------------------------------------------------
          ! 1) Build "raw" inflow at ghost plane (i=0) using
@@ -67,8 +78,8 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
             ! Krüger-style correction:
             !    fghost(l) = f(l,1,j,k) - 2 w rho (c·u)/cs2
             fghost(l) = f(l,1,j,k) - 2.0 * wl * rho0 * &
-                        ( cxl*uu*cos(udir*pi/180.0) + &
-                          cyl*uu*sin(udir*pi/180.0) ) / cs2
+                        ( cxl*uu*uxdir + &
+                          cyl*uu*uydir ) / cs2
          enddo
 
          !-----------------------------------------------------------
@@ -76,13 +87,15 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
          !-----------------------------------------------------------
          do l = 1, nl
             if (cxs(l) <= 0) then
-               f(l,0,j,k) = fghost(l)
+!               f(l,0,j,k) = fghost(l)
+               f(l,0,j,k) = alphai*fghost(l) + (1.0-alphai)*f(l,1,j,k)
             else
                do m = 1, nl
                   if (cxs(m) == -cxs(l) .and. &
                       cys(m) == -cys(l) .and. &
                       czs(m) == -czs(l)) then
-                     f(l,0,j,k) = fghost(m)
+!                     f(l,0,j,k) = fghost(m)
+                     f(l,0,j,k) = alphai*fghost(m) + (1.0-alphai)*f(l,1,j,k)
                      exit
                   endif
                enddo
@@ -96,7 +109,8 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
             f(l,nx+1,j,k) = f(l,nx,j,k)
          enddo
 
-      elseif (cos(udir*pi/180.0) < 0.0) then
+      !inflow at i=nx and outflow at i=1
+      elseif (uxdir < -dir_tol) then
 
          !-----------------------------------------------------------
          ! 1) Build "raw" inflow at ghost plane (i=nx+1) using
@@ -114,8 +128,8 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
             ! Krüger-style correction:
             !    fghost(l) = f(l,nx,j,k) - 2 w rho (c·u)/cs2
             fghost(l) = f(l,nx,j,k) - 2.0 * wl * rho0 * &
-                        ( cxl*uu*cos(udir*pi/180.0) + &
-                          cyl*uu*sin(udir*pi/180.0) ) / cs2
+                        ( cxl*uu*uxdir + &
+                          cyl*uu*uydir ) / cs2
          enddo
 
          !-----------------------------------------------------------
@@ -123,13 +137,15 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
          !-----------------------------------------------------------
          do l = 1, nl
             if (cxs(l) >= 0) then
-               f(l,nx+1,j,k) = fghost(l)
+!               f(l,nx+1,j,k) = fghost(l)
+               f(l,nx+1,j,k) = alphai*fghost(l) + (1.0-alphai)*f(l,nx,j,k)
             else
                do m = 1, nl
                   if (cxs(m) == -cxs(l) .and. &
                       cys(m) == -cys(l) .and. &
                       czs(m) == -czs(l)) then
-                     f(l,nx+1,j,k) = fghost(m)
+!                     f(l,nx+1,j,k) = fghost(m)
+                     f(l,nx+1,j,k) = alphai*fghost(m) + (1.0-alphai)*f(l,nx,j,k)
                      exit
                   endif
                enddo
@@ -183,7 +199,6 @@ subroutine boundary_i_inflow_kernel(f,uvel,rho0,udir,jbnd,kbnd,taperj,taperk)
 !!      ! 2) General x-bounce mapping on ghost plane i=0
 !!      !
 !!      !    Idea (mimicking a tmp-swap logic in a robust way):
-!!      !    - for directions with cxs <= 0: keep fghost(l) as is
 !!      !    - for directions with cxs > 0 (incoming from ghost to fluid):
 !!      !         f(l,0,j,k) := fghost(l_opp)
 !!      !      where l_opp has cxs = -cxs(l),  cys=-cys(l), czs=-czs(l)

@@ -22,6 +22,7 @@ subroutine boundarycond(f1,f2,uvel)
 
    use m_boundary_i_inflow_kernel
    use m_boundary_j_inflow_kernel
+   use m_boundary_ij_corner_kernel
 
    use m_boundary_i_periodic_kernel
    use m_boundary_j_periodic_kernel
@@ -331,6 +332,22 @@ subroutine boundarycond(f1,f2,uvel)
 #endif
       &(f1,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
    endif
+
+   if (ibnd==1 .and. jbnd==1) then
+#ifdef _CUDA
+tx = 32
+ty = 4
+bx = (nl+tx-1)/tx
+by = (nz+ty-1)/ty
+#endif
+call boundary_ij_corner_kernel &
+#ifdef _CUDA
+      & <<<dim3(bx,by,1),dim3(tx,ty,1)>>>&
+#endif
+      &(f1)
+   endif
+
+
 
 
 ! Update edges for inflow conditions for periodic boundary conditions in i-direction

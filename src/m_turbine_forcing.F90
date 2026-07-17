@@ -88,8 +88,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    yawrate_max  = 0.3
    yaw_deadband = 5.0
    do n = 1, nturbines
-      call turbine_yaw_controller(udir, dtcontrol, 1, turbines_in(n:n)%yaw, yawrate_max, yaw_deadband)
-!      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
+!      call turbine_yaw_controller(udir, dtcontrol, 1, turbines_in(n:n)%yaw, yawrate_max, yaw_deadband)
+      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
    enddo
    turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
 

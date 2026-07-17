@@ -34,7 +34,10 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
    real :: uu
    ! Local buffer for ghost distributions at j=0
    real :: fghost(nl)
-
+   real :: uxdir, uydir
+   real, parameter :: dir_tol = 1.0e-4
+   real, parameter :: switch_tol = 0.02
+   real :: alphai, alphaj
    j = 1   ! interior inflow plane
 
 !------------------ Indexing (CUDA vs CPU) -------------------------
@@ -44,12 +47,21 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
    if (i < 1 .or. i > nx) return
    if (k < 1 .or. k > nz) return
 #else
-!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,k,l,m,ka,wl,cxl,cyl,uu,fghost) &
-!$OMP& SHARED(f,uvel,rho0,udir)
+!$OMP PARALLEL DO COLLAPSE(2) &
+!$OMP& PRIVATE(i,k,l,m,ka,wl,cxl,cyl,uu,fghost,uxdir,uydir) &
+!$OMP& SHARED(f,uvel,rho0,udir,taperi,taperk)
    do k = 1, nz
    do i = 1, nx
 #endif
-      if (sin(udir*pi/180.0) >= 0.0) then
+      uxdir = cos(udir*pi/180.0)
+      uydir = sin(udir*pi/180.0)
+      alphai = min(1.0, abs(uxdir)/switch_tol)
+      alphaj = min(1.0, abs(uydir)/switch_tol)
+!      if (abs(uxdir) < dir_tol) uxdir = 0.0
+!      if (abs(uydir) < dir_tol) uydir = 0.0
+
+      !inflow at j=1 and outflow at j=ny
+      if (uydir > dir_tol) then
 
 
          !-----------------------------------------------------------
@@ -68,8 +80,8 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
             ! Krüger-style correction:
             !    fghost(l) = f(l,i,1,k) - 2 w rho (c·u)/cs2
             fghost(l) = f(l,i,1,k) - 2.0 * wl * rho0 * &
-                        ( cxl*uu*cos(udir*pi/180.0) + &
-                          cyl*uu*sin(udir*pi/180.0) ) / cs2
+                        ( cxl*uu*uxdir + &
+                          cyl*uu*uydir ) / cs2
          enddo
 
          !-----------------------------------------------------------
@@ -77,19 +89,20 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
          !-----------------------------------------------------------
          do l = 1, nl
             if (cys(l) <= 0) then
-               f(l,i,0,k) = fghost(l)
+!               f(l,i,0,k) = fghost(l)
+               f(l,i,0,k) = alphaj*fghost(l) +  (1.0-alphaj)*f(l,i,1,k)
             else
                do m = 1, nl
                   if (cxs(m) == -cxs(l) .and. &
                       cys(m) == -cys(l) .and. &
                       czs(m) == -czs(l)) then
-                     f(l,i,0,k) = fghost(m)
+!                     f(l,i,0,k) = fghost(m)
+                     f(l,i,0,k) = alphaj*fghost(m) + (1.0-alphaj)*f(l,i,1,k)
                      exit
                   endif
                enddo
             endif
          enddo
-
          !-----------------------------------------------------------
          ! 3) Outflow at j=ny+1: zero-gradient extrapolation
          !-----------------------------------------------------------
@@ -97,7 +110,8 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
             f(l,i,ny+1,k) = f(l,i,ny,k)
          enddo
 
-      elseif (sin(udir*pi/180.0) < 0.0) then
+      !inflow at j=ny and outflow at j=1
+      elseif (uydir < -dir_tol) then
 
          !-----------------------------------------------------------
          ! 1) Build "raw" inflow at ghost plane (j=ny+1) using
@@ -115,8 +129,8 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
             ! Krüger-style correction:
             !    fghost(l) = f(l,i,ny,k) - 2 w rho (c·u)/cs2
             fghost(l) = f(l,i,ny,k) - 2.0 * wl * rho0 * &
-                        ( cxl*uu*cos(udir*pi/180.0) + &
-                          cyl*uu*sin(udir*pi/180.0) ) / cs2
+                        ( cxl*uu*uxdir + &
+                          cyl*uu*uydir ) / cs2
          enddo
 
          !-----------------------------------------------------------
@@ -124,13 +138,15 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
          !-----------------------------------------------------------
          do l = 1, nl
             if (cys(l) >= 0) then
-               f(l,i,ny+1,k) = fghost(l)
+!               f(l,i,ny+1,k) = fghost(l)
+               f(l,i,ny+1,k) = alphaj*fghost(l) + (1.0-alphaj)*f(l,i,ny,k)
             else
                do m = 1, nl
                   if (cxs(m) == -cxs(l) .and. &
                       cys(m) == -cys(l) .and. &
                       czs(m) == -czs(l)) then
-                     f(l,i,ny+1,k) = fghost(m)
+!                     f(l,i,ny+1,k) = fghost(m)
+                     f(l,i,ny+1,k) = alphaj*fghost(m) +  (1.0-alphaj)*f(l,i,ny,k)
                      exit
                   endif
                enddo

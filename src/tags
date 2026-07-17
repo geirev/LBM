@@ -21,6 +21,7 @@ boundarycond_pottemp	m_boundarycond_pottemp.F90	/^module
 boundarycond_tracer	m_boundarycond_tracer.F90	/^module
 boundary_closed_corners	m_boundary_closed_corners.F90	/^module
 boundary_closed_edges	m_boundary_closed_edges.F90	/^module
+boundary_ij_corner_kernel	m_boundary_ij_corner_kernel.F90	/^module
 boundary_i_closed_kernel	m_boundary_i_closed_kernel.F90	/^module
 boundary_i_inflow_edges	m_boundary_i_inflow_edges.F90	/^module
 boundary_i_inflow_kernel	m_boundary_i_inflow_kernel.F90	/^module
@@ -106,6 +107,7 @@ m_boundarycond_pottemp	m_boundarycond_pottemp.F90	/^module
 m_boundarycond_tracer	m_boundarycond_tracer.F90	/^module
 m_boundary_closed_corners	m_boundary_closed_corners.F90	/^module
 m_boundary_closed_edges	m_boundary_closed_edges.F90	/^module
+m_boundary_ij_corner_kernel	m_boundary_ij_corner_kernel.F90	/^module
 m_boundary_i_closed_kernel	m_boundary_i_closed_kernel.F90	/^module
 m_boundary_i_inflow_edges	m_boundary_i_inflow_edges.F90	/^module
 m_boundary_i_inflow_kernel	m_boundary_i_inflow_kernel.F90	/^module

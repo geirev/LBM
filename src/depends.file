@@ -119,6 +119,7 @@ m_boundarycond.o:      makefile
 m_boundarycond.o:      m_boundary_closed_corners.o
 m_boundarycond.o:      m_boundary_i_closed_kernel.o
 m_boundarycond.o:      m_boundary_i_inflow_kernel.o
+m_boundarycond.o:      m_boundary_ij_corner_kernel.o
 m_boundarycond.o:      m_boundary_i_j_edges.o
 m_boundarycond.o:      m_boundary_i_k_edges.o
 m_boundarycond.o:      m_boundary_i_periodic_kernel.o
@@ -154,6 +155,9 @@ m_boundary_i_inflow_edges.o:      mod_dimensions.o
 m_boundary_i_inflow_kernel.o:      makefile
 m_boundary_i_inflow_kernel.o:      mod_D3Q27setup.o
 m_boundary_i_inflow_kernel.o:      mod_dimensions.o
+m_boundary_ij_corner_kernel.o:      makefile
+m_boundary_ij_corner_kernel.o:      mod_D3Q27setup.o
+m_boundary_ij_corner_kernel.o:      mod_dimensions.o
 m_boundary_i_j_edges.o:      makefile
 m_boundary_i_j_edges.o:      mod_D3Q27setup.o
 m_boundary_i_j_edges.o:      mod_dimensions.o

@@ -214,6 +214,9 @@ program LatticeBoltzmann
    uvel(:) = uvel_time(nt0)*uvel_shear(:)
    udir = udir_time(nt0)
 
+   do i=nt0,nt1
+      write(*,*)i,udir_time(i)
+   enddo
 
    if (nt0 == 0) then
 ! Intialization of macro variables

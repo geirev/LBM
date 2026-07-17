@@ -119,6 +119,7 @@ F90SOURCE = \
 	m_turbine_point_forces_kernel.F90\
 	m_turbine_rotor_basis.F90\
 	m_turbines_bounding_box.F90\
+	m_turbine_yaw_controller.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\
 	m_wtime.F90

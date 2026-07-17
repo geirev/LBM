@@ -411,12 +411,14 @@ m_turbine_extend_array.o:      mod_turbines.o
 m_turbine_forcing.o:      makefile
 m_turbine_forcing.o:      mod_dimensions.o
 m_turbine_forcing.o:      mod_turbines.o
+m_turbine_forcing.o:      m_readinfile.o
 m_turbine_forcing.o:      m_turbine_deposit_gpu.o
 m_turbine_forcing.o:      m_turbine_deposit.o
 m_turbine_forcing.o:      m_turbine_distribute_points.o
 m_turbine_forcing.o:      m_turbine_point_forces_gpu.o
 m_turbine_forcing.o:      m_turbine_point_forces.o
 m_turbine_forcing.o:      m_turbines_bounding_box.o
+m_turbine_forcing.o:      m_turbine_yaw_controller.o
 m_turbine_forcing.o:      m_wtime.o
 m_turbine_initialize.o:      makefile
 m_turbine_initialize.o:      m_nrelreadfoil.o
@@ -446,6 +448,8 @@ m_turbine_rotor_basis.o:      makefile
 m_turbines_bounding_box.o:      makefile
 m_turbines_bounding_box.o:      mod_dimensions.o
 m_turbines_bounding_box.o:      mod_turbines.o
+m_turbine_yaw_controller.o:      makefile
+m_turbine_yaw_controller.o:      mod_turbines.o
 m_vreman_kernel.o:      makefile
 m_vreman_kernel.o:      mod_D3Q27setup.o
 m_vreman_kernel.o:      mod_dimensions.o

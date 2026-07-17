@@ -26,7 +26,8 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
    real :: angattack, clift, cdrag
    real :: costheta, sintheta
    real :: utheta, phi
-
+   real :: e_axis(3), e1(3), e2(3), e_tan(3)
+   real :: uaxis,yaw,tilt
 #ifdef _CUDA
    p = (blockIdx%x - 1) * blockDim%x + threadIdx%x
    if (p < 1 .or. p > np) return
@@ -49,20 +50,52 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
 #endif
 
    call turbine_interpolate_velocity(u, v, w, rho, &
-        points(p)%xg, points(p)%yg, points(p)%zg, j_start, ux, uy, uz, dens)
+        points(p)%xg, points(p)%yg, points(p)%zg, j_start, &
+        ux, uy, uz, dens)
+
+   !call turbine_rotor_basis(points(p)%yaw, points(p)%tilt, e_axis, e1, e2)
+   yaw=points(p)%yaw
+   tilt=points(p)%tilt
+   e_axis = (/ cos(yaw)*cos(tilt),  sin(yaw)*cos(tilt), -sin(tilt) /)
+   e1     = (/ -sin(yaw),           cos(yaw),            0.0       /)
+   e2     = (/ -cos(yaw)*sin(tilt), -sin(yaw)*sin(tilt), -cos(tilt) /)
 
    costheta = cos(points(p)%theta)
    sintheta = sin(points(p)%theta)
 
-   utheta = points(p)%omegand * points(p)%relm - &
-            uz*costheta - uy*sintheta
+! Tangential direction corresponding to increasing theta.
+   e_tan(:) = -sintheta*e1(:) + costheta*e2(:)
 
-   phi       = atan2(ux, utheta)
-   angattack = (phi*180.0/pi - points(p)%twist - points(p)%pitch)
+! Velocity component along the rotor axis.
+   uaxis = ux*e_axis(1) + uy*e_axis(2) + uz*e_axis(3)
+
+! Blade-relative tangential velocity.
+   utheta = points(p)%omegand*points(p)%relm + &
+            ux*e_tan(1) + uy*e_tan(2) + uz*e_tan(3)
+
+   phi       = atan2(uaxis, utheta)
+   angattack = phi*180.0/pi - points(p)%twist - points(p)%pitch
 
    call nrelliftdrag(clift, cdrag, angattack, points(p)%foil)
 
-   call turbine_compute_bladeforce(Fvec(:,p), points(p), ux, utheta, dens, clift, cdrag)
+   call turbine_compute_bladeforce(Fvec(:,p), points(p), &
+                                   uaxis, utheta, dens, clift, cdrag)
+
+!!   call turbine_interpolate_velocity(u, v, w, rho, &
+!!        points(p)%xg, points(p)%yg, points(p)%zg, j_start, ux, uy, uz, dens)
+!!
+!!   costheta = cos(points(p)%theta)
+!!   sintheta = sin(points(p)%theta)
+!!
+!!   utheta = points(p)%omegand * points(p)%relm - &
+!!            uz*costheta - uy*sintheta
+!!
+!!   phi       = atan2(ux, utheta)
+!!   angattack = (phi*180.0/pi - points(p)%twist - points(p)%pitch)
+!!
+!!   call nrelliftdrag(clift, cdrag, angattack, points(p)%foil)
+!!
+!!   call turbine_compute_bladeforce(Fvec(:,p), points(p), ux, utheta, dens, clift, cdrag)
 #ifndef _CUDA
    enddo
 #endif

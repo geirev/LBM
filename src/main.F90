@@ -82,8 +82,8 @@ program LatticeBoltzmann
    real,         allocatable  ::       rho(:,:,:) ! fluid density
    real,         allocatable  ::      uvel(:)     ! actual vertical u inflow velocity on device
    real,         allocatable  ::      uvel_shear(:) ! normalized vertical u-velocity profile on device
-   real,         allocatable  ::      uvel_time(:)  ! normalized time variability of inflow velocity on device
-   real,         allocatable  ::      udir_time(:)  ! normalized time variability of inflow velocity direction on device
+   real,         allocatable  ::      uvel_time(:)  ! normalized time variability of inflow velocity
+   real,         allocatable  ::      udir_time(:)  ! normalized time variability of inflow velocity direction
    real,         allocatable  ::       u_h(:,:,:) ! x component of fluid velocity
    real,         allocatable  ::       v_h(:,:,:) ! y component of fluid velocity
    real,         allocatable  ::       w_h(:,:,:) ! z component of fluid velocity
@@ -116,9 +116,6 @@ program LatticeBoltzmann
    attributes(device) :: w
    attributes(device) :: rho
    attributes(device) :: uvel
-   !attributes(device) :: uvel_shear
-   !attributes(device) :: uvel_time
-   !attributes(device) :: udir_time
 
    attributes(device) :: tracerA,tracerS,tracerB,t1,t2,tr_tmp
    attributes(device) :: pottempA,pottempS,pottempB,p1,p2,pt_tmp

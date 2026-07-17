@@ -1,5 +1,13 @@
 module m_turbine_forcing
 contains
+pure real function wrap_180(angle)
+   implicit none
+   real, intent(in) :: angle
+
+   wrap_180 = modulo(angle + 180.0, 360.0) - 180.0
+
+end function wrap_180
+
 !      1) Update rotor azimuth theta
 !      2) Rebuild global actuator point locations
 !      3) Compute per-point forces (CPU or GPU)
@@ -10,8 +18,10 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
    use mpi
 #endif
    use mod_dimensions, only : nx, ny, nz, nyg
+   use m_readinfile, only : udir,nturbines
    use mod_turbines, only : turbine_t,point_t,points_global
 
+   use m_turbine_yaw_controller
    use m_turbine_distribute_points
    use m_turbine_point_forces_gpu
    use m_turbine_point_forces
@@ -58,6 +68,11 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 #ifndef MPI
    integer :: mpi_rank=0
 #endif
+   real, parameter :: pi=3.141592653589
+   real, parameter :: pi2=2.0*pi
+   integer n
+   real  yawrate_max,yaw_deadband,dtcontrol
+
 
    call cpustart()
 ! 1. Update turbine azimuth
@@ -69,7 +84,13 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 !        turbines(n)%omegand    = omega * p2l%time
 !     enddo
 !  endif
-
+   dtcontrol=1.0
+   yawrate_max  = 0.3
+   yaw_deadband = 5.0
+   do n = 1, nturbines
+      call turbine_yaw_controller(udir, dtcontrol, 1, turbines_in(n:n)%yaw, yawrate_max, yaw_deadband)
+!      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
+   enddo
    turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
 
 ! 2. Construct global actuator point locations and blade data stored in points_global(np)

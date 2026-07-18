@@ -23,7 +23,6 @@ boundary_closed_corners	m_boundary_closed_corners.F90	/^module
 boundary_closed_edges	m_boundary_closed_edges.F90	/^module
 boundary_ij_corner_kernel	m_boundary_ij_corner_kernel.F90	/^module
 boundary_i_closed_kernel	m_boundary_i_closed_kernel.F90	/^module
-boundary_i_inflow_edges	m_boundary_i_inflow_edges.F90	/^module
 boundary_i_inflow_kernel	m_boundary_i_inflow_kernel.F90	/^module
 boundary_i_j_edges	m_boundary_i_j_edges.F90	/^module
 boundary_i_k_edges	m_boundary_i_k_edges.F90	/^module
@@ -34,6 +33,8 @@ boundary_j_k_edges	m_boundary_j_k_edges.F90	/^module
 boundary_j_periodic_kernel	m_boundary_j_periodic_kernel.F90	/^module
 boundary_k_closed_kernel	m_boundary_k_closed_kernel.F90	/^module
 boundary_k_periodic_kernel	m_boundary_k_periodic_kernel.F90	/^module
+boundary_mixed_edges	m_boundary_mixed_edges.F90	/^module
+boundary_nongeneric_corners	m_boundary_nongeneric_corners.F90	/^module
 buoyancy_forcing	m_buoyancy_forcing.F90	/^module
 buoyancy_forcing_kernel	m_buoyancy_forcing_kernel.F90	/^module
 city	m_city.F90	/^module
@@ -109,7 +110,6 @@ m_boundary_closed_corners	m_boundary_closed_corners.F90	/^module
 m_boundary_closed_edges	m_boundary_closed_edges.F90	/^module
 m_boundary_ij_corner_kernel	m_boundary_ij_corner_kernel.F90	/^module
 m_boundary_i_closed_kernel	m_boundary_i_closed_kernel.F90	/^module
-m_boundary_i_inflow_edges	m_boundary_i_inflow_edges.F90	/^module
 m_boundary_i_inflow_kernel	m_boundary_i_inflow_kernel.F90	/^module
 m_boundary_i_j_edges	m_boundary_i_j_edges.F90	/^module
 m_boundary_i_k_edges	m_boundary_i_k_edges.F90	/^module
@@ -120,6 +120,8 @@ m_boundary_j_k_edges	m_boundary_j_k_edges.F90	/^module
 m_boundary_j_periodic_kernel	m_boundary_j_periodic_kernel.F90	/^module
 m_boundary_k_closed_kernel	m_boundary_k_closed_kernel.F90	/^module
 m_boundary_k_periodic_kernel	m_boundary_k_periodic_kernel.F90	/^module
+m_boundary_mixed_edges	m_boundary_mixed_edges.F90	/^module
+m_boundary_nongeneric_corners	m_boundary_nongeneric_corners.F90	/^module
 m_buoyancy_forcing	m_buoyancy_forcing.F90	/^module
 m_buoyancy_forcing_kernel	m_buoyancy_forcing_kernel.F90	/^module
 m_city	m_city.F90	/^module

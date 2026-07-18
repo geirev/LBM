@@ -24,7 +24,6 @@ F90SOURCE = \
 	m_boundarycond_pottemp.F90\
 	m_boundarycond_tracer.F90\
 	m_boundary_i_closed_kernel.F90\
-	m_boundary_i_inflow_edges.F90\
 	m_boundary_i_inflow_kernel.F90\
 	m_boundary_ij_corner_kernel.F90\
 	m_boundary_i_j_edges.F90\
@@ -36,6 +35,8 @@ F90SOURCE = \
 	m_boundary_j_periodic_kernel.F90\
 	m_boundary_k_closed_kernel.F90\
 	m_boundary_k_periodic_kernel.F90\
+	m_boundary_mixed_edges.F90\
+	m_boundary_nongeneric_corners.F90\
 	m_buoyancy_forcing.F90\
 	m_buoyancy_forcing_kernel.F90\
 	m_city2.F90\

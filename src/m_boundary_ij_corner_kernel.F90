@@ -26,13 +26,14 @@ subroutine boundary_ij_corner_kernel(f)
 #endif
 
       f(l,0,0,k) = 0.5 *  (f(l,0,1,k) + f(l,1,0,k))
-
       f(l,0,ny+1,k) = 0.5 * (f(l,0,ny,k) + f(l,1,ny+1,k))
-
       f(l,nx+1,0,k) = 0.5 * (f(l,nx+1,1,k) + f(l,nx,0,k))
-
       f(l,nx+1,ny+1,k) = 0.5 * (f(l,nx+1,ny,k) + f(l,nx,ny+1,k))
 
+!      f(l,0,0,k) = 0.25 * (f(l,0,1,k) + f(l,1,0,k) +  2.0*f(l,1,1,k))
+!      f(l,0,ny+1,k) = 0.25 * (f(l,0,ny,k) + f(l,1,ny+1,k) +  2.0*f(l,1,ny,k))
+!      f(l,nx+1,0,k) = 0.25 * (f(l,nx+1,1,k) + f(l,nx,0,k) + 2.0*f(l,nx,1,k))
+!      f(l,nx+1,ny+1,k) = 0.25 * (f(l,nx+1,ny,k) + f(l,nx,ny+1,k) + 2.0*f(l,nx,ny,k))
 #ifndef _CUDA
    enddo
    enddo

@@ -3,14 +3,15 @@ contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
-! Inflow / outflow boundary conditions in j-direction.
+subroutine boundary_j_inflow_kernel(f,uvel,udir,taperi,taperk)
+! Inflow/outflow boundary conditions in the j-direction.
 !
-!  - Inflow imposed at ghost plane j=0 using a Krüger-type formula
-!    based on interior values at j=1 and a prescribed velocity profile uvel(k).
-!  - A general y-bounce mapping is applied that does NOT assume any
-!    particular ordering of the D3Q27 directions.
-!  - Outflow at j=ny+1 uses simple zero-gradient extrapolation.
+!  - For positive uy, inflow is imposed at j=0 and outflow at j=ny+1.
+!  - For negative uy, inflow is imposed at j=ny+1 and outflow at j=0.
+!  - The inflow uses a Krüger-type reconstruction based on the adjacent
+!    interior plane and the prescribed velocity profile uvel(k).
+!  - A general opposite-direction mapping is applied using bounce(l).
+!  - Open outflow uses first-order zero-gradient extrapolation.
 
 #ifdef _CUDA
    use cudafor
@@ -24,21 +25,16 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
    real, intent(in)    :: taperi(nx)
    real, intent(in)    :: taperk(nz)
    real, value         :: udir
-   real, value         :: rho0
-   integer, value      :: ibnd
-   integer, value      :: kbnd
 
-   integer :: i,j,k,l,m,ka
-   real, parameter :: pi = 3.1415927410125732
+   integer :: i,k,l
+   real, parameter :: pi = acos(-1.0)
    real :: wl, cxl, cyl
    real :: uu
-   ! Local buffer for ghost distributions at j=0
-   real :: fghost(nl)
+   real :: fghost(nl) ! Local buffer for reconstructed ghost distributions
    real :: uxdir, uydir
-   real, parameter :: dir_tol = 1.0e-4
+   real, parameter :: dir_tol = 10.0*epsilon(1.0)
    real, parameter :: switch_tol = 0.02
-   real :: alphai, alphaj
-   j = 1   ! interior inflow plane
+   real :: alphaj, rholoc
 
 !------------------ Indexing (CUDA vs CPU) -------------------------
 #ifdef _CUDA
@@ -48,61 +44,50 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
    if (k < 1 .or. k > nz) return
 #else
 !$OMP PARALLEL DO COLLAPSE(2) &
-!$OMP& PRIVATE(i,k,l,m,ka,wl,cxl,cyl,uu,fghost,uxdir,uydir) &
-!$OMP& SHARED(f,uvel,rho0,udir,taperi,taperk)
+!$OMP& PRIVATE(i,k,l,wl,cxl,cyl,uu,fghost,uxdir,uydir,alphaj,rholoc) &
+!$OMP& SHARED(f,uvel,udir,taperi,taperk)
    do k = 1, nz
    do i = 1, nx
 #endif
       uxdir = cos(udir*pi/180.0)
       uydir = sin(udir*pi/180.0)
-      alphai = min(1.0, abs(uxdir)/switch_tol)
       alphaj = min(1.0, abs(uydir)/switch_tol)
-!      if (abs(uxdir) < dir_tol) uxdir = 0.0
-!      if (abs(uydir) < dir_tol) uydir = 0.0
 
-      !inflow at j=1 and outflow at j=ny
+! Inflow at ghost plane j=0; outflow at ghost plane j=ny+1
       if (uydir > dir_tol) then
-
 
          !-----------------------------------------------------------
          ! 1) Build "raw" inflow at ghost plane (j=0) using
          !    Krüger-type velocity condition based on interior f(i,1,k).
          !    Store temporarily in fghost(l) to avoid device aliasing issues.
          !-----------------------------------------------------------
-         ka = min(max(k,1), nz)
-         uu = uvel(ka)*taperi(i)*taperk(k)
+         uu = uvel(k)*taperi(i)*taperk(k)
 
+         rholoc = 0.0
+         do l = 1, nl
+            rholoc = rholoc + f(l,i,1,k)
+         enddo
+
+         ! Krüger-style correction:
+         !    fghost(l) = f(l,i,1,k) - 2 w rho (c·u)/cs2
          do l = 1, nl
             wl  = weights(l)
             cxl = real(cxs(l))
             cyl = real(cys(l))
-
-            ! Krüger-style correction:
-            !    fghost(l) = f(l,i,1,k) - 2 w rho (c·u)/cs2
-            fghost(l) = f(l,i,1,k) - 2.0 * wl * rho0 * &
-                        ( cxl*uu*uxdir + &
-                          cyl*uu*uydir ) / cs2
+            fghost(l) = f(l,i,1,k) - 2.0*wl*rholoc * (cxl*uu*uxdir + cyl*uu*uydir)/cs2
          enddo
 
          !-----------------------------------------------------------
          ! 2) General y-bounce mapping on ghost plane j=0
          !-----------------------------------------------------------
-         do l = 1, nl
+         do l = 1,nl
             if (cys(l) <= 0) then
-!               f(l,i,0,k) = fghost(l)
-               f(l,i,0,k) = alphaj*fghost(l) +  (1.0-alphaj)*f(l,i,1,k)
+               f(l,i,0,k) = alphaj*fghost(l) + (1.0-alphaj)*f(l,i,1,k)
             else
-               do m = 1, nl
-                  if (cxs(m) == -cxs(l) .and. &
-                      cys(m) == -cys(l) .and. &
-                      czs(m) == -czs(l)) then
-!                     f(l,i,0,k) = fghost(m)
-                     f(l,i,0,k) = alphaj*fghost(m) + (1.0-alphaj)*f(l,i,1,k)
-                     exit
-                  endif
-               enddo
+               f(l,i,0,k) = alphaj*fghost(bounce(l)) + (1.0-alphaj)*f(l,i,1,k)
             endif
          enddo
+
          !-----------------------------------------------------------
          ! 3) Outflow at j=ny+1: zero-gradient extrapolation
          !-----------------------------------------------------------
@@ -110,7 +95,7 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
             f(l,i,ny+1,k) = f(l,i,ny,k)
          enddo
 
-      !inflow at j=ny and outflow at j=1
+      ! Inflow at ghost plane j=ny+1; outflow at ghost plane j=0
       elseif (uydir < -dir_tol) then
 
          !-----------------------------------------------------------
@@ -118,8 +103,12 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
          !    Krüger-type velocity condition based on interior f(i,ny,k).
          !    Store temporarily in fghost(l) to avoid device aliasing issues.
          !-----------------------------------------------------------
-         ka = min(max(k,1), nz)
-         uu = uvel(ka)*taperi(i)*taperk(k)
+         uu = uvel(k)*taperi(i)*taperk(k)
+
+         rholoc = 0.0
+         do l = 1, nl
+            rholoc = rholoc + f(l,i,ny,k)
+         enddo
 
          do l = 1, nl
             wl  = weights(l)
@@ -128,30 +117,21 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
 
             ! Krüger-style correction:
             !    fghost(l) = f(l,i,ny,k) - 2 w rho (c·u)/cs2
-            fghost(l) = f(l,i,ny,k) - 2.0 * wl * rho0 * &
-                        ( cxl*uu*uxdir + &
-                          cyl*uu*uydir ) / cs2
+            fghost(l) = f(l,i,ny,k) - 2.0*wl*rholoc*(cxl*uu*uxdir + cyl*uu*uydir)/cs2
          enddo
 
          !-----------------------------------------------------------
          ! 2) General y-bounce mapping on ghost plane j=ny+1
          !-----------------------------------------------------------
-         do l = 1, nl
+
+         do l = 1,nl
             if (cys(l) >= 0) then
-!               f(l,i,ny+1,k) = fghost(l)
                f(l,i,ny+1,k) = alphaj*fghost(l) + (1.0-alphaj)*f(l,i,ny,k)
             else
-               do m = 1, nl
-                  if (cxs(m) == -cxs(l) .and. &
-                      cys(m) == -cys(l) .and. &
-                      czs(m) == -czs(l)) then
-!                     f(l,i,ny+1,k) = fghost(m)
-                     f(l,i,ny+1,k) = alphaj*fghost(m) +  (1.0-alphaj)*f(l,i,ny,k)
-                     exit
-                  endif
-               enddo
+               f(l,i,ny+1,k) = alphaj*fghost(bounce(l)) + (1.0-alphaj)*f(l,i,ny,k)
             endif
          enddo
+
 
          !-----------------------------------------------------------
          ! 3) Outflow at j=0: zero-gradient extrapolation
@@ -161,78 +141,17 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
          enddo
 
       else
+
          !-----------------------------------------------------------
-         ! 3) Outflow at j=ny+1: zero-gradient extrapolation
+         ! 3) The normal velocity is essentially zero. Use zero-gradient
+         !    extrapolation at both j-boundaries.
          !-----------------------------------------------------------
          do l = 1, nl
             f(l,i,ny+1,k) = f(l,i,ny,k)
-         enddo
-
-         !-----------------------------------------------------------
-         ! 3) Outflow at j=0: zero-gradient extrapolation
-         !-----------------------------------------------------------
-         do l = 1, nl
             f(l,i,0,k) = f(l,i,1,k)
          enddo
+
       endif
-
-!!      !-----------------------------------------------------------
-!!      ! 1) Build "raw" inflow at ghost plane (j=0) using
-!!      !    Krüger-type velocity condition based on interior f(i,1,k).
-!!      !    Store temporarily in fghost(l) to avoid device aliasing issues.
-!!      !-----------------------------------------------------------
-!!      ka = min(max(k,1), nz)
-!!      uu = uvel(ka)*taperi(i)*taperk(k)
-!!
-!!      do l = 1, nl
-!!         wl  = weights(l)
-!!         cxl = real(cxs(l))
-!!         cyl = real(cys(l))
-!!
-!!         ! Krüger-style correction:
-!!         !    fghost(l) = f(l,i,1,k) - 2 w rho (c·u)/cs2
-!!         fghost(l) = f(l,i,1,k) - 2.0 * wl * rho0 * &
-!!                     ( cxl*uu*cos(udir*pi/180.0) + &
-!!                       cyl*uu*sin(udir*pi/180.0) ) / cs2
-!!      enddo
-!!
-!!      !-----------------------------------------------------------
-!!      ! 2) General y-bounce mapping on ghost plane j=0
-!!      !
-!!      !    Idea (mimicking a tmp-swap logic in a robust way):
-!!      !    - for directions with cys <= 0: keep fghost(l) as is
-!!      !    - for directions with cys > 0 (incoming from ghost to fluid):
-!!      !         f(l,i,0,k) := fghost(l_opp)
-!!      !      where l_opp has cxs = -cxs(l),  cys=-cys(l), czs=-czs(l)
-!!      !      Of course we assume no vertical component to the inflow so the czs should not matter.
-!!      !
-!!      !    This gives "one-timestep bounce-back" behaviour for y,
-!!      !    without relying on even/odd indexing or pair ordering.
-!!      !-----------------------------------------------------------
-!!      do l = 1, nl
-!!         if (cys(l) <= 0) then
-!!            ! keep the Krüger-corrected value directly
-!!            f(l,i,0,k) = fghost(l)
-!!         else
-!!            ! find opposite direction in y
-!!            do m = 1, nl
-!!               if (cxs(m) == -cxs(l) .and. &
-!!                   cys(m) == -cys(l) .and. &
-!!                   czs(m) == -czs(l)) then
-!!                  f(l,i,0,k) = fghost(m)
-!!                  exit
-!!               endif
-!!            enddo
-!!         endif
-!!      enddo
-!!
-!!      !-----------------------------------------------------------
-!!      ! 3) Outflow at j=ny+1: zero-gradient extrapolation
-!!      !-----------------------------------------------------------
-!!      do l = 1, nl
-!!         f(l,i,ny+1,k) = f(l,i,ny,k)
-!!      enddo
-
 
 #ifndef _CUDA
    enddo
@@ -242,3 +161,4 @@ subroutine boundary_j_inflow_kernel(f,uvel,rho0,udir,ibnd,kbnd,taperi,taperk)
 
 end subroutine
 end module
+

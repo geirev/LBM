@@ -126,7 +126,7 @@ subroutine boundary_j_k_edges(f1,f2,opt)
       do l=1,nl
          if (cys(l) > 0 .and. czs(l) > 0) then
             do m=1,nl
-               if (cxs(m)== cxs(l) .and. &
+               if (cxs(m)== opt*cxs(l) .and. &
                    cys(m)==-cys(l) .and. &
                    czs(m)==-czs(l)) then
                   f1(m,i,ny+1,nz+1)=f2(l,i,ny+1,nz+1)

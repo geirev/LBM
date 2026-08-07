@@ -1,6 +1,6 @@
-module m_boundary_i_j_edges
+module m_boundary_edges_i_j
 contains
-subroutine boundary_i_j_edges(f1,f2,opt)
+subroutine boundary_edges_i_j(f1,f2,opt)
    use mod_dimensions
    use mod_D3Q27setup, only : nl, cxs, cys, czs
    implicit none

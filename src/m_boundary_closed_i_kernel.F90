@@ -1,9 +1,9 @@
-module m_boundary_i_closed_kernel
+module m_boundary_closed_i_kernel
 contains
 #ifdef _CUDA
    attributes(global) &
 #endif
-   subroutine boundary_i_closed_kernel(f1,f2,iplane,opt)
+   subroutine boundary_closed_i_kernel(f1,f2,iplane,opt)
 #ifdef _CUDA
       use cudafor
 #endif

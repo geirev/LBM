@@ -252,8 +252,8 @@ program LatticeBoltzmann
       call fequil3(fB,rho,u,v,w)
       call fillghosts(fB)
       fA=fB
-      call boundarycond(fB,fA,uvel)
-      call boundarycond(fA,fB,uvel)
+      call boundarycond(fB,fA,rho,uvel)
+      call boundarycond(fA,fB,rho,uvel)
 
       if (ntracer > 0) then
          call boundarycond_tracer(tracerA)
@@ -337,7 +337,7 @@ program LatticeBoltzmann
 ! [f1 and f2 updated with boundary conditions]
       uvel(:)=uvel_time(it)*uvel_shear(:)
       udir=udir_time(it)
-      call boundarycond(f1,f2,uvel)
+      call boundarycond(f1,f2,rho,uvel)
 
 #ifdef MPI
       call mpi_halo_exchange_j(f1,nl)

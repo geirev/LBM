@@ -1,9 +1,9 @@
-module m_boundary_k_periodic_kernel
+module m_boundary_periodic_k_kernel
 contains
 #ifdef _CUDA
    attributes(global)&
 #endif
-   subroutine boundary_k_periodic_kernel(f,nl)
+   subroutine boundary_periodic_k_kernel(f,nl)
 #ifdef _CUDA
    use cudafor
 #endif

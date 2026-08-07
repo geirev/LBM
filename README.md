@@ -38,6 +38,17 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 
 
 ## Release notes:
+### (Aug 2026): Significant rewrite of boundary conditions implementation and yaw control
+**Boundary conditions**
+  - Inflow/outflow in both i and j directions, allowing for time varying inflows with directions of 0-360 degrees.
+  - The implementation significantly improved with the help of Claude and ChatGPT to ensure consistency.
+  - Particularly the inflow/outflow routines are updated, and the corner treatment is now consistent with the inflow/outflow conditions.
+
+**Turbine yaw control**
+  - The turbine plane is now always orthogonal to the inflow wind direction, so a turbine will rotate with the wind direction.
+    Later I will implement local yaw control where the local wind direction upstream of a tubine is used to control each individual turbine.
+  
+
 ### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
 **Previous version**
   - As this release is a major upgrade, I may have introduced some issus. The previous operational code is stored under the ```version_gpu``` branch.

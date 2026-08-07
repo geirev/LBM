@@ -1,6 +1,6 @@
-module m_boundary_closed_corners
+module m_boundary_corner_closed
 contains
-subroutine boundary_closed_corners(f1,f2,opt)
+subroutine boundary_corner_closed(f1,f2,opt)
    use mod_dimensions,    only: nx,ny,nz
    use mod_D3Q27setup,    only: cxs,cys,czs,nl
    implicit none

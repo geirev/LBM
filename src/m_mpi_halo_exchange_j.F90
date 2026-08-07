@@ -89,7 +89,7 @@ subroutine mpi_halo_exchange_j(f,nl)
    call MPI_Waitall(4, req, MPI_STATUSES_IGNORE, ierr)
 
 #ifdef _CUDA
-!   istat2 = cudaDeviceSynchronize()
+   istat2 = cudaDeviceSynchronize()
 #endif
 
 !!!!!!!!!!!!!!!!!!! South unpack

@@ -4,66 +4,59 @@
 !   ibnd/jbnd/kbnd = 0 periodic, 1 open inflow/outflow, 11:22 closed.
 !   Open inflow/outflow is implemented only in i and j.
 !   Closed face kernels operate on face interiors only.
-!   Existing closed-closed edge kernels are retained.
 !
-! Required corrected existing modules:
-!   m_boundary_i_inflow_kernel
-!   m_boundary_j_inflow_kernel
-!   m_boundary_i_periodic_kernel
-!   m_boundary_j_periodic_kernel
-!   m_boundary_k_periodic_kernel
-!   m_boundary_i_closed_kernel
-!   m_boundary_j_closed_kernel
-!   m_boundary_k_closed_kernel
-!   m_boundary_i_j_edges
-!   m_boundary_i_k_edges
-!   m_boundary_j_k_edges
-!   m_boundary_closed_corners
 !
 module m_boundarycond
 contains
-subroutine boundarycond(f1,f2,uvel)
+subroutine boundarycond(f1,f2,rho,uvel)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
-   use m_readinfile, only : ibnd,jbnd,kbnd,rho0,udir
+   use m_readinfile, only : ibnd,jbnd,kbnd,udir,rho0
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
+#ifdef MPI
+   use mpi
+   use m_mpi_decomp_init, only : north, south
+#endif
    use m_wtime
 
-   use m_boundary_i_inflow_kernel
-   use m_boundary_j_inflow_kernel
-   use m_boundary_ij_corner_kernel
+   use m_boundary_inflow_i_kernel
+   use m_boundary_inflow_j_kernel
+   use m_boundary_inflow_edges_ij_kernel
 
-   use m_boundary_i_periodic_kernel
-   use m_boundary_j_periodic_kernel
-   use m_boundary_k_periodic_kernel
+   use m_boundary_periodic_i_kernel
+   use m_boundary_periodic_j_kernel
+   use m_boundary_periodic_k_kernel
 
-   use m_boundary_i_closed_kernel
-   use m_boundary_j_closed_kernel
-   use m_boundary_k_closed_kernel
+   use m_boundary_closed_i_kernel
+   use m_boundary_closed_j_kernel
+   use m_boundary_closed_k_kernel
 
-   use m_boundary_i_j_edges
-   use m_boundary_i_k_edges
-   use m_boundary_j_k_edges
-   use m_boundary_closed_corners
+   use m_boundary_edges_i_j
+   use m_boundary_edges_i_k
+   use m_boundary_edges_j_k
+   use m_boundary_edges_mixed
 
-   use m_boundary_mixed_edges
-   use m_boundary_nongeneric_corners
+   use m_boundary_corner_closed
+   use m_boundary_corner_nongeneric
 
    implicit none
    real, intent(inout) :: f1(nl,0:nx+1,0:ny+1,0:nz+1)
    real, intent(inout) :: f2(nl,0:nx+1,0:ny+1,0:nz+1)
+   real, intent(in)    :: rho(0:nx+1,0:ny+1,0:nz+1)
    real, intent(in)    :: uvel(nz)
 
-   real :: taperi(nx),taperj(ny),taperk(nz)
 #ifdef _CUDA
-   attributes(device) :: f1,f2,uvel,taperi,taperj,taperk
+   attributes(device) :: f1,f2,uvel,rho
    integer :: tx,ty,tz,bx,by,bz
 #endif
    integer, parameter :: icpu=11
    integer :: opt_i1,opt_iN,opt_j1,opt_jN,opt_k1,opt_kN
    integer :: opt_ij,opt_ik,opt_jk,opt_ijk
+   real, parameter :: pi=acos(-1.0)
+   real, parameter :: rho_relax=0.6
+   logical j0_is_phys, jN_is_phys
 
    call cpustart()
 
@@ -73,9 +66,14 @@ subroutine boundarycond(f1,f2,uvel)
    call decode_closed(jbnd,opt_j1,opt_jN)
    call decode_closed(kbnd,opt_k1,opt_kN)
 
-   taperi = 1.0
-   taperj = 1.0
-   taperk = 1.0
+#ifdef MPI
+      j0_is_phys = (south == MPI_PROC_NULL)
+      jN_is_phys = (north == MPI_PROC_NULL)
+#else
+      j0_is_phys = .true.
+      jN_is_phys = .true.
+#endif
+
 
    !-----------------------------------------------------------------
    ! 1. Preliminary periodic sweep.
@@ -92,12 +90,13 @@ subroutine boundarycond(f1,f2,uvel)
       ty=8;   by=(ny+ty-1)/ty
       tz=8;   bz=(nz+tz-1)/tz
 #endif
-      call boundary_i_inflow_kernel&
+      call boundary_inflow_i_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,udir,taperj,taperk)
+      &(f1,uvel,udir,rho0,rho_relax)
    endif
+
 
    if (jbnd == 1) then
 #ifdef _CUDA
@@ -105,11 +104,11 @@ subroutine boundarycond(f1,f2,uvel)
       ty=8;   by=(nx+ty-1)/ty
       tz=8;   bz=(nz+tz-1)/tz
 #endif
-      call boundary_j_inflow_kernel&
+      call boundary_inflow_j_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,udir,taperi,taperk)
+      &(f1,uvel,udir,rho0,rho_relax,j0_is_phys,jN_is_phys)
    endif
 
    ! Open-open i-j corner lines, k=1:nz.
@@ -118,11 +117,11 @@ subroutine boundarycond(f1,f2,uvel)
       tx=32; bx=(nl+tx-1)/tx
       ty=4;  by=(nz+ty-1)/ty
 #endif
-      call boundary_ij_corner_kernel&
+      call boundary_inflow_edges_ij_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,1),dim3(tx,ty,1)>>>&
 #endif
-      &(f1)
+      &(f1,uvel,udir,rho0,rho_relax)
    endif
 
    !-----------------------------------------------------------------
@@ -134,13 +133,13 @@ subroutine boundarycond(f1,f2,uvel)
       ty=nty; by=(ny+ty-1)/ty
       tz=ntz; bz=(nz+tz-1)/tz
 #endif
-      call boundary_i_closed_kernel&
+      call boundary_closed_i_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
       &(f1,f2,1,opt_i1)
 
-      call boundary_i_closed_kernel&
+      call boundary_closed_i_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
@@ -153,13 +152,13 @@ subroutine boundarycond(f1,f2,uvel)
       ty=1;   by=1
       tz=ntz; bz=(nz+tz-1)/tz
 #endif
-      call boundary_j_closed_kernel&
+      call boundary_closed_j_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
       &(f1,f2,1,opt_j1)
 
-      call boundary_j_closed_kernel&
+      call boundary_closed_j_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
@@ -172,13 +171,13 @@ subroutine boundarycond(f1,f2,uvel)
       ty=nty; by=(ny+ty-1)/ty
       tz=1;   bz=1
 #endif
-      call boundary_k_closed_kernel&
+      call boundary_closed_k_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
       &(f1,f2,1,opt_k1)
 
-      call boundary_k_closed_kernel&
+      call boundary_closed_k_kernel&
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
@@ -194,25 +193,25 @@ subroutine boundarycond(f1,f2,uvel)
    opt_ik = merge(+1,-1,ibnd==22 .and. kbnd==22)
    opt_jk = merge(+1,-1,jbnd==22 .and. kbnd==22)
 
-   if (ibnd>10 .and. jbnd>10) call boundary_i_j_edges(f1,f2,opt_ij)
-   if (ibnd>10 .and. kbnd>10) call boundary_i_k_edges(f1,f2,opt_ik)
-   if (jbnd>10 .and. kbnd>10) call boundary_j_k_edges(f1,f2,opt_jk)
+   if (ibnd>10 .and. jbnd>10) call boundary_edges_i_j(f1,f2,opt_ij)
+   if (ibnd>10 .and. kbnd>10) call boundary_edges_i_k(f1,f2,opt_ik)
+   if (jbnd>10 .and. kbnd>10) call boundary_edges_j_k(f1,f2,opt_jk)
 
    !-----------------------------------------------------------------
    ! 5. Mixed open-closed edges. Extrapolate the already completed
    !    closed edge along the open-boundary normal. This preserves the
    !    closed-wall reflection and avoids stale ghost populations.
    !-----------------------------------------------------------------
-   call boundary_mixed_edges(f1,ibnd,jbnd,kbnd)
+   call boundary_edges_mixed(f1,ibnd,jbnd,kbnd,j0_is_phys,jN_is_phys)
 
    !-----------------------------------------------------------------
    ! 6. Three-closed-wall corners.
    !-----------------------------------------------------------------
    if (ibnd>10 .and. jbnd>10 .and. kbnd>10) then
       opt_ijk = merge(+1,-1,ibnd==22 .and. jbnd==22 .and. kbnd==22)
-      call boundary_closed_corners(f1,f2,opt_ijk)
+      call boundary_corner_closed(f1,f2,opt_ijk)
    else
-      call boundary_nongeneric_corners(f1,ibnd,jbnd,kbnd)
+      call boundary_corner_nongeneric(f1,uvel,udir,rho0,rho_relax,ibnd,jbnd,kbnd,j0_is_phys,jN_is_phys)
    endif
 
    !-----------------------------------------------------------------
@@ -250,7 +249,7 @@ contains
          ty=32; by=(ny+2+ty-1)/ty
          tz=8;  bz=(nz+2+tz-1)/tz
 #endif
-         call boundary_i_periodic_kernel&
+         call boundary_periodic_i_kernel&
 #ifdef _CUDA
          &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
@@ -262,7 +261,7 @@ contains
          ty=1;   by=1
          tz=1;   bz=(nz+2+tz-1)/tz
 #endif
-         call boundary_j_periodic_kernel&
+         call boundary_periodic_j_kernel&
 #ifdef _CUDA
          &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
@@ -274,7 +273,7 @@ contains
          ty=1;   by=(ny+2+ty-1)/ty
          tz=1;   bz=1
 #endif
-         call boundary_k_periodic_kernel&
+         call boundary_periodic_k_kernel&
 #ifdef _CUDA
          &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif

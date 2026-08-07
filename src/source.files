@@ -18,25 +18,24 @@ F90SOURCE = \
 	m_averaging_sec_kernelfin2.F90\
 	m_bilin.F90\
 	m_bilin_gpu.F90\
-	m_boundary_closed_corners.F90\
-	m_boundary_closed_edges.F90\
+	m_boundary_closed_i_kernel.F90\
+	m_boundary_closed_j_kernel.F90\
+	m_boundary_closed_k_kernel.F90\
 	m_boundarycond.F90\
 	m_boundarycond_pottemp.F90\
 	m_boundarycond_tracer.F90\
-	m_boundary_i_closed_kernel.F90\
-	m_boundary_i_inflow_kernel.F90\
-	m_boundary_ij_corner_kernel.F90\
-	m_boundary_i_j_edges.F90\
-	m_boundary_i_k_edges.F90\
-	m_boundary_i_periodic_kernel.F90\
-	m_boundary_j_closed_kernel.F90\
-	m_boundary_j_inflow_kernel.F90\
-	m_boundary_j_k_edges.F90\
-	m_boundary_j_periodic_kernel.F90\
-	m_boundary_k_closed_kernel.F90\
-	m_boundary_k_periodic_kernel.F90\
-	m_boundary_mixed_edges.F90\
-	m_boundary_nongeneric_corners.F90\
+	m_boundary_corner_closed.F90\
+	m_boundary_corner_nongeneric.F90\
+	m_boundary_edges_i_j.F90\
+	m_boundary_edges_i_k.F90\
+	m_boundary_edges_j_k.F90\
+	m_boundary_edges_mixed.F90\
+	m_boundary_inflow_edges_ij_kernel.F90\
+	m_boundary_inflow_i_kernel.F90\
+	m_boundary_inflow_j_kernel.F90\
+	m_boundary_periodic_i_kernel.F90\
+	m_boundary_periodic_j_kernel.F90\
+	m_boundary_periodic_k_kernel.F90\
 	m_buoyancy_forcing.F90\
 	m_buoyancy_forcing_kernel.F90\
 	m_city2.F90\
@@ -72,6 +71,12 @@ F90SOURCE = \
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
+	m_mpi_decomp_finalize.F90\
+	m_mpi_decomp_init.F90\
+	m_mpi_halo_buffers.F90\
+	m_mpi_halo_exchange_j.F90\
+	m_mpi_pack_jplane.F90\
+	m_mpi_unpack_jplane.F90\
 	m_netcdfout.F90\
 	m_nrelliftdrag.F90\
 	m_nrelreadfoil.F90\

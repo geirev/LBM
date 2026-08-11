@@ -120,8 +120,9 @@ F90SOURCE = \
 	m_turbine_extend_array.F90\
 	m_turbine_forcing.F90\
 	m_turbine_initialize.F90\
-	m_turbine_interpolation.F90\
-	m_turbine_point_forces.F90\
+	m_turbine_interpolate_velocity.F90\
+	m_turbine_local_wind.F90\
+	m_turbine_local_wind_kernel.F90\
 	m_turbine_point_forces_gpu.F90\
 	m_turbine_point_forces_kernel.F90\
 	m_turbine_rotor_basis.F90\

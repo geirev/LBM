@@ -46,8 +46,8 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 
 **Turbine yaw control**
   - The turbine plane is now always orthogonal to the inflow wind direction, so a turbine will rotate with the wind direction.
-    Later I will implement local yaw control where the local wind direction upstream of a tubine is used to control each individual turbine.
-  
+  - Each turbine uses a local yaw control where the local wind direction upstream of a tubine is used to control each individual turbine.
+  - Check the documentation in m_turbine_forcing.F90 for detailed information
 
 ### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
 **Previous version**

@@ -29,6 +29,17 @@ subroutine turbine_initialize()
    integer :: n
    real    :: radius, omega
 
+! Upstream tubine velocity filtering
+   allocate(uavg_f(nturbines))
+   allocate(vavg_f(nturbines))
+   allocate(wavg_f(nturbines))
+   allocate(windfilter_initialized(nturbines))
+   uavg_f = 0.0
+   vavg_f = 0.0
+   wavg_f = 0.0
+   windfilter_initialized = .false.
+
+
    if (.not. allocated(turbines))  allocate(turbines(nturbines))
 
    ! Rotation speed in radians / second

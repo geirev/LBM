@@ -16,7 +16,7 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
    real tmp,t
    integer nrtdata
    real, allocatable :: tdata(:),uvel_tdata(:),udir_tdata(:)
-   real, parameter   :: pi=3.1415927410125732
+   real, parameter   :: pi=acos(-1.0)
    real,    dimension(:),       allocatable :: uvel_h      ! temporary vertical u-velocity profile on host
    real dangle
 

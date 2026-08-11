@@ -20,7 +20,7 @@ contains
    real, value       :: stddev
    real, value       :: rho0
 
-   real, parameter   :: pi=3.1415927410125732
+   real, parameter :: pi=acos(-1.0)
    integer :: i, j, k
 
 #ifdef _CUDA

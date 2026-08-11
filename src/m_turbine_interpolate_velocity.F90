@@ -1,37 +1,11 @@
 !==============================================================
-!  m_turbine_interpolation.F90
 !  Velocity & density interpolation (CPU/GPU unified)
 !==============================================================
-module m_turbine_interpolation
+module m_turbine_interpolate_velocity
    use mod_dimensions, only : nx, ny, nz
    use mod_turbines,   only : pi
    implicit none
 contains
-
-!--------------------------------------------------------------
-!  function turbine_trilinear
-!
-!  PURPOSE:
-!    Trilinear interpolation of a scalar given its 8 corner
-!    values and local fractional offsets fx, fy, fz.
-!
-!  NOTE:
-!    Marked host/device so it can be called from both CPU and
-!    CUDA kernels.
-!--------------------------------------------------------------
-#ifdef _CUDA
-attributes(host,device) &
-#endif
-real function turbine_trilinear(c000,c100,c010,c110,c001,c101,c011,c111,fx,fy,fz)
-   implicit none
-   real, intent(in) :: c000,c100,c010,c110,c001,c101,c011,c111
-   real, intent(in) :: fx,fy,fz
-
-   turbine_trilinear = c000*(1-fx)*(1-fy)*(1-fz) + c100*fx*(1-fy)*(1-fz) + &
-                       c010*(1-fx)*fy*(1-fz)     + c110*fx*fy*(1-fz)     + &
-                       c001*(1-fx)*(1-fy)*fz     + c101*fx*(1-fy)*fz     + &
-                       c011*(1-fx)*fy*fz         + c111*fx*fy*fz
-end function turbine_trilinear
 
 
 !--------------------------------------------------------------
@@ -73,25 +47,35 @@ subroutine turbine_interpolate_velocity(u,v,w,rho, xg,yg,zg, j_start, ux,uy,uz,d
    real    :: fx, fy, fz
    real    :: c000,c100,c010,c110,c001,c101,c011,c111
 
-   ! Global integer indices
+   ! Global integer indices (unclamped)
    ig = floor(xg)
    jg = floor(yg)
    kg = floor(zg)
-
-   ! Fractional offsets
-   fx = xg - real(ig)
-   fy = yg - real(jg)
-   fz = zg - real(kg)
 
    ! Global -> local tile index in j
    j = jg - j_start + 1
    i = ig
    k = kg
 
-   ! Clamp into interior region
+   ! Clamp the BASE stencil index into the valid interior range first
    i = max(1, min(nx-1, i))
    j = max(1, min(ny-1, j))
    k = max(1, min(nz-1, k))
+
+   ! Fractional offsets computed from the SAME clamped base index used
+   ! for the stencil, then clamped to [0,1]. This makes points outside
+   ! the domain extrapolate flatly from the boundary cell instead of
+   ! being interpolated with a fraction that belongs to a different,
+   ! unclamped cell.
+
+   ! Compute offsets consistently against the clamped indices:
+   fx = xg - real(i)
+   fy = (yg - real(j_start - 1)) - real(j)
+   fz = zg - real(k)
+
+   fx = max(0.0, min(1.0, fx))
+   fy = max(0.0, min(1.0, fy))
+   fz = max(0.0, min(1.0, fz))
 
    ! u
    c000=u(i,j,k);   c100=u(i+1,j,k);   c010=u(i,j+1,k);   c110=u(i+1,j+1,k)
@@ -114,4 +98,29 @@ subroutine turbine_interpolate_velocity(u,v,w,rho, xg,yg,zg, j_start, ux,uy,uz,d
    dens = turbine_trilinear(c000,c100,c010,c110,c001,c101,c011,c111,fx,fy,fz)
 end subroutine turbine_interpolate_velocity
 
-end module m_turbine_interpolation
+!--------------------------------------------------------------
+!  function turbine_trilinear
+!
+!  PURPOSE:
+!    Trilinear interpolation of a scalar given its 8 corner
+!    values and local fractional offsets fx, fy, fz.
+!
+!  NOTE:
+!    Marked host/device so it can be called from both CPU and
+!    CUDA kernels.
+!--------------------------------------------------------------
+#ifdef _CUDA
+attributes(host,device) &
+#endif
+real function turbine_trilinear(c000,c100,c010,c110,c001,c101,c011,c111,fx,fy,fz)
+   implicit none
+   real, intent(in) :: c000,c100,c010,c110,c001,c101,c011,c111
+   real, intent(in) :: fx,fy,fz
+
+   turbine_trilinear = c000*(1-fx)*(1-fy)*(1-fz) + c100*fx*(1-fy)*(1-fz) + &
+                       c010*(1-fx)*fy*(1-fz)     + c110*fx*fy*(1-fz)     + &
+                       c001*(1-fx)*(1-fy)*fz     + c101*fx*(1-fy)*fz     + &
+                       c011*(1-fx)*fy*fz         + c111*fx*fy*fz
+end function turbine_trilinear
+
+end module m_turbine_interpolate_velocity

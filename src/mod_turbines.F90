@@ -61,5 +61,9 @@ module mod_turbines
 
 ! point block limits (not used yet)
    integer t_imin,t_imax,t_jmin,t_jmax,t_kmin,t_kmax
+
+! variables for time filtered local upstream velocities for each turbine
+   real, allocatable, save :: uavg_f(:), vavg_f(:), wavg_f(:)
+   logical, allocatable, save :: windfilter_initialized(:)
 end module mod_turbines
 

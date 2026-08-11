@@ -39,7 +39,7 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    real, allocatable    :: y(:,:)   ! Physical field
    complex, allocatable :: x(:,:)   ! Fourier amplitudes
 
-   real, parameter :: pi=3.141592653589
+   real, parameter :: pi=acos(-1.0)
    logical lm
    real e
 

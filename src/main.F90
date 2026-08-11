@@ -314,7 +314,7 @@ program LatticeBoltzmann
 
 ! External forcing
       external_forcing=0.0
-      if (nturbines > 0)      call turbine_forcing(external_forcing, turbines, rho, u, v, w)
+      if (nturbines > 0)      call turbine_forcing(external_forcing, turbines, rho, u, v, w, it)
       if (iablvisc == 2)      call buoyancy_forcing(external_forcing,p1)
 
 ! [turbulence_df = turbulenceforcing(rho,u,v,w)]

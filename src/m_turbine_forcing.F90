@@ -1,3 +1,160 @@
+!-----------------------------------------------------------------------
+! Turbine forcing and yaw control
+!-----------------------------------------------------------------------
+! This routine computes the actuator-line turbine forcing and updates the
+! yaw angle of each turbine using the locally resolved upstream wind.
+!
+! The main sequence is:
+!
+!   1. Local wind measurement and yaw control
+!   2. Update rotor azimuth
+!   3. Rebuild global actuator-point locations
+!   4. Compute actuator-point forces
+!   5. Combine point forces across MPI tiles
+!   6. Deposit the smoothed turbine forces onto the local CFD grid
+!
+!-----------------------------------------------------------------------
+! 1. Local wind measurement and yaw control
+!-----------------------------------------------------------------------
+! The yaw controller uses the locally resolved wind direction rather than
+! the externally imposed inflow direction.
+!
+! The controller is executed approximately every dtcontrol seconds:
+!
+!      ncontrol        = nint(dtcontrol/p2l%time)
+!      dtcontrol_actual = ncontrol*p2l%time
+!
+! The actual controller interval dtcontrol_actual is used in both the
+! low-pass filter and the yaw-rate limiter.
+!
+! For each turbine, turbine_local_wind() evaluates the velocity over a
+! circular sampling disk:
+!
+!   - centered on the turbine axis,
+!   - parallel to the current rotor plane,
+!   - located 1 rotor diameter upstream,
+!   - with diameter equal to the rotor diameter,
+!   - discretized using nsrad=6 radial sampling intervals.
+!
+! The routine returns the disk-averaged velocity components
+!
+!      uavg, vavg, wavg
+!
+! together with the mean speed, instantaneous horizontal wind direction,
+! and velocity normal to the rotor plane.
+!
+! The local measurement therefore accounts for spatial variations in the
+! resolved flow caused by wakes, blockage, and other turbine interactions.
+!
+!-----------------------------------------------------------------------
+! Low-pass filtering
+!-----------------------------------------------------------------------
+! The disk-averaged velocity components are filtered independently using
+! a first-order exponential low-pass filter:
+!
+!      q_f = q_f + alpha*(q-q_f)
+!
+! with
+!
+!      alpha = dtcontrol_actual/(filter_time + dtcontrol_actual)
+!
+! where filter_time is the filter time constant in physical seconds.
+!
+! The current setting is
+!
+!      filter_time = 5.0 s
+!
+! On the first controller update, the filtered velocity is initialized
+! directly from the first local-wind measurement to avoid a transient
+! associated with initialization from zero.
+!
+! The wind direction is calculated AFTER filtering:
+!
+!      winddir = atan2(vavg_f,uavg_f)
+!
+! This avoids angular averaging and the associated discontinuity at
+! +/-180 or 0/360 degrees.
+!
+! winddir is converted from radians to degrees before being passed to
+! turbine_yaw_controller().
+!
+!-----------------------------------------------------------------------
+! Yaw controller
+!-----------------------------------------------------------------------
+! turbine_yaw_controller() changes each turbine yaw angle subject to:
+!
+!      yawrate_max  = 0.3 deg/s
+!      yaw_deadband = 5.0 deg
+!
+! The controller therefore:
+!
+!   - ignores yaw errors within the deadband,
+!   - limits yaw motion to yawrate_max,
+!   - aligns each turbine gradually with its filtered local wind direction.
+!
+! Internally, turbine yaw is stored in radians, while winddir,
+! yawrate_max, and yaw_deadband are supplied to the controller in degrees.
+!
+!-----------------------------------------------------------------------
+! MPI/GPU treatment of local wind
+!-----------------------------------------------------------------------
+! The macroscopic fields rho,u,v,w remain on the GPU.
+!
+! Each MPI tile evaluates only the part of the upstream sampling disk
+! belonging to its local j-domain. The local velocity sums and number of
+! valid sampling points are combined with MPI_Allreduce so that all MPI
+! ranks obtain the same disk-averaged wind for each turbine.
+!
+! Consequently, each MPI rank obtains the same yaw update and the turbine
+! geometry remains synchronized across tiles.
+!
+!-----------------------------------------------------------------------
+! 2. Rotor azimuth
+!-----------------------------------------------------------------------
+! The blade azimuth is advanced according to the nondimensional angular
+! velocity stored for each turbine:
+!
+!      theta = theta + omegand
+!
+!-----------------------------------------------------------------------
+! 3. Actuator-point locations
+!-----------------------------------------------------------------------
+! turbine_distribute_points() rebuilds the actuator-point coordinates
+! using the current turbine yaw, tilt, azimuth, and blade geometry.
+!
+!-----------------------------------------------------------------------
+! 4. Actuator-point forces
+!-----------------------------------------------------------------------
+! turbine_point_forces_gpu() interpolates the local flow at each actuator
+! point and computes the corresponding blade-force vector.
+!
+! Under MPI, each tile contributes only for actuator points whose
+! interpolation stencil belongs to that tile.
+!
+!-----------------------------------------------------------------------
+! 5. MPI force reduction
+!-----------------------------------------------------------------------
+! MPI_Allreduce sums the partial actuator-point forces from all MPI tiles,
+! producing one global force vector for every actuator point.
+!
+!-----------------------------------------------------------------------
+! 6. Force deposition
+!-----------------------------------------------------------------------
+! The global actuator-point forces are distributed onto the CFD grid using
+! the turbine-force deposition routine. Under CUDA this operation is
+! performed directly on the GPU.
+!
+!-----------------------------------------------------------------------
+! Alternative yaw specification
+!-----------------------------------------------------------------------
+! For testing, local yaw control can be bypassed and the turbine yaw can
+! instead be aligned directly with the externally imposed wind direction:
+!
+!      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
+!
+! This is useful for comparison with the local-wind yaw controller.
+!-----------------------------------------------------------------------
+
 module m_turbine_forcing
 contains
 pure real function wrap_180(angle)
@@ -8,23 +165,24 @@ pure real function wrap_180(angle)
 
 end function wrap_180
 
-!      1) Update rotor azimuth theta
-!      2) Rebuild global actuator point locations
-!      3) Compute per-point forces (CPU or GPU)
-!      4) MPI_Allreduce to accumulate tile contributions
-!      5) Deposit smoothed forces on local F_turb
-subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
+!      1) Compute local upstream wind and update turbine yaw
+!      2) Update rotor azimuth theta
+!      3) Rebuild global actuator point locations
+!      4) Compute per-point forces (CPU or GPU)
+!      5) MPI_Allreduce to accumulate tile contributions
+!      6) Deposit smoothed forces on local external_forcing
+subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimestep)
 #ifdef MPI
    use mpi
 #endif
    use mod_dimensions, only : nx, ny, nz, nyg
-   use m_readinfile, only : udir,nturbines
-   use mod_turbines, only : turbine_t,point_t,points_global
+   use m_readinfile, only : udir,nturbines,p2l
+   use mod_turbines, only : turbine_t,point_t,points_global, uavg_f, vavg_f, wavg_f,windfilter_initialized
 
+   use m_turbine_local_wind
    use m_turbine_yaw_controller
    use m_turbine_distribute_points
    use m_turbine_point_forces_gpu
-   use m_turbine_point_forces
 
    use m_turbine_deposit
    use m_turbine_deposit_gpu
@@ -68,13 +226,67 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 #ifndef MPI
    integer :: mpi_rank=0
 #endif
-   real, parameter :: pi=3.141592653589
+   real, parameter :: pi=acos(-1.0)
    real, parameter :: pi2=2.0*pi
-   integer n
-   real  yawrate_max,yaw_deadband,dtcontrol
-
+   integer n,ncontrol,itimestep
+   real yawrate_max,yaw_deadband
+   real uavg, vavg, wavg, speed, winddir, unormal
+   real filter_time,dtcontrol,dtcontrol_actual,alpha
 
    call cpustart()
+
+
+   dtcontrol = 1.0
+   ncontrol = max(1,nint(dtcontrol/p2l%time))
+
+! Actual controller interval represented by ncontrol model steps
+   dtcontrol_actual = real(ncontrol)*p2l%time
+
+   yawrate_max  = 0.3
+   yaw_deadband = 5.0
+   filter_time=5.0
+
+   alpha = dtcontrol_actual/(filter_time + dtcontrol_actual)
+
+   if (mod(itimestep,ncontrol) == 0) then
+
+      do n = 1,nturbines
+
+         call turbine_local_wind(turbines_in(n),u,v,w,rho, &
+                                 1.0,6, &
+                                 uavg,vavg,wavg,speed,winddir,unormal)
+
+         if (.not. windfilter_initialized(n)) then
+
+            ! Initialize from the first actual wind measurement.
+            uavg_f(n) = uavg
+            vavg_f(n) = vavg
+            wavg_f(n) = wavg
+
+            windfilter_initialized(n) = .true.
+
+         else
+            ! First-order low-pass filter.
+            uavg_f(n) = uavg_f(n) + alpha*(uavg-uavg_f(n))
+            vavg_f(n) = vavg_f(n) + alpha*(vavg-vavg_f(n))
+            wavg_f(n) = wavg_f(n) + alpha*(wavg-wavg_f(n))
+         endif
+
+         ! Compute direction from the FILTERED velocity components.
+         winddir = atan2(vavg_f(n),uavg_f(n))*360.0/pi2
+
+!         winddir = atan2(vavg,uavg)*360.0/pi2
+
+         call turbine_yaw_controller(winddir,dtcontrol_actual,1, &
+              turbines_in(n:n)%yaw,yawrate_max,yaw_deadband)
+
+!!! Using the externally imposed wind direction
+!!!      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
+
+      enddo
+
+   endif
+
 ! 1. Update turbine azimuth
 !  if (tipspeed /= 0.0) then
 !     compute new turbrpm for each turbine
@@ -84,13 +296,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w)
 !        turbines(n)%omegand    = omega * p2l%time
 !     enddo
 !  endif
-   dtcontrol=1.0
-   yawrate_max  = 0.3
-   yaw_deadband = 5.0
-   do n = 1, nturbines
-!      call turbine_yaw_controller(udir, dtcontrol, 1, turbines_in(n:n)%yaw, yawrate_max, yaw_deadband)
-      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
-   enddo
+
+
    turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
 
 ! 2. Construct global actuator point locations and blade data stored in points_global(np)

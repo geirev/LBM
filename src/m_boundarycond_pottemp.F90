@@ -14,7 +14,7 @@ subroutine boundarycond_pottemp(pottemp)
    implicit none
    real, intent(inout):: pottemp(0:nx+1,0:ny+1,0:nz+1)
 
-   real, parameter   :: pi=3.1415927410125732
+   real, parameter   :: pi=acos(-1.0)
 #ifdef _CUDA
    attributes(device) :: pottemp
 #endif

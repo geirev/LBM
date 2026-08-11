@@ -61,7 +61,7 @@ subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd
    cosphi = cos(phi)
 
    ! Lift and drag decomposition in (e_axis, e_tan) plane
-   Fvec = L * (cosphi * e_axis + sinphi * e_tan) - &
+   Fvec = L * (cosphi * e_axis + sinphi * e_tan) + &
           D * (sinphi * e_axis - cosphi * e_tan)
 end subroutine
 end module

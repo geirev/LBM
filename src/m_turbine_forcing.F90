@@ -176,7 +176,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    use mpi
 #endif
    use mod_dimensions, only : nx, ny, nz, nyg
-   use m_readinfile, only : udir,nturbines,p2l
+   use m_readinfile, only : udir,nturbines,p2l,localwind,dtcontrol,yawrate_max,yaw_deadband,filter_time
+
    use mod_turbines, only : turbine_t,point_t,points_global, uavg_f, vavg_f, wavg_f,windfilter_initialized
 
    use m_turbine_local_wind
@@ -229,22 +230,18 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    real, parameter :: pi=acos(-1.0)
    real, parameter :: pi2=2.0*pi
    integer n,ncontrol,itimestep
-   real yawrate_max,yaw_deadband
    real uavg, vavg, wavg, speed, winddir, unormal
-   real filter_time,dtcontrol,dtcontrol_actual,alpha
+   real dtcontrol_actual,alpha
 
    call cpustart()
 
 
-   dtcontrol = 1.0
+! Target controller interval in seconds and number of time steps per approximate second
    ncontrol = max(1,nint(dtcontrol/p2l%time))
 
-! Actual controller interval represented by ncontrol model steps
+! Actual controller interval in seconds represented by ncontrol model steps
    dtcontrol_actual = real(ncontrol)*p2l%time
 
-   yawrate_max  = 0.3
-   yaw_deadband = 5.0
-   filter_time=5.0
 
    alpha = dtcontrol_actual/(filter_time + dtcontrol_actual)
 
@@ -252,36 +249,37 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 
       do n = 1,nturbines
 
-         call turbine_local_wind(turbines_in(n),u,v,w,rho, &
-                                 1.0,6, &
-                                 uavg,vavg,wavg,speed,winddir,unormal)
+         if (localwind==1) then
+            call turbine_local_wind(turbines_in(n),u,v,w,rho, &
+                                    1.0,6, &
+                                    uavg,vavg,wavg,speed,winddir,unormal)
 
-         if (.not. windfilter_initialized(n)) then
+            if (.not. windfilter_initialized(n)) then
 
-            ! Initialize from the first actual wind measurement.
-            uavg_f(n) = uavg
-            vavg_f(n) = vavg
-            wavg_f(n) = wavg
+               ! Initialize from the first actual wind measurement.
+               uavg_f(n) = uavg
+               vavg_f(n) = vavg
+               wavg_f(n) = wavg
 
-            windfilter_initialized(n) = .true.
+               windfilter_initialized(n) = .true.
 
-         else
-            ! First-order low-pass filter.
-            uavg_f(n) = uavg_f(n) + alpha*(uavg-uavg_f(n))
-            vavg_f(n) = vavg_f(n) + alpha*(vavg-vavg_f(n))
-            wavg_f(n) = wavg_f(n) + alpha*(wavg-wavg_f(n))
+            else
+               ! First-order low-pass filter.
+               uavg_f(n) = uavg_f(n) + alpha*(uavg-uavg_f(n))
+               vavg_f(n) = vavg_f(n) + alpha*(vavg-vavg_f(n))
+               wavg_f(n) = wavg_f(n) + alpha*(wavg-wavg_f(n))
+            endif
+
+            ! Compute direction from the FILTERED velocity components.
+            winddir = atan2(vavg_f(n),uavg_f(n))*360.0/pi2
+
+            call turbine_yaw_controller(winddir,dtcontrol_actual,1, &
+                 turbines_in(n:n)%yaw,yawrate_max,yaw_deadband)
+
+         elseif (localwind ==2) then
+! Using the externally imposed wind direction to set the turbine yaw
+            turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
          endif
-
-         ! Compute direction from the FILTERED velocity components.
-         winddir = atan2(vavg_f(n),uavg_f(n))*360.0/pi2
-
-!         winddir = atan2(vavg,uavg)*360.0/pi2
-
-         call turbine_yaw_controller(winddir,dtcontrol_actual,1, &
-              turbines_in(n:n)%yaw,yawrate_max,yaw_deadband)
-
-!!! Using the externally imposed wind direction
-!!!      turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
 
       enddo
 
@@ -298,7 +296,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 !  endif
 
 
-   turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
+!   turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
+   turbines_in(:)%theta = modulo(turbines_in(:)%theta + turbines_in(:)%omegand, pi2)
 
 ! 2. Construct global actuator point locations and blade data stored in points_global(np)
    if (allocated(points_global)) deallocate(points_global)

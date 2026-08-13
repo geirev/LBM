@@ -23,6 +23,7 @@ subroutine boundary_inflow_edges_ij_kernel(f,uvel,udir,rho0,rho_relax)
 
    real, parameter :: udir_tol = 10.0*epsilon(1.0)
    real, parameter :: pi       = acos(-1.0)
+   real, parameter :: uconv_min_frac = 0.2   ! same floor fraction as face kernels
 
 #ifdef _CUDA
    attributes(device) :: f
@@ -34,6 +35,7 @@ subroutine boundary_inflow_edges_ij_kernel(f,uvel,udir,rho0,rho_relax)
    real :: uu,rhocorner,rholocal
    real :: momentum_correction
    real :: cconv, invden
+   real :: uvel_ref   ! reference bulk speed for the floor (see note below)
 
 #ifdef _CUDA
    l = threadIdx%x + (blockIdx%x-1)*blockDim%x
@@ -42,17 +44,26 @@ subroutine boundary_inflow_edges_ij_kernel(f,uvel,udir,rho0,rho_relax)
    if (k < 1 .or. k > nz) return
 #else
 !$OMP PARALLEL DO COLLAPSE(2) DEFAULT(NONE)                                        &
-!$OMP PRIVATE(l,k,m,mm,uxdir,uydir,uu,rhocorner,rholocal,momentum_correction,cconv,invden) &
+!$OMP PRIVATE(l,k,m,mm,uxdir,uydir,uu,rhocorner,rholocal,momentum_correction,cconv,invden,uvel_ref) &
 !$OMP SHARED(f,uvel,udir,rho0,rho_relax)
    do k = 1,nz
    do l = 1,nl
 #endif
 
-      uconv=uvel(k)
       uxdir = cos(udir*pi/180.0)
       uydir = sin(udir*pi/180.0)
 
       uu = uvel(k)
+
+      ! Floor uconv against the bulk imposed speed so a locally small
+      ! or zero uvel(k) (e.g. near a k=1/k=nz wall-adjacent profile)
+      ! cannot make this corner's outflow ghost effectively frozen.
+      ! maxval(uvel) is the natural bulk reference here since the
+      ! corner's own uconv is already the full (unprojected) speed,
+      ! unlike the face kernels where the floor guards against an
+      ! oblique-angle projection going to zero.
+      uvel_ref = maxval(uvel)
+      uconv = max(uu, uconv_min_frac*uvel_ref)
 
       cconv  = min(1.0, max(0.0, uconv))
       invden = 1.0/(1.0+cconv)

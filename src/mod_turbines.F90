@@ -12,6 +12,7 @@ module mod_turbines
 
 !   Stores NREL-5MW style configuration information.
    type turbine_t
+      integer :: imodel           ! 0 = actuator line (ALM), 1 = rotating actuator disk (ADM-R)
       real    :: xhub             ! hub x-position (global grid index)
       real    :: yhub             ! hub y-position (global grid index)
       real    :: zhub             ! hub z-position (global grid index)
@@ -35,6 +36,8 @@ module mod_turbines
       real    :: omegand          ! non-dim angular speed, omega*p2l%time
       real    :: pitchangle       ! collective pitch (deg)
       integer :: tiploss          ! tip-loss flag
+
+      integer :: nazim            ! number of azimuthal samples per radius, ADM-R only
    end type turbine_t
 
 !   One actuator sample point per chord per blade per turbine in global coordinates.
@@ -53,6 +56,8 @@ module mod_turbines
       real    :: theta            ! rotor azimuth (rad)
       real    :: pitch            ! pitch (deg)
       real    :: omegand          ! non-dim angular speed
+
+      real    :: force_scale   ! multiplies Fvec after turbine_compute_bladeforce; 1.0 for ALM, nblades/nazim for ADM-R
    end type point_t
 
 ! Global storage (used by high-level drivers if desired)

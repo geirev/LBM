@@ -5,7 +5,7 @@ module m_readinfile
    integer  iout           ! number of steps between outputs 0, 0+iout, ...
    integer  iprt1          ! Output every dprt time steps of it <= iprt
    integer  iprt2          ! Output every dprt time steps of it <= iprt
-   integer  dprt           ! delta high frequency output 
+   integer  dprt           ! delta high frequency output
    logical  ltesting       ! Print minimalistice plt file if true (no derived variables)
    integer  irestart       ! number of steps between restart files
    integer  itecout        ! format of tecplot solution files (0 full files, 2 only solution variables)
@@ -32,6 +32,7 @@ module m_readinfile
    logical :: ldump        ! Dumping diagnostic files to disk
    logical :: lmeasurements! Used in data assimilation experiments
 
+
    type physconv
       real rho
       real length
@@ -43,11 +44,19 @@ module m_readinfile
    type(physconv) p2l
 
    integer nturbines       ! Number of turbines in model
-   real pitchangle         ! Imposed pitch angle
-   real turbrpm            ! Imposed turbine RPM
-   real tipspeedratio      ! Imposed tipspeed ratio
+   integer alm_adm         ! Switch for Actuator Line model(0) or Actuator Disk model (1)
+   integer nazim           ! Number of azimutal points on each radius circle for the ADM
+   integer localwind       ! Compute upstreem wind direction locally for each turbine (1), use external udir(2), else use infile values
+   real    filter_time     ! filter time for when computing local upstream winds for yaw computation
+   real    dtcontrol       ! Yaw update interval in seconds
+   real    yawrate_max     ! Maximum speed at which the turbine is allowed to yaw, in degrees per second.
+   real    yaw_deadband    ! A threshold, in degrees, below which the controller does nothing.
+   real    pitchangle      ! Imposed pitch angle
+   real    turbrpm         ! Imposed turbine RPM
+   real    tipspeedratio   ! Imposed tipspeed ratio
    integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
-   real, allocatable ::  yaw(:),tilt(:)          ! Turbine yaw and tilt
+   real,    allocatable ::  yaw(:),tilt(:)          ! Turbine yaw and tilt
+
    integer  ihrr           ! Option (1) for regularized R(fneq) scheme
    integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
    integer  ivreman        ! Option (1) for subgridscale mixing using Vreman
@@ -143,17 +152,17 @@ subroutine readinfile()
       read(10,*,err=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
          allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines), yaw(n), tilt(n))
-         read(10,*,err=100)pitchangle          ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,  ' [deg]'
-         read(10,*,err=100)turbrpm             ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,     ' [rotations/min]'
-         read(10,*,err=100)tipspeedratio       ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio, ' []'
-         read(10,*,err=100)itiploss            ; print '(a,i8)',          'Tiploss           = ',itiploss
-!         do n=1,nturbines
-!            read(10,'(a)',err=100)ver
-!            read(10,*,err=100)ipos(n)
-!            read(10,*,err=100)jpos(n)
-!            read(10,*,err=100)kpos(n)
-!            print '(a,i4,a,3i4)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n)
-!         enddo
+         read(10,*,err=100)alm_adm            ; print '(a,i8,a)',        'Turbine model     = ',alm_adm
+         nazim=36
+         read(10,*,err=100)localwind          ; print '(a,i8,a)',        'localwind         = ',localwind
+         read(10,*,err=100)dtcontrol          ; print '(a,f8.3,a)',      'dtcontrol         = ',dtcontrol,    ' [s]'
+         read(10,*,err=100)yawrate_max        ; print '(a,f8.3,a)',      'yawrate_max       = ',yawrate_max,  ' [deg/s]'
+         read(10,*,err=100)yaw_deadband       ; print '(a,f8.3,a)',      'yaw_deadband      = ',yaw_deadband, ' [deg]'
+         read(10,*,err=100)filter_time        ; print '(a,f8.3,a)',      'filter_time       = ',filter_time,  ' [sec]'
+         read(10,*,err=100)pitchangle         ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,   ' [deg]'
+         read(10,*,err=100)turbrpm            ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,      ' [rotations/min]'
+         read(10,*,err=100)tipspeedratio      ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio,' []'
+         read(10,*,err=100)itiploss           ; print '(a,i8)',          'Tiploss           = ',itiploss
          do n=1,nturbines
             read(10,'(a)',err=100)ver
             read(10,*,err=100)ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)

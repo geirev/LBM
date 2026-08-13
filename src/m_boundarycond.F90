@@ -56,6 +56,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
    integer :: opt_ij,opt_ik,opt_jk,opt_ijk
    real, parameter :: pi=acos(-1.0)
    real, parameter :: rho_relax=0.6
+   real uvel_ref
    logical j0_is_phys, jN_is_phys
 
    call cpustart()
@@ -73,7 +74,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
       j0_is_phys = .true.
       jN_is_phys = .true.
 #endif
-
+      uvel_ref = maxval(uvel)
 
    !-----------------------------------------------------------------
    ! 1. Preliminary periodic sweep.
@@ -94,7 +95,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,udir,rho0,rho_relax)
+      &(f1,uvel,udir,rho0,rho_relax,uvel_ref)
    endif
 
 
@@ -108,7 +109,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,udir,rho0,rho_relax,j0_is_phys,jN_is_phys)
+      &(f1,uvel,udir,rho0,rho_relax,uvel_ref,j0_is_phys,jN_is_phys)
    endif
 
    ! Open-open i-j corner lines, k=1:nz.

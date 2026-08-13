@@ -4,7 +4,7 @@
 !==============================================================
 module m_turbine_initialize
    use mod_turbines
-   use m_readinfile, only : nturbines, p2l, ipos, jpos, kpos, yaw, tilt, turbrpm, pitchangle, tipspeedratio, itiploss
+   use m_readinfile, only : nturbines, p2l, ipos,jpos,kpos,yaw,tilt,turbrpm, pitchangle, tipspeedratio, itiploss, alm_adm, nazim
    use m_nrelreadfoil
    implicit none
 contains
@@ -46,6 +46,8 @@ subroutine turbine_initialize()
    omega = pi2 * turbrpm / 60.0
 
    do n = 1, nturbines
+      turbines(n)%imodel = alm_adm
+
       ! Hub position in global grid indices
       turbines(n)%xhub = real(ipos(n))
       turbines(n)%yhub = real(jpos(n))
@@ -76,6 +78,9 @@ subroutine turbine_initialize()
       turbines(n)%omegand    = omega * p2l%time
       turbines(n)%pitchangle = pitchangle
       turbines(n)%tiploss    = itiploss
+
+      ! Actuator disk samples per radius
+      turbines(n)%nazim = nazim
    end do
 
 

@@ -83,6 +83,10 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
    call turbine_compute_bladeforce(Fvec(:,p), points(p), &
                                    uaxis, utheta, dens, clift, cdrag)
 
+   Fvec(1,p) = Fvec(1,p) * points(p)%force_scale
+   Fvec(2,p) = Fvec(2,p) * points(p)%force_scale
+   Fvec(3,p) = Fvec(3,p) * points(p)%force_scale
+
 #ifndef _CUDA
    enddo
 #endif

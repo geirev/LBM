@@ -38,16 +38,36 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 
 
 ## Release notes:
-### (Aug 2026): Significant rewrite of boundary conditions implementation and yaw control
+### (Aug 2026): Rewrite of boundary conditions, added yaw control and actuator disk model
 **Boundary conditions**
   - Inflow/outflow in both i and j directions, allowing for time varying inflows with directions of 0-360 degrees.
+  - Since boundaries can switch between inflow and outflow, I use a smooth transition with averaging the in and outflow conditions.
   - The implementation significantly improved with the help of Claude and ChatGPT to ensure consistency.
   - Particularly the inflow/outflow routines are updated, and the corner treatment is now consistent with the inflow/outflow conditions.
 
 **Turbine yaw control**
-  - The turbine plane is now always orthogonal to the inflow wind direction, so a turbine will rotate with the wind direction.
-  - Each turbine uses a local yaw control where the local wind direction upstream of a tubine is used to control each individual turbine.
-  - Check the documentation in m_turbine_forcing.F90 for detailed information
+  - I have added a turbine yaw controller that is activated by setting localwind=1.  Each turbine then uses a local yaw control where
+    the local wind direction upstream of a tubine is used to control each individual turbine. Alternatively, it is possible to adjust the yaw
+    according to the inflow direction udir (localwind=2), or using the specified yaw values for each turbine from infile.in (localwind=0).
+  - Check the documentation in m_turbine_forcing.F90 for detailed information.
+
+**Actuator Disk Model**
+  - Added functionality for running an Actuator Disk Model (with rotation). The implementation uses the same information concerning blades
+    and force computation as in the ALM, but distributes the forces among the actuator disk points rather than the blade points.
+  - Added infile.in flag for chosing actuator line vs actuator disk models.
+  - The forcing points are hard-coded  in m_read_infile to be located on every chord radius and every 10 degrees
+
+**Fixed a drag-sign bug** that impacted the turbine blade forcing**
+
+**Add the following after nturbines in infile.in**
+```text
+ 0                ! alm_adm         : Actuator line (0), actuator disk (1)
+ 1                ! localwind       : 1- activate yaw controller using local ustream wind, 0-infile yaw values, 2-external wind direction
+ 1.0              ! dt_control      : yaw_controller: Seconds between each yaw-update
+ 0.3              ! yawrate_max     : yaw_controller: Maximum yaw update in degrees per second
+ 2.0              ! yaw_deadband    : yaw_controller: A threshold, in degrees, below which the yaw controller does nothing
+ 3.0              ! filter_time     : yaw_controller: time-filter of local wind average
+```
 
 ### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
 **Previous version**

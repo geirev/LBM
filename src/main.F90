@@ -49,6 +49,7 @@ program LatticeBoltzmann
    use m_solids
    use m_solid_objects_init
    use m_sphere
+   use m_sponge_tau
    use m_tecfld
    use m_inflow
    use m_vreman
@@ -214,10 +215,6 @@ program LatticeBoltzmann
    uvel(:) = uvel_time(nt0)*uvel_shear(:)
    udir = udir_time(nt0)
 
-   do i=nt0,nt1
-      write(*,*)i,udir_time(i)
-   enddo
-
    if (nt0 == 0) then
 ! Intialization of macro variables
       call inipert(rho,u,v,w,uvel,ir)
@@ -322,6 +319,7 @@ program LatticeBoltzmann
 
 ! [f1,tau = post collision(f1,rho,u,v,w] (returns post collision density and tau for forcing)
       call postcoll(f1, tau, rho,u,v,w)
+      !if (lsponge) call sponge_tau(tau, tau_max, nsponge_i, nsponge_j)
 
 
 ! [f1 = f1 + turbulence_df]

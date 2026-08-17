@@ -12,6 +12,11 @@ module m_readinfile
    integer  ibnd           ! Type of bondary condition in i direction (ibnd=0 periodic, 1 inflow/outflow, 12
    integer  jbnd           ! Type of bondary condition in i direction
    integer  kbnd           ! Type of bondary condition in k direction
+   logical  lsponge        ! Adds a sponge layer along open boundaries with increased tau
+   real     tau_max        ! Maximum tau value in the sponge layer
+   integer  nsponge_i      ! Thickness of sponge layer in i-direction
+   integer  nsponge_j      ! Thickness of sponge layer in j-direction
+
    logical  inflowturbulence          ! Add smooth pseudo-random peturbations for turbulent inflow
    integer  nrturb         ! Number of precomputed batches of inflow turbulence for u,v,w, and rho
    real     turbulence_ampl! strength of inflow turbulence
@@ -126,6 +131,10 @@ subroutine readinfile()
       read(10,*,err=100)ibnd               ; print '(a,i8)',      'ibnd              = ',ibnd
       read(10,*,err=100)jbnd               ; print '(a,i8)',      'jbnd              = ',jbnd
       read(10,*,err=100)kbnd               ; print '(a,i8)',      'kbnd              = ',kbnd
+      lsponge=.false.
+      tau_max=0.7
+      nsponge_i=15
+      nsponge_j=15
 
       read(10,'(a)',err=100)ver
 

@@ -57,7 +57,6 @@ F90SOURCE = \
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\
 	m_fequil_boundary.F90\
-	m_fequil_difference.F90\
 	m_fillghosts.F90\
 	m_forcings_apply.F90\
 	m_forcings_apply_kernel.F90\

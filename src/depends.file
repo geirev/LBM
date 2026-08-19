@@ -178,17 +178,15 @@ m_boundary_edges_mixed.o:      makefile
 m_boundary_edges_mixed.o:      mod_D3Q27setup.o
 m_boundary_edges_mixed.o:      mod_dimensions.o
 m_boundary_inflow_edges_ij_kernel.o:      makefile
-m_boundary_inflow_edges_ij_kernel.o:      m_fequil_difference.o
+m_boundary_inflow_edges_ij_kernel.o:      m_fequil_boundary.o
 m_boundary_inflow_edges_ij_kernel.o:      mod_D3Q27setup.o
 m_boundary_inflow_edges_ij_kernel.o:      mod_dimensions.o
 m_boundary_inflow_i_kernel.o:      makefile
 m_boundary_inflow_i_kernel.o:      m_fequil_boundary.o
-m_boundary_inflow_i_kernel.o:      m_fequil_difference.o
 m_boundary_inflow_i_kernel.o:      mod_D3Q27setup.o
 m_boundary_inflow_i_kernel.o:      mod_dimensions.o
 m_boundary_inflow_j_kernel.o:      makefile
 m_boundary_inflow_j_kernel.o:      m_fequil_boundary.o
-m_boundary_inflow_j_kernel.o:      m_fequil_difference.o
 m_boundary_inflow_j_kernel.o:      mod_D3Q27setup.o
 m_boundary_inflow_j_kernel.o:      mod_dimensions.o
 m_boundary_mass_monitor_kernel.o:      makefile
@@ -270,8 +268,6 @@ m_fequil3.o:      m_readinfile.o
 m_fequil3.o:      m_wtime.o
 m_fequil_boundary.o:      makefile
 m_fequil_boundary.o:      mod_D3Q27setup.o
-m_fequil_difference.o:      makefile
-m_fequil_difference.o:      mod_D3Q27setup.o
 m_fillghosts.o:      makefile
 m_fillghosts.o:      mod_D3Q27setup.o
 m_fillghosts.o:      mod_dimensions.o

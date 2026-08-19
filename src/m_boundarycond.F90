@@ -55,7 +55,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
    integer :: opt_i1,opt_iN,opt_j1,opt_jN,opt_k1,opt_kN
    integer :: opt_ij,opt_ik,opt_jk,opt_ijk
    real, parameter :: pi=acos(-1.0)
-   real, parameter :: rho_relax=0.5
+   real, parameter :: rho_relax=0.0
    real, parameter :: inv1cs2 = 1.0/(cs2)
    real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
    real, parameter :: inv6cs6 = 1.0/(6.0*cs6)

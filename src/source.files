@@ -33,6 +33,8 @@ F90SOURCE = \
 	m_boundary_inflow_edges_ij_kernel.F90\
 	m_boundary_inflow_i_kernel.F90\
 	m_boundary_inflow_j_kernel.F90\
+	m_boundary_mass_monitor.F90\
+	m_boundary_mass_monitor_kernel.F90\
 	m_boundary_periodic_i_kernel.F90\
 	m_boundary_periodic_j_kernel.F90\
 	m_boundary_periodic_k_kernel.F90\
@@ -54,6 +56,8 @@ F90SOURCE = \
 	m_fequil3_block_kernel.F90\
 	m_fequil3.F90\
 	m_fequil3_kernel.F90\
+	m_fequil_boundary.F90\
+	m_fequil_difference.F90\
 	m_fillghosts.F90\
 	m_forcings_apply.F90\
 	m_forcings_apply_kernel.F90\
@@ -104,6 +108,8 @@ F90SOURCE = \
 	m_solid_objects_init.F90\
 	m_solids.F90\
 	m_sphere.F90\
+	m_sponge_tau.F90\
+	m_sponge_tau_kernel.F90\
 	m_string.F90\
 	m_tecfld.F90\
 	m_tecfldsec.F90\

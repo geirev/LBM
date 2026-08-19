@@ -10,8 +10,8 @@ module m_boundarycond
 contains
 subroutine boundarycond(f1,f2,rho,uvel)
    use mod_dimensions
-   use mod_D3Q27setup, only : nl
-   use m_readinfile, only : ibnd,jbnd,kbnd,udir,rho0
+   use mod_D3Q27setup, only : nl,cs2,cs4,cs6
+   use m_readinfile, only : ibnd,jbnd,kbnd,udir,rho0,ibgk
 #ifdef _CUDA
    use m_readinfile, only : ntx,nty,ntz
 #endif
@@ -55,8 +55,10 @@ subroutine boundarycond(f1,f2,rho,uvel)
    integer :: opt_i1,opt_iN,opt_j1,opt_jN,opt_k1,opt_kN
    integer :: opt_ij,opt_ik,opt_jk,opt_ijk
    real, parameter :: pi=acos(-1.0)
-   real, parameter :: rho_relax=0.6
-   real uvel_ref
+   real, parameter :: rho_relax=0.5
+   real, parameter :: inv1cs2 = 1.0/(cs2)
+   real, parameter :: inv2cs4 = 1.0/(2.0*cs4)
+   real, parameter :: inv6cs6 = 1.0/(6.0*cs6)
    logical j0_is_phys, jN_is_phys
 
    call cpustart()
@@ -74,7 +76,6 @@ subroutine boundarycond(f1,f2,rho,uvel)
       j0_is_phys = .true.
       jN_is_phys = .true.
 #endif
-      uvel_ref = maxval(uvel)
 
    !-----------------------------------------------------------------
    ! 1. Preliminary periodic sweep.
@@ -95,7 +96,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,udir,rho0,rho_relax,uvel_ref)
+      &(f1,uvel,udir,rho0,rho_relax,inv1cs2,inv2cs4,inv6cs6,ibgk)
    endif
 
 
@@ -109,7 +110,8 @@ subroutine boundarycond(f1,f2,rho,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,bz),dim3(tx,ty,tz)>>>&
 #endif
-      &(f1,uvel,udir,rho0,rho_relax,uvel_ref,j0_is_phys,jN_is_phys)
+      &(f1,uvel,udir,rho0,rho_relax,inv1cs2,inv2cs4,inv6cs6,ibgk, &
+        j0_is_phys,jN_is_phys)
    endif
 
    ! Open-open i-j corner lines, k=1:nz.
@@ -122,7 +124,7 @@ subroutine boundarycond(f1,f2,rho,uvel)
 #ifdef _CUDA
       &<<<dim3(bx,by,1),dim3(tx,ty,1)>>>&
 #endif
-      &(f1,uvel,udir,rho0,rho_relax)
+      &(f1,uvel,udir,rho0,rho_relax,inv1cs2,inv6cs6,ibgk,j0_is_phys,jN_is_phys)
    endif
 
    !-----------------------------------------------------------------

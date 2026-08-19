@@ -31,6 +31,8 @@ boundary_edges_mixed	m_boundary_edges_mixed.F90	/^module
 boundary_inflow_edges_ij_kernel	m_boundary_inflow_edges_ij_kernel.F90	/^module
 boundary_inflow_i_kernel	m_boundary_inflow_i_kernel.F90	/^module
 boundary_inflow_j_kernel	m_boundary_inflow_j_kernel.F90	/^module
+boundary_mass_monitor	m_boundary_mass_monitor.F90	/^module
+boundary_mass_monitor_kernel	m_boundary_mass_monitor_kernel.F90	/^module
 boundary_periodic_i_kernel	m_boundary_periodic_i_kernel.F90	/^module
 boundary_periodic_j_kernel	m_boundary_periodic_j_kernel.F90	/^module
 boundary_periodic_k_kernel	m_boundary_periodic_k_kernel.F90	/^module
@@ -54,6 +56,8 @@ dump_elevation	m_dump_elevation.F90	/^module
 fequil3	m_fequil3.F90	/^module
 fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 fequil3_kernel	m_fequil3_kernel.F90	/^module
+fequil_boundary	m_fequil_boundary.F90	/^module
+fequil_difference	m_fequil_difference.F90	/^module
 fftw3	mod_fftw3.F90	/^module
 fillghosts	m_fillghosts.F90	/^module
 forcings_apply	m_forcings_apply.F90	/^module
@@ -117,6 +121,8 @@ m_boundary_edges_mixed	m_boundary_edges_mixed.F90	/^module
 m_boundary_inflow_edges_ij_kernel	m_boundary_inflow_edges_ij_kernel.F90	/^module
 m_boundary_inflow_i_kernel	m_boundary_inflow_i_kernel.F90	/^module
 m_boundary_inflow_j_kernel	m_boundary_inflow_j_kernel.F90	/^module
+m_boundary_mass_monitor	m_boundary_mass_monitor.F90	/^module
+m_boundary_mass_monitor_kernel	m_boundary_mass_monitor_kernel.F90	/^module
 m_boundary_periodic_i_kernel	m_boundary_periodic_i_kernel.F90	/^module
 m_boundary_periodic_j_kernel	m_boundary_periodic_j_kernel.F90	/^module
 m_boundary_periodic_k_kernel	m_boundary_periodic_k_kernel.F90	/^module
@@ -138,6 +144,8 @@ m_dump_elevation	m_dump_elevation.F90	/^module
 m_fequil3	m_fequil3.F90	/^module
 m_fequil3_block_kernel	m_fequil3_block_kernel.F90	/^module
 m_fequil3_kernel	m_fequil3_kernel.F90	/^module
+m_fequil_boundary	m_fequil_boundary.F90	/^module
+m_fequil_difference	m_fequil_difference.F90	/^module
 m_fillghosts	m_fillghosts.F90	/^module
 m_forcings_apply	m_forcings_apply.F90	/^module
 m_forcings_apply_kernel	m_forcings_apply_kernel.F90	/^module
@@ -182,6 +190,8 @@ m_set_random_seed3	m_set_random_seed3.F90	/^module
 m_solids	m_solids.F90	/^module
 m_solid_objects_init	m_solid_objects_init.F90	/^module
 m_sphere	m_sphere.F90	/^module
+m_sponge_tau	m_sponge_tau.F90	/^module
+m_sponge_tau_kernel	m_sponge_tau_kernel.F90	/^module
 m_string	m_string.F90	/^module
 m_tecfld	m_tecfld.F90	/^module
 m_tecfldsec	m_tecfldsec.F90	/^module
@@ -232,6 +242,8 @@ shapiro	mod_shapiro.F90	/^module
 solids	m_solids.F90	/^module
 solid_objects_init	m_solid_objects_init.F90	/^module
 sphere	m_sphere.F90	/^module
+sponge_tau	m_sponge_tau.F90	/^module
+sponge_tau_kernel	m_sponge_tau_kernel.F90	/^module
 string	m_string.F90	/^module
 tecfld	m_tecfld.F90	/^module
 tecfldsec	m_tecfldsec.F90	/^module

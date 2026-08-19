@@ -16,6 +16,7 @@ program LatticeBoltzmann
    use m_averaging_full
    use m_averaging_sec
    use m_fillghosts
+   use m_boundary_mass_monitor
    use m_boundarycond
    use m_boundarycond_tracer
    use m_boundarycond_pottemp
@@ -305,6 +306,7 @@ program LatticeBoltzmann
    do it = nt0+1, nt1
       if ((mod(it, 10) == 0) .or. it == nt1) then
          if (ir==0) write(*,'(a,i6,a,f10.2,a)')'Iteration: ',it,' Time: ',real(it)*p2l%time,' s.'
+         call boundary_mass_monitor(rho,u,v,it)
       endif
 
 ! start time step with f1,rho,u,v,w given

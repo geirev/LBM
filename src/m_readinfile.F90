@@ -70,6 +70,8 @@ module m_readinfile
    integer  istable        ! stability of abl (1=stable, 0=neutral, and -1=unstable)
    real smagorinsky        ! smagorinsky constant (0.15) used in subgridscale mixing
    logical ltiming         ! true for timing of kernels. Should be false to avoid syncs
+   integer iturb
+   character(len=10) turbinename
 
 contains
 subroutine readinfile()
@@ -172,10 +174,11 @@ subroutine readinfile()
          read(10,*,err=100)turbrpm            ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,      ' [rotations/min]'
          read(10,*,err=100)tipspeedratio      ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio,' []'
          read(10,*,err=100)itiploss           ; print '(a,i8)',          'Tiploss           = ',itiploss
+         read(10,'(a)',err=100)ver
          do n=1,nturbines
-            read(10,'(a)',err=100)ver
-            read(10,*,err=100)ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
-            print '(a,i4,a,3i4,2f10.2)', '(ijk)-pos for turbine  = ',n,' : ',ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
+            read(10,*,err=100)iturb,turbinename,ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
+            print '(a,x,i4,x,3a,x,3i4,2f10.2)','Turbine',iturb,'(',trim(turbinename),'):',&
+                                                                     ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
          enddo
       else
          print '(a)','Running without wind turbines'

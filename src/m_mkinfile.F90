@@ -54,9 +54,8 @@ open(10,file='infile.in',status='new')
    write(10,'(a)')' 0.00             ! tipspeed ratio  : Tipspeed ratio (7.55) (if given will override the given turbine RPM'
    write(10,'(a)')' 0                ! itiploss        : Tiploss(0-none, 1-Prandl, 2-Shen)'
    write(10,'(a)')'# T1'
-   write(10,'(a)')' 96 61 61 0.0 0.0    ! ipos, jpos, kpos, yaw, tilt'
-   write(10,'(a)')'# T2'
-   write(10,'(a)')' 96 91 61 0.0 0.0    ! ipos, jpos, kpos, yaw, tilt'
+   write(10,'(a)')' 1 T1 96 61 61 0.0 0.0    ! ipos, jpos, kpos, yaw, tilt'
+   write(10,'(a)')' 2 T2 96 91 61 0.0 0.0    ! ipos, jpos, kpos, yaw, tilt'
    write(10,'(a)')
    write(10,'(a)')
    write(10,'(a)')' kinematic viscosity of air is 1.78E-5'

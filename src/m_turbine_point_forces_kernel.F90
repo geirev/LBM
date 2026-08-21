@@ -7,7 +7,7 @@ attributes(global) &
 subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end, Fvec)
    use mod_dimensions, only : nx, ny, nz
    use mod_turbines,   only : point_t,pi
-   use m_nrelliftdrag
+   use m_liftdrag
    use m_turbine_compute_bladeforce
    use m_turbine_interpolate_velocity
    use m_turbine_rotor_basis
@@ -78,7 +78,7 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
    phi       = atan2(uaxis, utheta)
    angattack = phi*180.0/pi - points(p)%twist - points(p)%pitch
 
-   call nrelliftdrag(clift, cdrag, angattack, points(p)%foil)
+   call liftdrag(clift, cdrag, angattack, points(p)%foil)
 
    call turbine_compute_bladeforce(Fvec(:,p), points(p), &
                                    uaxis, utheta, dens, clift, cdrag)

@@ -1,11 +1,11 @@
-module m_nrelliftdrag
+module m_liftdrag
 contains
 
 #ifdef _CUDA
 attributes(host,device) &
 #endif
-subroutine nrelliftdrag(cl, cd, angle, k)
-   use mod_nrel5mw
+subroutine liftdrag(cl, cd, angle, k)
+   use mod_turbine_def, only : nrang,foil
    implicit none
 
    real,    intent(out) :: cl, cd
@@ -33,5 +33,5 @@ subroutine nrelliftdrag(cl, cd, angle, k)
       end if
    end do
 
-end subroutine nrelliftdrag
-end module m_nrelliftdrag
+end subroutine
+end module

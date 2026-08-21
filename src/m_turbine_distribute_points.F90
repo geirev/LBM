@@ -1,6 +1,7 @@
 module m_turbine_distribute_points
    implicit none
 contains
+
 ! Build the global list of actuator sample points (points_global) from turbine
 ! hub locations and blade geometry.
 !
@@ -10,22 +11,20 @@ contains
 !                each carrying force_scale = nblades/nazim so the annulus receives
 !                the same total force as nblades individual blade passes would.
 subroutine turbine_distribute_points(turbines_in, points_global)
-   use mod_turbines, only : turbine_t, point_t, pi2
+
+   use mod_turbines,    only : turbine_t, point_t, pi2
+   use mod_turbine_def, only : nrchords, relm, dc, chord, twist
    use m_turbine_extend_array
    use m_turbine_rotor_basis
-#ifdef MPI
-   use m_mpi_decomp_init, only : j_start, j_end, mpi_rank
-#endif
-#ifdef _CUDA
-   use cudafor
-#endif
+
    implicit none
+
    type(turbine_t),              intent(in)  :: turbines_in(:)
    type(point_t),   allocatable, intent(out) :: points_global(:)
 
    integer :: it, ib, ic
    integer :: np
-   integer :: nsamples          ! nblades (ALM) or nazim (ADM-R) for this turbine
+   integer :: nsamples
    real    :: e_axis(3), e1(3), e2(3), e_rot(3)
    real    :: theta, yaw, tilt
    real    :: fscale
@@ -35,60 +34,83 @@ subroutine turbine_distribute_points(turbines_in, points_global)
    allocate(points_global(np))
 
    do it = 1, size(turbines_in)
+
       yaw  = turbines_in(it)%yaw
       tilt = turbines_in(it)%tilt
 
       call turbine_rotor_basis(yaw, tilt, e_axis, e1, e2)
 
       if (turbines_in(it)%imodel == 0) then
-         ! ---- Actuator line: nblades discrete points, tied to rotor azimuth ----
+
+         if (turbines_in(it)%nblades <= 0) then
+            write(*,*) 'ERROR: nblades must be positive for turbine ', it
+            stop
+         end if
+
          nsamples = turbines_in(it)%nblades
          fscale   = 1.0
-      else
-         ! ---- Rotating actuator disk: nazim static points around each ring ----
+
+      else if (turbines_in(it)%imodel == 1) then
+
+         if (turbines_in(it)%nazim <= 0) then
+            write(*,*) 'ERROR: nazim must be positive for ADM-R turbine ', it
+            stop
+         end if
+
          nsamples = turbines_in(it)%nazim
-         fscale   = real(turbines_in(it)%nblades) / real(turbines_in(it)%nazim)
+         fscale   = real(turbines_in(it)%nblades) / &
+                    real(turbines_in(it)%nazim)
+
+      else
+         write(*,*) 'ERROR: invalid turbine model ', turbines_in(it)%imodel
+         stop
       end if
 
       do ib = 1, nsamples
 
          if (turbines_in(it)%imodel == 0) then
             ! Blade azimuth advances with rotor rotation.
-            theta = turbines_in(it)%theta + real(ib-1)*pi2/real(nsamples)
+            theta = turbines_in(it)%theta + &
+                    real(ib-1)*pi2/real(nsamples)
          else
-            ! Fixed ring of sample points, independent of instantaneous theta -
-            ! this is what gives the azimuthal smoothing an ADM is meant to provide.
+            ! Fixed ring of sample points, independent of instantaneous theta.
             theta = real(ib-1)*pi2/real(nsamples)
          end if
 
-         do ic = 1, turbines_in(it)%nchords
+         do ic = 1, nrchords
+
             pt%iturb  = it
             pt%iblade = ib
             pt%ichord = ic
 
             e_rot(:) = cos(theta)*e1(:) + sin(theta)*e2(:)
 
-            pt%xg = turbines_in(it)%xhub + turbines_in(it)%relm(ic) * e_rot(1)
-            pt%yg = turbines_in(it)%yhub + turbines_in(it)%relm(ic) * e_rot(2)
-            pt%zg = turbines_in(it)%zhub + turbines_in(it)%relm(ic) * e_rot(3)
+            pt%xg = turbines_in(it)%xhub + relm(ic)*e_rot(1)
+            pt%yg = turbines_in(it)%yhub + relm(ic)*e_rot(2)
+            pt%zg = turbines_in(it)%zhub + relm(ic)*e_rot(3)
 
             pt%yaw         = yaw
             pt%tilt        = tilt
             pt%theta       = theta
-            pt%relm        = turbines_in(it)%relm(ic)
-            pt%dc          = turbines_in(it)%dc(ic)
-            pt%chord       = turbines_in(it)%chord(ic)
-            pt%twist       = turbines_in(it)%twist(ic)
+
+            pt%relm        = relm(ic)
+            pt%dc          = dc(ic)
+            pt%chord       = chord(ic)
+            pt%twist       = twist(ic)
+            pt%foil        = ic
+
             pt%pitch       = turbines_in(it)%pitchangle
-            pt%foil        = turbines_in(it)%nfoil(ic)
             pt%omegand     = turbines_in(it)%omegand
             pt%force_scale = fscale
 
             call turbine_extend_array(points_global, np+1)
             np = np + 1
             points_global(np) = pt
+
          end do
       end do
    end do
+
 end subroutine turbine_distribute_points
-end module
+
+end module m_turbine_distribute_points

@@ -14,7 +14,6 @@ program LatticeBoltzmann
    use m_postcoll
    use m_printdefines
    use m_averaging_full
-   use m_averaging_sec
    use m_fillghosts
    use m_boundary_mass_monitor
    use m_boundarycond
@@ -57,6 +56,7 @@ program LatticeBoltzmann
    use m_wtime
    use mod_D3Q27setup
    use mod_dimensions
+   use mod_turbine_def
    use mod_shapiro
    use, intrinsic :: omp_lib
 
@@ -188,7 +188,10 @@ program LatticeBoltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Some initialization
    call hermite_polynomials()
-   if (nturbines > 0)      call turbine_initialize()
+   if (nturbines > 0) then
+      call turbine_def(trim(turbname))
+      call turbine_initialize()
+   endif
    if (inflowturbulence)   call inflow_turbulence_init()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -411,11 +414,6 @@ program LatticeBoltzmann
       call diag(itecout,it,rho,u,v,w,p1,t1,lblanking)
 
       call cpustart()
-! Averaging for diagnostics similar to Asmuth paper for wind turbines
-      if (laveturb .and. nturbines > 0) then
-         if (avestart < it .and. it < avesave) call averaging_sec(u,v,w,.false.,turbines(1)%iradius)
-         if (it == avesave)                    call averaging_sec(u,v,w,.true.,turbines(1)%iradius)
-      endif
 
 ! Averaging for diagnostics
       if (laveraging) then

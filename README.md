@@ -38,6 +38,80 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 
 
 ## Release notes:
+### (Aug 2026 second update): Generalized turbine initialization and airfoil database
+
+The turbine initialization has been completely rewritten to remove all hard-coded blade geometry and airfoil data. Turbine geometry and aerodynamic coefficients
+are now read from external input files, making it straightforward to add new turbine types without recompilation.
+
+**Blade geometry**
+  - Added a new blade definition file (`turbine_def.in`) containing blade geometry and aerodynamic twist.
+  - Geometry is now defined by blade element length (DC), radial position (RELM), chord, twist and associated airfoil file.
+  - Added consistency checks to ensure that blade elements start at the hub radius and terminate at the specified rotor radius.
+  - Blade geometry is automatically converted from physical units to lattice units during initialization.
+
+**Airfoil database**
+  - Airfoil polars are now stored in individual text files, one for each blade element.
+  - Each file contains a simple four-column table:
+    ```text
+    # angle[deg]    Cl      Cd      Cm
+    ```
+  - Comment lines beginning with `#` or `!` are ignored.
+  - The number of aerodynamic data points is detected automatically, while `nrdata` specifies the maximum permitted table size.
+  - Airfoil tables are transferred automatically to the GPU during initialization.
+
+**Internal implementation**
+  - Removed all hard-coded NREL5MW blade geometry and aerodynamic tables.
+  - Removed the previous `nfoil()` mapping. Each blade element now has its own aerodynamic lookup table, simplifying indexing throughout the ALM/ADM implementation.
+  - Blade geometry is stored globally in `mod_turbine_def` and shared by all turbines.
+
+**Example turbine_def.in**
+```text
+rotorradius = 75.0
+hubradius   = 2.0
+nrchords    = 25
+nrdata      = 150
+
+Foil          DC      RELM   Chord      Twist      foilfile
+foil_1   3.28949   3.64474   3.5000   54.654600   af_1.dat
+...
+foil_25  0.65790  76.67135   0.7140   -3.632710   af_25.dat
+```
+
+**Example airfoil file**
+```text
+# angle[deg]      Cl          Cd          Cm
+-180.0      -0.00100     0.60000     0.00000
+...
+   0.0       0.02315     0.00972    -0.01284
+...
+ 180.0       0.00100     0.60000     0.00000
+```
+
+**Update with two more lines in infile.in**
+```text
+# Turbine-definitions
+ 1                ! nturbines       : Number of turbines
+ NREL6MW          ! turbname        : Turbine type
+ 0                ! alm_adm         : Actuator line (0), actuator disk (1)
+ 36               ! nazim           : Number of azimutal points in ADM (36)
+ 1                ! local wind      : 1- activate yaw controller using local ustream wind, 0-infile yaw values, 2-external wind direction
+ 1.0              ! dt_control      : yaw_controller: Seconds between each yaw-update
+ 0.3              ! yawrate_max     : yaw_controller: Maximum yaw update in degrees per second
+ 2.0              ! yaw_deadband    : yaw_controller: A threshold, in degrees, below which the yaw controller does nothing
+ 3.0              ! filter_time     : yaw_controller: time-filter of local wind average
+ 0.0              ! pitchangle      : Imposed pitchangle (0 until u=11.4, see table 7.1 in NREL doc).
+ 8.95             ! turbrpm         : Turbine RPM for actuator line model (max 12.1 9.22 8.95 12.06
+ 0.00             ! tipspeed ratio  : Tipspeed ratio (7.55) (if given will override the given turbine RPM
+ 0                ! itiploss        : Tiploss(0-none, 1-Prandl, 2-Shen)
+# T1
+ 1 T1 250.0  480.0  90.0  0.0  0.0    ! ipos, jpos, kpos, yaw, tilt
+ 2 T2 250.0  480.0  90.0  0.0  0.0    ! ipos, jpos, kpos, yaw, tilt
+```
+Note that the turbine definition table is modified to include a turbine number and name, and the hub location is given as (x,y,z) in meters.
+This gives a more accurate turbine location and makes the turbine locations independent of the grid resolution.
+
+
+
 ### (Aug 2026): Rewrite of boundary conditions, added yaw control and actuator disk model
 **Boundary conditions**
   - Inflow/outflow in both i and j directions, allowing for time varying inflows with directions of 0-360 degrees.

@@ -11,11 +11,6 @@ F90SOURCE = \
 	m_averaging_full.F90\
 	m_averaging_full_kernel.F90\
 	m_averaging_full_kernelfin.F90\
-	m_averaging_sec.F90\
-	m_averaging_sec_kernel1.F90\
-	m_averaging_sec_kernel2.F90\
-	m_averaging_sec_kernelfin1.F90\
-	m_averaging_sec_kernelfin2.F90\
 	m_bilin.F90\
 	m_bilin_gpu.F90\
 	m_boundary_closed_i_kernel.F90\
@@ -70,18 +65,17 @@ F90SOURCE = \
 	m_inflow_turbulence_update.F90\
 	m_inipert.F90\
 	m_inipert_kernel.F90\
+	m_liftdrag.F90\
 	m_macrovars.F90\
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
 	m_netcdfout.F90\
-	m_nrelliftdrag.F90\
-	m_nrelreadfoil.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
 	mod_fftw3.F90\
-	mod_nrel5mw.F90\
 	mod_shapiro.F90\
+	mod_turbine_def.F90\
 	mod_turbines.F90\
 	m_postcoll.F90\
 	m_postcoll_kernel.F90\
@@ -105,7 +99,6 @@ F90SOURCE = \
 	m_sponge_tau_kernel.F90\
 	m_string.F90\
 	m_tecfld.F90\
-	m_tecfldsec.F90\
 	m_tecout.F90\
 	m_tecplot.F90\
 	m_testing.F90\

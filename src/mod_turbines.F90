@@ -1,33 +1,41 @@
 module mod_turbines
 ! Global turbine types, parameters and shared arrays
+
    use mod_dimensions, only : nx, ny, nz, nyg
+
 #ifdef MPI
    use mpi
    use m_mpi_decomp_init, only : mpi_rank, mpi_nprocs, j_start, j_end
 #endif
-   use mod_nrel5mw,   only : nrchords, relm, dc, chord, nfoil, twist, hubradius, rotorradius
+
    implicit none
-   real, parameter :: pi  = 3.14159265358979323846
+
+   real, parameter :: pi  = acos(-1.0)
    real, parameter :: pi2 = 2.0*pi
 
-!   Stores NREL-5MW style configuration information.
+
+!------------------------------------------------------------
+! Stores turbine-specific configuration information.
+!
+! Blade geometry (relm, dc, chord, twist) and foil tables are
+! stored globally in mod_turbine_def and are shared by all
+! turbines.
+!------------------------------------------------------------
    type turbine_t
-      integer :: imodel           ! 0 = actuator line (ALM), 1 = rotating actuator disk (ADM-R)
+
+      integer :: imodel           ! 0 = actuator line (ALM)
+                                  ! 1 = rotating actuator disk (ADM-R)
+
       real    :: xhub             ! hub x-position (global grid index)
       real    :: yhub             ! hub y-position (global grid index)
       real    :: zhub             ! hub z-position (global grid index)
 
-      real    :: radius           ! rotor radius (non-dimensional, /p2l%length)
+      real    :: radius           ! total rotor radius, non-dimensional
+                                  ! = (hubradius + rotorradius)/p2l%length
+
       integer :: iradius          ! rotor radius in number of grid cells
 
       integer :: nblades          ! number of blades
-      integer :: nchords          ! chords per blade
-
-      real    :: relm(nrchords)   ! radial positions (non-dimensional)
-      real    :: dc   (nrchords)  ! radial segment length (non-dimensional)
-      real    :: chord(nrchords)  ! chord width (non-dimensional)
-      real    :: twist(nrchords)  ! twist angle per chord (deg)
-      integer :: nfoil(nrchords)  ! foil index
 
       real    :: theta            ! rotor azimuth (rad)
       real    :: yaw              ! yaw angle (rad)
@@ -37,38 +45,60 @@ module mod_turbines
       real    :: pitchangle       ! collective pitch (deg)
       integer :: tiploss          ! tip-loss flag
 
-      integer :: nazim            ! number of azimuthal samples per radius, ADM-R only
+      integer :: nazim            ! number of azimuthal samples per radius,
+                                  ! ADM-R only
+
    end type turbine_t
 
-!   One actuator sample point per chord per blade per turbine in global coordinates.
-   type :: point_t
-      integer :: iturb            ! turbine index
-      integer :: iblade           ! blade index
-      integer :: ichord           ! chord index
 
-      real    :: xg, yg, zg       ! global coordinates (in grid units)
-      real    :: dc               ! local radial segment
+!------------------------------------------------------------
+! One actuator sample point per chord per blade per turbine
+! in global coordinates.
+!------------------------------------------------------------
+   type :: point_t
+
+      integer :: iturb            ! turbine index
+      integer :: iblade           ! blade/sample index
+      integer :: ichord           ! blade element index
+
+      real    :: xg, yg, zg       ! global coordinates (grid units)
+
+      real    :: dc               ! local radial segment length
       real    :: chord            ! local chord width
       real    :: relm             ! local radial position
-      integer :: foil             ! foil index
-      real    :: twist            ! local twist (deg)
+
+      integer :: foil             ! foil-table index; normally = ichord
+
+      real    :: twist            ! local aerodynamic twist (deg)
+
       real    :: yaw, tilt        ! yaw/tilt (rad)
       real    :: theta            ! rotor azimuth (rad)
-      real    :: pitch            ! pitch (deg)
+      real    :: pitch            ! collective pitch (deg)
       real    :: omegand          ! non-dim angular speed
 
-      real    :: force_scale   ! multiplies Fvec after turbine_compute_bladeforce; 1.0 for ALM, nblades/nazim for ADM-R
+      real    :: force_scale      ! multiplies Fvec after
+                                  ! turbine_compute_bladeforce;
+                                  ! 1.0 for ALM,
+                                  ! nblades/nazim for ADM-R
+
    end type point_t
 
-! Global storage (used by high-level drivers if desired)
+
+!------------------------------------------------------------
+! Global storage
+!------------------------------------------------------------
    type(turbine_t), allocatable :: turbines(:)
    type(point_t),   allocatable :: points_global(:)
 
-! point block limits (not used yet)
-   integer t_imin,t_imax,t_jmin,t_jmax,t_kmin,t_kmax
 
-! variables for time filtered local upstream velocities for each turbine
-   real, allocatable, save :: uavg_f(:), vavg_f(:), wavg_f(:)
+! Point block limits (not used yet)
+   integer :: t_imin, t_imax
+   integer :: t_jmin, t_jmax
+   integer :: t_kmin, t_kmax
+
+
+! Time-filtered local upstream velocities for each turbine
+   real,    allocatable, save :: uavg_f(:), vavg_f(:), wavg_f(:)
    logical, allocatable, save :: windfilter_initialized(:)
-end module mod_turbines
 
+end module mod_turbines

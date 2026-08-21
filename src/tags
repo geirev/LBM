@@ -9,11 +9,6 @@ airfoil	m_airfoil.F90	/^module
 averaging_full	m_averaging_full.F90	/^module
 averaging_full_kernel	m_averaging_full_kernel.F90	/^module
 averaging_full_kernelfin	m_averaging_full_kernelfin.F90	/^module
-averaging_sec	m_averaging_sec.F90	/^module
-averaging_sec_kernel1	m_averaging_sec_kernel1.F90	/^module
-averaging_sec_kernel2	m_averaging_sec_kernel2.F90	/^module
-averaging_sec_kernelfin1	m_averaging_sec_kernelfin1.F90	/^module
-averaging_sec_kernelfin2	m_averaging_sec_kernelfin2.F90	/^module
 bilin	m_bilin.F90	/^module
 bilin_gpu	m_bilin_gpu.F90	/^module
 boundarycond	m_boundarycond.F90	/^module
@@ -71,6 +66,7 @@ inflow_turbulence_init	m_inflow_turbulence_init.F90	/^module
 inflow_turbulence_update	m_inflow_turbulence_update.F90	/^module
 inipert	m_inipert.F90	/^module
 inipert_kernel	m_inipert_kernel.F90	/^module
+liftdrag	m_liftdrag.F90	/^module
 macrovars	m_macrovars.F90	/^module
 macrovars_kernel	m_macrovars_kernel.F90	/^module
 mechanical_ablvisc	m_mechanical_ablvisc.F90	/^module
@@ -78,9 +74,9 @@ mkinfile	m_mkinfile.F90	/^module
 mod_D3Q27setup	mod_D3Q27setup.F90	/^module
 mod_dimensions	mod_dimensions.F90	/^module
 mod_fftw3	mod_fftw3.F90	/^module
-mod_nrel5mw	mod_nrel5mw.F90	/^module
 mod_shapiro	mod_shapiro.F90	/^module
 mod_turbines	mod_turbines.F90	/^module
+mod_turbine_def	mod_turbine_def.F90	/^module
 mpi_decomp_finalize	m_mpi_decomp_finalize.F90	/^module
 mpi_decomp_init	m_mpi_decomp_init.F90	/^module
 mpi_halo_buffers	m_mpi_halo_buffers.F90	/^module
@@ -98,11 +94,6 @@ m_airfoil	m_airfoil.F90	/^module
 m_averaging_full	m_averaging_full.F90	/^module
 m_averaging_full_kernel	m_averaging_full_kernel.F90	/^module
 m_averaging_full_kernelfin	m_averaging_full_kernelfin.F90	/^module
-m_averaging_sec	m_averaging_sec.F90	/^module
-m_averaging_sec_kernel1	m_averaging_sec_kernel1.F90	/^module
-m_averaging_sec_kernel2	m_averaging_sec_kernel2.F90	/^module
-m_averaging_sec_kernelfin1	m_averaging_sec_kernelfin1.F90	/^module
-m_averaging_sec_kernelfin2	m_averaging_sec_kernelfin2.F90	/^module
 m_bilin	m_bilin.F90	/^module
 m_bilin_gpu	m_bilin_gpu.F90	/^module
 m_boundarycond	m_boundarycond.F90	/^module
@@ -157,6 +148,7 @@ m_inflow_turbulence_init	m_inflow_turbulence_init.F90	/^module
 m_inflow_turbulence_update	m_inflow_turbulence_update.F90	/^module
 m_inipert	m_inipert.F90	/^module
 m_inipert_kernel	m_inipert_kernel.F90	/^module
+m_liftdrag	m_liftdrag.F90	/^module
 m_macrovars	m_macrovars.F90	/^module
 m_macrovars_kernel	m_macrovars_kernel.F90	/^module
 m_mechanical_ablvisc	m_mechanical_ablvisc.F90	/^module
@@ -168,8 +160,6 @@ m_mpi_halo_exchange_j	m_mpi_halo_exchange_j.F90	/^module
 m_mpi_pack_jplane	m_mpi_pack_jplane.F90	/^module
 m_mpi_unpack_jplane	m_mpi_unpack_jplane.F90	/^module
 m_netcdfout	m_netcdfout.F90	/^module
-m_nrelliftdrag	m_nrelliftdrag.F90	/^module
-m_nrelreadfoil	m_nrelreadfoil.F90	/^module
 m_postcoll	m_postcoll.F90	/^module
 m_postcoll_kernel	m_postcoll_kernel.F90	/^module
 m_predicted_measurements	m_predicted_measurements.F90	/^module
@@ -192,7 +182,6 @@ m_sponge_tau	m_sponge_tau.F90	/^module
 m_sponge_tau_kernel	m_sponge_tau_kernel.F90	/^module
 m_string	m_string.F90	/^module
 m_tecfld	m_tecfld.F90	/^module
-m_tecfldsec	m_tecfldsec.F90	/^module
 m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
 m_testing	m_testing.F90	/^module
@@ -218,9 +207,6 @@ m_vreman	m_vreman.F90	/^module
 m_vreman_kernel	m_vreman_kernel.F90	/^module
 m_wtime	m_wtime.F90	/^module
 netcdfout	m_netcdfout.F90	/^module
-nrel5mw	mod_nrel5mw.F90	/^module
-nrelliftdrag	m_nrelliftdrag.F90	/^module
-nrelreadfoil	m_nrelreadfoil.F90	/^module
 postcoll	m_postcoll.F90	/^module
 postcoll_kernel	m_postcoll_kernel.F90	/^module
 predicted_measurements	m_predicted_measurements.F90	/^module
@@ -244,7 +230,6 @@ sponge_tau	m_sponge_tau.F90	/^module
 sponge_tau_kernel	m_sponge_tau_kernel.F90	/^module
 string	m_string.F90	/^module
 tecfld	m_tecfld.F90	/^module
-tecfldsec	m_tecfldsec.F90	/^module
 tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module
 testing	m_testing.F90	/^module
@@ -253,6 +238,7 @@ theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 turbines	mod_turbines.F90	/^module
 turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
+turbine_def	mod_turbine_def.F90	/^module
 turbine_deposit	m_turbine_deposit.F90	/^module
 turbine_deposit_gpu	m_turbine_deposit_gpu.F90	/^module
 turbine_deposit_gpu_kernel	m_turbine_deposit_gpu_kernel.F90	/^module

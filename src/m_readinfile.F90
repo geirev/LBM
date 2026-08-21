@@ -27,7 +27,6 @@ module m_readinfile
    real     kinevisc       ! Kinematic viscosity (nondimensional used in fequil)
    character(len=20) experiment ! experiment name
    logical laveraging      ! Computes full averages ower the whole grid (memory demanding)
-   logical laveturb        ! Computes  section averages with wind turbine according to Ashmut
    integer avestart        ! Iteration number for starting to compute averages
    integer avesave         ! Iteration number for ending averaging and saving averages
    integer itiploss        ! Tiploss(0-none, 1-Prandl, 2-Shen)
@@ -48,6 +47,7 @@ module m_readinfile
    real machnr
    type(physconv) p2l
 
+   character(len=20) turbname ! Turbine definition idenfier (NREL5MW)
    integer nturbines       ! Number of turbines in model
    integer alm_adm         ! Switch for Actuator Line model(0) or Actuator Disk model (1)
    integer nazim           ! Number of azimutal points on each radius circle for the ADM
@@ -59,8 +59,8 @@ module m_readinfile
    real    pitchangle      ! Imposed pitch angle
    real    turbrpm         ! Imposed turbine RPM
    real    tipspeedratio   ! Imposed tipspeed ratio
-   integer, allocatable ::  ipos(:),jpos(:),kpos(:) ! Turbine locations
-   real,    allocatable ::  yaw(:),tilt(:)          ! Turbine yaw and tilt
+   real, allocatable ::  xpos(:),ypos(:),zpos(:) ! Turbine locations
+   real, allocatable ::  yaw(:),tilt(:)          ! Turbine yaw and tilt
 
    integer  ihrr           ! Option (1) for regularized R(fneq) scheme
    integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
@@ -154,7 +154,7 @@ subroutine readinfile()
 
       read(10,'(a)',err=100)ver
 
-      read(10,'(1x,l1,1x,l1)',err=100)laveraging,laveturb ; print '(a,tr7,2l1)',  'laveraging, lavetu= ',laveraging,laveturb
+      read(10,'(1x,l1)',err=100)laveraging ; print '(a,tr7,2l1)', 'laveraging        = ',laveraging
       read(10,*,err=100)avestart           ; print '(a,i8)',      'avestart iteration= ',avestart
       read(10,*,err=100)avesave            ; print '(a,i8)',      'avesave iteration = ',avesave
 
@@ -162,9 +162,10 @@ subroutine readinfile()
 
       read(10,*,err=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
-         allocate(ipos(nturbines), jpos(nturbines), kpos(nturbines), yaw(n), tilt(n))
-         read(10,*,err=100)alm_adm            ; print '(a,i8,a)',        'Turbine model     = ',alm_adm
-         nazim=36
+         allocate(xpos(nturbines), ypos(nturbines), zpos(nturbines), yaw(n), tilt(n))
+         read(10,*,err=100)turbname           ; print '(a,a)',           'Turbine type      = ',trim(turbname)
+         read(10,*,err=100)alm_adm            ; print '(a,i8,a)',        'Actuator model    = ',alm_adm
+         read(10,*,err=100)nazim              ; print '(a,i8,a)',        'nazim in ADM      = ',nazim
          read(10,*,err=100)localwind          ; print '(a,i8,a)',        'localwind         = ',localwind
          read(10,*,err=100)dtcontrol          ; print '(a,f8.3,a)',      'dtcontrol         = ',dtcontrol,    ' [s]'
          read(10,*,err=100)yawrate_max        ; print '(a,f8.3,a)',      'yawrate_max       = ',yawrate_max,  ' [deg/s]'
@@ -176,9 +177,8 @@ subroutine readinfile()
          read(10,*,err=100)itiploss           ; print '(a,i8)',          'Tiploss           = ',itiploss
          read(10,'(a)',err=100)ver
          do n=1,nturbines
-            read(10,*,err=100)iturb,turbinename,ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
-            print '(a,x,i4,x,3a,x,3i4,2f10.2)','Turbine',iturb,'(',trim(turbinename),'):',&
-                                                                     ipos(n),jpos(n),kpos(n),yaw(n),tilt(n)
+            read(10,*,err=100)iturb,turbinename,xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
+            print '(a,x,i4,x,3a,x,5f10.2)','Turbine',iturb,'(',trim(turbinename),'):',xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
          enddo
       else
          print '(a)','Running without wind turbines'

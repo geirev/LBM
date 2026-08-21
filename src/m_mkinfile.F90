@@ -52,12 +52,12 @@ open(10,file='infile.in',status='new')
    write(10,'(a)')' 2.0              ! yaw_deadband    : yaw_controller: A threshold, in degrees, before yaw controller activates'
    write(10,'(a)')' 3.0              ! filter_time     : yaw_controller: time-filter of local wind average'
    write(10,'(a)')' 0.0              ! pitchangle      : Imposed pitchangle (0 until u=11.4, see table 7.1 in NREL doc).'
-   write(10,'(a)')' 8.95             ! turbrpm         : Turbine RPM for actuator line model (max 12.1 9.22 8.95 12.06'
-   write(10,'(a)')' 0.00             ! tipspeed ratio  : Tipspeed ratio (7.55) (if given will override the given turbine RPM'
+   write(10,'(a)')' 8.95             ! turbrpm         : Initial/fixed RPM; used when tipspeedratio <= 0'
+   write(10,'(a)')' 7.55             ! tipspeedratio   : Target TSR; >0 overrides RPM using local upstream wind'
    write(10,'(a)')' 0                ! itiploss        : Tiploss(0-none, 1-Prandl, 2-Shen)'
    write(10,'(a)')'# T1'
-   write(10,'(a)')' 1 T1 96 61 61 0.0 0.0    ! ipos, jpos, kpos, yaw, tilt'
-   write(10,'(a)')' 2 T2 96 91 61 0.0 0.0    ! ipos, jpos, kpos, yaw, tilt'
+   write(10,'(a)')' 1 T1 250.0  480.0  90.0  0.0  0.0    ! n, name, xpos, ypos, hubheight, yaw, tilt'
+   write(10,'(a)')' 2 T2 250.0  680.0  90.0  0.0  0.0    ! n, name, xpos, ypos, hubheight, yaw, tilt'
    write(10,'(a)')
    write(10,'(a)')
    write(10,'(a)')' kinematic viscosity of air is 1.78E-5'

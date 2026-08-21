@@ -72,8 +72,8 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
 
    uaxis = ux*e_axis(1) + uy*e_axis(2) + uz*e_axis(3)
 
-   utheta = points(p)%omegand*points(p)%relm + &
-            ux*e_tan(1) + uy*e_tan(2) + uz*e_tan(3)
+   utheta = points(p)%omegand*points(p)%relm - &
+            (ux*e_tan(1) + uy*e_tan(2) + uz*e_tan(3))
 
    phi       = atan2(uaxis, utheta)
    angattack = phi*180.0/pi - points(p)%twist - points(p)%pitch

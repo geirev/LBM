@@ -6,13 +6,80 @@
 !
 ! The main sequence is:
 !
-!   1. Local wind measurement and yaw control
+!   1. Local wind measurement, yaw control and rotor-speed control
 !   2. Update rotor azimuth
 !   3. Rebuild global actuator-point locations
 !   4. Compute actuator-point forces
 !   5. Combine point forces across MPI tiles
-!   6. Deposit the smoothed turbine forces onto the local CFD grid
+!   6. Deposit the smoothed turbine forces onto the local CFD grid!
 !
+!-----------------------------------------------------------------------
+! Local wind, yaw control and tip-speed-ratio control
+!-----------------------------------------------------------------------
+!
+! The local upstream wind is sampled every dtcontrol seconds using
+! turbine_local_wind(). The same filtered velocity components are used
+! for both yaw control and, when requested, rotor-speed control.
+!
+! A local wind measurement is performed when either
+!
+!      localwind == 1
+!
+! or
+!
+!      tipspeedratio > 0
+!
+! so TSR control can be used independently of the local yaw controller.
+!
+! The measured velocity components are low-pass filtered according to
+!
+!      q_f = q_f + alpha*(q-q_f)
+!
+! where
+!
+!      alpha = dtcontrol_actual/(filter_time + dtcontrol_actual).
+!
+! On the first measurement the filtered velocity is initialized directly
+! from the measured velocity to avoid a startup transient.
+!
+! Yaw control:
+!
+!   localwind = 0 : use yaw values specified in infile.in
+!   localwind = 1 : yaw each turbine toward its filtered local wind
+!   localwind = 2 : set yaw from the externally imposed direction udir
+!
+! Rotor-speed control:
+!
+!   tipspeedratio <= 0 :
+!      use the fixed RPM specified in infile.in.
+!
+!   tipspeedratio > 0 :
+!      override the fixed RPM individually for each turbine using the
+!      magnitude of its filtered local upstream velocity.
+!
+! The target tip-speed ratio is
+!
+!      lambda = omega*R/U
+!
+! giving
+!
+!      omega = lambda*U/R
+!
+! where R = hubradius + rotorradius is the physical rotor radius [m]
+! and U is the filtered local upstream wind speed [m/s].
+!
+! The resulting angular velocity is stored in nondimensional form as
+!
+!      omegand = omega*p2l%time
+!
+! and is subsequently used to advance the rotor azimuth:
+!
+!      theta = theta + omegand
+!
+! Thus, when tipspeedratio > 0, turbines operating in different local
+! wind conditions can rotate at different RPM while maintaining the
+! same prescribed target tip-speed ratio.
+!-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
 ! 1. Local wind measurement and yaw control
 !-----------------------------------------------------------------------
@@ -176,14 +243,16 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    use mpi
 #endif
    use mod_dimensions, only : nx, ny, nz, nyg
-   use m_readinfile, only : udir,nturbines,p2l,localwind,dtcontrol,yawrate_max,yaw_deadband,filter_time
+   use m_readinfile, only : uini,udir,nturbines,p2l,localwind,dtcontrol,yawrate_max,yaw_deadband,filter_time,tipspeedratio
 
    use mod_turbines, only : turbine_t,point_t,points_global, uavg_f, vavg_f, wavg_f,windfilter_initialized
+   use mod_turbine_def, only : hubradius,rotorradius,nrchords,relm
 
    use m_turbine_local_wind
    use m_turbine_yaw_controller
    use m_turbine_distribute_points
    use m_turbine_point_forces_gpu
+   use m_turbine_diagnostics
 
    use m_turbine_deposit
    use m_turbine_deposit_gpu
@@ -232,6 +301,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    integer n,ncontrol,itimestep
    real uavg, vavg, wavg, speed, winddir, unormal
    real dtcontrol_actual,alpha
+   real :: radius, ulocal, omega, rpm
+
 
    call cpustart()
 
@@ -247,16 +318,21 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 
    if (mod(itimestep,ncontrol) == 0) then
 
-      do n = 1,nturbines
+      do n = 1, nturbines
 
-         if (localwind==1) then
+         !---------------------------------------------------------
+         ! Local upstream wind is needed for:
+         !   localwind = 1       : local yaw controller
+         !   tipspeedratio > 0   : local rotor-speed controller
+         !---------------------------------------------------------
+         if (localwind == 1 .or. tipspeedratio > 0.0) then
+
             call turbine_local_wind(turbines_in(n),u,v,w,rho, &
                                     1.0,6, &
                                     uavg,vavg,wavg,speed,winddir,unormal)
 
             if (.not. windfilter_initialized(n)) then
 
-               ! Initialize from the first actual wind measurement.
                uavg_f(n) = uavg
                vavg_f(n) = vavg
                wavg_f(n) = wavg
@@ -264,39 +340,61 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
                windfilter_initialized(n) = .true.
 
             else
-               ! First-order low-pass filter.
+
                uavg_f(n) = uavg_f(n) + alpha*(uavg-uavg_f(n))
                vavg_f(n) = vavg_f(n) + alpha*(vavg-vavg_f(n))
                wavg_f(n) = wavg_f(n) + alpha*(wavg-wavg_f(n))
+
             endif
 
-            ! Compute direction from the FILTERED velocity components.
+         endif
+
+
+         !---------------------------------------------------------
+         ! Yaw control
+         !---------------------------------------------------------
+         if (localwind == 1) then
+
             winddir = atan2(vavg_f(n),uavg_f(n))*360.0/pi2
 
             call turbine_yaw_controller(winddir,dtcontrol_actual,1, &
-                 turbines_in(n:n)%yaw,yawrate_max,yaw_deadband)
+                 turbines_in(n)%yaw,yawrate_max,yaw_deadband)
 
-         elseif (localwind ==2) then
-! Using the externally imposed wind direction to set the turbine yaw
+         elseif (localwind == 2) then
+
             turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
+
+         endif
+
+
+         !---------------------------------------------------------
+         ! Rotor speed from prescribed tip-speed ratio
+         !
+         ! lambda = omega R / U
+         !---------------------------------------------------------
+         if (tipspeedratio > 0.0 .and. windfilter_initialized(n)) then
+
+            radius = rotorradius + hubradius       ! [m]
+
+            ! Filtered local incoming wind speed [m/s]
+            ulocal = sqrt(uavg_f(n)**2 + &
+                          vavg_f(n)**2 + &
+                          wavg_f(n)**2) * p2l%vel
+
+            omega = tipspeedratio * ulocal / radius
+
+            turbines_in(n)%omegand = omega * p2l%time
+
+            ! Diagnostic physical RPM
+            rpm = omega * 60.0/pi2
+
          endif
 
       enddo
 
    endif
 
-! 1. Update turbine azimuth
-!  if (tipspeed /= 0.0) then
-!     compute new turbrpm for each turbine
-!     do n=1,nrturbines
-!        turbrpm=f(u,tipspeedratio)
-!        omega = pi2 * turbrpm / 60.0
-!        turbines(n)%omegand    = omega * p2l%time
-!     enddo
-!  endif
 
-
-!   turbines_in(:)%theta = turbines_in(:)%theta + turbines_in(:)%omegand
    turbines_in(:)%theta = modulo(turbines_in(:)%theta + turbines_in(:)%omegand, pi2)
 
 ! 2. Construct global actuator point locations and blade data stored in points_global(np)
@@ -326,6 +424,11 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    Fvec_global = Fvec_local
 #endif
    call cpufinish(23)
+
+! Turbine aerodynamic diagnostics
+   if (mod(itimestep,10*ncontrol) == 0) then
+      call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
+   endif
 
 ! 6. Clear local forcing field and deposit smoothed forces
    call cpustart()

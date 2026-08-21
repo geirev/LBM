@@ -80,7 +80,7 @@ module mod_turbines
                                   ! turbine_compute_bladeforce;
                                   ! 1.0 for ALM,
                                   ! nblades/nazim for ADM-R
-
+      real    :: radius
    end type point_t
 
 

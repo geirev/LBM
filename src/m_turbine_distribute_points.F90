@@ -13,7 +13,7 @@ contains
 subroutine turbine_distribute_points(turbines_in, points_global)
 
    use mod_turbines,    only : turbine_t, point_t, pi2
-   use mod_turbine_def, only : nrchords, relm, dc, chord, twist
+   use mod_turbine_def, only : nrchords, relm, dc, chord, twist, rotorradius
    use m_turbine_extend_array
    use m_turbine_rotor_basis
 
@@ -102,6 +102,9 @@ subroutine turbine_distribute_points(turbines_in, points_global)
             pt%pitch       = turbines_in(it)%pitchangle
             pt%omegand     = turbines_in(it)%omegand
             pt%force_scale = fscale
+
+            pt%radius = turbines_in(it)%radius
+
 
             call turbine_extend_array(points_global, np+1)
             np = np + 1

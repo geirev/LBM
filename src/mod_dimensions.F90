@@ -4,20 +4,20 @@ module mod_dimensions
 ! ny is the tile dimension, while nyg is an ntiles*ny the global dimension in the y-direction.
 
 !windfarm big D=32
-!   integer, parameter :: nx = 928           !110          !928          ! grid dimension x-dir (east)
-!   integer, parameter :: ny = 120          ! Local-tile grid dimension y-dir (north)
-!   integer, parameter :: ntiles = 1        ! Number of tiles in y direction
-!   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
-!   integer, parameter :: nz = 121          ! grid dimension z-dir (up)
-!   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
-
-!windturbine yaw test
-   integer, parameter :: nx = 240          ! grid dimension x-dir (east)
-   integer, parameter :: ny = 240          ! grid dimension y-dir (north)
+   integer, parameter :: nx = 928           !110          !928          ! grid dimension x-dir (east)
+   integer, parameter :: ny = 120          ! Local-tile grid dimension y-dir (north)
    integer, parameter :: ntiles = 1        ! Number of tiles in y direction
    integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
-   integer, parameter :: nz = 60          ! grid dimension z-dir (up)
+   integer, parameter :: nz = 121          ! grid dimension z-dir (up)
    integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+
+!windturbine yaw test
+!   integer, parameter :: nx = 240          ! grid dimension x-dir (east)
+!   integer, parameter :: ny = 240          ! grid dimension y-dir (north)
+!   integer, parameter :: ntiles = 1        ! Number of tiles in y direction
+!   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+!   integer, parameter :: nz = 60          ! grid dimension z-dir (up)
+!   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !city
 !  integer, parameter :: nx = 200          ! grid dimension x-dir (east)

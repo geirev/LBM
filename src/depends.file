@@ -410,6 +410,11 @@ m_turbine_deposit_gpu.o:      m_turbine_deposit_gpu_kernel.o
 m_turbine_deposit.o:      makefile
 m_turbine_deposit.o:      mod_dimensions.o
 m_turbine_deposit.o:      mod_turbines.o
+m_turbine_diagnostics.o:      makefile
+m_turbine_diagnostics.o:      mod_turbine_def.o
+m_turbine_diagnostics.o:      mod_turbines.o
+m_turbine_diagnostics.o:      m_readinfile.o
+m_turbine_diagnostics.o:      m_turbine_rotor_basis.o
 m_turbine_distribute_points.o:      makefile
 m_turbine_distribute_points.o:      mod_turbine_def.o
 m_turbine_distribute_points.o:      mod_turbines.o
@@ -419,10 +424,12 @@ m_turbine_extend_array.o:      makefile
 m_turbine_extend_array.o:      mod_turbines.o
 m_turbine_forcing.o:      makefile
 m_turbine_forcing.o:      mod_dimensions.o
+m_turbine_forcing.o:      mod_turbine_def.o
 m_turbine_forcing.o:      mod_turbines.o
 m_turbine_forcing.o:      m_readinfile.o
 m_turbine_forcing.o:      m_turbine_deposit_gpu.o
 m_turbine_forcing.o:      m_turbine_deposit.o
+m_turbine_forcing.o:      m_turbine_diagnostics.o
 m_turbine_forcing.o:      m_turbine_distribute_points.o
 m_turbine_forcing.o:      m_turbine_local_wind.o
 m_turbine_forcing.o:      m_turbine_point_forces_gpu.o

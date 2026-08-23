@@ -70,6 +70,12 @@ F90SOURCE = \
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
+	m_mpi_decomp_finalize.F90\
+	m_mpi_decomp_init.F90\
+	m_mpi_halo_buffers.F90\
+	m_mpi_halo_exchange_j.F90\
+	m_mpi_pack_jplane.F90\
+	m_mpi_unpack_jplane.F90\
 	m_netcdfout.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
@@ -110,7 +116,6 @@ F90SOURCE = \
 	m_turbine_deposit_gpu_kernel.F90\
 	m_turbine_diagnostics.F90\
 	m_turbine_distribute_points.F90\
-	m_turbine_extend_array.F90\
 	m_turbine_forcing.F90\
 	m_turbine_initialize.F90\
 	m_turbine_interpolate_velocity.F90\

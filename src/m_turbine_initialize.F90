@@ -68,6 +68,7 @@ subroutine turbine_initialize()
 
       ! Blade discretization
       turbines(n)%nblades = 3
+      turbines(n)%nrchords = nrchords
 
 
       ! Orientation & dynamics

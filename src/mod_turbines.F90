@@ -34,6 +34,7 @@ module mod_turbines
                                   ! = (hubradius + rotorradius)/p2l%length
 
       integer :: iradius          ! rotor radius in number of grid cells
+      integer :: nrchords         ! Number of elements in a turbine blade
 
       integer :: nblades          ! number of blades
 

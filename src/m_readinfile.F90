@@ -162,7 +162,7 @@ subroutine readinfile()
 
       read(10,*,err=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
-         allocate(xpos(nturbines), ypos(nturbines), zpos(nturbines), yaw(n), tilt(n))
+         allocate(xpos(nturbines), ypos(nturbines), zpos(nturbines), yaw(nturbines), tilt(nturbines))
          read(10,*,err=100)turbname           ; print '(a,a)',           'Turbine type      = ',trim(turbname)
          read(10,*,err=100)alm_adm            ; print '(a,i8,a)',        'Actuator model    = ',alm_adm
          read(10,*,err=100)nazim              ; print '(a,i8,a)',        'nazim in ADM      = ',nazim

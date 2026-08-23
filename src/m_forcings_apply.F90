@@ -27,14 +27,12 @@ subroutine forcings_apply(f,external_forcing,rho,u,v,w)
    attributes(device) :: w
    
 #endif
-   integer n,ip
 
 #ifdef _CUDA
    integer :: tx, ty, tz, bx, by, bz
 #endif
    real :: inv1cs2
    real :: inv2cs4
-   real :: inv2cs6
    real :: inv6cs6
    real :: ratio
    integer, parameter :: icpu=7
@@ -43,7 +41,6 @@ subroutine forcings_apply(f,external_forcing,rho,u,v,w)
 
    inv1cs2 = 1.0/(cs2)
    inv2cs4 = 1.0/(2.0*cs4)
-   inv2cs6 = 1.0/(2.0*cs6)
    inv6cs6 = 1.0/(6.0*cs6)
    ratio = inv6cs6 / inv2cs4
 #ifdef _CUDA

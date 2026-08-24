@@ -104,9 +104,7 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
 
          torque = torque + tq
 
-         ! Independent torque check.
-         ! Minus sign follows the present rotor-axis convention.
-         torque_rft = torque_rft - points_global(p)%relm * &
+         torque_rft = torque_rft + points_global(p)%relm * &
                       dot_product(fpoint,e_tan)
 
          ! Torque contribution from this radial element

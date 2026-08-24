@@ -395,7 +395,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    endif
 
 
-   turbines_in(:)%theta = modulo(turbines_in(:)%theta + turbines_in(:)%omegand, pi2)
+   turbines_in(:)%theta = modulo(turbines_in(:)%theta - turbines_in(:)%omegand, pi2)
 
 ! 2. Construct global actuator point locations and blade data stored in points_global(np)
    if (allocated(points_global)) deallocate(points_global)
@@ -426,9 +426,9 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    call cpufinish(23)
 
 ! Turbine aerodynamic diagnostics
-!   if (mod(itimestep,10*ncontrol) == 0) then
-!      call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
-!   endif
+  !if (mod(itimestep,10*ncontrol) == 0) then
+  !   call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
+  !endif
 
 ! 6. Clear local forcing field and deposit smoothed forces
    call cpustart()

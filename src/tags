@@ -189,10 +189,12 @@ m_testvar	m_testvar.F90	/^module
 m_theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 m_turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 m_turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
+m_turbine_controller	m_turbine_controller.F90	/^module
 m_turbine_deposit	m_turbine_deposit.F90	/^module
 m_turbine_deposit_gpu	m_turbine_deposit_gpu.F90	/^module
 m_turbine_deposit_gpu_kernel	m_turbine_deposit_gpu_kernel.F90	/^module
 m_turbine_diagnostics	m_turbine_diagnostics.F90	/^module
+m_turbine_diagnostics_timeseries	m_turbine_diagnostics_timeseries.F90	/^module
 m_turbine_distribute_points	m_turbine_distribute_points.F90	/^module
 m_turbine_forcing	m_turbine_forcing.F90	/^module
 m_turbine_initialize	m_turbine_initialize.F90	/^module
@@ -238,11 +240,13 @@ theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 turbines	mod_turbines.F90	/^module
 turbines_bounding_box	m_turbines_bounding_box.F90	/^module
 turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
+turbine_controller	m_turbine_controller.F90	/^module
 turbine_def	mod_turbine_def.F90	/^module
 turbine_deposit	m_turbine_deposit.F90	/^module
 turbine_deposit_gpu	m_turbine_deposit_gpu.F90	/^module
 turbine_deposit_gpu_kernel	m_turbine_deposit_gpu_kernel.F90	/^module
 turbine_diagnostics	m_turbine_diagnostics.F90	/^module
+turbine_diagnostics_timeseries	m_turbine_diagnostics_timeseries.F90	/^module
 turbine_distribute_points	m_turbine_distribute_points.F90	/^module
 turbine_forcing	m_turbine_forcing.F90	/^module
 turbine_initialize	m_turbine_initialize.F90	/^module

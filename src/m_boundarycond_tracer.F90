@@ -8,9 +8,9 @@ subroutine boundarycond_tracer(tracer)
 #endif
    use m_wtime
 
-   use m_boundary_i_periodic_kernel
-   use m_boundary_j_periodic_kernel
-   use m_boundary_k_periodic_kernel
+   use m_boundary_periodic_i_kernel
+   use m_boundary_periodic_j_kernel
+   use m_boundary_periodic_k_kernel
 
    implicit none
    real, intent(inout):: tracer(ntracer,0:nx+1,0:ny+1,0:nz+1)

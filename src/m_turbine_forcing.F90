@@ -249,15 +249,15 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    use mod_turbine_def, only : hubradius,rotorradius,nrchords,relm
 
    use m_turbine_local_wind
-   use m_turbine_yaw_controller
+   use m_turbine_controller
    use m_turbine_distribute_points
    use m_turbine_point_forces_gpu
    use m_turbine_diagnostics
+   use m_turbine_diagnostics_timeseries
 
    use m_turbine_deposit
    use m_turbine_deposit_gpu
 
-   use m_turbines_bounding_box
    use m_wtime
 #ifdef MPI
    use m_mpi_decomp_init, only : j_start, j_end, mpi_rank
@@ -305,130 +305,87 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 
 
    call cpustart()
-
-
-! Target controller interval in seconds and number of time steps per approximate second
    ncontrol = max(1,nint(dtcontrol/p2l%time))
-
-! Actual controller interval in seconds represented by ncontrol model steps
-   dtcontrol_actual = real(ncontrol)*p2l%time
-
-
-   alpha = dtcontrol_actual/(filter_time + dtcontrol_actual)
-
-   if (mod(itimestep,ncontrol) == 0) then
-
-      do n = 1, nturbines
-
-         !---------------------------------------------------------
-         ! Local upstream wind is needed for:
-         !   localwind = 1       : local yaw controller
-         !   tipspeedratio > 0   : local rotor-speed controller
-         !---------------------------------------------------------
-         if (localwind == 1 .or. tipspeedratio > 0.0) then
-
-            call turbine_local_wind(turbines_in(n),u,v,w,rho, &
-                                    1.0,6, &
-                                    uavg,vavg,wavg,speed,winddir,unormal)
-
-            if (.not. windfilter_initialized(n)) then
-
-               uavg_f(n) = uavg
-               vavg_f(n) = vavg
-               wavg_f(n) = wavg
-
-               windfilter_initialized(n) = .true.
-
-            else
-
-               uavg_f(n) = uavg_f(n) + alpha*(uavg-uavg_f(n))
-               vavg_f(n) = vavg_f(n) + alpha*(vavg-vavg_f(n))
-               wavg_f(n) = wavg_f(n) + alpha*(wavg-wavg_f(n))
-
-            endif
-
-         endif
+!-----------------------------------------------------------------------
+! 1. Update turbine controllers:
+!
+!    - local upstream wind
+!    - wind filtering
+!    - yaw
+!    - rotor RPM
+!    - blade pitch
+!-----------------------------------------------------------------------
+   call turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
-         !---------------------------------------------------------
-         ! Yaw control
-         !---------------------------------------------------------
-         if (localwind == 1) then
-
-            winddir = atan2(vavg_f(n),uavg_f(n))*360.0/pi2
-
-            call turbine_yaw_controller(winddir,dtcontrol_actual,1, &
-                 turbines_in(n)%yaw,yawrate_max,yaw_deadband)
-
-         elseif (localwind == 2) then
-
-            turbines_in(n)%yaw = (wrap_180(udir)/360.0)*pi2
-
-         endif
 
 
-         !---------------------------------------------------------
-         ! Rotor speed from prescribed tip-speed ratio
-         !
-         ! lambda = omega R / U
-         !---------------------------------------------------------
-         if (tipspeedratio > 0.0 .and. windfilter_initialized(n)) then
 
-            radius = rotorradius + hubradius       ! [m]
-
-            ! Filtered local incoming wind speed [m/s]
-            ulocal = sqrt(uavg_f(n)**2 + &
-                          vavg_f(n)**2 + &
-                          wavg_f(n)**2) * p2l%vel
-
-            omega = tipspeedratio * ulocal / radius
-
-            turbines_in(n)%omegand = omega * p2l%time
-
-            ! Diagnostic physical RPM
-            rpm = omega * 60.0/pi2
-
-         endif
-
-      enddo
-
-   endif
+!-----------------------------------------------------------------------
+! 2. Update rotor azimuth.
+!-----------------------------------------------------------------------
+   turbines_in(:)%theta = modulo(turbines_in(:)%theta-turbines_in(:)%omegand,pi2)
 
 
-   turbines_in(:)%theta = modulo(turbines_in(:)%theta - turbines_in(:)%omegand, pi2)
 
-! 2. Construct global actuator point locations and blade data stored in points_global(np)
+
+
+
+! 3. Construct global actuator point locations and blade data stored in points_global(np)
    if (allocated(points_global)) deallocate(points_global)
    call turbine_distribute_points(turbines_in, points_global)
    np = size(points_global)
 
    call cpufinish(21)
 
+
+
+
+
    call cpustart()
-! 3. Allocate global force vectors
+! 4. Allocate global force vectors
    if (allocated(Fvec_local))  deallocate(Fvec_local) ; allocate(Fvec_local(3, np))
    if (allocated(Fvec_global)) deallocate(Fvec_global); allocate(Fvec_global(3, np))
    Fvec_local  = 0.0
    Fvec_global = 0.0
 
 
-! 4. Compute point forces directly on device
+
+
+
+! 5. Compute point forces directly on device
    call turbine_point_forces_gpu(points_global, rho, u, v, w, Fvec_local, np)
    call cpufinish(22)
 
+
+
+
+
    call cpustart()
 #ifdef MPI
-! 5. MPI reduction: sum contributions from all tiles
+! 6. MPI reduction: sum contributions from all tiles
    call MPI_Allreduce(Fvec_local, Fvec_global, 3*np, MPI_REAL, MPI_SUM, MPI_COMM_WORLD, ierr)
 #else
    Fvec_global = Fvec_local
 #endif
    call cpufinish(23)
 
+
+
+!-----------------------------------------------------------------------
+! Update aerodynamic feedback for the next pitch-controller step.
+!-----------------------------------------------------------------------
+   call turbine_controller_feedback(turbines_in,points_global, &
+                                    Fvec_global,np,itimestep)
+
 ! Turbine aerodynamic diagnostics
-  !if (mod(itimestep,10*ncontrol) == 0) then
-  !   call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
-  !endif
+  if (mod(itimestep,10*ncontrol) == 0) then
+      call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
+  endif
+
+  if (mod(itimestep,ncontrol) == 0) then
+     call turbine_diagnostics_timeseries(turbines_in,points_global,Fvec_global,np,itimestep)
+  endif
 
 ! 6. Clear local forcing field and deposit smoothed forces
    call cpustart()

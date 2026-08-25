@@ -23,6 +23,8 @@ module mod_turbines
 !------------------------------------------------------------
    type turbine_t
 
+      character(len=10) :: name
+
       integer :: imodel           ! 0 = actuator line (ALM)
                                   ! 1 = rotating actuator disk (ADM-R)
 

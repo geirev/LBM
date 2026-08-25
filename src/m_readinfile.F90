@@ -44,8 +44,8 @@ module m_readinfile
       real vel
       real visc
    end type
-   real machnr
    type(physconv) p2l
+   real machnr
 
    character(len=20) turbname ! Turbine definition idenfier (NREL5MW)
    integer nturbines       ! Number of turbines in model
@@ -61,6 +61,7 @@ module m_readinfile
    real    tipspeedratio   ! Imposed tipspeed ratio
    real, allocatable ::  xpos(:),ypos(:),zpos(:) ! Turbine locations
    real, allocatable ::  yaw(:),tilt(:)          ! Turbine yaw and tilt
+   character(len=10), allocatable ::  turbinename(:)
 
    integer  ihrr           ! Option (1) for regularized R(fneq) scheme
    integer  ibgk           ! Option (2,3) for second or third order BGK f^eq expansion
@@ -71,7 +72,6 @@ module m_readinfile
    real smagorinsky        ! smagorinsky constant (0.15) used in subgridscale mixing
    logical ltiming         ! true for timing of kernels. Should be false to avoid syncs
    integer iturb
-   character(len=10) turbinename
 
 contains
 subroutine readinfile()
@@ -162,7 +162,7 @@ subroutine readinfile()
 
       read(10,*,err=100)nturbines              ; print '(a,i8)',          'Num of turbines   = ',nturbines
       if (nturbines > 0) then
-         allocate(xpos(nturbines), ypos(nturbines), zpos(nturbines), yaw(nturbines), tilt(nturbines))
+         allocate(xpos(nturbines), ypos(nturbines), zpos(nturbines), yaw(nturbines), tilt(nturbines), turbinename(nturbines))
          read(10,*,err=100)turbname           ; print '(a,a)',           'Turbine type      = ',trim(turbname)
          read(10,*,err=100)alm_adm            ; print '(a,i8,a)',        'Actuator model    = ',alm_adm
          read(10,*,err=100)nazim              ; print '(a,i8,a)',        'nazim in ADM      = ',nazim
@@ -177,8 +177,8 @@ subroutine readinfile()
          read(10,*,err=100)itiploss           ; print '(a,i8)',          'Tiploss           = ',itiploss
          read(10,'(a)',err=100)ver
          do n=1,nturbines
-            read(10,*,err=100)iturb,turbinename,xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
-            print '(a,x,i4,x,3a,x,5f10.2)','Turbine',iturb,'(',trim(turbinename),'):',xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
+            read(10,*,err=100)iturb,turbinename(n),xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
+            print '(a,x,i4,x,3a,x,5f10.2)','Turbine',iturb,'(',trim(turbinename(n)),'):',xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
          enddo
       else
          print '(a)','Running without wind turbines'

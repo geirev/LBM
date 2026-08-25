@@ -105,10 +105,12 @@ F90SOURCE = \
 	m_testvar.F90\
 	m_theta_fluxbc_kernel.F90\
 	m_turbine_compute_bladeforce.F90\
+	m_turbine_controller.F90\
 	m_turbine_deposit.F90\
 	m_turbine_deposit_gpu.F90\
 	m_turbine_deposit_gpu_kernel.F90\
 	m_turbine_diagnostics.F90\
+	m_turbine_diagnostics_timeseries.F90\
 	m_turbine_distribute_points.F90\
 	m_turbine_forcing.F90\
 	m_turbine_initialize.F90\

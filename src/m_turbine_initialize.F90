@@ -5,7 +5,7 @@
 module m_turbine_initialize
    use mod_turbines
    use mod_turbine_def
-   use m_readinfile, only : nturbines, p2l, xpos,ypos,zpos,yaw,tilt,turbrpm, pitchangle, itiploss, alm_adm, nazim
+   use m_readinfile, only : nturbines, p2l, xpos,ypos,zpos,yaw,tilt,turbinename,turbrpm, pitchangle, itiploss, alm_adm, nazim
    implicit none
 contains
 
@@ -51,6 +51,7 @@ subroutine turbine_initialize()
 
    do n = 1, nturbines
 
+      turbines(n)%name = trim(turbinename(n))
       turbines(n)%imodel = alm_adm
 
       ! Hub position in global coordinates (meter)

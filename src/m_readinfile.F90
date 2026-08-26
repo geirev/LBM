@@ -1,4 +1,5 @@
 module m_readinfile
+   use mod_dimensions, only : nx, nyg, nz
 ! Simulation parameters
    integer  nt0            ! First timestep
    integer  nt1            ! Last timestep
@@ -179,6 +180,18 @@ subroutine readinfile()
          do n=1,nturbines
             read(10,*,err=100)iturb,turbinename(n),xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
             print '(a,x,i4,x,3a,x,5f10.2)','Turbine',iturb,'(',trim(turbinename(n)),'):',xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)
+            if (xpos(n) < 0 .or.  xpos(n) > real(nx )*p2l%length .or. &
+                ypos(n) < 0 .or.  ypos(n) > real(nyg)*p2l%length .or. &
+                zpos(n) < 0 .or.  zpos(n) > real(nz )*p2l%length) then
+               write(*,*)
+               write(*,*) 'ERROR: turbine hub lies outside model domain'
+               write(*,'(A,I5,2X,A)') 'Turbine : ',n,trim(turbinename(n))
+               write(*,'(A,3F12.3,A)') 'Hub     : ', xpos(n),ypos(n),zpos(n),' [m]'
+               write(*,'(A,2F12.3,A)') 'x-range : ', p2l%length,real(nx)*p2l%length,' [m]'
+               write(*,'(A,2F12.3,A)') 'y-range : ', p2l%length,real(nyg)*p2l%length,' [m]'
+               write(*,'(A,2F12.3,A)') 'z-range : ', p2l%length,real(nz)*p2l%length,' [m]'
+               error stop
+            endif
          enddo
       else
          print '(a)','Running without wind turbines'

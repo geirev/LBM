@@ -5,6 +5,7 @@ contains
 subroutine turbine_point_forces_gpu(points_global, rho, u, v, w, Fvec_local, np)
    use mod_dimensions, only : nx, ny, nz
    use mod_turbines,   only : point_t
+   use mod_turbine_def,   only : radiusnd
    use m_turbine_point_forces_kernel
 #ifdef _CUDA
    use cudafor
@@ -56,7 +57,7 @@ subroutine turbine_point_forces_gpu(points_global, rho, u, v, w, Fvec_local, np)
 #ifdef _CUDA
         &<<<nblocks, tpb>>>&
 #endif
-        &(points, np, rho, u, v, w, j_start, j_end, Fvec)
+        &(points, np, rho, u, v, w, j_start, j_end, Fvec, radiusnd)
 
 #ifdef _CUDA
    istat = cudaDeviceSynchronize()

@@ -3,10 +3,6 @@
 !  Turbine initialization: read config and fill turbines(:)
 !==============================================================
 module m_turbine_initialize
-   use mod_turbines
-   use mod_turbine_def
-   use m_readinfile, only : nturbines, p2l, xpos,ypos,zpos,yaw,tilt,turbinename,turbrpm, pitchangle, itiploss, alm_adm, nazim
-   implicit none
 contains
 
 !--------------------------------------------------------------
@@ -24,9 +20,12 @@ contains
 !    - Calls read_foil() to load airfoil tables
 !--------------------------------------------------------------
 subroutine turbine_initialize()
+   use mod_turbines
+   use mod_turbine_def
+   use m_readinfile, only : nturbines, p2l, xpos,ypos,zpos,yaw,tilt,turbinename,turbrpm, pitchangle
    implicit none
    integer :: n
-   real    :: radius, omega
+   real    :: omega
 
 ! Upstream tubine velocity filtering
    allocate(uavg_f(nturbines))
@@ -49,28 +48,17 @@ subroutine turbine_initialize()
    dc  (1:)  = dc  (1:)   / p2l%length
    chord(1:) = chord(1:)  / p2l%length
 
-   do n = 1, nturbines
+   ! Rotor geometry (non-dimensionalized by p2l%length)
+   radiusnd  = radius / p2l%length
+   iradius = nint(radiusnd)
 
+   do n = 1, nturbines
       turbines(n)%name = trim(turbinename(n))
-      turbines(n)%imodel = alm_adm
 
       ! Hub position in global coordinates (meter)
       turbines(n)%xhub = xpos(n)/p2l%length
       turbines(n)%yhub = ypos(n)/p2l%length
       turbines(n)%zhub = zpos(n)/p2l%length
-
-      ! Rotor geometry (non-dimensionalized by p2l%length)
-      radius              = rotorradius + hubradius
-      turbines(n)%radius  = radius / p2l%length
-      turbines(n)%iradius = nint(turbines(n)%radius)
-
-!      print '(a,f8.2,i4)', 'Rotor radius=   ', turbines(n)%radius,  turbines(n)%iradius
-!      print '(a,f8.2)',    'Rotor diameter=', 2.0 * turbines(n)%radius
-
-      ! Blade discretization
-      turbines(n)%nblades = 3
-      turbines(n)%nrchords = nrchords
-
 
       ! Orientation & dynamics
       turbines(n)%theta      = 0.0
@@ -78,10 +66,7 @@ subroutine turbine_initialize()
       turbines(n)%tilt       = (tilt(n)/360.0)*pi2
       turbines(n)%omegand    = omega * p2l%time
       turbines(n)%pitchangle = pitchangle
-      turbines(n)%tiploss    = itiploss
 
-      ! Actuator disk samples per radius
-      turbines(n)%nazim = nazim
    end do
 
    ! Load aerodynamic coefficient tables

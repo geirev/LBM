@@ -341,6 +341,7 @@ m_readinfile.o:      m_mkinfile.o
 m_readrestart.o:      makefile
 m_readrestart.o:      mod_D3Q27setup.o
 m_readrestart.o:      mod_dimensions.o
+m_readrestart.o:      mod_turbines.o
 m_readrestart.o:      m_readinfile.o
 m_regularization_kernel.o:      makefile
 m_regularization_kernel.o:      mod_D3Q27setup.o
@@ -357,6 +358,7 @@ m_rhotest.o:      mod_dimensions.o
 m_saverestart.o:      makefile
 m_saverestart.o:      mod_D3Q27setup.o
 m_saverestart.o:      mod_dimensions.o
+m_saverestart.o:      mod_turbines.o
 m_saverestart.o:      m_readinfile.o
 m_save_uvw.o:      makefile
 m_save_uvw.o:      mod_dimensions.o
@@ -401,6 +403,7 @@ m_testvar.o:      makefile
 m_theta_fluxbc_kernel.o:      makefile
 m_theta_fluxbc_kernel.o:      mod_dimensions.o
 m_turbine_compute_bladeforce.o:      makefile
+m_turbine_compute_bladeforce.o:      mod_turbine_def.o
 m_turbine_compute_bladeforce.o:      mod_turbines.o
 m_turbine_compute_bladeforce.o:      m_turbine_rotor_basis.o
 m_turbine_controller.o:      makefile
@@ -424,12 +427,14 @@ m_turbine_diagnostics.o:      mod_turbines.o
 m_turbine_diagnostics.o:      m_readinfile.o
 m_turbine_diagnostics.o:      m_turbine_rotor_basis.o
 m_turbine_diagnostics_timeseries.o:      makefile
+m_turbine_diagnostics_timeseries.o:      mod_turbine_def.o
 m_turbine_diagnostics_timeseries.o:      mod_turbines.o
 m_turbine_diagnostics_timeseries.o:      m_readinfile.o
 m_turbine_diagnostics_timeseries.o:      m_turbine_rotor_basis.o
 m_turbine_distribute_points.o:      makefile
 m_turbine_distribute_points.o:      mod_turbine_def.o
 m_turbine_distribute_points.o:      mod_turbines.o
+m_turbine_distribute_points.o:      m_readinfile.o
 m_turbine_distribute_points.o:      m_turbine_rotor_basis.o
 m_turbine_forcing.o:      makefile
 m_turbine_forcing.o:      mod_dimensions.o
@@ -457,11 +462,13 @@ m_turbine_local_wind_kernel.o:      mod_dimensions.o
 m_turbine_local_wind_kernel.o:      m_turbine_interpolate_velocity.o
 m_turbine_local_wind.o:      makefile
 m_turbine_local_wind.o:      mod_dimensions.o
+m_turbine_local_wind.o:      mod_turbine_def.o
 m_turbine_local_wind.o:      mod_turbines.o
 m_turbine_local_wind.o:      m_turbine_local_wind_kernel.o
 m_turbine_local_wind.o:      m_turbine_rotor_basis.o
 m_turbine_point_forces_gpu.o:      makefile
 m_turbine_point_forces_gpu.o:      mod_dimensions.o
+m_turbine_point_forces_gpu.o:      mod_turbine_def.o
 m_turbine_point_forces_gpu.o:      mod_turbines.o
 m_turbine_point_forces_gpu.o:      m_turbine_point_forces_kernel.o
 m_turbine_point_forces_kernel.o:      makefile

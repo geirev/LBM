@@ -29,7 +29,7 @@ module m_readinfile
    logical laveraging      ! Computes full averages ower the whole grid (memory demanding)
    integer avestart        ! Iteration number for starting to compute averages
    integer avesave         ! Iteration number for ending averaging and saving averages
-   integer itiploss        ! Tiploss(0-none, 1-Prandl, 2-Shen)
+   real    powerloss       ! Powerloss factor for turbine drive chain and generator
    integer :: ntx          ! Number of threads per block in x-direction
    integer :: nty          ! Number of threads per block in y-direction
    integer :: ntz          ! Number of threads per block in z-direction
@@ -49,7 +49,7 @@ module m_readinfile
 
    character(len=20) turbname ! Turbine definition idenfier (NREL5MW)
    integer nturbines       ! Number of turbines in model
-   integer alm_adm         ! Switch for Actuator Line model(0) or Actuator Disk model (1)
+   integer actuator_model  ! Switch for Actuator Line model(0) or Actuator Disk model (1)
    integer nazim           ! Number of azimutal points on each radius circle for the ADM
    integer localwind       ! Compute upstreem wind direction locally for each turbine (1), use external udir(2), else use infile values
    real    filter_time     ! filter time for when computing local upstream winds for yaw computation
@@ -164,7 +164,7 @@ subroutine readinfile()
       if (nturbines > 0) then
          allocate(xpos(nturbines), ypos(nturbines), zpos(nturbines), yaw(nturbines), tilt(nturbines), turbinename(nturbines))
          read(10,*,err=100)turbname           ; print '(a,a)',           'Turbine type      = ',trim(turbname)
-         read(10,*,err=100)alm_adm            ; print '(a,i8,a)',        'Actuator model    = ',alm_adm
+         read(10,*,err=100)actuator_model     ; print '(a,i8,a)',        'Actuator model    = ',actuator_model
          read(10,*,err=100)nazim              ; print '(a,i8,a)',        'nazim in ADM      = ',nazim
          read(10,*,err=100)localwind          ; print '(a,i8,a)',        'localwind         = ',localwind
          read(10,*,err=100)dtcontrol          ; print '(a,f8.3,a)',      'dtcontrol         = ',dtcontrol,    ' [s]'
@@ -174,7 +174,7 @@ subroutine readinfile()
          read(10,*,err=100)pitchangle         ; print '(a,f8.3,a)',      'Pitch angle       = ',pitchangle,   ' [deg]'
          read(10,*,err=100)turbrpm            ; print '(a,f8.3,a)',      'RPM for act.line  = ',turbrpm,      ' [rotations/min]'
          read(10,*,err=100)tipspeedratio      ; print '(a,f8.3,a)',      'Tipspeed ratio    = ',tipspeedratio,' []'
-         read(10,*,err=100)itiploss           ; print '(a,i8)',          'Tiploss           = ',itiploss
+         read(10,*,err=100)powerloss          ; print '(a,f8.3,a)',      'Powerloss factor  = ',powerloss,    ' []'
          read(10,'(a)',err=100)ver
          do n=1,nturbines
             read(10,*,err=100)iturb,turbinename(n),xpos(n),ypos(n),zpos(n),yaw(n),tilt(n)

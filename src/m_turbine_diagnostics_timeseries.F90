@@ -55,7 +55,8 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
                             uavg_f,vavg_f,wavg_f, &
                             windfilter_initialized
 
-   use m_readinfile, only : nturbines,p2l,uini
+   use mod_turbine_def, only : radiusnd
+   use m_readinfile, only : nturbines,p2l,uini,powerloss
    use m_turbine_rotor_basis
 
 #ifdef MPI
@@ -110,7 +111,6 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
    real :: ulocal_phys        ! [m/s]
    real :: time_phys          ! [s]
 
-   real :: loss=0.93          ! Factor multiplied with power to account for power loss
 
    character(len=256) :: filename
    logical ex
@@ -259,8 +259,7 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
 !-----------------------------------------------------------------------
 ! Rotor geometry.
 !-----------------------------------------------------------------------
-      radius = turbines_in(n)%radius
-      area   = pi*radius*radius
+      area   = pi*radiusnd*radiusnd
 
 
 !-----------------------------------------------------------------------
@@ -276,7 +275,7 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
       if (ulocal > 1.0e-12) then
 
          ! Tip-speed ratio [-].
-         lambda_actual = turbines_in(n)%omegand*radius/ulocal
+         lambda_actual = turbines_in(n)%omegand*radiusnd/ulocal
 
          ! Mechanical rotor power [LB power].
          power = torque*turbines_in(n)%omegand
@@ -287,7 +286,7 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
 
          ! Torque coefficient [-].
          cq = torque / &
-              (0.5*rho_ref*ulocal**2*area*radius)
+              (0.5*rho_ref*ulocal**2*area*radiusnd)
 
          ! Power coefficient [-].
          cp = power / &
@@ -317,7 +316,6 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
 !
 ! timestep time[s] U[m/s] RPM TSR Ct Cq Cp T[kN] Q[kN m] P[MW]
 !-----------------------------------------------------------------------
-      write(filename,'("output/turbine_",I3.3,".dat")') n
       write(filename,'("output/turbine_",a,".dat")') trim(turbines_in(n)%name)
 
       open(newunit=iu,file=trim(filename), &
@@ -342,7 +340,7 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
            thrust_phys/1.0e3, &
            torque_phys/1.0e3, &
            power_phys/1.0e6,  &
-           power_phys*loss/1.0e6
+           power_phys*powerloss/1.0e6
 
       close(iu)
 

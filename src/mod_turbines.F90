@@ -25,20 +25,9 @@ module mod_turbines
 
       character(len=10) :: name
 
-      integer :: imodel           ! 0 = actuator line (ALM)
-                                  ! 1 = rotating actuator disk (ADM-R)
-
       real    :: xhub             ! hub x-position (global grid index)
       real    :: yhub             ! hub y-position (global grid index)
       real    :: zhub             ! hub z-position (global grid index)
-
-      real    :: radius           ! total rotor radius, non-dimensional
-                                  ! = (hubradius + rotorradius)/p2l%length
-
-      integer :: iradius          ! rotor radius in number of grid cells
-      integer :: nrchords         ! Number of elements in a turbine blade
-
-      integer :: nblades          ! number of blades
 
       real    :: theta            ! rotor azimuth (rad)
       real    :: yaw              ! yaw angle (rad)
@@ -46,10 +35,6 @@ module mod_turbines
 
       real    :: omegand          ! non-dim angular speed, omega*p2l%time
       real    :: pitchangle       ! collective pitch (deg)
-      integer :: tiploss          ! tip-loss flag
-
-      integer :: nazim            ! number of azimuthal samples per radius,
-                                  ! ADM-R only
 
    end type turbine_t
 
@@ -74,7 +59,8 @@ module mod_turbines
 
       real    :: twist            ! local aerodynamic twist (deg)
 
-      real    :: yaw, tilt        ! yaw/tilt (rad)
+      real    :: yaw              ! yaw (rad)
+      real    :: tilt             ! tilt (rad)
       real    :: theta            ! rotor azimuth (rad)
       real    :: pitch            ! collective pitch (deg)
       real    :: omegand          ! non-dim angular speed
@@ -83,7 +69,6 @@ module mod_turbines
                                   ! turbine_compute_bladeforce;
                                   ! 1.0 for ALM,
                                   ! nblades/nazim for ADM-R
-      real    :: radius
    end type point_t
 
 

@@ -1,4 +1,5 @@
 module m_turbine_controller
+   use mod_turbine_def, only : hubradius,rotorradius, ratedrpm, ratedpower, pitch_min, pitch_max, pitchrate_max
 
    implicit none
 
@@ -14,20 +15,6 @@ module m_turbine_controller
    logical, allocatable, save :: power_initialized(:)
 
    logical, save :: controller_initialized = .false.
-
-
-!-----------------------------------------------------------------------
-! Rated turbine/controller parameters.
-!
-! Values below correspond approximately to the NREL 5 MW turbine.
-! These should eventually be moved to the turbine input file.
-!-----------------------------------------------------------------------
-   real, save :: ratedrpm      = 12.1       ! [rev/min]
-   real, save :: ratedpower    = 5.0e6      ! [W]
-
-   real, save :: pitch_min     = 0.0        ! [deg]
-   real, save :: pitch_max     = 30.0       ! [deg]
-   real, save :: pitchrate_max = 8.0        ! [deg/s]
 
 ! PI gains based on normalized power error:
 !
@@ -92,7 +79,6 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
                             uavg_f,vavg_f,wavg_f, &
                             windfilter_initialized
 
-   use mod_turbine_def, only : hubradius,rotorradius
 
    use m_readinfile, only : p2l,udir,nturbines, &
                             localwind,dtcontrol,filter_time, &
@@ -140,7 +126,7 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 !-----------------------------------------------------------------------
 ! Initialize controller state.
 !-----------------------------------------------------------------------
-   call turbine_controller_initialize(nturbines)
+   call turbine_controller_initialize(size(turbines_in))
 
 
 !-----------------------------------------------------------------------
@@ -162,7 +148,7 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 !=======================================================================
 ! Turbine loop.
 !=======================================================================
-   do n = 1,nturbines
+   do n = 1,size(turbines_in)
 
 
 !-----------------------------------------------------------------------
@@ -251,13 +237,32 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
             omega_rated = ratedrpm*pi2/60.0                 ! [rad/s]
 
 
-!=======================================================================
-! BELOW RATED
+!-----------------------------------------------------------------------
+! Below-rated operation:
 !
-! Maintain target TSR and return blades toward minimum pitch.
-!=======================================================================
-            if (rpm_tsr <= ratedrpm) then
+! Maintain the prescribed optimal TSR until either the TSR-based rotor
+! speed reaches rated RPM AND the aerodynamic power is approaching
+! rated power.
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+! Rotor-speed and pitch control.
+!-----------------------------------------------------------------------
+            if (.not.power_initialized(n)) then
 
+               ! No aerodynamic feedback available yet.
+               omega = min(omega_tsr,omega_rated)
+
+               call turbine_pitch_below_rated( &
+                    turbines_in(n)%pitchangle, &
+                    pitch_integral(n), &
+                    dtcontrol_actual)
+
+            elseif (rpm_tsr <= ratedrpm) then
+
+               !------------------------------------------------------------
+               ! Region 2:
+               ! Maintain prescribed optimal TSR.
+               !------------------------------------------------------------
                omega = omega_tsr
 
                call turbine_pitch_below_rated( &
@@ -265,30 +270,24 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
                     pitch_integral(n), &
                     dtcontrol_actual)
 
-
-!=======================================================================
-! ABOVE RATED
-!
-! Cap rotor speed at rated RPM and regulate aerodynamic power
-! by collective blade pitching.
-!=======================================================================
             else
 
+               !------------------------------------------------------------
+               ! Region 3:
+               ! Rotor has reached rated RPM.
+               !
+               ! Hold RPM at rated value and regulate aerodynamic power
+               ! using collective blade pitch.
+               !------------------------------------------------------------
                omega = omega_rated
 
-               if (power_initialized(n)) then
-
-                  call turbine_pitch_power_controller( &
-                       paero_last(n),ratedpower, &
-                       dtcontrol_actual, &
-                       turbines_in(n)%pitchangle, &
-                       pitch_integral(n))
-
-               endif
+               call turbine_pitch_power_controller( &
+                    paero_last(n),ratedpower, &
+                    dtcontrol_actual, &
+                    turbines_in(n)%pitchangle, &
+                    pitch_integral(n))
 
             endif
-
-
 !-----------------------------------------------------------------------
 ! Store rotor angular increment in lattice units [rad/timestep].
 !-----------------------------------------------------------------------
@@ -322,8 +321,7 @@ end subroutine turbine_controller
 !
 ! A pitch-rate limit and simple integral anti-windup are applied.
 !=======================================================================
-subroutine turbine_pitch_power_controller(paero,prated,dt,pitch, &
-                                          integral_error)
+subroutine turbine_pitch_power_controller(paero,prated,dt,pitch,integral_error)
 
    implicit none
 

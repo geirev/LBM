@@ -31,7 +31,7 @@
 !
 ! The lattice variables therefore have the following dimensions:
 !
-!      position, radius, relm     [LU]
+!      position, radiusnd, relm     [LU]
 !      velocity                   [LU/TS]
 !      density                    [rho_LB]
 !      omegand                    [rad/TS]
@@ -113,7 +113,7 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
                             uavg_f, vavg_f, wavg_f, &
                             windfilter_initialized
 
-   use mod_turbine_def, only : nrchords, relm
+   use mod_turbine_def, only : nrchords, relm, radiusnd
    use m_readinfile, only : nturbines, p2l, uini, tipspeedratio
    use m_turbine_rotor_basis
 
@@ -278,16 +278,15 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
 
          ulocal_phys = ulocal*p2l%vel
 
-         radius      = turbines_in(n)%radius
-         radius_phys = radius*p2l%length
+         radius_phys = radiusnd*p2l%length
 
-         area = pi*radius*radius
+         area = pi*radiusnd*radiusnd
 
 
          if (ulocal > 1.0e-12) then
 
             ! Actual tip-speed ratio [-].
-            lambda_actual = turbines_in(n)%omegand*radius/ulocal
+            lambda_actual = turbines_in(n)%omegand*radiusnd/ulocal
 
             ! Mechanical rotor power [LB power].
             power = torque*turbines_in(n)%omegand
@@ -297,7 +296,7 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
             !---------------------------------------------------------
             ct = thrust / (0.5*rho_ref*ulocal**2*area)
 
-            cq = torque / (0.5*rho_ref*ulocal**2*area*radius)
+            cq = torque / (0.5*rho_ref*ulocal**2*area*radiusnd)
 
             cp = power  / (0.5*rho_ref*ulocal**3*area)
 
@@ -306,7 +305,7 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
             !---------------------------------------------------------
             ct_ref = thrust / (0.5*rho_ref*uini**2*area)
 
-            cq_ref = torque / (0.5*rho_ref*uini**2*area*radius)
+            cq_ref = torque / (0.5*rho_ref*uini**2*area*radiusnd)
 
             cp_ref = power  / (0.5*rho_ref*uini**3*area)
 
@@ -421,7 +420,7 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
 
          write(*,'(I5,F12.4,ES16.6,F16.6)') &
               ic, &
-              relm(ic)/turbines_in(n)%radius, &
+              relm(ic)/radiusnd, &
               torque_chord(ic)*torque_conv/1.0e3, &
               torque_chord(ic)/torque
 

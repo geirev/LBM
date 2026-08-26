@@ -4,7 +4,7 @@ contains
 #ifdef _CUDA
 attributes(global) &
 #endif
-subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end, Fvec)
+subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end, Fvec, radiusnd)
    use mod_dimensions, only : nx, ny, nz
    use mod_turbines,   only : point_t,pi
    use m_liftdrag
@@ -15,6 +15,7 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
 
    type(point_t) :: points(:)
    integer, value :: np
+   real, value :: radiusnd
    real :: rho(0:nx+1,0:ny+1,0:nz+1)
    real :: u  (0:nx+1,0:ny+1,0:nz+1)
    real :: v  (0:nx+1,0:ny+1,0:nz+1)
@@ -81,7 +82,7 @@ subroutine turbine_point_forces_kernel(points, np, rho, u, v, w, j_start, j_end,
    call liftdrag(clift, cdrag, angattack, points(p)%foil)
 
    call turbine_compute_bladeforce(Fvec(:,p), points(p), &
-                                   uaxis, utheta, dens, clift, cdrag)
+                                   uaxis, utheta, dens, clift, cdrag, radiusnd)
 
    Fvec(1,p) = Fvec(1,p) * points(p)%force_scale
    Fvec(2,p) = Fvec(2,p) * points(p)%force_scale

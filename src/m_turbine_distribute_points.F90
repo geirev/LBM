@@ -5,18 +5,19 @@ contains
 ! Build the global list of actuator sample points (points_global) from turbine
 ! hub locations and blade geometry.
 !
-! Runtime switch per turbine, via turbines_in(it)%imodel:
-!   imodel = 0 : actuator line (ALM) - nblades discrete azimuthal positions,
-!                rotating with theta.
-!   imodel = 1 : rotating actuator disk (ADM-R) - nazim fixed azimuthal
-!                positions per radius, each carrying
-!                force_scale = nblades/nazim so that the annulus receives
-!                the same total force as nblades individual blade passes.
+! Runtime switch per turbine, via:
+!   actuator_model = 0 : actuator line (ALM) - nblades discrete azimuthal positions,
+!                        rotating with theta.
+!   actuator_model = 1 : rotating actuator disk (ADM-R) - nazim fixed azimuthal
+!                        positions per radius, each carrying
+!                        force_scale = nblades/nazim so that the annulus receives
+!                        the same total force as nblades individual blade passes.
 subroutine turbine_distribute_points(turbines_in, points_global)
 
    use mod_turbines,    only : turbine_t, point_t, pi2
-   use mod_turbine_def, only : nrchords, relm, dc, chord, twist
+   use mod_turbine_def, only : nrchords, relm, dc, chord, twist, radiusnd, nblades
    use m_turbine_rotor_basis
+   use m_readinfile, only : actuator_model,nazim
 
    implicit none
 
@@ -41,27 +42,27 @@ subroutine turbine_distribute_points(turbines_in, points_global)
 
    do it = 1,size(turbines_in)
 
-      select case(turbines_in(it)%imodel)
+      select case(actuator_model)
 
       case(0)
-         if (turbines_in(it)%nblades <= 0) then
+         if (nblades <= 0) then
             write(*,*) 'ERROR: nblades must be positive for turbine ',it
             error stop
          endif
 
-         nsamples = turbines_in(it)%nblades
+         nsamples = nblades
 
       case(1)
-         if (turbines_in(it)%nazim <= 0) then
+         if (nazim <= 0) then
             write(*,*) 'ERROR: nazim must be positive for ADM-R turbine ',it
             error stop
          endif
 
-         nsamples = turbines_in(it)%nazim
+         nsamples = nazim
 
       case default
          write(*,*) 'ERROR: invalid turbine model for turbine ',it, &
-                    ': ',turbines_in(it)%imodel
+                    ': ',actuator_model
          error stop
 
       end select
@@ -92,15 +93,15 @@ subroutine turbine_distribute_points(turbines_in, points_global)
 
 
 ! ALM or ADM-R model
-      select case(turbines_in(it)%imodel)
+      select case(actuator_model)
 
       case(0)
-         nsamples = turbines_in(it)%nblades
+         nsamples = nblades
          fscale   = 1.0
 
       case(1)
-         nsamples = turbines_in(it)%nazim
-         fscale   = real(turbines_in(it)%nblades)/real(turbines_in(it)%nazim)
+         nsamples = nazim
+         fscale   = real(nblades)/real(nazim)
 
       end select
 
@@ -108,7 +109,7 @@ subroutine turbine_distribute_points(turbines_in, points_global)
 ! Loop over blade or azimuthal positions
       do ib = 1,nsamples
 
-         if (turbines_in(it)%imodel == 0) then
+         if (actuator_model == 0) then
 
             ! Blade azimuth advances with rotor rotation.
             theta = turbines_in(it)%theta + &
@@ -150,8 +151,6 @@ subroutine turbine_distribute_points(turbines_in, points_global)
             pt%pitch       = turbines_in(it)%pitchangle
             pt%omegand     = turbines_in(it)%omegand
             pt%force_scale = fscale
-
-            pt%radius = turbines_in(it)%radius
 
             points_global(p) = pt
 

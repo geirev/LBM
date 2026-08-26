@@ -4,6 +4,7 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    use mod_dimensions
    use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb,iablvisc
+   use mod_turbines, only : turbines
 #ifdef MPI
    use m_mpi_decomp_init, only : mpi_rank
 #endif
@@ -101,15 +102,15 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    endif
 
    if (nturbines > 0) then
-      prefix='theta'
+      prefix='turbines'
       fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
       inquire(file=trim(fname),exist=ex)
       print '(3a)','reading: ',trim(fname)
       if (ex) then
          open(newunit=iunit,file=trim(fname),form="unformatted", status='unknown')
-            read(iunit,err=998)theta
+            read(iunit,err=998)turbines
          close(iunit)
-         print *,'read restart theta',theta
+         print *,'read restart turbines'
       else
          print '(a)','readrestart: No restart file for theta avaialble:',trim(fname)
          stop

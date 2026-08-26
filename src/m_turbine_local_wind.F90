@@ -25,6 +25,7 @@ subroutine turbine_local_wind(turbine,u,v,w,rho,dist_upstream_D,nsrad, &
 ! nsrad=6 gives approximately pi*6^2 = 113 sampling points.
 
    use mod_dimensions
+   use mod_turbine_def, only : radiusnd
    use mod_turbines, only : turbine_t
    use m_turbine_rotor_basis
    use m_turbine_local_wind_kernel
@@ -70,7 +71,7 @@ subroutine turbine_local_wind(turbine,u,v,w,rho,dist_upstream_D,nsrad, &
    integer :: ierr
 #endif
 
-   real :: radius,diameter
+   real :: diameter
    real :: e_axis(3),e1(3),e2(3)
    real :: xc,yc,zc
 
@@ -99,11 +100,7 @@ subroutine turbine_local_wind(turbine,u,v,w,rho,dist_upstream_D,nsrad, &
 !------------------------------------------------------------------
    call turbine_rotor_basis(turbine%yaw,turbine%tilt,e_axis,e1,e2)
 
-!------------------------------------------------------------------
-! Rotor radius.
-!------------------------------------------------------------------
-   radius=turbine%radius
-   diameter = 2.0*radius
+   diameter = 2.0*radiusnd
 
 
 !------------------------------------------------------------------
@@ -144,7 +141,7 @@ subroutine turbine_local_wind(turbine,u,v,w,rho,dist_upstream_D,nsrad, &
      xc,yc,zc, &
      e1(1),e1(2),e1(3), &
      e2(1),e2(2),e2(3), &
-     radius,nsrad,j_start,j_end,sums_d)
+     radiusnd,nsrad,j_start,j_end,sums_d)
 
    istat = cudaDeviceSynchronize()
 
@@ -157,7 +154,7 @@ subroutine turbine_local_wind(turbine,u,v,w,rho,dist_upstream_D,nsrad, &
      xc,yc,zc, &
      e1(1),e1(2),e1(3), &
      e2(1),e2(2),e2(3), &
-     radius,nsrad,j_start,j_end,sums)
+     radiusnd,nsrad,j_start,j_end,sums)
 
 #endif
 

@@ -4,9 +4,10 @@ contains
 #ifdef _CUDA
 attributes(host,device) &
 #endif
-subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd)
+subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd, rtip)
 
    use mod_turbines, only : point_t
+   use mod_turbine_def, only : nblades
    use m_turbine_rotor_basis
 
    implicit none
@@ -14,6 +15,7 @@ subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd
    type(point_t), intent(in) :: point
    real, intent(in)          :: u_ax, u_tan_rel
    real, intent(in)          :: dens
+   real, intent(in)          :: rtip
    real, intent(in)          :: cl, cd
    real, intent(out)         :: Fvec(3)
 
@@ -23,11 +25,10 @@ subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd
    real :: phi, sinphi, cosphi
 
    real :: ftip, arg
-   real :: r, rtip
+   real :: r
    real :: exp_arg
 
    real, parameter :: pi = acos(-1.0)
-   integer, parameter :: nblades = 3
    real, parameter :: epsloss = 1.0e-6
 
    ! Build rotor coordinate system
@@ -55,7 +56,6 @@ subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd
    ! f = B/2 * (R-r)/(r |sin(phi)|)
    !------------------------------------------------------------
    r    = point%relm
-   rtip = point%radius
 
    arg = 0.5*real(nblades) * max(rtip-r,0.0) / &
          max(r*abs(sinphi),epsloss)

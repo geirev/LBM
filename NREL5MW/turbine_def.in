@@ -1,7 +1,12 @@
- rotorradius = 61.500
- hubradius   = 1.500
- nrchords    = 17
- nrdata      = 150
+ rotorradius   = 61.500     ! m]
+ hubradius     = 1.500      ! [m]
+ nrchords      = 17
+ nrdata        = 150
+ ratedrpm      = 12.1       ! [rev/min]
+ ratedpower    = 5.0e6      ! [W]
+ pitch_min     = 0.0        ! [deg]
+ pitch_max     = 30.0       ! [deg]
+ pitchrate_max = 8.0        ! [deg/s]
 
  Foil          DC      RELM   Chord      Twist   airfoil
  foil_1    2.73330   2.86670  3.54200  13.3080   Cylinder1.dat

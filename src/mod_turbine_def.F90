@@ -9,8 +9,14 @@ module mod_turbine_def
 !
 ! rotorradius : Aerodynamic blade length from the blade root to
 !               the blade tip [m].
+! radius      : hubradius+rotorradius
 !
 !               Total rotor radius = hubradius + rotorradius
+! ratedrpm      = 12.1       ! [rev/min]
+! ratedpower    = 5.0e6      ! [W]
+! pitch_min     = 0.0        ! [deg]
+! pitch_max     = 30.0       ! [deg]
+! pitchrate_max = 8.0        ! [deg/s]
 !
 ! DC          : Spanwise length of the blade element [m].
 !
@@ -46,10 +52,19 @@ module mod_turbine_def
 ! but makes the indexing between blade elements and foil data direct.
 !------------------------------------------------------------
 
-   real,    save :: rotorradius
-   real,    save :: hubradius
-   integer, save :: nrchords    ! number of blade elements
-   integer, save :: nrd         ! maximum number of entries in a foil table
+   integer, parameter :: nblades = 3
+   real,    save :: rotorradius    ! [m]
+   real,    save :: hubradius      ! [m]
+   real,    save :: radius         ! [m]
+   real,    save :: radiusnd       ! [LU]
+   integer, save :: iradius        ! [-]
+   integer, save :: nrchords       ! number of blade elements
+   integer, save :: nrd            ! maximum number of entries in a foil table
+   real,    save :: ratedrpm       ! [rev/min]
+   real,    save :: ratedpower     ! [W]
+   real,    save :: pitch_min      ! [deg]
+   real,    save :: pitch_max      ! [deg]
+   real,    save :: pitchrate_max  ! [deg/s]
 
    real, allocatable, save :: dc(:)
    real, allocatable, save :: relm(:)
@@ -86,12 +101,18 @@ contains
 !=======================================================================
 ! Read turbine blade geometry and allocate turbine arrays.
 !
-! Expected input format:
+! Expected input format (NREL5MW):
 !
-! rotorradius = 61.500
-! hubradius   = 1.500
-! nrchords    = 17
-! nrd         = 150
+! rotorradius   = 61.500
+! hubradius     = 1.500
+! radius        = 63.0
+! nrchords      = 17
+! nrd           = 150
+! ratedrpm      = 12.1       ! [rev/min]
+! ratedpower    = 5.0e6      ! [W]
+! pitch_min     = 0.0        ! [deg]
+! pitch_max     = 30.0       ! [deg]
+! pitchrate_max = 8.0        ! [deg/s]
 !
 ! Foil          DC      RELM   Chord      Twist   foilfile
 ! foil_1    2.73330   2.86670  3.54200  13.3080   Cylinder1.dat
@@ -108,7 +129,7 @@ subroutine turbine_def(turbname)
    character(len=32)  :: foilname
    character(len=200)  :: filename
 
-   real :: rinner, router, rtip
+   real :: rinner, router
    real, parameter :: tol = 1.0e-3
 
    filename=trim(turbname)//'/turbine_def.in'
@@ -141,6 +162,26 @@ subroutine turbine_def(turbname)
    read(iu,'(A)',iostat=ios) line
    if (ios /= 0) call turbine_read_error(filename)
    call read_integer_parameter(line, nrd)
+
+   read(iu,'(A)',iostat=ios) line
+   if (ios /= 0) call turbine_read_error(filename)
+   call read_real_parameter(line, ratedrpm)
+
+   read(iu,'(A)',iostat=ios) line
+   if (ios /= 0) call turbine_read_error(filename)
+   call read_real_parameter(line, ratedpower)
+
+   read(iu,'(A)',iostat=ios) line
+   if (ios /= 0) call turbine_read_error(filename)
+   call read_real_parameter(line, pitch_min)
+
+   read(iu,'(A)',iostat=ios) line
+   if (ios /= 0) call turbine_read_error(filename)
+   call read_real_parameter(line, pitch_max)
+
+   read(iu,'(A)',iostat=ios) line
+   if (ios /= 0) call turbine_read_error(filename)
+   call read_real_parameter(line, pitchrate_max)
 
    !------------------------------------------------------------
    ! Basic checks
@@ -239,7 +280,7 @@ subroutine turbine_def(turbname)
    router = relm(nrchords) + 0.5*dc(nrchords)
 
    ! Expected blade tip radius
-   rtip = hubradius + rotorradius
+   radius = hubradius + rotorradius
 
    if (abs(rinner - hubradius) > tol) then
       write(*,*) 'WARNING: first blade element does not start at hubradius'
@@ -247,9 +288,9 @@ subroutine turbine_def(turbname)
       write(*,*) '         first inner edge = ', rinner
    end if
 
-   if (abs(router - rtip) > tol) then
+   if (abs(router - radius) > tol) then
       write(*,*) 'WARNING: blade elements do not end at rotor tip'
-      write(*,*) '         expected tip = ', rtip
+      write(*,*) '         expected tip = ', radius
       write(*,*) '         table tip    = ', router
    end if
 
@@ -258,11 +299,16 @@ subroutine turbine_def(turbname)
    !------------------------------------------------------------
    write(*,*)
    write(*,*) 'Turbine blade definition read from: ', trim(filename)
-   write(*,*) 'Blade length       = ', rotorradius
-   write(*,*) 'Hub radius         = ', hubradius
-   write(*,*) 'Total rotor radius = ', hubradius + rotorradius
+   write(*,*) 'Blade length       = ', rotorradius,             '[m]'
+   write(*,*) 'Hub radius         = ', hubradius,               '[m]'
+   write(*,*) 'Total rotor radius = ', hubradius + rotorradius, '[m]'
    write(*,*) 'Number of elements = ', nrchords
    write(*,*) 'Maximum foil data  = ', nrd
+   write(*,*) 'Rated RPM          = ', ratedrpm,                '[rev/min]'
+   write(*,*) 'Rated power        = ', ratedpower,              '[W]'
+   write(*,*) 'Minimum pitch      = ', pitch_min
+   write(*,*) 'Maximum pitch      = ', pitch_max
+   write(*,*) 'Maximum pitchrate  = ', pitchrate_max
 
    write(*,*)
    write(*,'(A)') &

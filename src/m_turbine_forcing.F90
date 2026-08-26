@@ -324,7 +324,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 !-----------------------------------------------------------------------
 ! 2. Update rotor azimuth.
 !-----------------------------------------------------------------------
-   turbines_in(:)%theta = modulo(turbines_in(:)%theta-turbines_in(:)%omegand,pi2)
+   turbines_in(:)%theta = modulo(turbines_in(:)%theta+turbines_in(:)%omegand,pi2)
 
 
 

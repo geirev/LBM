@@ -2,6 +2,7 @@ module m_saverestart
 contains
 subroutine saverestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    use mod_dimensions
+   use mod_turbines, only : turbines
    use mod_D3Q27setup, only : nl
    use m_readinfile, only : inflowturbulence,nturbines,nrturb,ldump,iablvisc
 #ifdef MPI
@@ -115,10 +116,10 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    endif
 
    if (nturbines > 0) then
-      prefix='theta'
+      prefix='turbines'
       fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
       open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
-         write(iunit)theta
+         write(iunit)turbines
       close(iunit)
    endif
 

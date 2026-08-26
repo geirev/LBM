@@ -36,45 +36,71 @@ The forcing function for the inflow turbulence, the turbines, and the buoyancy f
 <img src="plots/city.png" width="600">
 </p>
 
+## Release notes
 
-## Release notes:
-### (Aug 2026 second update): Generalized turbine model, initialization, airfoil database, and turbine control
-The turbine initialization has been substantially rewritten to remove hard-coded blade geometry and airfoil data and to separate turbine-type properties from individual turbine state. Turbine geometry and aerodynamic coefficients are now read from external input files, making it straightforward to introduce new turbine types without recompilation.
+### Aug 2026 — Second update: Generalized turbine model, external turbine definitions, and turbine control
 
-**Blade geometry**
+The turbine implementation has been substantially generalized and reorganized. Hard-coded blade geometry and aerodynamic data have been removed, turbine-type properties have been separated from the state of individual turbines, and turbine geometry and airfoil data are now read from external files. The turbine controller has also been extended to include rotor-speed and collective-pitch control in addition to yaw control.
+
+#### Blade geometry and turbine definition
+
 - Added a turbine definition file (`turbine_def.in`) containing rotor dimensions, blade geometry, aerodynamic twist, operating parameters, and references to the corresponding airfoil files.
 - Blade geometry is defined by blade-element length (`DC`), radial position (`RELM`), chord, twist, and associated airfoil file.
-- Added consistency checks to ensure that the blade elements start at the hub radius and terminate at the specified rotor radius.
-- Blade geometry is read in physical units and automatically converted to lattice units during turbine initialization.
-- Blade geometry and rotor properties are stored globally in `mod_turbine_def` and shared by all turbines of the same type.
+- Added consistency checks to ensure that blade elements start at the hub radius and terminate at the specified rotor radius.
+- Blade geometry is read in physical units and automatically converted to lattice units during initialization.
+- Turbine-type properties such as rotor and blade geometry are stored globally in `mod_turbine_def` and shared by all turbines of the same type.
 
-**Airfoil database**
+#### Airfoil database
+
 - Airfoil polars are stored in individual text files, with one aerodynamic lookup table for each blade element.
-- Each file contains a simple four-column table:
+- Each file contains a four-column table:
+
   ```text
   # angle[deg]    Cl      Cd      Cm
   ```
+
 - Comment lines beginning with `#` or `!` are ignored.
 - The number of aerodynamic data points in each airfoil file is detected automatically, while `nrd` specifies the maximum permitted table size.
 - Airfoil tables are automatically transferred to the GPU during initialization.
+- Removed the previous `nfoil()` mapping; each blade element now directly references its aerodynamic lookup table.
 
-**Turbine and actuator-model configuration**
+#### Turbine and actuator-model configuration
+
 - Farm-wide turbine and actuator-model settings are read from `infile.in`.
 - `actuator_model` selects between the actuator line model (`0`) and rotating actuator disk model (`1`).
-- `nazim` specifies the number of azimuthal sampling points per radial position for the actuator disk model.
-- Turbine RPM, imposed pitch angle, tip-speed ratio, tip-loss model, and yaw-controller parameters are specified globally.
-- Each turbine is assigned an individual name, hub position, yaw angle, and tilt angle.
-- Hub coordinates are specified directly as `(x,y,z)` in meters rather than as grid indices. Turbine placement is therefore independent of grid resolution.
+- `nazim` specifies the number of azimuthal sampling points per radial position for the rotating actuator disk model.
+- Prescribed RPM, tip-speed ratio, pitch angle, tip-loss model, and controller parameters are specified as common turbine-model parameters.
+- Each turbine is assigned an individual number, name, hub position, yaw angle, and tilt angle.
+- Hub coordinates are specified directly as physical `(x,y,z)` coordinates in meters rather than grid indices, making turbine placement independent of grid resolution.
 
-**Internal implementation**
+#### Turbine control
+
+The original yaw controller introduced in the previous August update has been integrated into a more general turbine-control framework.
+
+- `localwind=0`: use the yaw angle specified for each turbine in `infile.in`.
+- `localwind=1`: control each turbine using its locally resolved upstream wind.
+- `localwind=2`: align the turbines using the externally prescribed inflow direction.
+- For local control, the resolved velocity is averaged over an upstream sampling plane and may be low-pass filtered to reduce sensitivity to turbulent fluctuations.
+- Yaw motion is limited by a specified maximum yaw rate and yaw deadband.
+- If a target tip-speed ratio (TSR) is specified, rotor RPM is dynamically adjusted to maintain that TSR below rated conditions.
+- Rotor speed is limited to the specified rated RPM.
+- Above rated conditions, collective blade pitch is adjusted to regulate aerodynamic power toward the specified rated turbine power.
+- Pitch control is constrained by minimum and maximum pitch angles and a maximum pitch rate.
+- Aerodynamic power is obtained from the resolved actuator forces and rotor torque and fed back to the pitch controller.
+- Controller updates are performed at the specified `dtcontrol` interval rather than every CFD timestep.
+- Each turbine is controlled independently and can therefore respond to local wake-induced variations in wind speed and direction.
+
+#### Internal implementation
+
 - Removed all hard-coded NREL 5 MW blade geometry and aerodynamic tables.
-- Removed the previous `nfoil()` mapping. Each blade element now directly references its own aerodynamic lookup table, simplifying indexing throughout the ALM/ADM implementation.
-- Turbine-type properties such as rotor geometry, blade geometry, and airfoil data are stored globally in `mod_turbine_def`.
-- Farm-wide actuator-model parameters are stored separately from the individual turbine state.
-- `turbine_t` has been reduced to quantities associated with an individual turbine: name, hub position, rotor phase, yaw, tilt, angular velocity, and pitch angle.
-- Actuator-point data are constructed from the shared turbine definition and the state of each individual turbine.
+- Separated turbine-type properties from individual turbine state.
+- `turbine_t` now contains only quantities associated with an individual turbine, such as name, hub position, rotor phase, yaw, tilt, angular velocity, and pitch angle.
+- Blade geometry, rotor properties, operating limits, and aerodynamic data are stored globally in `mod_turbine_def`.
+- Actuator-point data are constructed from the shared turbine definition and the instantaneous state of each turbine.
+- The same blade geometry and aerodynamic force calculations are used by both the actuator line and rotating actuator disk models.
 
-**Example `turbine_def.in`**
+#### Example `turbine_def.in`
+
 ```text
 rotorradius   = 75.0         ! [m]
 hubradius     = 2.00         ! [m]
@@ -92,7 +118,8 @@ foil_1   3.28949   3.64474    3.5000   54.654600    af_1.dat
 foil_25  0.65790  76.67135    0.7140   -3.632710    af_25.dat
 ```
 
-**Example airfoil file**
+#### Example airfoil file
+
 ```text
 # angle[deg]      Cl          Cd          Cm
 -180.0      -0.00100     0.60000     0.00000
@@ -102,21 +129,22 @@ foil_25  0.65790  76.67135    0.7140   -3.632710    af_25.dat
  180.0       0.00100     0.60000     0.00000
 ```
 
-**Updated turbine section in `infile.in`**
+#### Updated turbine section in `infile.in`
+
 ```text
 # Turbine definitions
  2                ! nturbines       : Number of turbines
  NREL6MW          ! turbname        : Turbine type
  0                ! actuator_model  : Actuator line (0), actuator disk (1)
  36               ! nazim           : Number of azimuthal points per radius in ADM
- 1                ! localwind       : 1-local upstream wind, 0-infile yaw, 2-external wind direction
- 1.0              ! dtcontrol       : Seconds between yaw-controller updates
+ 1                ! localwind       : 0-infile yaw, 1-local upstream wind, 2-external wind direction
+ 1.0              ! dtcontrol       : Controller update interval [s]
  0.3              ! yawrate_max     : Maximum yaw rate [deg/s]
  2.0              ! yaw_deadband    : Yaw-controller deadband [deg]
- 3.0              ! filter_time     : Time scale for filtering local upstream wind [s]
- 0.0              ! pitchangle      : Imposed collective pitch angle [deg]
+ 3.0              ! filter_time     : Local-wind filter time scale [s]
+ 0.0              ! pitchangle      : Prescribed collective pitch angle [deg]
  8.95             ! turbrpm         : Prescribed turbine RPM
- 0.00             ! tipspeedratio   : If > 0, overrides prescribed turbine RPM
+ 0.00             ! tipspeedratio   : Target TSR; if > 0, overrides prescribed RPM
  0                ! itiploss        : Tip loss: 0-none, 1-Prandtl, 2-Shen
 
 # Turbine number/name and hub position [m], yaw and tilt [deg]
@@ -124,51 +152,36 @@ foil_25  0.65790  76.67135    0.7140   -3.632710    af_25.dat
  2 T2 250.0  680.0  90.0  0.0  0.0
 ```
 
-The turbine table now includes an integer turbine identifier and a turbine name. Hub positions are specified as physical `(x,y,z)` coordinates in meters rather than grid indices. This allows turbines to be positioned accurately and makes turbine placement independent of the computational grid resolution.
 
-**Turbine control**
-- Added a turbine controller for dynamically updating yaw, rotor speed, and collective blade pitch.
-- The yaw controller can align each turbine with the locally resolved upstream wind direction rather than only using the externally prescribed inflow direction.
-- Local wind conditions are estimated by averaging the resolved velocity over a circular sampling plane located upstream of each rotor. The measured velocity components can be low-pass filtered to reduce sensitivity to turbulent fluctuations and avoid unnecessary yaw motion.
-- Yaw motion is controlled by a specified maximum yaw rate and yaw deadband.
-- Rotor speed can be controlled using a prescribed tip-speed ratio (TSR). Below rated conditions, the controller adjusts RPM to maintain the target TSR.
-- The rotor speed is limited to the specified rated RPM. Above rated conditions, the rotor speed is held at rated RPM and collective blade pitch is adjusted to regulate aerodynamic power toward the rated turbine power.
-- The pitch controller is subject to specified minimum and maximum pitch angles and a maximum pitch rate.
-- Aerodynamic turbine power is calculated from the resolved actuator forces and rotor torque and is fed back to the pitch controller.
-- Controller updates are performed at the specified `dtcontrol` interval rather than at every CFD timestep.
-- Each turbine is controlled independently, allowing downstream turbines to respond to local wake-induced changes in wind speed and direction.
+### Aug 2026 — Boundary-condition rewrite, yaw control, and rotating actuator disk model
 
+#### Boundary conditions
 
-### (Aug 2026): Rewrite of boundary conditions, added yaw control and actuator disk model
-**Boundary conditions**
-  - Inflow/outflow in both i and j directions, allowing for time varying inflows with directions of 0-360 degrees.
-  - Since boundaries can switch between inflow and outflow, I use a smooth transition with averaging the in and outflow conditions.
-  - The implementation significantly improved with the help of Claude and ChatGPT to ensure consistency.
-  - Particularly the inflow/outflow routines are updated, and the corner treatment is now consistent with the inflow/outflow conditions.
+- Reworked the inflow/outflow boundary conditions in both the `i` and `j` directions to support time-varying inflow directions over the full 0–360° range.
+- Boundary faces automatically switch between inflow and outflow according to the instantaneous flow direction.
+- Added smooth transitions between inflow and outflow treatment near changes in boundary orientation.
+- Updated corner treatment for consistency with the directional inflow/outflow conditions.
 
-**Turbine yaw control**
-  - I have added a turbine yaw controller that is activated by setting localwind=1.  Each turbine then uses a local yaw control where
-    the local wind direction upstream of a tubine is used to control each individual turbine. Alternatively, it is possible to adjust the yaw
-    according to the inflow direction udir (localwind=2), or using the specified yaw values for each turbine from infile.in (localwind=0).
-  - Check the documentation in m_turbine_forcing.F90 for detailed information.
+#### Turbine yaw control
 
-**Actuator Disk Model**
-  - Added functionality for running an Actuator Disk Model (with rotation). The implementation uses the same information concerning blades
-    and force computation as in the ALM, but distributes the forces among the actuator disk points rather than the blade points.
-  - Added infile.in flag for chosing actuator line vs actuator disk models.
-  - The forcing points are hard-coded  in m_read_infile to be located on every chord radius and every 10 degrees
+- Introduced local yaw control for individual turbines.
+- Added three yaw modes through `localwind`:
+  - `0`: use the prescribed turbine yaw angles.
+  - `1`: align each turbine using the locally resolved upstream wind direction.
+  - `2`: align turbines using the externally prescribed inflow direction.
+- Added controller update interval, maximum yaw rate, yaw deadband, and local-wind filtering parameters.
+- The yaw-control implementation was subsequently incorporated into the more general turbine controller described in the second August update above.
 
-**Fixed a drag-sign bug** that impacted the turbine blade forcing**
+#### Rotating actuator disk model
 
-**Add the following after nturbines in infile.in**
-```text
- 0                ! alm_adm         : Actuator line (0), actuator disk (1)
- 1                ! localwind       : 1- activate yaw controller using local ustream wind, 0-infile yaw values, 2-external wind direction
- 1.0              ! dt_control      : yaw_controller: Seconds between each yaw-update
- 0.3              ! yawrate_max     : yaw_controller: Maximum yaw update in degrees per second
- 2.0              ! yaw_deadband    : yaw_controller: A threshold, in degrees, below which the yaw controller does nothing
- 3.0              ! filter_time     : yaw_controller: time-filter of local wind average
-```
+- Added a rotating actuator disk model (ADM-R) as an alternative to the actuator line model (ALM).
+- ADM-R uses the same blade geometry, airfoil data, and aerodynamic force calculation as the ALM, but distributes the blade forces over multiple azimuthal sample points at each radial position.
+- Added an input option for selecting ALM or ADM-R.
+- The number of ADM-R azimuthal sampling points is controlled by `nazim`.
+
+#### Corrections
+
+- Fixed a drag-sign error in the turbine blade-force calculation.
 
 ### (Jan 2026): Code upgraded to allow for MPI parallelization and buoyancy forcing
 **Previous version**

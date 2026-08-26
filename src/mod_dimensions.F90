@@ -3,6 +3,14 @@ module mod_dimensions
 ! If the domain is tiled using MPI parallelization with domain decomposition in the y-direction
 ! ny is the tile dimension, while nyg is an ntiles*ny the global dimension in the y-direction.
 
+!Dudgeon  dx=4 m 3440 x 1880(470) x 104
+!  integer, parameter :: nx = 3440         !
+!  integer, parameter :: ny = 470          ! Local-tile grid dimension y-dir (north)
+!  integer, parameter :: ntiles = 4        ! Number of tiles in y direction
+!  integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+!  integer, parameter :: nz = 104           ! grid dimension z-dir (up)
+!  integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+
 !Dudgeon  dx=5 m 2752 x 1504(376) x 80
 !   integer, parameter :: nx = 2752         !
 !   integer, parameter :: ny = 376          ! Local-tile grid dimension y-dir (north)
@@ -10,6 +18,14 @@ module mod_dimensions
 !   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
 !   integer, parameter :: nz = 80           ! grid dimension z-dir (up)
 !   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+
+!Dudgeon  dx=6 m 2294 x 1256(314) x 68
+!  integer, parameter :: nx = 2294         !
+!  integer, parameter :: ny = 314          ! Local-tile grid dimension y-dir (north)
+!  integer, parameter :: ntiles = 4        ! Number of tiles in y direction
+!  integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+!  integer, parameter :: nz = 68           ! grid dimension z-dir (up)
+!  integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !Dudgeon  dx=8 m 1720 x 940(235) x 52
 !  integer, parameter :: nx = 1720         !
@@ -28,12 +44,12 @@ module mod_dimensions
 !   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !Dudgeon  dx=10 m  1377 x 756(189) x 40
-   integer, parameter :: nx = 1377         !
-   integer, parameter :: ny = 189          ! Local-tile grid dimension y-dir (north)
-   integer, parameter :: ntiles = 4        ! Number of tiles in y direction
-   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
-   integer, parameter :: nz = 40           ! grid dimension z-dir (up)
-   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+  integer, parameter :: nx = 1377         !
+  integer, parameter :: ny = 189          ! Local-tile grid dimension y-dir (north)
+  integer, parameter :: ntiles = 4        ! Number of tiles in y direction
+  integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+  integer, parameter :: nz = 40           ! grid dimension z-dir (up)
+  integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !Dudgeon  dx=16 m  861 x 472(118) x 25
 !  integer, parameter :: nx = 861          !

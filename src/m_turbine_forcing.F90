@@ -302,6 +302,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    real uavg, vavg, wavg, speed, winddir, unormal
    real dtcontrol_actual,alpha
    real :: radius, ulocal, omega, rpm
+   logical newfile
 
 
    call cpustart()
@@ -384,7 +385,9 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
   endif
 
   if (mod(itimestep,ncontrol) == 0) then
-     call turbine_diagnostics_timeseries(turbines_in,points_global,Fvec_global,np,itimestep)
+     if (itimestep==ncontrol) newfile=.true.
+     call turbine_diagnostics_timeseries(turbines_in,points_global,Fvec_global,np,itimestep,newfile)
+     newfile=.false.
   endif
 
 ! 6. Clear local forcing field and deposit smoothed forces

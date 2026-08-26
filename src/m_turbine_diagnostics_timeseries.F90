@@ -45,7 +45,7 @@ module m_turbine_diagnostics_timeseries
 contains
 
 subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
-                                          Fvec_global,np,itimestep)
+                                          Fvec_global,np,itimestep,newfile)
 
 #ifdef MPI
    use mpi
@@ -70,6 +70,7 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
    real,            intent(in) :: Fvec_global(3,np)
    integer,         intent(in) :: np
    integer,         intent(in) :: itimestep
+   logical,         intent(in) :: newfile
 
 #ifndef MPI
    integer, parameter :: mpi_rank = 0
@@ -156,35 +157,34 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
       do n = 1,nturbines
 
          write(filename,'("output/turbine_",a,".dat")') trim(turbines_in(n)%name)
-         inquire(file=trim(filename),exist=ex)
 
-         if ((.not.ex) .or. (ex.and. itimestep == 1)) then
+         if (newfile) then
             open(newunit=iu,file=trim(filename),  status='replace',action='write',iostat=ios)
             if (ios /= 0) then
                write(*,*) 'ERROR opening turbine diagnostic file: ', trim(filename)
                stop
             endif
-            write(iu,'(2A)')'# ',trim(turbines_in(n)%name)
-            write(iu,'(A)',advance='no')'# timestep'
-            write(iu,'(A)',advance='no')'            time[s]'
-            write(iu,'(A)',advance='no')'             U[m/s]'
-            write(iu,'(A)',advance='no')'       RPM[rev/min]'
-            write(iu,'(A)',advance='no')'             TSR[-]'
-            write(iu,'(A)',advance='no')'         Pitch[deg]'
-            write(iu,'(A)',advance='no')'              Ct[-]'
-            write(iu,'(A)',advance='no')'              Cq[-]'
-            write(iu,'(A)',advance='no')'              Cp[-]'
-            write(iu,'(A)',advance='no')'              T[kN]'
-            write(iu,'(A)',advance='no')'             Q[kNm]'
-            write(iu,'(A)',advance='no')'          Paero[MW]'
-            write(iu,'(A)',advance='no')'          Pelec[MW]'
+            write(iu,'(3a)')'TITLE = "',trim(turbines_in(n)%name),'"'
+            write(iu,'(A)',advance='no')'VARIABLES= '
+            write(iu,'(A)',advance='no')'          "time[s]"'
+            write(iu,'(A)',advance='no')'           "U[m/s]"'
+            write(iu,'(A)',advance='no')'     "RPM[rev/min]"'
+            write(iu,'(A)',advance='no')'           "TSR[-]"'
+            write(iu,'(A)',advance='no')'       "Pitch[deg]"'
+            write(iu,'(A)',advance='no')'            "Ct[-]"'
+            write(iu,'(A)',advance='no')'            "Cq[-]"'
+            write(iu,'(A)',advance='no')'            "Cp[-]"'
+            write(iu,'(A)',advance='no')'            "T[kN]"'
+            write(iu,'(A)',advance='no')'           "Q[kNm]"'
+            write(iu,'(A)',advance='no')'        "Paero[MW]"'
+            write(iu,'(A)',advance='no')'        "Pelec[MW]"'
             write(iu,*)
+            write(iu,'(a,a,a)')'ZONE T="',trim(turbines_in(n)%name),'", I=XXX, F=POINT'
             close(iu)
          endif
       enddo
 
       files_initialized = .true.
-
    endif
 
 

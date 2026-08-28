@@ -33,7 +33,7 @@ contains
       character(len=MPI_MAX_PROCESSOR_NAME), allocatable :: hosts(:)
       integer, allocatable :: node_ids(:)
       integer :: my_node_id, nnodes, i
-      integer :: ngpu_node
+      integer :: ngpu_node,ngpu_local
 
       ! Gather per-rank info for one-line-per-rank summary
       integer, allocatable :: all_dev(:), all_j0(:), all_j1(:)
@@ -106,7 +106,7 @@ contains
       end if
       print '(2(a,i0))','irank=',mpi_rank,' ngpu=',ngpu
 
-      dev  = mod(shm_rank, ngpu)
+      dev = min((shm_rank * ngpu) / shm_size, ngpu-1)
       ierr = cudaSetDevice(dev)
       if (ierr /= 0) then
          write(*,*) "Rank", mpi_rank, "cudaSetDevice(",dev,") failed, ierr=", ierr
@@ -164,11 +164,11 @@ contains
       ! GPUs per node: assume homogeneous nodes, get ngpu from local rank 0 on each node,
       ! then max across world (safe, simple).
 #ifdef _CUDA
-      ngpu_node = merge(ngpu, 0, shm_rank == 0)
+      ngpu_local = merge(ngpu, 0, shm_rank == 0)
 #else
-      ngpu_node = 0
+      ngpu_local = 0
 #endif
-      call MPI_Allreduce(ngpu_node, ngpu_node, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+      call MPI_Allreduce(ngpu_local, ngpu_node, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
 
       print *, '----------------------------------------'
       if (mpi_rank == 0) then

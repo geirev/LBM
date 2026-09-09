@@ -271,7 +271,7 @@ program LatticeBoltzmann
       if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
    else
 ! Restart from restart file
-      call readrestart(nt0,fA,turbines(1:nturbines)%theta,uu,vv,ww,rr,pottempA,tracerA)
+      call readrestart(nt0,fA,uu,vv,ww,rr,pottempA,tracerA)
       call macrovars(rho,u,v,w,fA)
 ! To ensure we have values in the boundary points first time we call boundarycond.
       fB=fA
@@ -426,7 +426,7 @@ program LatticeBoltzmann
       endif
 
 ! Save restart file
-      if (mod(it,irestart) == 0)            call saverestart(it,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,p1,t1)
+      if (mod(it,irestart) == 0)            call saverestart(it,f1,uu,vv,ww,rr,p1,t1)
       call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) then
@@ -438,7 +438,7 @@ program LatticeBoltzmann
 
 
    call cpustart()
-   call saverestart(it-1,f1,turbines(1:nturbines)%theta,uu,vv,ww,rr,p1,t1)
+   call saverestart(it-1,f1,uu,vv,ww,rr,p1,t1)
    call cpufinish(16)
    if (ir==0) call cpuprint()
 

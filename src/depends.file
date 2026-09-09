@@ -30,6 +30,7 @@ main.o:      m_advection.o
 main.o:      m_advection_predictor.o
 main.o:      m_airfoil.o
 main.o:      makefile
+main.o:      m_atmospheric_grid.o
 main.o:      m_averaging_full.o
 main.o:      m_boundarycond.o
 main.o:      m_boundarycond_pottemp.o
@@ -87,6 +88,7 @@ main.o:      m_vreman.o
 main.o:      m_wtime.o
 m_airfoil.o:      makefile
 m_airfoil.o:      mod_dimensions.o
+m_atmospheric_grid.o:      makefile
 m_averaging_full_kernelfin.o:      makefile
 m_averaging_full_kernelfin.o:      mod_dimensions.o
 m_averaging_full_kernel.o:      makefile

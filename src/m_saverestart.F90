@@ -125,17 +125,18 @@ subroutine saverestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
 
    prefix='restart'
    fname =  trim(directory) // trim(prefix) // '_' // trim(ctile) // '_' // trim(cit) // trim(ext)
-   open(newunit=iunit,file=trim(fname),form="unformatted", status='replace')
-#ifdef _CUDA
-   if (.not. allocated(f_h)) allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
-   f_h = f
-   write(iunit) nx,ny,nz,nl,f_h
-   deallocate(f_h)
-#else
-    write(iunit) nx,ny,nz,nl,f
-#endif
+   open(newunit=iunit,file=trim(fname),form="unformatted",status='replace')
+   #ifdef _CUDA
+      if (.not. allocated(f_h)) allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
+      f_h = f
+      write(iunit) nx,ny,nz,nl
+      write(iunit) f_h
+      deallocate(f_h)
+   #else
+      write(iunit) nx,ny,nz,nl
+      write(iunit) f
+   #endif
    close(iunit)
-
 end subroutine
 end module
 

@@ -8,6 +8,7 @@ F90SOURCE = \
 	m_advection_predictor_kernel.F90\
 	main.F90\
 	m_airfoil.F90\
+	m_atmospheric_grid.F90\
 	m_averaging_full.F90\
 	m_averaging_full_kernel.F90\
 	m_averaging_full_kernelfin.F90\

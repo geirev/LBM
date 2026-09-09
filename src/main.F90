@@ -6,6 +6,7 @@ program LatticeBoltzmann
    use m_abl_initialize
    use m_advection
    use m_advection_predictor
+   use m_atmospheric_grid
    use m_advection_corrector
    use m_heatflux
    use m_buoyancy_forcing

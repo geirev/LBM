@@ -6,6 +6,7 @@ advection_kernel	m_advection_kernel.F90	/^module
 advection_predictor	m_advection_predictor.F90	/^module
 advection_predictor_kernel	m_advection_predictor_kernel.F90	/^module
 airfoil	m_airfoil.F90	/^module
+atmospheric_grid	m_atmospheric_grid.F90	/^module
 averaging_full	m_averaging_full.F90	/^module
 averaging_full_kernel	m_averaging_full_kernel.F90	/^module
 averaging_full_kernelfin	m_averaging_full_kernelfin.F90	/^module
@@ -91,6 +92,7 @@ m_advection_kernel	m_advection_kernel.F90	/^module
 m_advection_predictor	m_advection_predictor.F90	/^module
 m_advection_predictor_kernel	m_advection_predictor_kernel.F90	/^module
 m_airfoil	m_airfoil.F90	/^module
+m_atmospheric_grid	m_atmospheric_grid.F90	/^module
 m_averaging_full	m_averaging_full.F90	/^module
 m_averaging_full_kernel	m_averaging_full_kernel.F90	/^module
 m_averaging_full_kernelfin	m_averaging_full_kernelfin.F90	/^module

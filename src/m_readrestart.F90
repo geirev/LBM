@@ -166,20 +166,26 @@ subroutine readrestart(it,f,theta,uu,vv,ww,rr,pottemp,tracer)
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       print '(3a)','reading: ',trim(fname)
-      open(newunit=iunit,file=trim(fname),form="unformatted", status='old')
-         read(iunit)i,j,k,l
-         rewind(iunit)
-         if ((i==nx).and.(j==ny).and.(k==nz).and.(l==nl)) then
-#ifdef _CUDA
-            allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
-            read(iunit,err=998)i,j,k,l,f_h
-            f=f_h
-            deallocate(f_h)
-#else
-            read(iunit,err=998)i,j,k,l,f
-#endif
-         endif
+      open(newunit=iunit,file=trim(fname),form="unformatted",status='old')
+      read(iunit,err=998) i,j,k,l
+      if ((i==nx).and.(j==ny).and.(k==nz).and.(l==nl)) then
+      #ifdef _CUDA
+         allocate(f_h(nl,0:nx+1,0:ny+1,0:nz+1))
+         read(iunit,err=998) f_h
+         f = f_h
+         deallocate(f_h)
+      #else
+         read(iunit,err=998) f
+      #endif
+      else
+         print *, 'readrestart: incompatible restart dimensions'
+         print *, 'file:    ',i,j,k,l
+         print *, 'current: ',nx,ny,nz,nl
+         close(iunit)
+         stop
+      endif
       close(iunit)
+
    else
       print '(3a)','readrestart: restart file does not exist: ',trim(fname)
       stop

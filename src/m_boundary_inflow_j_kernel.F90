@@ -180,6 +180,7 @@ subroutine boundary_inflow_j_kernel(f,uvel,udir,rho0,rho_relax, &
 
    real :: dfeq
 
+   real ub,vb,wb,beta
 
 !=======================================================================
 ! CUDA / CPU indexing
@@ -202,7 +203,8 @@ subroutine boundary_inflow_j_kernel(f,uvel,udir,rho0,rho_relax, &
 !$OMP&         uloc0,vloc0,wloc0,ulocN,vlocN,wlocN,                &
 !$OMP&         x,s,win0,winN,wout0,woutN,                          &
 !$OMP&         fint0,fintN,fin0,finN,fout0,foutN,                  &
-!$OMP&         feq_int,feq_out,dfeq)                               &
+!$OMP&         feq_int,feq_out,dfeq,                               &
+!$OMP&         ub,vb,wb,beta)                                      &
 !$OMP& SHARED(f,uvel,udir,rho0,rho_relax,                          &
 !$OMP&        inv1cs2,inv2cs4,inv6cs6,ibgk,                       &
 !$OMP&        j0_is_phys,jN_is_phys)
@@ -410,11 +412,13 @@ subroutine boundary_inflow_j_kernel(f,uvel,udir,rho0,rho_relax, &
                             inv1cs2,inv2cs4,inv6cs6,ibgk)
 
 
+               beta = 0.8
+               ub = ux + beta*(uloc0-ux)
+               vb = uy + beta*(vloc0-uy)
+               wb =      beta* wloc0
                feq_out = fequil_value( &
-                            l,rho0, &
-                            uloc0,vloc0,wloc0, &
+                            l,rho0,ub,vb,wb, &
                             inv1cs2,inv2cs4,inv6cs6,ibgk)
-
 
                fout0 = feq_out + &
                        (fint0-feq_int)
@@ -480,9 +484,12 @@ subroutine boundary_inflow_j_kernel(f,uvel,udir,rho0,rho_relax, &
                             inv1cs2,inv2cs4,inv6cs6,ibgk)
 
 
+               beta = 0.8
+               ub = ux + beta*(ulocN-ux)
+               vb = uy + beta*(vlocN-uy)
+               wb =      beta* wlocN
                feq_out = fequil_value( &
-                            l,rho0, &
-                            ulocN,vlocN,wlocN, &
+                            l,rho0,ub,vb,wb, &
                             inv1cs2,inv2cs4,inv6cs6,ibgk)
 
 

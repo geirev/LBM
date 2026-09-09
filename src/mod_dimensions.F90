@@ -44,12 +44,12 @@ module mod_dimensions
 !   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !Dudgeon  dx=10 m  1377 x 756(189) x 40
-  integer, parameter :: nx = 1377         !
-  integer, parameter :: ny = 189          ! Local-tile grid dimension y-dir (north)
-  integer, parameter :: ntiles = 4        ! Number of tiles in y direction
-  integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
-  integer, parameter :: nz = 40           ! grid dimension z-dir (up)
-  integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+!  integer, parameter :: nx = 1377         !
+!  integer, parameter :: ny = 189          ! Local-tile grid dimension y-dir (north)
+!  integer, parameter :: ntiles = 4        ! Number of tiles in y direction
+!  integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+!  integer, parameter :: nz = 40           ! grid dimension z-dir (up)
+!  integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !Dudgeon  dx=16 m  861 x 472(118) x 25
 !  integer, parameter :: nx = 861          !
@@ -68,12 +68,12 @@ module mod_dimensions
 !   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !windturbine yaw test
-!   integer, parameter :: nx = 240          ! grid dimension x-dir (east)
-!   integer, parameter :: ny = 240          ! grid dimension y-dir (north)
-!   integer, parameter :: ntiles = 1        ! Number of tiles in y direction
-!   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
-!   integer, parameter :: nz = 60          ! grid dimension z-dir (up)
-!   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+   integer, parameter :: nx = 240          ! grid dimension x-dir (east)
+   integer, parameter :: ny = 240          ! grid dimension y-dir (north)
+   integer, parameter :: ntiles = 1        ! Number of tiles in y direction
+   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+   integer, parameter :: nz = 60           ! 60 grid dimension z-dir (up)
+   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !city
 !  integer, parameter :: nx = 200          ! grid dimension x-dir (east)

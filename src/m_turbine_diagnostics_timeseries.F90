@@ -166,6 +166,7 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
             endif
             write(iu,'(3a)')'TITLE = "',trim(turbines_in(n)%name),'"'
             write(iu,'(A)',advance='no')'VARIABLES= '
+            write(iu,'(A)',advance='no')'          "I-index"'
             write(iu,'(A)',advance='no')'          "time[s]"'
             write(iu,'(A)',advance='no')'           "U[m/s]"'
             write(iu,'(A)',advance='no')'     "RPM[rev/min]"'

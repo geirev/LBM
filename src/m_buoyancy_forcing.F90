@@ -2,11 +2,10 @@ module m_buoyancy_forcing
 contains
 subroutine buoyancy_forcing(external_forcing,pottemp)
    use mod_dimensions,  only : nx,ny,nz
-   use m_readinfile   , only : iablvisc
+   use m_readinfile,    only : p2l,iablvisc
 #ifdef _CUDA
-   use m_readinfile,    only : ntx,nty,ntz,p2l
+   use m_readinfile,    only : ntx,nty,ntz
 #endif
-   use m_readinfile,    only : p2l
    use m_buoyancy_forcing_kernel
    use  m_abl_initialize, only : pottemp0
    use m_wtime
@@ -20,8 +19,6 @@ subroutine buoyancy_forcing(external_forcing,pottemp)
 #endif
    real :: scaling
    real :: g
-   real :: theta0
-   integer n,ip
 
 #ifdef _CUDA
    integer :: tx, ty, tz, bx, by, bz

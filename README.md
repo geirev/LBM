@@ -29,7 +29,7 @@ The model also allows including buoyancy forcing by advecting potential temperat
 The forcing function for the inflow turbulence, the turbines, and the buoyancy forcing is the one of Kupershtokh (2009).
 
 <p align="center">
-<img src="plots/windfarm.png" width="1200">
+<img src="plots/windfarm2.png" width="1200">
 </p>
 
 

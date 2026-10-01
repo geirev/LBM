@@ -41,6 +41,7 @@ compute_f	m_compute_f.F90	/^module
 compute_fneq	m_compute_fneq.F90	/^module
 compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
 compute_f_kernel	m_compute_f_kernel.F90	/^module
+create_uvel_shear	m_create_uvel_shear.F90	/^module
 cube	m_cube.F90	/^module
 cylinder	m_cylinder.F90	/^module
 D3Q27setup	mod_D3Q27setup.F90	/^module
@@ -127,6 +128,7 @@ m_compute_f	m_compute_f.F90	/^module
 m_compute_fneq	m_compute_fneq.F90	/^module
 m_compute_fneq_kernel	m_compute_fneq_kernel.F90	/^module
 m_compute_f_kernel	m_compute_f_kernel.F90	/^module
+m_create_uvel_shear	m_create_uvel_shear.F90	/^module
 m_cube	m_cube.F90	/^module
 m_cylinder	m_cylinder.F90	/^module
 m_diag	m_diag.F90	/^module

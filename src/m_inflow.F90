@@ -4,6 +4,7 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
 ! Read vertical velocity shear from file and impose on the u velocity
    use mod_dimensions
    use m_readinfile, only : uini,udir,p2l
+   use m_create_uvel_shear
    implicit none
    integer, intent(in) :: nt0
    integer, intent(in) :: nt1
@@ -19,27 +20,45 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
    real, parameter   :: pi=acos(-1.0)
    real,    dimension(:),       allocatable :: uvel_h      ! temporary vertical u-velocity profile on host
    real dangle
+   logical vertical_wind_profile
+   real zref
+   real z0
+
+! Parameters for neutral offshore ABL
+   zref = 102.0       ! Reference/hub height [m]
+   z0   = 2.0e-4      ! Offshore roughness length [m]
+   vertical_wind_profile = .true.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Vertical inflow velocity profile read from file
-! If the uvel.dat file exists we read the vertical velocity profile into uvel(k), normalize it
-! and store scaled uvel in uvel_shear
-   allocate(uvel_h(nz))
-   uvel_h=1.0
-   inquire(file='uvel_shear.dat',exist=ex)
-   if (ex) then
-      print '(a)','inflow: Reading inflow vertical profile from uvel_shear.dat'
-      open(10,file='uvel_shear.dat')
-         do k=1,nz
-            read(10,*,err=999,end=999)kk,z(k),uvel_h(k)
-         enddo
-      close(10)
-   endif
+! Vertical inflow velocity profile
 
-   do k=1,nz
-      uvel_shear(k)=uvel_h(k)/uvel_h(nz)
-   enddo
-   deallocate(uvel_h)
+! Default: uniform vertical inflow profile
+   uvel_shear(:) = 1.0
+
+   if (vertical_wind_profile) then
+
+! Create a neutral offshore ABL profile if uvel_shear.dat does not exist
+      call create_uvel_shear('uvel_shear.dat',nz,p2l%length,zref,z0)
+
+! Read normalized vertical velocity profile
+      inquire(file='uvel_shear.dat',exist=ex)
+      if (ex) then
+         allocate(uvel_h(nz))
+
+         print '(a)','inflow: Reading inflow vertical profile from uvel_shear.dat'
+
+         open(10,file='uvel_shear.dat')
+         do k=1,nz
+            read(10,*,err=999,end=999) kk,z(k),uvel_h(k)
+         enddo
+         close(10)
+
+         uvel_shear(:) = uvel_h(:)
+
+         deallocate(uvel_h)
+      endif
+
+   endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Time variability of inflow-velocity and inflow-direction
@@ -80,8 +99,7 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
                   uvel_time(i) = uvel_tdata(k) + tmp * &
                        (uvel_tdata(k+1)-uvel_tdata(k))
                   ! Shortest signed angular change in [-180,180).
-                  dangle = modulo(udir_tdata(k+1)-udir_tdata(k)+180.0, &
-                                  360.0)-180.0
+                  dangle = modulo(udir_tdata(k+1)-udir_tdata(k)+180.0, 360.0)-180.0
                   udir_time(i) = modulo(udir_tdata(k)+tmp*dangle,360.0)
                   exit
                endif
@@ -89,25 +107,6 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
          endif
       enddo
 
-!!      do i=nt0,nt1
-!!         t = real(i-1)*p2l%time
-!!         if (t <= tdata(1)) then
-!!            uvel_time(i) = uvel_tdata(1)
-!!            udir_time(i) = udir_tdata(1)
-!!         else if (t >= tdata(nrtdata)) then
-!!            uvel_time(i) = uvel_tdata(nrtdata)
-!!            udir_time(i) = udir_tdata(nrtdata)
-!!         else
-!!            do k=1,nrtdata-1
-!!               if (t >= tdata(k) .and. t <= tdata(k+1)) then
-!!                  tmp = (t - tdata(k)) / (tdata(k+1) - tdata(k))
-!!                  uvel_time(i) = uvel_tdata(k) + tmp*(uvel_tdata(k+1) - uvel_tdata(k))
-!!                  udir_time(i) = udir_tdata(k) + tmp*(udir_tdata(k+1) - udir_tdata(k))
-!!                  exit
-!!               endif
-!!            enddo
-!!         endif
-!!      enddo
      endif
 
 

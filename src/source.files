@@ -43,6 +43,7 @@ F90SOURCE = \
 	m_compute_f_kernel.F90\
 	m_compute_fneq.F90\
 	m_compute_fneq_kernel.F90\
+	m_create_uvel_shear.F90\
 	m_cube.F90\
 	m_cylinder.F90\
 	m_diag.F90\
@@ -71,12 +72,6 @@ F90SOURCE = \
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
-	m_mpi_decomp_finalize.F90\
-	m_mpi_decomp_init.F90\
-	m_mpi_halo_buffers.F90\
-	m_mpi_halo_exchange_j.F90\
-	m_mpi_pack_jplane.F90\
-	m_mpi_unpack_jplane.F90\
 	m_netcdfout.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\

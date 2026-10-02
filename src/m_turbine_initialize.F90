@@ -59,6 +59,8 @@ subroutine turbine_initialize()
       turbines(n)%xhub = xpos(n)/p2l%length
       turbines(n)%yhub = ypos(n)/p2l%length
       turbines(n)%zhub = zpos(n)/p2l%length
+      ! Adding 0.5 since height is relative to boundary between ghost and fluid cells
+      turbines(n)%zhub = zpos(n)/p2l%length + 0.5
 
       ! Orientation & dynamics
       turbines(n)%theta      = 0.0

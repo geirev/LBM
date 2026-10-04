@@ -1,53 +1,31 @@
 module m_turbine_controller
-   use mod_turbine_def, only : ratedrpm,ratedpower,pitch_min,pitch_max,pitchrate_max
+   use mod_turbine_def, only : hubradius,rotorradius, ratedrpm, ratedpower, pitch_min, pitch_max, pitchrate_max
 
    implicit none
 
 !-----------------------------------------------------------------------
 ! Controller state.
 !
-! paero_last(n)        : most recent aerodynamic rotor power [W]
-! torque_aero_last(n)  : most recent aerodynamic rotor torque [N m]
-! pitch_integral(n)    : integral state of normalized rotor-speed error [s]
-! power_initialized(n) : true after first aerodynamic torque measurement
+! paero_last(n)      : most recently computed aerodynamic rotor power [W]
+! power_initialized  : true after first aerodynamic power measurement
+! pitch_integral     : integral state of normalized power error [s]
 !-----------------------------------------------------------------------
    real,    allocatable, save :: paero_last(:)
-   real,    allocatable, save :: torque_aero_last(:)
    real,    allocatable, save :: pitch_integral(:)
    logical, allocatable, save :: power_initialized(:)
 
    logical, save :: controller_initialized = .false.
 
-!-----------------------------------------------------------------------
-! SWT-6.0-154 surrogate drivetrain/controller parameters.
+! PI gains based on normalized power error:
 !
-! rotor_inertia is the combined rotor/direct-drive-generator inertia
-! referred to the rotor [kg m^2].  A reliable public Siemens value is
-! not available, so this is explicitly a tunable model parameter.
+!    error = (Paero-Prated)/Prated
 !
-! rpm_min is the lower variable-speed operating limit.
+! Therefore:
 !
-! Region 2 generator torque is
+!    pitch_kp [deg]
+!    pitch_ki [deg/s]
 !
-!       Qgen = Kgen*omega^2
-!
-! where Kgen is calculated from ratedpower and ratedrpm so that Region 2
-! joins continuously to rated power at rated rotor speed.
-!-----------------------------------------------------------------------
-   real, save :: rotor_inertia = 1.0e8       ! [kg m^2], initial estimate
-   real, save :: rpm_min       = 5.0         ! [rev/min]
-
-!-----------------------------------------------------------------------
-! Above-rated pitch PI gains based on normalized rotor-speed error:
-!
-!       error = (omega-omega_rated)/omega_rated
-!
-! pitch_kp [deg]
-! pitch_ki [deg/s]
-!
-! These are initial tuning values and may require adjustment after the
-! drivetrain inertia and aerodynamic response have been calibrated.
-!-----------------------------------------------------------------------
+! These are initial tuning values only.
    real, save :: pitch_kp = 10.0
    real, save :: pitch_ki = 0.5
 
@@ -57,29 +35,37 @@ contains
 !=======================================================================
 ! Turbine controller
 !
-! BELOW RATED (Region 2):
+! Operating regions
+! -----------------
 !
-!    Qgen = Kgen*omega^2
+! BELOW RATED:
 !
-!    J domega/dt = Qaero-Qgen
-!
+!    omega = lambda_target*U/R
 !    pitch -> pitch_min
 !
-! Rotor speed is therefore determined dynamically by the aerodynamic
-! torque from the ALM and the generator torque.  No estimate of incoming
-! wind speed is required for RPM control.
+! Thus the turbine maintains the prescribed optimal TSR.
 !
-! ABOVE RATED (Region 3):
+! ABOVE RATED:
 !
-!    generator power is limited approximately to ratedpower
+!    omega = omega_rated
 !
-!    Qgen = ratedpower/omega
+! and collective blade pitch is controlled using the aerodynamic
+! power measured on the previous controller update:
 !
-! and collective blade pitch regulates rotor speed toward ratedrpm.
+!    e = (Paero-Prated)/Prated
 !
-! The rotor speed remains dynamic in Region 3; it is not hard-clamped to
-! ratedrpm.  This allows gusts and turbulent/waked inflow to produce a
-! physically meaningful drivetrain response.
+!    beta_target = beta_min + Kp*e + Ki*integral(e dt)
+!
+! Increasing pitch reduces angle of attack through
+!
+!    alpha = phi - twist - pitch
+!
+! which modifies Cl, Cd, torque and aerodynamic power.
+!
+! NOTE:
+! The present turbine model prescribes rotor speed directly; it does
+! not contain rotor/generator inertia. Therefore pitch regulates
+! aerodynamic power above rated while RPM is explicitly capped.
 !=======================================================================
 subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
@@ -93,8 +79,10 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
                             uavg_f,vavg_f,wavg_f, &
                             windfilter_initialized
 
-   use m_readinfile, only : p2l,udir,localwind,dtcontrol,filter_time, &
-                            yawrate_max,yaw_deadband
+
+   use m_readinfile, only : p2l,udir,nturbines, &
+                            localwind,dtcontrol,filter_time, &
+                            yawrate_max,yaw_deadband,tipspeedratio
 
    use m_turbine_local_wind
    use m_turbine_yaw_controller
@@ -125,12 +113,14 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
    real :: uavg,vavg,wavg
    real :: speed,winddir,unormal
 
-   real :: omega
-   real :: omega_min
+   real :: radius
+   real :: ulocal
+
+   real :: omega_tsr
    real :: omega_rated
-   real :: kgen
-   real :: torque_gen
-   real :: domega
+   real :: omega
+
+   real :: rpm_tsr
 
 
 !-----------------------------------------------------------------------
@@ -155,30 +145,6 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
    if (mod(itimestep,ncontrol) /= 0) return
 
 
-!-----------------------------------------------------------------------
-! Rotor-speed limits and Region-2 generator constant.
-!-----------------------------------------------------------------------
-   omega_min   = rpm_min*pi2/60.0
-   omega_rated = ratedrpm*pi2/60.0
-
-   if (omega_rated <= 0.0) then
-      write(*,*) 'ERROR turbine_controller: ratedrpm must be positive'
-      error stop
-   endif
-
-   if (ratedpower <= 0.0) then
-      write(*,*) 'ERROR turbine_controller: ratedpower must be positive'
-      error stop
-   endif
-
-   if (rotor_inertia <= 0.0) then
-      write(*,*) 'ERROR turbine_controller: rotor_inertia must be positive'
-      error stop
-   endif
-
-   kgen = ratedpower/omega_rated**3
-
-
 !=======================================================================
 ! Turbine loop.
 !=======================================================================
@@ -186,10 +152,14 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
 !-----------------------------------------------------------------------
-! Local upstream wind is required only for local yaw control.
-! RPM control no longer requires an estimate of incoming wind speed.
+! Local upstream wind.
+!
+! Required for:
+!
+!    localwind == 1       : local yaw control
+!    tipspeedratio > 0    : TSR/RPM control
 !-----------------------------------------------------------------------
-      if (localwind == 1) then
+      if (localwind == 1 .or. tipspeedratio > 0.0) then
 
          call turbine_local_wind(turbines_in(n),u,v,w,rho, &
                                  1.0,6, &
@@ -198,7 +168,7 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
 !-----------------------------------------------------------------------
-! Low-pass filter local velocity components used by the yaw controller.
+! Low-pass filter local velocity components.
 !-----------------------------------------------------------------------
          if (.not.windfilter_initialized(n)) then
 
@@ -238,103 +208,94 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
 !-----------------------------------------------------------------------
-! Current physical rotor angular velocity [rad/s].
+! Rotor-speed and pitch control.
 !-----------------------------------------------------------------------
-      omega = turbines_in(n)%omegand/p2l%time
+      if (tipspeedratio > 0.0 .and. windfilter_initialized(n)) then
 
+         radius = rotorradius + hubradius                   ! [m]
 
-!-----------------------------------------------------------------------
-! Before the first aerodynamic feedback measurement, retain the existing
-! rotor speed.  This avoids inventing an aerodynamic torque at startup.
-!-----------------------------------------------------------------------
-      if (.not.power_initialized(n)) then
+         ! Filtered local incoming wind speed [m/s].
+         ulocal = sqrt(uavg_f(n)**2 + &
+                       vavg_f(n)**2 + &
+                       wavg_f(n)**2)*p2l%vel
 
-         omega = max(omega_min,min(omega_rated,omega))
-
-         call turbine_pitch_below_rated( &
-              turbines_in(n)%pitchangle, &
-              pitch_integral(n), &
-              dtcontrol_actual)
-
-      else
-
+         if (ulocal > 1.0e-12) then
 
 !-----------------------------------------------------------------------
-! Generator torque.
+! Rotor speed required to maintain target TSR:
 !
-! Below rated:
-!
-!       Qgen = Kgen*omega^2
-!
-! Above rated:
-!
-!       Qgen = Prated/omega
-!
-! The two expressions are identical at omega=omega_rated because
-!
-!       Kgen = Prated/omega_rated^3.
+!       omega_TSR = lambda U/R
 !-----------------------------------------------------------------------
-         if (omega < omega_rated) then
+            omega_tsr = tipspeedratio*ulocal/radius         ! [rad/s]
 
-            torque_gen = kgen*omega**2
-
-         else
-
-            torque_gen = ratedpower/max(omega,1.0e-12)
-
-         endif
+            rpm_tsr = omega_tsr*60.0/pi2                    ! [rev/min]
 
 
 !-----------------------------------------------------------------------
-! Rotor/direct-drive-generator dynamics.
+! Rated rotor speed.
+!-----------------------------------------------------------------------
+            omega_rated = ratedrpm*pi2/60.0                 ! [rad/s]
+
+
+!-----------------------------------------------------------------------
+! Below-rated operation:
 !
-!       J domega/dt = Qaero-Qgen
+! Maintain the prescribed optimal TSR until either the TSR-based rotor
+! speed reaches rated RPM AND the aerodynamic power is approaching
+! rated power.
 !-----------------------------------------------------------------------
-         domega = (torque_aero_last(n)-torque_gen)/rotor_inertia
-
-         omega = omega + domega*dtcontrol_actual
-
-
 !-----------------------------------------------------------------------
-! Lower rotor-speed limit.
-!
-! The upper speed is deliberately not hard-clamped to ratedrpm.  Above
-! rated, the pitch controller acts on rotor-speed error and brings the
-! rotor back toward rated speed dynamically.
+! Rotor-speed and pitch control.
 !-----------------------------------------------------------------------
-         omega = max(omega_min,omega)
+            if (.not.power_initialized(n)) then
 
+               ! No aerodynamic feedback available yet.
+               omega = min(omega_tsr,omega_rated)
 
+               call turbine_pitch_below_rated( &
+                    turbines_in(n)%pitchangle, &
+                    pitch_integral(n), &
+                    dtcontrol_actual)
+
+            elseif (rpm_tsr <= ratedrpm) then
+
+               !------------------------------------------------------------
+               ! Region 2:
+               ! Maintain prescribed optimal TSR.
+               !------------------------------------------------------------
+               omega = omega_tsr
+
+               call turbine_pitch_below_rated( &
+                    turbines_in(n)%pitchangle, &
+                    pitch_integral(n), &
+                    dtcontrol_actual)
+
+            else
+
+               !------------------------------------------------------------
+               ! Region 3:
+               ! Rotor has reached rated RPM.
+               !
+               ! Hold RPM at rated value and regulate aerodynamic power
+               ! using collective blade pitch.
+               !------------------------------------------------------------
+               omega = omega_rated
+
+               call turbine_pitch_power_controller( &
+                    paero_last(n),ratedpower, &
+                    dtcontrol_actual, &
+                    turbines_in(n)%pitchangle, &
+                    pitch_integral(n))
+
+            endif
 !-----------------------------------------------------------------------
-! Pitch control.
-!
-! Below rated: return toward pitch_min.
-! Above rated: regulate rotor speed toward ratedrpm.
+! Store rotor angular increment in lattice units [rad/timestep].
 !-----------------------------------------------------------------------
-         if (omega < omega_rated) then
-
-            call turbine_pitch_below_rated( &
-                 turbines_in(n)%pitchangle, &
-                 pitch_integral(n), &
-                 dtcontrol_actual)
-
-         else
-
-            call turbine_pitch_speed_controller( &
-                 omega,omega_rated, &
-                 dtcontrol_actual, &
-                 turbines_in(n)%pitchangle, &
-                 pitch_integral(n))
+            turbines_in(n)%omegand = omega*p2l%time
 
          endif
 
       endif
-
-
-!-----------------------------------------------------------------------
-! Store rotor angular increment in lattice units [rad/timestep].
-!-----------------------------------------------------------------------
-      turbines_in(n)%omegand = omega*p2l%time
 
    enddo
 
@@ -344,31 +305,32 @@ end subroutine turbine_controller
 !=======================================================================
 ! Above-rated collective pitch controller.
 !
-! Uses normalized rotor-speed error:
+! Uses normalized aerodynamic power error:
 !
-!       error = (omega-omega_rated)/omega_rated
+!      error = (Paero-Prated)/Prated
 !
 ! Thus:
 !
-!       error > 0   -> increase pitch
-!       error < 0   -> decrease pitch
+!      error > 0   -> increase pitch
+!      error < 0   -> decrease pitch
 !
 ! The PI controller is
 !
-!       beta_target = beta_min + Kp*error + Ki*integral(error dt)
+!      beta_target =
+!           beta_min + Kp*error + Ki*integral(error dt)
 !
 ! A pitch-rate limit and simple integral anti-windup are applied.
 !=======================================================================
-subroutine turbine_pitch_speed_controller(omega,omega_rated,dt,pitch,integral_error)
+subroutine turbine_pitch_power_controller(paero,prated,dt,pitch,integral_error)
 
    implicit none
 
-   real, intent(in)    :: omega
-   real, intent(in)    :: omega_rated
-   real, intent(in)    :: dt
+   real, intent(in)    :: paero              ! [W]
+   real, intent(in)    :: prated             ! [W]
+   real, intent(in)    :: dt                 ! [s]
 
-   real, intent(inout) :: pitch
-   real, intent(inout) :: integral_error
+   real, intent(inout) :: pitch              ! [deg]
+   real, intent(inout) :: integral_error     ! [s]
 
    real :: error
    real :: integral_trial
@@ -380,13 +342,13 @@ subroutine turbine_pitch_speed_controller(omega,omega_rated,dt,pitch,integral_er
    real :: dpitch_max
 
 
-   if (omega_rated <= 0.0) return
+   if (prated <= 0.0) return
 
 
 !-----------------------------------------------------------------------
-! Normalized rotor-speed error [-].
+! Normalized power error [-].
 !-----------------------------------------------------------------------
-   error = (omega-omega_rated)/omega_rated
+   error = (paero-prated)/prated
 
 
 !-----------------------------------------------------------------------
@@ -442,14 +404,14 @@ subroutine turbine_pitch_speed_controller(omega,omega_rated,dt,pitch,integral_er
 
    pitch = min(pitch_max,max(pitch_min,pitch))
 
-end subroutine turbine_pitch_speed_controller
+end subroutine turbine_pitch_power_controller
 
 
 !=======================================================================
 ! Below-rated pitch controller.
 !
 ! Below rated, the blades are returned toward pitch_min while rotor
-! speed is determined by aerodynamic and generator torque.
+! speed is controlled to maintain the target TSR.
 !=======================================================================
 subroutine turbine_pitch_below_rated(pitch,integral_error,dt)
 
@@ -464,15 +426,11 @@ subroutine turbine_pitch_below_rated(pitch,integral_error,dt)
    real :: dpitch_max
 
 
-!-----------------------------------------------------------------------
 ! Reset integral state when leaving the above-rated region.
-!-----------------------------------------------------------------------
    integral_error = 0.0
 
 
-!-----------------------------------------------------------------------
 ! Return pitch gradually toward pitch_min.
-!-----------------------------------------------------------------------
    dpitch = pitch_min-pitch
 
    dpitch_max = pitchrate_max*dt
@@ -487,7 +445,6 @@ subroutine turbine_pitch_below_rated(pitch,integral_error,dt)
 
 end subroutine turbine_pitch_below_rated
 
-
 !=======================================================================
 ! Aerodynamic feedback update.
 !
@@ -495,14 +452,14 @@ end subroutine turbine_pitch_below_rated
 !
 ! For each turbine:
 !
-!       Q = sum[(r x F) . e_axis]       [LB torque]
+!      Q = sum[(r x F) . e_axis]       [LB torque]
 !
-!       Qphys = Q * torque_conv         [N m]
+!      Qphys = Q * torque_conv         [N m]
 !
-!       Paero = Qphys * omega           [W]
+!      Paero = Qphys * omega           [W]
 !
-! Both aerodynamic torque and power are stored for the next controller
-! update.  The torque is used directly in the drivetrain equation.
+! Paero is stored and used by the pitch controller at the next
+! controller update.
 !=======================================================================
 subroutine turbine_controller_feedback(turbines_in,points_global, &
                                        Fvec_global,np,itimestep)
@@ -572,14 +529,12 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
    endif
 
    if (size(paero_last) /= nturb .or. &
-       size(torque_aero_last) /= nturb .or. &
        size(power_initialized) /= nturb) then
 
       write(*,*) 'ERROR turbine_controller_feedback: controller arrays'
-      write(*,*) 'nturb                       = ',nturb
-      write(*,*) 'size(paero_last)             = ',size(paero_last)
-      write(*,*) 'size(torque_aero_last)       = ',size(torque_aero_last)
-      write(*,*) 'size(power_initialized)      = ',size(power_initialized)
+      write(*,*) 'nturb                   = ',nturb
+      write(*,*) 'size(paero_last)         = ',size(paero_last)
+      write(*,*) 'size(power_initialized)  = ',size(power_initialized)
       error stop
 
    endif
@@ -596,7 +551,7 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 !-----------------------------------------------------------------------
 ! Lattice torque -> physical torque:
 !
-!       Qphys = QLB * rho_c * L_c^5 / T_c^2
+!      Qphys = QLB * rho_c * L_c^5 / T_c^2
 !
 ! [N m]
 !-----------------------------------------------------------------------
@@ -657,11 +612,9 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 
 
 !-----------------------------------------------------------------------
-! Physical aerodynamic torque [N m].
+! Physical torque [N m].
 !-----------------------------------------------------------------------
       torque_phys = torque*torque_conv
-
-      torque_aero_last(n) = torque_phys
 
 
 !-----------------------------------------------------------------------
@@ -704,14 +657,12 @@ subroutine turbine_controller_initialize(nturb)
    if (controller_initialized) then
 
       if (allocated(paero_last) .and. &
-          allocated(torque_aero_last) .and. &
           allocated(pitch_integral) .and. &
           allocated(power_initialized)) then
 
-         if (size(paero_last)         == nturb .and. &
-             size(torque_aero_last)   == nturb .and. &
-             size(pitch_integral)     == nturb .and. &
-             size(power_initialized)  == nturb) return
+         if (size(paero_last)       == nturb .and. &
+             size(pitch_integral)   == nturb .and. &
+             size(power_initialized)== nturb) return
 
       endif
 
@@ -721,25 +672,21 @@ subroutine turbine_controller_initialize(nturb)
 !-----------------------------------------------------------------------
 ! Allocate/reallocate controller state.
 !-----------------------------------------------------------------------
-   if (allocated(paero_last))         deallocate(paero_last)
-   if (allocated(torque_aero_last))   deallocate(torque_aero_last)
-   if (allocated(pitch_integral))     deallocate(pitch_integral)
-   if (allocated(power_initialized))  deallocate(power_initialized)
+   if (allocated(paero_last))        deallocate(paero_last)
+   if (allocated(pitch_integral))    deallocate(pitch_integral)
+   if (allocated(power_initialized)) deallocate(power_initialized)
 
    allocate(paero_last(nturb))
-   allocate(torque_aero_last(nturb))
    allocate(pitch_integral(nturb))
    allocate(power_initialized(nturb))
 
-   paero_last         = 0.0
-   torque_aero_last   = 0.0
-   pitch_integral     = 0.0
-   power_initialized  = .false.
+   paero_last        = 0.0
+   pitch_integral    = 0.0
+   power_initialized = .false.
 
    controller_initialized = .true.
 
 end subroutine turbine_controller_initialize
-
 
 !=======================================================================
 ! Wrap angle to [-180,180) degrees.

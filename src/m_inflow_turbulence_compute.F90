@@ -3,6 +3,7 @@ contains
 subroutine inflow_turbulence_compute(uu,vv,ww,rr,ny_here,nz,nrturb,lfirst)
    use m_pseudo2D
    use m_tecfld
+   use m_readinfile, only : p2l,timecor, turb_length
    implicit none
    integer, intent(in) :: ny_here,nz,nrturb
    logical, intent(in) :: lfirst
@@ -11,26 +12,53 @@ subroutine inflow_turbulence_compute(uu,vv,ww,rr,ny_here,nz,nrturb,lfirst)
    real, intent(inout) :: ww(ny_here,nz,0:nrturb)
    real, intent(inout) :: rr(ny_here,nz,0:nrturb)
    real :: cor1, cor2
-   real :: dx=1.0, dy=1.0, dir=0.0, timecor=0.98
+   real :: dx, dy, dir=0.0
    integer :: i,j,k
    real :: aveu,avev,avew,aver,varu,varv,varw,varr
    integer n1,n2
+   integer n0,nn
 
-   cor1=10.0/sqrt(3.0)!*real(ny_here/nz)
-   cor2=10.0/sqrt(3.0)
 
+   dx=p2l%length
+   dy=p2l%length
+
+   cor1=turb_length/sqrt(3.0)
+   cor2=turb_length/sqrt(3.0)
+
+   if (cor1 < 3.0*dx .or. cor1 > 100.0*dx) then
+      print *,'WARNING: turbulence correlation length poorly scaled'
+      print *,'  cor1 = ',cor1
+      print *,'  dx   = ',dx
+      print *,'  cor1/dx = ',cor1/dx
+   endif
 
    print *,'compute_turbulence_field: generating pseudo-2D inflow forcing'
 
-   if (lfirst) then
-      uu(:,:,0)=0.0; vv(:,:,0)=0.0; ww(:,:,0)=0.0; rr(:,:,0)=0.0
-   endif
    n1=ny_here
    n2=nz
-   call pseudo2d(uu(:,:,0:nrturb),ny_here,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-   call pseudo2d(vv(:,:,0:nrturb),ny_here,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-   call pseudo2d(ww(:,:,0:nrturb),ny_here,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,.false.)
-   call pseudo2d(rr(:,:,0:nrturb),ny_here,nz,nrturb+1,cor1,cor2,dx,dy,n1,n2,dir,.false.)
+
+   if (lfirst) then
+      n0=0
+      nn=1
+   else
+      n0=1
+      nn=0
+      uu(:,:,0)=uu(:,:,nrturb)
+      vv(:,:,0)=vv(:,:,nrturb)
+      ww(:,:,0)=ww(:,:,nrturb)
+      rr(:,:,0)=rr(:,:,nrturb)
+   endif
+
+   call pseudo2d(uu(:,:,n0:nrturb),ny_here,nz,nrturb+nn,cor1,cor2,dx,dy,n1,n2,dir,.false.)
+
+   n1=ny_here; n2=nz
+   call pseudo2d(vv(:,:,n0:nrturb),ny_here,nz,nrturb+nn,cor1,cor2,dx,dy,n1,n2,dir,.false.)
+
+   n1=ny_here; n2=nz
+   call pseudo2d(ww(:,:,n0:nrturb),ny_here,nz,nrturb+nn,cor1,cor2,dx,dy,n1,n2,dir,.false.)
+
+   n1=ny_here; n2=nz
+   call pseudo2d(rr(:,:,n0:nrturb),ny_here,nz,nrturb+nn,cor1,cor2,dx,dy,n1,n2,dir,.false.)
 
    do i=1,nrturb
       uu(:,:,i)=timecor*uu(:,:,i-1)+sqrt(1.0-timecor**2)*uu(:,:,i)

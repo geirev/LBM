@@ -39,6 +39,8 @@ module m_readinfile
 
    logical  inflowturbulence   ! Add smooth pseudo-random inflow perturbations
    integer  nrturb             ! Number of precomputed turbulence batches
+   real     timecor            ! Time correlation of turbulence forcing fields
+   real     turb_length        ! Length scales of turbulence forcing fields
    real     turbulence_ampl    ! Amplitude of inflow turbulence
 
    real     uini               ! Initial absolute velocity
@@ -322,9 +324,11 @@ subroutine readinfile()
       'inflow (uini,udir)= ',uini,' [m/s]',udir,' [degrees]'
 
    read(10,*,err=100) wind_profile,wall_model,zref,z0
-   print '(a,tr7,l1,tr2,f10.2,f10.6)', &
-      'wind profile, zref,z0 = ',wind_profile,wall_model,zref,z0
+   print '(a,tr7,2l1,tr2,f10.2,f10.6)', &
+      'wind profile, wallmodel, zref,z0 = ',wind_profile,wall_model,zref,z0
 
+   timecor=0.98
+   turb_length=30.0       ! [m]
    read(10,*,err=100) inflowturbulence,turbulence_ampl,nrturb
    print '(a,tr7,l1,tr2,g13.5,tr2,i5)', &
       'inflowturbulence  = ', &

@@ -268,7 +268,7 @@ program LatticeBoltzmann
       endif
 
 ! Generate turbulence forcing fields
-      if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
+      if (inflowturbulence) call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.true.)
    else
 ! Restart from restart file
       call readrestart(nt0,fA,uu,vv,ww,rr,pottempA,tracerA)
@@ -315,6 +315,8 @@ program LatticeBoltzmann
 
 ! External forcing
       external_forcing=0.0
+      uvel(:)=uvel_time(it)*uvel_shear(:)
+      udir=udir_time(it)
 
       if (nturbines > 0) &
          call turbine_forcing(external_forcing,turbines,rho,u,v,w,it)
@@ -326,22 +328,20 @@ program LatticeBoltzmann
          call wall_forcing(external_forcing,rho,u,v)
 
       if (inflowturbulence) &
-         call inflow_turbulence_forcing(external_forcing,rho,turbulence_ampl,it,nrturb)
+         call inflow_turbulence_forcing(external_forcing,rho,turbulence_ampl,udir,it,nrturb)
 
 ! [f1,tau = post collision(f1,rho,u,v,w] (returns post collision density and tau for forcing)
       call postcoll(f1,tau,rho,u,v,w)
       !if (lsponge) call sponge_tau(tau, tau_max, nsponge_i, nsponge_j)
 
 ! [f1 = f1 + external forcing]
-      if (nturbines > 0 .or. iablvisc == 2 .or. wall_model) &
+      if (nturbines > 0 .or. iablvisc == 2 .or. wall_model .or. inflowturbulence) &
          call forcings_apply(f1,external_forcing,rho,u,v,w)
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(f1,lblanking)
 
 ! [f1 and f2 updated with boundary conditions]
-      uvel(:)=uvel_time(it)*uvel_shear(:)
-      udir=udir_time(it)
       call boundarycond(f1,f2,rho,uvel)
 
 #ifdef MPI
@@ -416,21 +416,20 @@ program LatticeBoltzmann
       call diag(itecout,it,rho,u,v,w,p1,t1,lblanking)
 
       call cpustart()
-
 ! Averaging for diagnostics
       if (laveraging) then
          if (avestart < it .and. it < avesave) call averaging_full(u,v,w,rho,p1,t1,lblanking,.false.)
          if (it == avesave)                    call averaging_full(u,v,w,rho,p1,t1,lblanking,.true.)
       endif
+      call cpufinish(15)
 
 ! Updating input turbulence matrix
-      if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence .and. ibnd==1) then
+      if (mod(it, nrturb) == 0 .and. it > 1 .and. inflowturbulence ) then
          call inflow_turbulence_update(uu,vv,ww,rr,nrturb,.false.)
       endif
 
 ! Save restart file
       if (mod(it,irestart) == 0)            call saverestart(it,f1,uu,vv,ww,rr,p1,t1)
-      call cpufinish(15)
 
       if (lmeasurements .and. mod(it,1000)==0) then
          call predicted_measurements(u,v,w,it)

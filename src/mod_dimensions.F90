@@ -69,8 +69,8 @@ module mod_dimensions
 
 !windturbine yaw test
    integer, parameter :: nx = 240          ! grid dimension x-dir (east)
-   integer, parameter :: ny = 240          ! grid dimension y-dir (north)
-   integer, parameter :: ntiles = 1        ! Number of tiles in y direction
+   integer, parameter :: ny = 120          ! grid dimension y-dir (north)
+   integer, parameter :: ntiles = 2        ! Number of tiles in y direction
    integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
    integer, parameter :: nz = 60           ! 60 grid dimension z-dir (up)
    integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)

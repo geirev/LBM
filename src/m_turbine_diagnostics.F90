@@ -372,38 +372,38 @@ subroutine turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
 ! P       : mechanical rotor power                    [MW]
 !-----------------------------------------------------------------------
 
-         write(*,'(A,I3, &
-                   &2X,A,F7.2,A, &
-                   &2X,A,F7.2,A, &
-                   &2X,A,F8.3,A, &
-                   &2X,A,F7.2,A, &
-                   &2X,A,F6.2,A, &
-                   &2X,A,F6.2,A, &
-                   &2X,A,F7.3,A, &
-                   &2X,A,F7.3,A, &
-                   &2X,A,F7.3,A, &
-                   &2X,A,F7.3,A, &
-                   &2X,A,F7.3,A, &
-                   &2X,A,F7.3,A, &
-                   &2X,A,F9.2,A, &
-                   &2X,A,F10.2,A, &
-                   &2X,A,F9.3,A)') &
-              'Turbine ', n, &
-              'U=',       ulocal_phys,          ' m/s', &
-              'R=',       radius_phys,          ' m', &
-              'omega=',   omega,                ' rad/s', &
-              'RPM=',     rpm,                  ' rev/min', &
-              'TSR=',     lambda_actual,        ' [-]', &
-              'TSR*=',    tipspeedratio,        ' [-]', &
-              'Ct=',      ct,                   ' [-]', &
-              'Cq=',      cq,                   ' [-]', &
-              'Cp=',      cp,                   ' [-]', &
-              'Ctr=',     ct_ref,               ' [-]', &
-              'Cqr=',     cq_ref,               ' [-]', &
-              'Cpr=',     cp_ref,               ' [-]', &
-              'T=',       thrust_phys/1.0e3,    ' kN', &
-              'Q=',       torque_phys/1.0e3,    ' kN m', &
-              'P=',       power_phys/1.0e6,     ' MW'
+!         write(*,'(A,I3, &
+!                   &2X,A,F7.2,A, &
+!                   &2X,A,F7.2,A, &
+!                   &2X,A,F8.3,A, &
+!                   &2X,A,F7.2,A, &
+!                   &2X,A,F6.2,A, &
+!                   &2X,A,F6.2,A, &
+!                   &2X,A,F7.3,A, &
+!                   &2X,A,F7.3,A, &
+!                   &2X,A,F7.3,A, &
+!                   &2X,A,F7.3,A, &
+!                   &2X,A,F7.3,A, &
+!                   &2X,A,F7.3,A, &
+!                   &2X,A,F9.2,A, &
+!                   &2X,A,F10.2,A, &
+!                   &2X,A,F9.3,A)') &
+!              'Turbine ', n, &
+!              'U=',       ulocal_phys,          ' m/s', &
+!              'R=',       radius_phys,          ' m', &
+!              'omega=',   omega,                ' rad/s', &
+!              'RPM=',     rpm,                  ' rev/min', &
+!              'TSR=',     lambda_actual,        ' [-]', &
+!              'TSR*=',    tipspeedratio,        ' [-]', &
+!              'Ct=',      ct,                   ' [-]', &
+!              'Cq=',      cq,                   ' [-]', &
+!              'Cp=',      cp,                   ' [-]', &
+!              'Ctr=',     ct_ref,               ' [-]', &
+!              'Cqr=',     cq_ref,               ' [-]', &
+!              'Cpr=',     cp_ref,               ' [-]', &
+!              'T=',       thrust_phys/1.0e3,    ' kN', &
+!              'Q=',       torque_phys/1.0e3,    ' kN m', &
+!              'P=',       power_phys/1.0e6,     ' MW'
 
       endif
 

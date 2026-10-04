@@ -3,14 +3,10 @@ module m_inflow_turbulence_init
    integer, parameter :: iturb_pos=10
    integer, parameter :: iturb_radius=2
 
-   real, allocatable  :: turbulence_df(:,:,:)
-   real, allocatable  :: vel(:,:,:,:), rtmp(:,:,:)
-   real, allocatable  :: dfeq1(:,:,:,:), dfeq2(:,:,:,:)
    real, allocatable  :: cx(:), cy(:), cz(:)
    real, allocatable  :: uu(:,:,:), vv(:,:,:), ww(:,:,:), rr(:,:,:)
 
 #ifdef _CUDA
-   attributes(device) :: turbulence_df, vel, rtmp, dfeq1, dfeq2
    attributes(device) :: cx, cy, cz, uu, vv, ww, rr
 #endif
 
@@ -24,11 +20,6 @@ subroutine inflow_turbulence_init
 
    if (nrturb <= 0) stop 'Call read_infile before inflow_turbulence_init'
 
-   if (.not. allocated(turbulence_df)) allocate(turbulence_df(nl,ny,nz))
-   if (.not. allocated(vel))           allocate(vel(3,1,ny,nz))
-   if (.not. allocated(rtmp))          allocate(rtmp(1,ny,nz))
-   if (.not. allocated(dfeq1))         allocate(dfeq1(nl,1,ny,nz))
-   if (.not. allocated(dfeq2))         allocate(dfeq2(nl,1,ny,nz))
    if (.not. allocated(cx))            allocate(cx(nl))
    if (.not. allocated(cy))            allocate(cy(nl))
    if (.not. allocated(cz))            allocate(cz(nl))

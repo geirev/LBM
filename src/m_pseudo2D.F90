@@ -82,7 +82,7 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
 ! computing the coefficients r1, r2, and c
 
    r1 = sqrt(real(r8, kind=kind(rx))) / rx
-   r2 = sqrt(real(r8, kind=kind(ry))) / rx
+   r2 = sqrt(real(r8, kind=kind(ry))) / ry
 !   r1=sqrt(8.0_c_float)/rx
 !   r2=sqrt(8.0_c_float)/ry
 

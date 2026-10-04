@@ -29,7 +29,6 @@ program LatticeBoltzmann
    use m_dump_elevation
    use m_fequil3
    use m_gpu_meminfo
-   use m_inflow_turbulence_apply
    use m_inflow_turbulence_update
    use m_inflow_turbulence_forcing
    use m_inflow_turbulence_init
@@ -326,18 +325,12 @@ program LatticeBoltzmann
       if (wall_model) &
          call wall_forcing(external_forcing,rho,u,v)
 
-! [turbulence_df = turbulenceforcing(rho,u,v,w)]
       if (inflowturbulence) &
-         call inflow_turbulence_forcing( &
-            rho,u,v,w,turbulence_ampl,it,nrturb)
+         call inflow_turbulence_forcing(external_forcing,rho,turbulence_ampl,it,nrturb)
 
 ! [f1,tau = post collision(f1,rho,u,v,w] (returns post collision density and tau for forcing)
       call postcoll(f1,tau,rho,u,v,w)
       !if (lsponge) call sponge_tau(tau, tau_max, nsponge_i, nsponge_j)
-
-! [f1 = f1 + turbulence_df]
-      if (inflowturbulence) &
-         call inflow_turbulence_apply(f1,turbulence_df)
 
 ! [f1 = f1 + external forcing]
       if (nturbines > 0 .or. iablvisc == 2 .or. wall_model) &

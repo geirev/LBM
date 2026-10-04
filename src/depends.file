@@ -81,6 +81,7 @@ main.o:      m_testing.o
 main.o:      m_turbine_forcing.o
 main.o:      m_turbine_initialize.o
 main.o:      m_vreman.o
+main.o:      m_wall_forcing.o
 main.o:      m_wtime.o
 m_airfoil.o:      makefile
 m_airfoil.o:      mod_dimensions.o
@@ -498,5 +499,12 @@ m_vreman.o:      mod_dimensions.o
 m_vreman.o:      m_readinfile.o
 m_vreman.o:      m_vreman_kernel.o
 m_vreman.o:      m_wtime.o
+m_wall_forcing_kernel.o:      makefile
+m_wall_forcing_kernel.o:      mod_dimensions.o
+m_wall_forcing.o:      makefile
+m_wall_forcing.o:      mod_dimensions.o
+m_wall_forcing.o:      m_readinfile.o
+m_wall_forcing.o:      m_wall_forcing_kernel.o
+m_wall_forcing.o:      m_wtime.o
 m_wtime.o:      makefile
 m_wtime.o:      m_readinfile.o

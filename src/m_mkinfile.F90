@@ -31,6 +31,7 @@ open(10,file='infile.in',status='new')
    write(10,'(a)')' 22               ! kbnd            : 0-periodic,                11,12,21,22 no-slip (1), free-slip (2)'
    write(10,'(a)')'# Inflow variables'
    write(10,'(a)')' 8.0 0.0          ! uini, udir      : Inflow wind velocity [m/s], direction in degrees (-45:45)'
+   write(10,'(a)')'T T 102.0 2.0e-4  ! wind_profile, wall_model, zref, z0 : wind profile, wall model, ref  height and roughness'
    write(10,'(a)')' F 0.00005  100   ! lturb amp nrtu  : Add turbulence forcing on inflow, amplitude, number of prestored time ste'
    write(10,'(a)')'# Physical variables'
    write(10,'(a)')' 0.0000178        ! visckin         : Dimensional kinematic viscosity'

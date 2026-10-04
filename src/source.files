@@ -126,5 +126,7 @@ F90SOURCE = \
 	m_turbine_yaw_controller.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\
+	m_wall_forcing.F90\
+	m_wall_forcing_kernel.F90\
 	m_wtime.F90
 

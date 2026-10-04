@@ -55,6 +55,7 @@ program LatticeBoltzmann
    use m_inflow
    use m_vreman
    use m_wtime
+   use m_wall_forcing
    use mod_D3Q27setup
    use mod_dimensions
    use mod_turbine_def
@@ -315,23 +316,32 @@ program LatticeBoltzmann
 
 ! External forcing
       external_forcing=0.0
-      if (nturbines > 0)      call turbine_forcing(external_forcing, turbines, rho, u, v, w, it)
-      if (iablvisc == 2)      call buoyancy_forcing(external_forcing,p1)
+
+      if (nturbines > 0) &
+         call turbine_forcing(external_forcing,turbines,rho,u,v,w,it)
+
+      if (iablvisc == 2) &
+         call buoyancy_forcing(external_forcing,p1)
+
+      if (wall_model) &
+         call wall_forcing(external_forcing,rho,u,v)
 
 ! [turbulence_df = turbulenceforcing(rho,u,v,w)]
-      if (inflowturbulence)   call inflow_turbulence_forcing(rho,u,v,w,turbulence_ampl,it,nrturb)
+      if (inflowturbulence) &
+         call inflow_turbulence_forcing( &
+            rho,u,v,w,turbulence_ampl,it,nrturb)
 
 ! [f1,tau = post collision(f1,rho,u,v,w] (returns post collision density and tau for forcing)
-      call postcoll(f1, tau, rho,u,v,w)
+      call postcoll(f1,tau,rho,u,v,w)
       !if (lsponge) call sponge_tau(tau, tau_max, nsponge_i, nsponge_j)
 
-
 ! [f1 = f1 + turbulence_df]
-      if (inflowturbulence)   call inflow_turbulence_apply(f1,turbulence_df)
+      if (inflowturbulence) &
+         call inflow_turbulence_apply(f1,turbulence_df)
 
 ! [f1 = f1 + external forcing]
-      if (nturbines > 0 .or. iablvisc==2) call forcings_apply(f1,external_forcing,rho,u,v,w)
-
+      if (nturbines > 0 .or. iablvisc == 2 .or. wall_model) &
+         call forcings_apply(f1,external_forcing,rho,u,v,w)
 
 ! Bounce back boundary on fixed walls within the fluid
       if (lsolids) call solids(f1,lblanking)

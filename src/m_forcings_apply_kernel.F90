@@ -79,12 +79,12 @@ contains
    Fy = external_forcing(2,i,j,k)
    Fz = external_forcing(3,i,j,k)
 
-!!   if (Fx == 0.0 .and. Fy == 0.0 .and. Fz == 0.0)&
-!!#ifdef _CUDA
-!!   return
-!!#else
-!!   cycle
-!!#endif
+   if (Fx == 0.0 .and. Fy == 0.0 .and. Fz == 0.0)&
+#ifdef _CUDA
+   return
+#else
+   cycle
+#endif
 
    !-----------------------------------------------------------------
    ! Original density and velocity
@@ -119,7 +119,10 @@ contains
 
    !-----------------------------------------------------------------
    ! 2) Compute forced velocity vel1 = vel0 + du, dv, dw
-   !    Here: du = -F / rho (add dt or coefficients if needed)
+   ! external_forcing is force density in lattice units.
+   ! With dt=1, the corresponding velocity increment is
+   !
+   !        du = -F/rho
    !-----------------------------------------------------------------
    du = -Fx / rr
    dv = -Fy / rr

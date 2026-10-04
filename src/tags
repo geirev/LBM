@@ -211,6 +211,8 @@ m_turbine_rotor_basis	m_turbine_rotor_basis.F90	/^module
 m_turbine_yaw_controller	m_turbine_yaw_controller.F90	/^module
 m_vreman	m_vreman.F90	/^module
 m_vreman_kernel	m_vreman_kernel.F90	/^module
+m_wall_forcing	m_wall_forcing.F90	/^module
+m_wall_forcing_kernel	m_wall_forcing_kernel.F90	/^module
 m_wtime	m_wtime.F90	/^module
 netcdfout	m_netcdfout.F90	/^module
 postcoll	m_postcoll.F90	/^module
@@ -263,4 +265,6 @@ turbine_rotor_basis	m_turbine_rotor_basis.F90	/^module
 turbine_yaw_controller	m_turbine_yaw_controller.F90	/^module
 vreman	m_vreman.F90	/^module
 vreman_kernel	m_vreman_kernel.F90	/^module
+wall_forcing	m_wall_forcing.F90	/^module
+wall_forcing_kernel	m_wall_forcing_kernel.F90	/^module
 wtime	m_wtime.F90	/^module

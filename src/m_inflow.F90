@@ -3,7 +3,7 @@ contains
 subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
 ! Read vertical velocity shear from file and impose on the u velocity
    use mod_dimensions
-   use m_readinfile, only : uini,udir,p2l
+   use m_readinfile, only : uini,udir,p2l,zref,z0,wind_profile
    use m_create_uvel_shear
    implicit none
    integer, intent(in) :: nt0
@@ -20,44 +20,15 @@ subroutine inflow(uvel_shear,uvel_time,udir_time,nt0,nt1)
    real, parameter   :: pi=acos(-1.0)
    real,    dimension(:),       allocatable :: uvel_h      ! temporary vertical u-velocity profile on host
    real dangle
-   logical vertical_wind_profile
-   real zref
-   real z0
 
-! Parameters for neutral offshore ABL
-   zref = 102.0       ! Reference/hub height [m]
-   z0   = 2.0e-4      ! Offshore roughness length [m]
-   vertical_wind_profile = .true.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Vertical inflow velocity profile
 
-! Default: uniform vertical inflow profile
-   uvel_shear(:) = 1.0
-
-   if (vertical_wind_profile) then
-
-! Create a neutral offshore ABL profile if uvel_shear.dat does not exist
-      call create_uvel_shear('uvel_shear.dat',nz,p2l%length,zref,z0)
-
-! Read normalized vertical velocity profile
-      inquire(file='uvel_shear.dat',exist=ex)
-      if (ex) then
-         allocate(uvel_h(nz))
-
-         print '(a)','inflow: Reading inflow vertical profile from uvel_shear.dat'
-
-         open(10,file='uvel_shear.dat')
-         do k=1,nz
-            read(10,*,err=999,end=999) kk,z(k),uvel_h(k)
-         enddo
-         close(10)
-
-         uvel_shear(:) = uvel_h(:)
-
-         deallocate(uvel_h)
-      endif
-
+   if (wind_profile) then
+      call create_uvel_shear('uvel_shear.dat',nz,p2l%length,zref,z0,uvel_shear)
+   else
+      uvel_shear(:) = 1.0
    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

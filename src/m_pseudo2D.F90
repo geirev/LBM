@@ -46,6 +46,8 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    if (lde < 1)    stop 'pseudo2D: error lde < 1'
    if (rx <= 0.0)  stop 'pseudo2D: error, rx <= 0.0'
    if (ry <= 0.0)  stop 'pseudo2D: error, ry <= 0.0'
+   if (dx <= 0.0)  stop 'pseudo2D: error, dx <= 0.0'
+   if (dy <= 0.0)  stop 'pseudo2D: error, dy <= 0.0'
    if (n1 < nx)    stop 'pseudo2D: n1 < nx'
    if (n2 < ny)    stop 'pseudo2D: n2 < ny'
 
@@ -62,6 +64,10 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    allocate(phi(0:n1/2,-n2/2:n2/2))
    allocate(y(0:n1+1,0:n2-1))
    allocate(x(0:n1/2,0:n2-1))
+
+   print *,'pseudo2D: nx,ny,n1,n2 = ',nx,ny,n1,n2
+   print *,'pseudo2D: rx,ry       = ',rx,ry
+   print *,'pseudo2D: dx,dy       = ',dx,dy
 
    pi2=2.0*pi
    deltak=pi2**2/(real(n1*n2)*dx*dy)

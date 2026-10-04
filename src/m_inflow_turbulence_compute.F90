@@ -34,8 +34,6 @@ subroutine inflow_turbulence_compute(uu,vv,ww,rr,ny_here,nz,nrturb,lfirst)
 
    print *,'compute_turbulence_field: generating pseudo-2D inflow forcing'
 
-   n1=ny_here
-   n2=nz
 
    if (lfirst) then
       n0=0
@@ -49,6 +47,8 @@ subroutine inflow_turbulence_compute(uu,vv,ww,rr,ny_here,nz,nrturb,lfirst)
       rr(:,:,0)=rr(:,:,nrturb)
    endif
 
+   n1=ny_here
+   n2=nz
    call pseudo2d(uu(:,:,n0:nrturb),ny_here,nz,nrturb+nn,cor1,cor2,dx,dy,n1,n2,dir,.false.)
 
    n1=ny_here; n2=nz

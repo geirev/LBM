@@ -34,8 +34,8 @@ module m_turbine_controller
 ! where Kgen is calculated from ratedpower and ratedrpm so that Region 2
 ! joins continuously to rated power at rated rotor speed.
 !-----------------------------------------------------------------------
-   real, save :: rotor_inertia = 1.0e8       ! [kg m^2], initial estimate
-   real, save :: rpm_min       = 5.0         ! [rev/min]
+   real, save :: rotor_inertia = 2.48e7      ! [kg m^2], initial estimate
+   real, save :: rpm_min       = 4.0         ! [rev/min]
 
 !-----------------------------------------------------------------------
 ! Above-rated pitch PI gains based on normalized rotor-speed error:

@@ -32,8 +32,7 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    real kappa2,lambda2,kappa,lambda
    real pi2,deltak,summ
    real a11tmp,a22tmp,a11,a22,a12,torad
-   real, parameter :: r8 = 8.0
-
+  
    real, allocatable    :: fampl(:,:,:)
    real, allocatable    :: phi(:,:)
    real, allocatable    :: y(:,:)   ! Physical field
@@ -59,11 +58,7 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    else
       lm=.true.   ! default is true
    endif
-
-   allocate(fampl(2,0:n1/2,-n2/2:n2/2))
-   allocate(phi(0:n1/2,-n2/2:n2/2))
-   allocate(y(0:n1+1,0:n2-1))
-   allocate(x(0:n1/2,0:n2-1))
+   
 
    print *,'pseudo2D: nx,ny,n1,n2 = ',nx,ny,n1,n2
    print *,'pseudo2D: rx,ry       = ',rx,ry
@@ -76,7 +71,7 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    lambda=pi2/(real(n2)*dy)
    lambda2=lambda**2
 
-   if (allocated(y)) deallocate(y)
+   allocate(x(0:n1/2,0:n2-1))
    allocate(y(0:n1-1,0:n2-1))
 #ifdef DOUBLE_PRECISION
    call dfftw_plan_dft_c2r_2d(plan,n1,n2,x,y,FFTW_ESTIMATE)
@@ -86,17 +81,8 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
 
 
 ! computing the coefficients r1, r2, and c
-
-   r1 = sqrt(real(r8, kind=kind(rx))) / rx
-   r2 = sqrt(real(r8, kind=kind(ry))) / ry
-!   r1=sqrt(8.0_c_float)/rx
-!   r2=sqrt(8.0_c_float)/ry
-
-!   if (verbose) print '(a,2f12.5,2i6,4f10.2)','pseudo2D: Call newton with ',r1,r2,n1,n2,dx,dy,rx,ry
-!   call newton2D(r1,r2,n1,n2,dx,dy,rx,ry,cnv,verbose)
-!   if (.not.cnv) then
-!      stop 'newton did not converge'
-!   endif
+   r1 = sqrt(8.0) / rx
+   r2 = sqrt(8.0) / ry
 
    summ=0.0
    do p=-n2/2+1,n2/2
@@ -122,6 +108,10 @@ subroutine pseudo2D(Amat,nx,ny,lde,rx,ry,dx,dy,n1,n2,theta,verbose,lmean)
    a11=a11tmp*cos(theta*torad)**2 + a22tmp*sin(theta*torad)**2
    a22=a11tmp*sin(theta*torad)**2 + a22tmp*cos(theta*torad)**2
    a12=(a22tmp-a11tmp)*cos(theta*torad)*sin(theta*torad)
+
+
+   allocate(fampl(2,0:n1/2,-n2/2:n2/2))
+   allocate(phi(0:n1/2,-n2/2:n2/2))
 
    do j=1,lde
       ! Calculating the random wave phases

@@ -72,12 +72,6 @@ F90SOURCE = \
 	m_macrovars_kernel.F90\
 	m_mechanical_ablvisc.F90\
 	m_mkinfile.F90\
-	m_mpi_decomp_finalize.F90\
-	m_mpi_decomp_init.F90\
-	m_mpi_halo_buffers.F90\
-	m_mpi_halo_exchange_j.F90\
-	m_mpi_pack_jplane.F90\
-	m_mpi_unpack_jplane.F90\
 	m_netcdfout.F90\
 	mod_D3Q27setup.F90\
 	mod_dimensions.F90\
@@ -125,10 +119,12 @@ F90SOURCE = \
 	m_turbine_interpolate_velocity.F90\
 	m_turbine_local_wind.F90\
 	m_turbine_local_wind_kernel.F90\
-	m_turbine_point_forces_gpu.F90\
-	m_turbine_point_forces_kernel.F90\
+	m_turbine_point_kinematics_gpu.F90\
+	m_turbine_point_kinematics_kernel.F90\
 	m_turbine_rotor_basis.F90\
 	m_turbines_bounding_box.F90\
+	m_turbine_smearing_correction.F90\
+	m_turbine_smearing_forces.F90\
 	m_turbine_yaw_controller.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\

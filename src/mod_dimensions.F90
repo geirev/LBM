@@ -67,13 +67,21 @@ module mod_dimensions
 !   integer, parameter :: nz = 121          ! grid dimension z-dir (up)
 !   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
-!windturbine yaw test
-   integer, parameter :: nx = 240          ! grid dimension x-dir (east)
+! turbine smearing test
+   integer, parameter :: nx = 960          ! grid dimension x-dir (east)
    integer, parameter :: ny = 120          ! grid dimension y-dir (north)
-   integer, parameter :: ntiles = 2        ! Number of tiles in y direction
+   integer, parameter :: ntiles = 1        ! Number of tiles in y direction
    integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
-   integer, parameter :: nz = 60           ! 60 grid dimension z-dir (up)
+   integer, parameter :: nz = 120          ! 60 grid dimension z-dir (up)
    integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
+
+!windturbine yaw test
+!   integer, parameter :: nx = 240          ! grid dimension x-dir (east)
+!   integer, parameter :: ny = 120          ! grid dimension y-dir (north)
+!   integer, parameter :: ntiles = 2        ! Number of tiles in y direction
+!   integer, parameter :: nyg = ntiles*ny   ! global grid dimension y-dir (north)
+!   integer, parameter :: nz = 60           ! 60 grid dimension z-dir (up)
+!   integer, parameter :: ntracer = 0       ! Number of tracer fields (potential temperature etc)
 
 !city
 !  integer, parameter :: nx = 200          ! grid dimension x-dir (east)

@@ -123,7 +123,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    ! Turbine-model switches.  For now these are compile-time parameters.
    ! They can later be moved to infile.in without changing the lower-level routines.
    logical, parameter :: use_smearing = .false.
-   logical, parameter :: use_prandtl  = .false.
+   logical, parameter :: use_prandtl  = .true.
 
 
    call cpustart()
@@ -181,7 +181,6 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    call turbine_point_kinematics_gpu(points_global,rho,u,v,w,kin_local,np)
    call cpufinish(22)
 
-   call cpustart()
 #ifdef MPI
 ! 5. Assemble the complete actuator-point velocity field on every rank.
    call MPI_Allreduce(kin_local,kin_global,3*np,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -195,6 +194,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 !
 !    epsilon_lattice MUST be identical to the epsilon used by
 !    turbine_deposit/turbine_deposit_gpu.
+   call cpustart()
    call turbine_smearing_forces(turbines_in,points_global,kin_global, &
                                 Fvec_global,np,p2l%length,p2l%vel, &
                                 p2l%time,itimestep,use_smearing,use_prandtl)

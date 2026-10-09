@@ -192,6 +192,7 @@ m_testing	m_testing.F90	/^module
 m_testvar	m_testvar.F90	/^module
 m_theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 m_turbines_bounding_box	m_turbines_bounding_box.F90	/^module
+m_turbine_blade_diagnostics	m_turbine_blade_diagnostics.F90	/^module
 m_turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 m_turbine_controller	m_turbine_controller.F90	/^module
 m_turbine_deposit	m_turbine_deposit.F90	/^module
@@ -247,6 +248,7 @@ testvar	m_testvar.F90	/^module
 theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 turbines	mod_turbines.F90	/^module
 turbines_bounding_box	m_turbines_bounding_box.F90	/^module
+turbine_blade_diagnostics	m_turbine_blade_diagnostics.F90	/^module
 turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 turbine_controller	m_turbine_controller.F90	/^module
 turbine_def	mod_turbine_def.F90	/^module

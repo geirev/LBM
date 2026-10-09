@@ -1,5 +1,9 @@
 module m_turbine_smearing_forces
+#ifdef _CUDA
+   use m_turbine_smearing_correction_gpu, only : smear_gpu_batch
+#else
    use m_turbine_smearing_correction, only : turbine_smear_init, turbine_smear_correct_blade
+#endif
    implicit none
    logical, save :: smear_initialized=.false.
 
@@ -28,7 +32,15 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
    logical, intent(in) :: use_smearing,use_prandtl
    real, intent(out) :: Fvec(3,np)
 
-   integer :: it,ib,ic,p0,p,nbl,niter
+   integer :: it,ib,ic,p0,p,nbl,niter,b,nbatch
+#ifdef _CUDA
+   real :: ua_all(nrchords,size(turbines)*nblades),ut_all(nrchords,size(turbines)*nblades)
+   real :: tw_all(nrchords,size(turbines)*nblades),pit_all(size(turbines)*nblades)
+   integer :: foil_all(nrchords,size(turbines)*nblades)
+   real :: uac_all(nrchords,size(turbines)*nblades),utc_all(nrchords,size(turbines)*nblades)
+   integer :: nit_all(size(turbines)*nblades)
+   real :: res_all(size(turbines)*nblades)
+#endif
    real :: eps_si,resid,phi,cl,cd
    real :: ua(nrchords),ut(nrchords),uac(nrchords),utc(nrchords)
    real :: cl_diag(nrchords)
@@ -49,14 +61,41 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
 #endif
 
    Fvec=0.0
+   niter=0;resid=0.0
    eps_si=epsilon_lattice*dx
    r_si=relm*dx
    c_si=chord*dx
 
+#ifndef _CUDA
    if (use_smearing .and. .not.smear_initialized) then
       call turbine_smear_init(size(turbines),nblades,nrchords,r_si,eps_si)
       smear_initialized=.true.
    endif
+#else
+   ! Batch all ALM blades into a single GPU launch; preserve blade order.
+   if (use_smearing .and. actuator_model==0) then
+      nbatch=size(turbines)*nblades
+      do it=1,size(turbines)
+         do ib=1,nblades
+            b=(it-1)*nblades+ib
+            p0=(b-1)*nrchords+1
+            do ic=1,nrchords
+               p=p0+ic-1
+               if (p>np) error stop 'GPU smearing: inconsistent point count'
+               if (points(p)%iturb/=it.or.points(p)%iblade/=ib.or.points(p)%ichord/=ic) &
+                    error stop 'GPU smearing: points must be ordered turbine/blade/section'
+               ua_all(ic,b)=kin(1,p)*uconv
+               ut_all(ic,b)=kin(2,p)*uconv
+               tw_all(ic,b)=points(p)%twist
+               foil_all(ic,b)=points(p)%foil
+            enddo
+            pit_all(b)=turbines(it)%pitchangle
+         enddo
+      enddo
+      call smear_gpu_batch(nrchords,nbatch,dt,eps_si,r_si,c_si,ua_all,ut_all, &
+                           tw_all,foil_all,pit_all,uac_all,utc_all,nit_all,res_all)
+   endif
+#endif
 
    ! points are ordered turbine -> blade/azimuth -> chord.
    do it=1,size(turbines)
@@ -86,9 +125,17 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
          enddo
 
          if (actuator_model==0 .and. use_smearing) then
+#ifdef _CUDA
+            b=(it-1)*nblades+ib
+            uac=uac_all(:,b)
+            utc=utc_all(:,b)
+            niter=nit_all(b)
+            resid=res_all(b)
+#else
             call turbine_smear_correct_blade(it,ib,dt,eps_si,r_si,c_si, &
                  twist_b,turbines(it)%pitchangle,foil_b,ua,ut,uac,utc, &
                  niter,resid)
+#endif
          else
             uac=ua
             utc=ut

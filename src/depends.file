@@ -481,6 +481,8 @@ m_turbine_rotor_basis.o:      makefile
 m_turbines_bounding_box.o:      makefile
 m_turbines_bounding_box.o:      mod_dimensions.o
 m_turbines_bounding_box.o:      mod_turbines.o
+m_turbine_smearing_correction_gpu.o:      makefile
+m_turbine_smearing_correction_gpu.o:      m_liftdrag.o
 m_turbine_smearing_correction.o:      makefile
 m_turbine_smearing_correction.o:      m_liftdrag.o
 m_turbine_smearing_forces.o:      makefile
@@ -491,6 +493,7 @@ m_turbine_smearing_forces.o:      m_readinfile.o
 m_turbine_smearing_forces.o:      m_turbine_blade_diagnostics.o
 m_turbine_smearing_forces.o:      m_turbine_compute_bladeforce.o
 m_turbine_smearing_forces.o:      m_turbine_rotor_basis.o
+m_turbine_smearing_forces.o:      m_turbine_smearing_correction_gpu.o
 m_turbine_smearing_forces.o:      m_turbine_smearing_correction.o
 m_turbine_yaw_controller.o:      makefile
 m_turbine_yaw_controller.o:      mod_turbines.o

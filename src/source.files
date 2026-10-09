@@ -125,6 +125,7 @@ F90SOURCE = \
 	m_turbine_rotor_basis.F90\
 	m_turbines_bounding_box.F90\
 	m_turbine_smearing_correction.F90\
+	m_turbine_smearing_correction_gpu.F90\
 	m_turbine_smearing_forces.F90\
 	m_turbine_yaw_controller.F90\
 	m_vreman.F90\

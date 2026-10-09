@@ -122,8 +122,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 
    ! Turbine-model switches.  For now these are compile-time parameters.
    ! They can later be moved to infile.in without changing the lower-level routines.
-   logical, parameter :: use_smearing = .false.
-   logical, parameter :: use_prandtl  = .true.
+   logical, parameter :: use_smearing = .true.
+   logical, parameter :: use_prandtl  = .false.
 
 
    call cpustart()

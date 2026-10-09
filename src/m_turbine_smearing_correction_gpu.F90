@@ -1,5 +1,6 @@
-! CUDA Fortran batch near-wake solver.  One block per blade, one thread per section.
-! This module intentionally retains the original CPU solver's state equations.
+! Explicit CUDA near-wake approximation: two kernels, one thread per blade section.
+! Uses predicted circulation and the original nonlocal wake influence formula.
+! Does NOT solve the original coupled nonlinear fixed-point equations.
 module m_turbine_smearing_correction_gpu
 #ifdef _CUDA
  use cudafor
@@ -16,6 +17,7 @@ module m_turbine_smearing_correction_gpu
  real, allocatable, device, save :: ph_d(:,:),ps_d(:,:),ddx_d(:,:),ddy_d(:,:),a_d(:,:,:),sm_d(:,:)
  real, allocatable, device, save :: r_d(:),rv_d(:),ch_d(:)
  real, allocatable, device, save :: ua_d(:,:),ut_d(:,:),tw_d(:,:),pitch_d(:),uac_d(:,:),utc_d(:,:)
+ real, allocatable, device, save :: gp_d(:,:),gs_d(:,:),vrp_d(:,:),dp_d(:,:,:)
  integer, allocatable, device, save :: foil_d(:,:),iters_d(:)
  real, allocatable, device, save :: residual_d(:)
 #endif
@@ -38,7 +40,7 @@ subroutine smear_gpu_reset()
 #ifdef _CUDA
  if (allocated(vn_d)) then
    deallocate(vn_d,vt_d,w_d,gh_d,dyn_d,xh_d,yh_d,ph_d,ps_d,ddx_d,ddy_d,a_d,sm_d, &
-              r_d,rv_d,ch_d,ua_d,ut_d,tw_d,pitch_d,uac_d,utc_d,foil_d,iters_d,residual_d)
+              r_d,rv_d,ch_d,ua_d,ut_d,tw_d,pitch_d,uac_d,utc_d,foil_d,iters_d,residual_d,gp_d,gs_d,vrp_d,dp_d)
  endif
 #endif
  ns_save=0;nb_save=0;eps_save=-1.;dx_save=-1.
@@ -71,6 +73,7 @@ subroutine smear_gpu_batch(nsec,nblade,dt,eps,r,chord,ua,ut,twist,foil,pitch,uac
    allocate(r_d(nsec),rv_d(nv),ch_d(nsec))
    allocate(ua_d(nsec,nblade),ut_d(nsec,nblade),tw_d(nsec,nblade),pitch_d(nblade))
    allocate(uac_d(nsec,nblade),utc_d(nsec,nblade),foil_d(nsec,nblade),iters_d(nblade),residual_d(nblade))
+   allocate(gp_d(nsec,nblade),gs_d(nsec,nblade),vrp_d(nsec,nblade),dp_d(nsec,3,nblade))
    vn_d=0.;vt_d=0.;w_d=0.;gh_d=0.;dyn_d=0.;xh_d=0.;yh_d=0.
    rv(2:nsec)=0.5*(r(1:nsec-1)+r(2:nsec))
    rv(1)=max(1.e-6,r(1)-0.5*(r(2)-r(1)))
@@ -89,11 +92,19 @@ subroutine smear_gpu_batch(nsec,nblade,dt,eps,r,chord,ua,ut,twist,foil,pitch,uac
    ns_save=nsec;nb_save=nblade;eps_save=eps
  endif
  ua_d=ua;ut_d=ut;tw_d=twist;foil_d=foil;pitch_d=pitch
- block=dim3(32,1,1);grid=dim3(nblade,1,1)
- call smear_kernel<<<grid,block>>>(nsec,nblade,dt,r_d,rv_d,ch_d,ua_d,ut_d,tw_d,foil_d,pitch_d, &
-         ph_d,ps_d,ddx_d,ddy_d,a_d,sm_d,vn_d,vt_d,w_d,gh_d,dyn_d,xh_d,yh_d, &
-         uac_d,utc_d,iters_d,residual_d)
- uac=uac_d;utc=utc_d;iters=iters_d;residual=residual_d
+ ! One thread per section, across all blades; no blade-level barriers.
+ block=dim3(128,1,1)
+ grid=dim3((nsec*nblade+127)/128,1,1)
+ call smear_predict<<<grid,block>>>(nsec,nblade,dt,ch_d,ua_d,ut_d,tw_d,foil_d,pitch_d, &
+             vn_d,vt_d,gh_d,dyn_d,gp_d,gs_d,vrp_d,dp_d)
+ call smear_apply<<<grid,block>>>(nsec,nblade,dt,r_d,rv_d,ua_d,ut_d, &
+             ph_d,ps_d,ddx_d,ddy_d,a_d,sm_d, &
+             vn_d,vt_d,w_d,gh_d,dyn_d,xh_d,yh_d, &
+             gp_d,gs_d,vrp_d,dp_d,uac_d,utc_d)
+ ! No nonlinear iteration or convergence residual in this explicit scheme.
+ iters=1
+ residual=-1.0
+ uac=uac_d;utc=utc_d
 #else
  error stop 'smear_gpu_batch requires compilation with -D_CUDA'
 #endif
@@ -131,143 +142,101 @@ subroutine geometry(h,hr,phi,phis,dx,dy,a)
 end subroutine
 
 #ifdef _CUDA
-attributes(global) subroutine smear_kernel(ns,nb,dt,r,rv,ch,ua,ut,tw,fo,pitch, &
-            ph,ps,ddx,ddy,a,sm,vnh,vth,wh,gh,dh,xh,yh,uac,utc,niter,resid)
- use m_liftdrag, only: liftdrag
+! Stage 1: independent predictor for circulation and dynamic filters.
+! Old history is READ ONLY; no state is committed until stage 2.
+attributes(global) subroutine smear_predict(ns,nb,dt,ch,ua,ut,tw,fo,pitch, &
+                                             vnh,vth,gh,dh,gp,gs,vrp,dp)
+ use m_liftdrag, only : liftdrag
  implicit none
- integer,value::ns,nb
- real,value::dt
- real,device::r(ns),rv(ns+1),ch(ns),ua(ns,nb),ut(ns,nb),tw(ns,nb),pitch(nb)
- integer,device::fo(ns,nb)
- real,device::ph(ns+1,ns),ps(ns+1,ns),ddx(ns+1,ns),ddy(ns+1,ns),a(ns+1,ns,4),sm(ns+1,ns)
- real,device::vnh(ns,nb),vth(ns,nb),wh(ns,nb),gh(ns,nb),dh(ns,3,nb)
- real,device::xh(ns+1,ns,nb),yh(ns+1,ns,nb),uac(ns,nb),utc(ns,nb),resid(nb)
- integer,device::niter(nb)
- real,shared::vn(maxsec),vt(maxsec),wold(maxsec),wnew(maxsec)
- real,shared::uax(maxsec),utan(maxsec),vr(maxsec),gsteady(maxsec),gcur(maxsec)
- real,shared::gdiff(maxsec+1),phiv(maxsec+1),vrelv(maxsec+1)
- real,shared::dyn(maxsec,3),err(maxsec),maxerr,relax
- integer::l,b,k,j,iter,km
- real::alpha,cl,cd,vrel,q,e1,e2,e3,dbeta,hr,kk,phistar,xe,ye,xnew,ynew,sumw,angle,oldx,oldy
- l=threadIdx%x;b=blockIdx%x
- if(b>nb)return
- if(l<=ns) then
-   vn(l)=vnh(l,b);vt(l)=vth(l,b);wold(l)=wh(l,b)
- endif
- if(l==1)relax=0.2
- call syncthreads()
- do k=l,ns+1,blockDim%x
-   if(k==1) then
-     angle=atan2(ua(1,b),max(abs(ut(1,b)),1.e-8))
-     if(ut(1,b)<0.)angle=atan2(ua(1,b),ut(1,b))
+ integer,value :: ns,nb
+ real,value :: dt
+ real,device :: ch(ns),ua(ns,nb),ut(ns,nb),tw(ns,nb),pitch(nb)
+ integer,device :: fo(ns,nb)
+ real,device :: vnh(ns,nb),vth(ns,nb),gh(ns,nb),dh(ns,3,nb)
+ real,device :: gp(ns,nb),gs(ns,nb),vrp(ns,nb),dp(ns,3,nb)
+ integer :: idx,l,b
+ real :: ax,tan,v,alpha,cl,cd,q,e1,e2,e3
+ idx=(blockIdx%x-1)*blockDim%x+threadIdx%x
+ if(idx>ns*nb)return
+ l=mod(idx-1,ns)+1; b=(idx-1)/ns+1
+ ax=ua(l,b)+vnh(l,b);tan=ut(l,b)-vth(l,b)
+ v=sqrt(ax*ax+tan*tan)
+ alpha=atan2(ax,tan)*180.0/pi-tw(l,b)-pitch(b)
+ call liftdrag(cl,cd,alpha,fo(l,b))
+ gs(l,b)=0.5*v*ch(l)*cl
+ vrp(l,b)=v
+ q=dt/max(ch(l)/(2.0*max(v,1.e-8)),1.e-8)
+ e1=exp(-0.3064*q);e2=exp(-0.0439*q);e3=exp(-3.227*q)
+ dp(l,1,b)=dh(l,1,b)*e1+0.27735*(gs(l,b)+gh(l,b))*(1.-e1)
+ dp(l,2,b)=dh(l,2,b)*e2+0.0914*(gs(l,b)+gh(l,b))*(1.-e2)
+ dp(l,3,b)=dh(l,3,b)*e3+0.13125*(gs(l,b)+gh(l,b))*(1.-e3)
+ gp(l,b)=dp(l,1,b)+dp(l,2,b)+dp(l,3,b)
+end subroutine smear_predict
+
+! Stage 2: each section independently integrates ALL trailing vortex influences.
+! The predicted circulation distribution is fixed for this step.
+attributes(global) subroutine smear_apply(ns,nb,dt,r,rv,ua,ut, &
+        ph,ps,ddx,ddy,a,sm,vnh,vth,wh,gh,dh,xh,yh, &
+        gp,gs,vrp,dp,uac,utc)
+ implicit none
+ integer,value :: ns,nb
+ real,value :: dt
+ real,device :: r(ns),rv(ns+1),ua(ns,nb),ut(ns,nb)
+ real,device :: ph(ns+1,ns),ps(ns+1,ns),ddx(ns+1,ns),ddy(ns+1,ns)
+ real,device :: a(ns+1,ns,4),sm(ns+1,ns)
+ real,device :: vnh(ns,nb),vth(ns,nb),wh(ns,nb),gh(ns,nb),dh(ns,3,nb)
+ real,device :: xh(ns+1,ns,nb),yh(ns+1,ns,nb)
+ real,device :: gp(ns,nb),gs(ns,nb),vrp(ns,nb),dp(ns,3,nb)
+ real,device :: uac(ns,nb),utc(ns,nb)
+ integer :: idx,l,b,k,j
+ real :: ang1,ang2,phiv,vrv,dg,hr,kk,phistar,dbeta,xe,ye,xnew,ynew
+ real :: sumw,w,ang,vn,vt,blend
+ idx=(blockIdx%x-1)*blockDim%x+threadIdx%x
+ if(idx>ns*nb)return
+ l=mod(idx-1,ns)+1;b=(idx-1)/ns+1
+ sumw=0.
+ do k=1,ns+1
+   if(k==1)then
+     ang1=atan2(ua(1,b),ut(1,b))
+     phiv=ang1;vrv=vrp(1,b);dg=gp(1,b)
    else if(k==ns+1)then
-     angle=atan2(ua(ns,b),max(abs(ut(ns,b)),1.e-8))
-     if(ut(ns,b)<0.)angle=atan2(ua(ns,b),ut(ns,b))
+     phiv=atan2(ua(ns,b),ut(ns,b))
+     vrv=vrp(ns,b);dg=-gp(ns,b)
    else
-     angle=atan2(ua(k-1,b),max(abs(ut(k-1,b)),1.e-8))
-     if(ut(k-1,b)<0.)angle=atan2(ua(k-1,b),ut(k-1,b))
-     alpha=atan2(ua(k,b),max(abs(ut(k,b)),1.e-8))
-     if(ut(k,b)<0.)alpha=atan2(ua(k,b),ut(k,b))
-     angle=angle+(rv(k)-r(k-1))/(r(k)-r(k-1))*(alpha-angle)
+     blend=(rv(k)-r(k-1))/(r(k)-r(k-1))
+     ang1=atan2(ua(k-1,b),ut(k-1,b))
+     ang2=atan2(ua(k,b),ut(k,b))
+     phiv=ang1+blend*(ang2-ang1)
+     vrv=vrp(k-1,b)+blend*(vrp(k,b)-vrp(k-1,b))
+     dg=gp(k,b)-gp(k-1,b)
    endif
-   phiv(k)=angle
+   dbeta=max(vrv*dt/rv(k),0.)
+   hr=(rv(k)-r(l))/rv(k)
+   if(hr<0.)then
+     kk=a(k,l,1)+a(k,l,2)*exp(a(k,l,3)*(pi/2.-phiv))+ &
+          a(k,l,4)*exp(-8.*(pi/2.-phiv))-a(k,l,2)-a(k,l,4)
+   else
+     kk=a(k,l,1)+a(k,l,2)*phiv+a(k,l,3)*phiv**2+a(k,l,4)*phiv**3
+   endif
+   kk=min(1.,max(0.,kk))
+   phistar=max(kk*ps(k,l)+(1.-kk)*ph(k,l),1.e-8)
+   xe=exp(-dbeta/phistar);ye=exp(-4.*dbeta/phistar)
+   xnew=dg*ddx(k,l)*phistar*(1.-xe)+xh(k,l,b)*xe
+   ynew=dg*ddy(k,l)*phistar*(1.-ye)+yh(k,l,b)*ye
+   xh(k,l,b)=xnew;yh(k,l,b)=ynew
+   sumw=sumw+sm(k,l)*(xnew+ynew)
  enddo
- call syncthreads()
- do iter=1,500
-   if(l<=ns)then
-     uax(l)=ua(l,b)+vn(l);utan(l)=ut(l,b)-vt(l)
-     vr(l)=sqrt(uax(l)*uax(l)+utan(l)*utan(l))
-     alpha=atan2(uax(l),utan(l))*180./pi-tw(l,b)-pitch(b)
-     call liftdrag(cl,cd,alpha,fo(l,b))
-     gsteady(l)=0.5*vr(l)*ch(l)*cl
-     q=dt/max(ch(l)/(2.*max(vr(l),1.e-8)),1.e-8)
-     e1=exp(-0.3064*q);e2=exp(-0.0439*q);e3=exp(-3.227*q)
-     dyn(l,1)=dh(l,1,b)*e1+0.27735*(gsteady(l)+gh(l,b))*(1.-e1)
-     dyn(l,2)=dh(l,2,b)*e2+0.0914*(gsteady(l)+gh(l,b))*(1.-e2)
-     dyn(l,3)=dh(l,3,b)*e3+0.13125*(gsteady(l)+gh(l,b))*(1.-e3)
-     gcur(l)=dyn(l,1)+dyn(l,2)+dyn(l,3)
-   endif
-   call syncthreads()
-   do k=l,ns+1,blockDim%x
-     if(k==1)then
-       gdiff(k)=gcur(1);vrelv(k)=vr(1)
-     else if(k==ns+1)then
-       gdiff(k)=-gcur(ns);vrelv(k)=vr(ns)
-     else
-       gdiff(k)=gcur(k)-gcur(k-1)
-       vrelv(k)=vr(k-1)+(rv(k)-r(k-1))/(r(k)-r(k-1))*(vr(k)-vr(k-1))
-     endif
-   enddo
-   call syncthreads()
-   if(l<=ns)then
-     sumw=0.
-     do k=1,ns+1
-       dbeta=max(vrelv(k)*dt/rv(k),0.)
-       hr=(rv(k)-r(l))/rv(k)
-       if(hr<0.)then
-         kk=a(k,l,1)+a(k,l,2)*exp(a(k,l,3)*(pi/2.-phiv(k)))+ &
-            a(k,l,4)*exp(-8.*(pi/2.-phiv(k)))-a(k,l,2)-a(k,l,4)
-       else
-         kk=a(k,l,1)+a(k,l,2)*phiv(k)+a(k,l,3)*phiv(k)**2+a(k,l,4)*phiv(k)**3
-       endif
-       kk=min(1.,max(0.,kk))
-       phistar=max(kk*ps(k,l)+(1.-kk)*ph(k,l),1.e-8)
-       xe=exp(-dbeta/phistar);ye=exp(-4.*dbeta/phistar)
-       oldx=xh(k,l,b);oldy=yh(k,l,b)
-       xnew=gdiff(k)*ddx(k,l)*phistar*(1.-xe)+oldx*xe
-       ynew=gdiff(k)*ddy(k,l)*phistar*(1.-ye)+oldy*ye
-       ! Do not update xh/yh until convergence (CPU uses previous-step history in each iteration).
-       ! Recompute converged x/y once below.
-       sumw=sumw+sm(k,l)*(xnew+ynew)
-     enddo
-     wnew(l)=relax*wold(l)+(1.-relax)*sumw
-     err(l)=abs(wnew(l)-wold(l))
-   endif
-   call syncthreads()
-   if(l==1)then
-     maxerr=0.
-     do j=1,ns
-       maxerr=max(maxerr,err(j))
-     enddo
-   endif
-   call syncthreads()
-   if(l<=ns)then
-     wold(l)=wnew(l)
-     angle=atan2(ua(l,b)+vn(l),ut(l,b)-vt(l))
-     vn(l)=wold(l)*cos(angle)
-     vt(l)=wold(l)*sin(angle)
-   endif
-   call syncthreads()
-   if(maxerr<1.e-6)exit
-   if(iter==100.and.l==1)relax=0.4
-   call syncthreads()
+ ! The original solver's relaxation is an iteration relaxation, not
+ ! a physical temporal filter. Explicit update therefore uses sumw.
+ w=sumw
+ ang=atan2(ua(l,b)+vnh(l,b),ut(l,b)-vth(l,b))
+ vn=w*cos(ang);vt=w*sin(ang)
+ uac(l,b)=ua(l,b)+vn;utc(l,b)=ut(l,b)-vt
+ vnh(l,b)=vn;vth(l,b)=vt;wh(l,b)=w
+ gh(l,b)=gs(l,b)
+ do j=1,3
+   dh(l,j,b)=dp(l,j,b)
  enddo
- if(l<=ns)then
-   uac(l,b)=ua(l,b)+vn(l);utc(l,b)=ut(l,b)-vt(l)
-   vnh(l,b)=vn(l);vth(l,b)=vt(l);wh(l,b)=wold(l)
-   gh(l,b)=gsteady(l)
-   do j=1,3
-     dh(l,j,b)=dyn(l,j)
-   enddo
-   do k=1,ns+1
-     dbeta=max(vrelv(k)*dt/rv(k),0.)
-     hr=(rv(k)-r(l))/rv(k)
-     if(hr<0.)then
-       kk=a(k,l,1)+a(k,l,2)*exp(a(k,l,3)*(pi/2.-phiv(k)))+ &
-          a(k,l,4)*exp(-8.*(pi/2.-phiv(k)))-a(k,l,2)-a(k,l,4)
-     else
-       kk=a(k,l,1)+a(k,l,2)*phiv(k)+a(k,l,3)*phiv(k)**2+a(k,l,4)*phiv(k)**3
-     endif
-     kk=min(1.,max(0.,kk))
-     phistar=max(kk*ps(k,l)+(1.-kk)*ph(k,l),1.e-8)
-     xe=exp(-dbeta/phistar);ye=exp(-4.*dbeta/phistar)
-     xh(k,l,b)=gdiff(k)*ddx(k,l)*phistar*(1.-xe)+xh(k,l,b)*xe
-     yh(k,l,b)=gdiff(k)*ddy(k,l)*phistar*(1.-ye)+yh(k,l,b)*ye
-   enddo
- endif
- if(l==1)then
-   niter(b)=iter;resid(b)=maxerr
- endif
-end subroutine
+end subroutine smear_apply
 #endif
-end module
+end module m_turbine_smearing_correction_gpu

@@ -179,8 +179,8 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
          endif
          if (use_smearing .and. itimestep==1 .and. it==1 .and. ib==1) then
             write(*,'(a,f8.3,a,i4,a,es12.4)') &
-                 'NW smearing correction: epsilon=',eps_si,' m, iterations=', &
-                 niter,', residual=',resid
+                 'NW explicit correction: epsilon=',eps_si,' m, passes=', &
+                 niter,', residual (N/A)=',resid
          endif
       enddo
    enddo

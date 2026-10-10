@@ -68,7 +68,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    use mpi
 #endif
    use mod_dimensions, only : nx, ny, nz
-   use m_readinfile, only : p2l, dtcontrol
+   use m_readinfile, only : p2l, dtcontrol, use_smearing, use_prandtl
 
    use mod_turbines, only : turbine_t, points_global
    use m_turbine_controller, only : turbine_controller, turbine_controller_feedback
@@ -119,12 +119,6 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    real, parameter :: pi2=2.0*acos(-1.0)
    integer :: p, np, ierr, ncontrol, itimestep
    logical newfile
-
-   ! Turbine-model switches.  For now these are compile-time parameters.
-   ! They can later be moved to infile.in without changing the lower-level routines.
-   logical, parameter :: use_smearing = .true.
-   logical, parameter :: use_prandtl  = .false.
-
 
    call cpustart()
    ncontrol = max(1,nint(dtcontrol/p2l%time))
@@ -192,8 +186,6 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
 !    compute the final actuator forces.  The correction is used for ALM
 !    turbines only; ADM-R points use the uncorrected sampled velocities.
 !
-!    epsilon_lattice MUST be identical to the epsilon used by
-!    turbine_deposit/turbine_deposit_gpu.
    call cpustart()
    call turbine_smearing_forces(turbines_in,points_global,kin_global, &
                                 Fvec_global,np,p2l%length,p2l%vel, &

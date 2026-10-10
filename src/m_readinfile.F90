@@ -99,8 +99,9 @@ module m_readinfile
    integer           nturbines      ! Number of turbines
    integer           actuator_model ! 0 = actuator line, 1 = actuator disk
    integer           nazim          ! Number of azimuthal points per radius
-   integer           localwind      ! 1 = local wind, 2 = external udir,
-                                    ! otherwise use infile yaw
+   integer           localwind      ! 1 = local wind, 2 = external udir, otherwise use infile yaw
+   logical           use_smearing   ! Applies the tip loss smearing method by Meyer Forsting et al
+   logical           use_prandtl    ! Applies a simple tip loss by Prandtl
 
    real     filter_time       ! Time filter for local upstream wind [s]
    real     dtcontrol         ! Yaw-controller update interval [s]
@@ -110,6 +111,7 @@ module m_readinfile
    real     turbrpm           ! Imposed turbine speed [rpm]
    real     tipspeedratio     ! Imposed tip-speed ratio
    real     powerloss         ! Turbine drivetrain/generator power-loss factor
+   real, parameter :: epsilon=2.0     ! Gaussian smearing width
 
    real, allocatable :: xpos(:), ypos(:), zpos(:)
    real, allocatable :: yaw(:), tilt(:)
@@ -450,6 +452,10 @@ subroutine readinfile()
       read(10,*,err=100) powerloss
       print '(a,f8.3,a)', &
          'Powerloss factor  = ',powerloss,' []'
+
+      read(10,*,err=100) use_smearing, use_prandtl
+      print '(2(a,l1))', &
+         'Meyer Forsting smearing = ',use_smearing,' Prandtl tiploss=',use_prandtl
 
       read(10,'(a)',err=100) ver
 

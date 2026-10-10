@@ -7,15 +7,12 @@ module m_turbine_smearing_forces
    implicit none
    logical, save :: smear_initialized=.false.
 
-   ! IMPORTANT: keep identical to turbine_deposit/turbine_deposit_gpu.
-   real, parameter :: epsilon_lattice=2.0
-
 contains
 subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itimestep, &
                                     use_smearing,use_prandtl)
    use mod_turbines, only : turbine_t,point_t,pi
    use mod_turbine_def, only : nrchords,relm,chord,nblades,radiusnd,nrang
-   use m_readinfile, only : actuator_model,nazim
+   use m_readinfile, only : actuator_model,nazim,epsilon
    use m_liftdrag, only : liftdrag_host
    use m_turbine_compute_bladeforce, only : turbine_compute_bladeforce
    use m_turbine_blade_diagnostics, only : turbine_blade_diagnostics
@@ -62,7 +59,7 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
 
    Fvec=0.0
    niter=0;resid=0.0
-   eps_si=epsilon_lattice*dx
+   eps_si=epsilon*dx
    r_si=relm*dx
    c_si=chord*dx
 

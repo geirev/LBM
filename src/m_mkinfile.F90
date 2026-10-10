@@ -56,6 +56,7 @@ open(10,file='infile.in',status='new')
    write(10,'(a)')' 8.95             ! turbrpm         : Initial/fixed RPM; used when tipspeedratio <= 0'
    write(10,'(a)')' 7.55             ! tipspeedratio   : Target TSR; >0 overrides RPM using local upstream wind'
    write(10,'(a)')' 0.93             ! powerloss       : Powerloss factor for turbine drive chain and generator'
+   write(10,'(a)')' T F              ! Smearing Prandtl: Tiploss activation (T F)'
    write(10,'(a)')'# T1'
    write(10,'(a)')' 1 T1 250.0  480.0  90.0  0.0  0.0    ! n, name, xpos, ypos, hubheight, yaw, tilt'
    write(10,'(a)')' 2 T2 250.0  680.0  90.0  0.0  0.0    ! n, name, xpos, ypos, hubheight, yaw, tilt'

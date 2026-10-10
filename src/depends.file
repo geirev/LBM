@@ -420,10 +420,12 @@ m_turbine_controller.o:      m_turbine_yaw_controller.o
 m_turbine_deposit_gpu_kernel.o:      makefile
 m_turbine_deposit_gpu.o:      makefile
 m_turbine_deposit_gpu.o:      mod_dimensions.o
+m_turbine_deposit_gpu.o:      m_readinfile.o
 m_turbine_deposit_gpu.o:      m_turbine_deposit_gpu_kernel.o
 m_turbine_deposit.o:      makefile
 m_turbine_deposit.o:      mod_dimensions.o
 m_turbine_deposit.o:      mod_turbines.o
+m_turbine_deposit.o:      m_readinfile.o
 m_turbine_diagnostics.o:      makefile
 m_turbine_diagnostics.o:      mod_turbine_def.o
 m_turbine_diagnostics.o:      mod_turbines.o

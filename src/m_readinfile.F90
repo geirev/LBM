@@ -100,6 +100,7 @@ module m_readinfile
    integer           actuator_model ! 0 = actuator line, 1 = actuator disk
    integer           nazim          ! Number of azimuthal points per radius
    integer           localwind      ! 1 = local wind, 2 = external udir, otherwise use infile yaw
+   integer           irotorcontrol  ! 0=dynamic, 1=fixed RPM, 2=local TSR, 3=inflow TSR
    logical           use_smearing   ! Applies the tip loss smearing method by Meyer Forsting et al
    logical           use_prandtl    ! Applies a simple tip loss by Prandtl
 
@@ -417,6 +418,13 @@ subroutine readinfile()
       print '(a,i8)', &
          'nazim in ADM      = ',nazim
 
+      read(10,*,err=100) irotorcontrol
+      if (irotorcontrol < 0 .or. irotorcontrol > 3) then
+         write(*,*) 'ERROR: irotorcontrol must be 0, 1, 2 or 3'
+         error stop
+      endif
+      print '(a,i8)', 'Rotor control mode = ',irotorcontrol
+
       read(10,*,err=100) localwind
       print '(a,i8)', &
          'localwind         = ',localwind
@@ -448,6 +456,10 @@ subroutine readinfile()
       read(10,*,err=100) tipspeedratio
       print '(a,f8.3,a)', &
          'Tipspeed ratio    = ',tipspeedratio,' []'
+
+      if (turbrpm < 0.0) error stop 'turbrpm must be nonnegative'
+      if (irotorcontrol >= 2 .and. tipspeedratio <= 0.0) &
+         error stop 'positive tipspeedratio required for rotor modes 2 and 3'
 
       read(10,*,err=100) powerloss
       print '(a,f8.3,a)', &

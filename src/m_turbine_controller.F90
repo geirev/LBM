@@ -1,5 +1,5 @@
 module m_turbine_controller
-   use mod_turbine_def, only : ratedrpm,ratedpower,pitch_min,pitch_max,pitchrate_max
+   use mod_turbine_def, only : ratedrpm,ratedpower,pitch_min,pitch_max,pitchrate_max,radius
 
    implicit none
 
@@ -65,9 +65,12 @@ contains
 !
 !    pitch -> pitch_min
 !
-! Rotor speed is therefore determined dynamically by the aerodynamic
-! torque from the ALM and the generator torque.  No estimate of incoming
-! wind speed is required for RPM control.
+! Rotor control mode (irotorcontrol from infile.in):
+!   0 : dynamic drivetrain (turbrpm is initial condition)
+!   1 : fixed turbrpm
+!   2 : target tipspeedratio using filtered local upstream wind
+!   3 : target tipspeedratio using prescribed inflow uini
+! Modes 1--3 bypass generator-torque and pitch PI updates.
 !
 ! ABOVE RATED (Region 3):
 !
@@ -94,7 +97,8 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
                             windfilter_initialized
 
    use m_readinfile, only : p2l,udir,localwind,dtcontrol,filter_time, &
-                            yawrate_max,yaw_deadband
+                            yawrate_max,yaw_deadband,tipspeedratio,turbrpm, &
+                            irotorcontrol,uini
 
    use m_turbine_local_wind
    use m_turbine_yaw_controller
@@ -123,7 +127,7 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
    real :: alpha
 
    real :: uavg,vavg,wavg
-   real :: speed,winddir,unormal
+   real :: speed,winddir,unormal,upstream_speed
 
    real :: omega
    real :: omega_min
@@ -137,6 +141,17 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 ! Initialize controller state.
 !-----------------------------------------------------------------------
    call turbine_controller_initialize(size(turbines_in))
+
+! Fixed-speed mode (irotorcontrol=1): impose prescribed RPM on EVERY timestep, not only
+! at controller intervals. This also prevents startup RPM transients.
+! Pitch is left unchanged in this mode. Yaw control remains active.
+   if (irotorcontrol == 1) then
+      if (turbrpm < 0.0) then
+         write(*,*) 'ERROR turbine_controller: turbrpm must be nonnegative'
+         error stop
+      endif
+      turbines_in(:)%omegand = (turbrpm*pi2/60.0)*p2l%time
+   endif
 
 
 !-----------------------------------------------------------------------
@@ -161,22 +176,23 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
    omega_min   = rpm_min*pi2/60.0
    omega_rated = ratedrpm*pi2/60.0
 
-   if (omega_rated <= 0.0) then
+   if (irotorcontrol == 0 .and. omega_rated <= 0.0) then
       write(*,*) 'ERROR turbine_controller: ratedrpm must be positive'
       error stop
    endif
 
-   if (ratedpower <= 0.0) then
+   if (irotorcontrol == 0 .and. ratedpower <= 0.0) then
       write(*,*) 'ERROR turbine_controller: ratedpower must be positive'
       error stop
    endif
 
-   if (rotor_inertia <= 0.0) then
+   if (irotorcontrol == 0 .and. rotor_inertia <= 0.0) then
       write(*,*) 'ERROR turbine_controller: rotor_inertia must be positive'
       error stop
    endif
 
-   kgen = ratedpower/omega_rated**3
+   kgen = 0.0
+   if (irotorcontrol == 0) kgen = ratedpower/omega_rated**3
 
 
 !=======================================================================
@@ -186,10 +202,11 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
 !-----------------------------------------------------------------------
-! Local upstream wind is required only for local yaw control.
-! RPM control no longer requires an estimate of incoming wind speed.
+! Sample and filter upstream wind for yaw control (localwind=1)
+! and/or prescribed-TSR operation (irotorcontrol=2).
+! This also supports TSR operation when yaw is externally prescribed.
 !-----------------------------------------------------------------------
-      if (localwind == 1) then
+      if (localwind == 1 .or. irotorcontrol == 2) then
 
          call turbine_local_wind(turbines_in(n),u,v,w,rho, &
                                  1.0,6, &
@@ -236,6 +253,40 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
       endif
 
+
+!-----------------------------------------------------------------------
+! In fixed-RPM mode, yaw has been updated above and rotor speed
+! was imposed before the controller-interval test. Do not run
+! generator/drivetrain dynamics or the pitch PI controller.
+!-----------------------------------------------------------------------
+      if (irotorcontrol == 1) cycle
+
+!-----------------------------------------------------------------------
+! Prescribed tip-speed ratio (irotorcontrol=2 or 3).
+!
+! lambda = omega*R/U, hence omega=lambda*U/R.
+! U is the magnitude of the filtered upstream velocity vector [m/s].
+! The rotor radius R is the total tip radius [m], including the hub.
+! Pitch is left unchanged, as in the fixed-RPM mode.
+!-----------------------------------------------------------------------
+      if (irotorcontrol == 2 .or. irotorcontrol == 3) then
+         if (radius <= 0.0) error stop &
+              'turbine_controller: rotor radius must be positive'
+         if (irotorcontrol == 2) then
+            if (.not.windfilter_initialized(n)) error stop &
+                 'turbine_controller: upstream wind filter not initialized'
+            upstream_speed = sqrt(uavg_f(n)**2+vavg_f(n)**2+wavg_f(n)**2) &
+                             * p2l%vel
+         else
+            ! uini is converted to lattice velocity in m_readinfile.
+            upstream_speed = abs(uini)*p2l%vel
+         endif
+         omega = tipspeedratio*upstream_speed/radius
+         turbines_in(n)%omegand = omega*p2l%time
+         cycle
+      endif
+
+! Mode 0: original dynamic drivetrain and pitch control.
 
 !-----------------------------------------------------------------------
 ! Current physical rotor angular velocity [rad/s].

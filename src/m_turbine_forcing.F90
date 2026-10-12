@@ -205,11 +205,11 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
       call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
   endif
 
-  if (mod(itimestep,ncontrol) == 0) then
-     if (itimestep==ncontrol) newfile=.true.
+!  if (mod(itimestep,1) == 0) then
+     if (itimestep==1) newfile=.true.
      call turbine_diagnostics_timeseries(turbines_in,points_global,Fvec_global,np,itimestep,newfile)
      newfile=.false.
-  endif
+!  endif
 
 ! 6. Clear local forcing field and deposit smoothed forces
    call cpustart()

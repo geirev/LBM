@@ -29,7 +29,7 @@ subroutine turbine_blade_diagnostics(iturb,iblade,itimestep,time,n, &
    character(len=128) :: filename
 
    if (n<1) return
-   write(filename,'("blade_t",i3.3,"_b",i2.2,".dat")') iturb,iblade
+   write(filename,'("output/blade_t",i3.3,"_b",i2.2,".dat")') iturb,iblade
    if (first) then
       open(newunit=iu,file=trim(filename),status='replace',action='write')
       write(iu,'(a)') 'TITLE="ALM blade diagnostics"'

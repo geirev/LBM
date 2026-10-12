@@ -112,7 +112,7 @@ module m_readinfile
    real     turbrpm           ! Imposed turbine speed [rpm]
    real     tipspeedratio     ! Imposed tip-speed ratio
    real     powerloss         ! Turbine drivetrain/generator power-loss factor
-   real, parameter :: epsilon=2.0     ! Gaussian smearing width
+   real, parameter :: epsilon=2.5     ! Gaussian smearing width
 
    real, allocatable :: xpos(:), ypos(:), zpos(:)
    real, allocatable :: yaw(:), tilt(:)

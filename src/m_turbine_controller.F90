@@ -7,12 +7,16 @@ module m_turbine_controller
 ! Controller state.
 !
 ! paero_last(n)        : most recent aerodynamic rotor power [W]
-! torque_aero_last(n)  : most recent aerodynamic rotor torque [N m]
+! torque_aero_last(n)  : preceding control-interval mean torque [N m]
+! torque_aero_sum(n)   : accumulated timestep torques in current interval
+! torque_sample_count(n): number of accumulated torque samples
 ! pitch_integral(n)    : integral state of normalized rotor-speed error [s]
 ! power_initialized(n) : true after first aerodynamic torque measurement
 !-----------------------------------------------------------------------
    real,    allocatable, save :: paero_last(:)
    real,    allocatable, save :: torque_aero_last(:)
+   real,    allocatable, save :: torque_aero_sum(:)
+   integer, allocatable, save :: torque_sample_count(:)
    real,    allocatable, save :: pitch_integral(:)
    logical, allocatable, save :: power_initialized(:)
 
@@ -202,13 +206,11 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
 !-----------------------------------------------------------------------
-! Sample and filter upstream wind for yaw control (localwind=1)
-! and/or prescribed-TSR operation (irotorcontrol=2).
-! This also supports TSR operation when yaw is externally prescribed.
+! Always sample and filter upstream wind. Besides yaw and TSR control,
+! turbine_diagnostics_timeseries requires windfilter_initialized in ALL
+! rotor and yaw modes, including fixed RPM and prescribed yaw.
 !-----------------------------------------------------------------------
-      if (localwind == 1 .or. irotorcontrol == 2) then
-
-         call turbine_local_wind(turbines_in(n),u,v,w,rho, &
+      call turbine_local_wind(turbines_in(n),u,v,w,rho, &
                                  1.0,6, &
                                  uavg,vavg,wavg, &
                                  speed,winddir,unormal)
@@ -232,8 +234,6 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
             wavg_f(n) = wavg_f(n) + alpha*(wavg-wavg_f(n))
 
          endif
-
-      endif
 
 
 !-----------------------------------------------------------------------
@@ -552,8 +552,9 @@ end subroutine turbine_pitch_below_rated
 !
 !       Paero = Qphys * omega           [W]
 !
-! Both aerodynamic torque and power are stored for the next controller
-! update.  The torque is used directly in the drivetrain equation.
+! Aerodynamic torque is sampled every LBM timestep, and its interval
+! average is stored for the next controller update. Power remains
+! instantaneous (diagnostic state only).
 !=======================================================================
 subroutine turbine_controller_feedback(turbines_in,points_global, &
                                        Fvec_global,np,itimestep)
@@ -637,11 +638,12 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 
 
 !-----------------------------------------------------------------------
-! Only update aerodynamic feedback at controller intervals.
+! Integrate torque on EVERY LBM timestep. Publish an interval mean
+! only at the end of each control interval. The controller is called
+! BEFORE this feedback routine, so it consumes the preceding interval
+! mean at its NEXT scheduled update.
 !-----------------------------------------------------------------------
    ncontrol = max(1,nint(dtcontrol/p2l%time))
-
-   if (mod(itimestep,ncontrol) /= 0) return
 
 
 !-----------------------------------------------------------------------
@@ -712,8 +714,15 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 !-----------------------------------------------------------------------
       torque_phys = torque*torque_conv
 
-      torque_aero_last(n) = torque_phys
+      torque_aero_sum(n) = torque_aero_sum(n) + torque_phys
+      torque_sample_count(n) = torque_sample_count(n) + 1
 
+      if (mod(itimestep,ncontrol) == 0) then
+         torque_aero_last(n) = torque_aero_sum(n)/real(torque_sample_count(n))
+         torque_aero_sum(n) = 0.0
+         torque_sample_count(n) = 0
+         power_initialized(n) = .true.
+      endif
 
 !-----------------------------------------------------------------------
 ! Physical angular velocity [rad/s].
@@ -725,8 +734,6 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 ! Aerodynamic mechanical power [W].
 !-----------------------------------------------------------------------
       paero_last(n) = torque_phys*omega
-
-      power_initialized(n) = .true.
 
    enddo
 
@@ -756,11 +763,15 @@ subroutine turbine_controller_initialize(nturb)
 
       if (allocated(paero_last) .and. &
           allocated(torque_aero_last) .and. &
+          allocated(torque_aero_sum) .and. &
+          allocated(torque_sample_count) .and. &
           allocated(pitch_integral) .and. &
           allocated(power_initialized)) then
 
          if (size(paero_last)         == nturb .and. &
              size(torque_aero_last)   == nturb .and. &
+             size(torque_aero_sum)    == nturb .and. &
+             size(torque_sample_count)== nturb .and. &
              size(pitch_integral)     == nturb .and. &
              size(power_initialized)  == nturb) return
 
@@ -774,16 +785,22 @@ subroutine turbine_controller_initialize(nturb)
 !-----------------------------------------------------------------------
    if (allocated(paero_last))         deallocate(paero_last)
    if (allocated(torque_aero_last))   deallocate(torque_aero_last)
+   if (allocated(torque_aero_sum))    deallocate(torque_aero_sum)
+   if (allocated(torque_sample_count)) deallocate(torque_sample_count)
    if (allocated(pitch_integral))     deallocate(pitch_integral)
    if (allocated(power_initialized))  deallocate(power_initialized)
 
    allocate(paero_last(nturb))
    allocate(torque_aero_last(nturb))
+   allocate(torque_aero_sum(nturb))
+   allocate(torque_sample_count(nturb))
    allocate(pitch_integral(nturb))
    allocate(power_initialized(nturb))
 
    paero_last         = 0.0
    torque_aero_last   = 0.0
+   torque_aero_sum    = 0.0
+   torque_sample_count = 0
    pitch_integral     = 0.0
    power_initialized  = .false.
 

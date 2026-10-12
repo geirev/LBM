@@ -38,7 +38,8 @@ subroutine turbine_deposit_gpu(F_turb, xg, yg, zg, Fvec, np)
 
   sigma   = epsilon / sqrt(2.0)
   sigma2  = sigma*sigma
-  krad    = min(5,int(ceiling(3.0*sigma)))
+  !krad    = min(5,int(ceiling(3.0*sigma)))
+  krad = ceiling(3.0*sigma)
 
 #ifdef MPI
   jstart_in = j_start

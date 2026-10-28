@@ -1,15 +1,19 @@
 module m_turbine_smearing_forces
+   ! CPU iterative solver is available even in CUDA builds for verification.
+   use m_turbine_smearing_correction, only : turbine_smear_init, &
+        turbine_smear_correct_blade, turbine_smear_reset
 #ifdef _CUDA
    use m_turbine_smearing_correction_gpu, only : smear_gpu_batch
-#else
-   use m_turbine_smearing_correction, only : turbine_smear_init, turbine_smear_correct_blade
 #endif
    implicit none
    logical, save :: smear_initialized=.false.
+   integer, parameter :: SMEAR_EXPLICIT=0, SMEAR_ITERATIVE_CPU=1
+   integer, save :: active_method=-1
+   public :: SMEAR_EXPLICIT, SMEAR_ITERATIVE_CPU
 
 contains
 subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itimestep, &
-                                    use_smearing,use_prandtl)
+                                    use_smearing,use_prandtl,smearing_method)
    use mod_turbines, only : turbine_t,point_t,pi
    use mod_turbine_def, only : nrchords,relm,chord,nblades,radiusnd,nrang
    use m_readinfile, only : actuator_model,nazim,epsilon
@@ -27,9 +31,13 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
    integer, intent(in) :: np,itimestep
    real, intent(in) :: kin(3,np),dx,uconv,dt
    logical, intent(in) :: use_smearing,use_prandtl
+   ! Optional verification switch:
+   !   0 (default) = explicit GPU in CUDA builds, iterative CPU otherwise
+   !   1           = original iterative CPU in any build
+   integer, intent(in), optional :: smearing_method
    real, intent(out) :: Fvec(3,np)
 
-   integer :: it,ib,ic,p0,p,nbl,niter,b,nbatch
+   integer :: it,ib,ic,p0,p,nbl,niter,b,nbatch,method
 #ifdef _CUDA
    real :: ua_all(nrchords,size(turbines)*nblades),ut_all(nrchords,size(turbines)*nblades)
    real :: tw_all(nrchords,size(turbines)*nblades),pit_all(size(turbines)*nblades)
@@ -63,14 +71,31 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
    r_si=relm*dx
    c_si=chord*dx
 
-#ifndef _CUDA
-   if (use_smearing .and. .not.smear_initialized) then
-      call turbine_smear_init(size(turbines),nblades,nrchords,r_si,eps_si)
-      smear_initialized=.true.
-   endif
-#else
-   ! Batch all ALM blades into a single GPU launch; preserve blade order.
+   method=SMEAR_EXPLICIT
+   if (present(smearing_method)) method=smearing_method
+   if (method/=SMEAR_EXPLICIT .and. method/=SMEAR_ITERATIVE_CPU) &
+      error stop 'turbine_smearing_forces: invalid smearing_method (0 or 1)'
+
+   ! Switching methods mid-run would mix different wake-history states.
+   ! Require a fresh run/restart initialization instead.
    if (use_smearing .and. actuator_model==0) then
+      if (active_method>=0 .and. method/=active_method) &
+         error stop 'turbine_smearing_forces: cannot switch smearing method mid-run'
+      active_method=method
+   endif
+
+   if (use_smearing .and. actuator_model==0 .and. &
+       (method==SMEAR_ITERATIVE_CPU .or. .not. cuda_smearing_available())) then
+      if (.not.smear_initialized) then
+         call turbine_smear_init(size(turbines),nblades,nrchords,r_si,eps_si)
+         smear_initialized=.true.
+      endif
+   endif
+
+#ifdef _CUDA
+   ! Default: explicit GPU scheme. Do not launch GPU smearing when verifying
+   ! against the original CPU iterative scheme.
+   if (use_smearing .and. actuator_model==0 .and. method==SMEAR_EXPLICIT) then
       nbatch=size(turbines)*nblades
       do it=1,size(turbines)
          do ib=1,nblades
@@ -123,11 +148,17 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
 
          if (actuator_model==0 .and. use_smearing) then
 #ifdef _CUDA
-            b=(it-1)*nblades+ib
-            uac=uac_all(:,b)
-            utc=utc_all(:,b)
-            niter=nit_all(b)
-            resid=res_all(b)
+            if (method==SMEAR_EXPLICIT) then
+               b=(it-1)*nblades+ib
+               uac=uac_all(:,b)
+               utc=utc_all(:,b)
+               niter=nit_all(b)
+               resid=res_all(b)
+            else
+               call turbine_smear_correct_blade(it,ib,dt,eps_si,r_si,c_si, &
+                    twist_b,turbines(it)%pitchangle,foil_b,ua,ut,uac,utc, &
+                    niter,resid)
+            endif
 #else
             call turbine_smear_correct_blade(it,ib,dt,eps_si,r_si,c_si, &
                  twist_b,turbines(it)%pitchangle,foil_b,ua,ut,uac,utc, &
@@ -175,12 +206,26 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
                  first_diagnostic)
          endif
          if (use_smearing .and. itimestep==1 .and. it==1 .and. ib==1) then
-            write(*,'(a,f8.3,a,i4,a,es12.4)') &
-                 'NW explicit correction: epsilon=',eps_si,' m, passes=', &
-                 niter,', residual (N/A)=',resid
+            if (method==SMEAR_ITERATIVE_CPU .or. .not.cuda_smearing_available()) then
+               write(*,'(a,f8.3,a,i5,a,es12.4)') &
+                    'NW iterative CPU: epsilon=',eps_si,' m, iterations=',niter, &
+                    ', residual=',resid
+            else
+               write(*,'(a,f8.3,a,i4)') &
+                    'NW explicit GPU: epsilon=',eps_si,' m, passes=',niter
+            endif
          endif
       enddo
    enddo
    if (myrank==0 .and. mod(itimestep,100)==0) first_diagnostic=.false.
 end subroutine turbine_smearing_forces
+
+logical function cuda_smearing_available()
+#ifdef _CUDA
+   cuda_smearing_available=.true.
+#else
+   cuda_smearing_available=.false.
+#endif
+end function cuda_smearing_available
+
 end module m_turbine_smearing_forces

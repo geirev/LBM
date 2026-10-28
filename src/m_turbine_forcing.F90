@@ -23,7 +23,7 @@
 !      For MPI runs the actuator-point kinematics are assembled on all
 !      ranks using MPI_Allreduce before the blade forces are evaluated.
 !
-!   4. turbine_smearing_forces
+!   4. turbine_smearing_forces (select explicit GPU or iterative CPU)
 !        Compute the aerodynamic actuator-point forces.  For ALM the
 !        optional near-wake smearing correction modifies the velocity
 !        used for the blade-element aerodynamic calculation.
@@ -56,6 +56,10 @@
 !
 !=======================================================================
 module m_turbine_forcing
+   implicit none
+   ! 0: explicit GPU smearing (default); 1: original iterative CPU smearing.
+   ! Set before starting the simulation; do not change during a run.
+   integer, parameter :: smearing_method = 0
 contains
 !      1) Compute local upstream wind and update turbine yaw
 !      2) Update rotor azimuth theta
@@ -189,7 +193,8 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
    call cpustart()
    call turbine_smearing_forces(turbines_in,points_global,kin_global, &
                                 Fvec_global,np,p2l%length,p2l%vel, &
-                                p2l%time,itimestep,use_smearing,use_prandtl)
+                                p2l%time,itimestep,use_smearing,use_prandtl, &
+                                smearing_method=smearing_method)
    call cpufinish(23)
 
 

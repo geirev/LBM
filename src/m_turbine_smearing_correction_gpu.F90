@@ -125,9 +125,13 @@ subroutine geometry(h,hr,phi,phis,dx,dy,a)
  endif
  phi=max(abs(phi),1.e-8)
  dw=1./(4.*pi*abs(h)*hr)
- dx=1.359*dw;dy=0.359/4.*dw
- rootcorr=(dx*(1.-exp(-pi/(2.*phi)))-dy*(1.-exp(-2.*pi/phi)))/(dx-dy)
- dx=rootcorr*dx;dy=rootcorr*dy;phi=max(abs(rootcorr*phi),1.e-8)
+
+   dx=1.359*dw
+   dy=-0.359/4.*dw
+   rootcorr = (dx*(1.0-exp(-pi/(2.0*phi))) + &
+                dy*(1.0-exp(-2.0*pi/phi))) / (dx+dy)
+   phi = max(abs(rootcorr*phi),1.0e-8)
+
  phis=0.788*abs(hr)
  if(hr<0.) then
    do j=1,4

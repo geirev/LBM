@@ -333,11 +333,10 @@ subroutine hr_components(h,hr,phi,phi_s,dx,dy,a)
 
    dw=1.0/(4.0*pi*abs(h)*hr)
    dx=1.359*dw
-   dy=0.359/4.0*dw
-   root_corr=(dx*(1.0-exp(-pi/(2.0*phi)))-dy*(1.0-exp(-2.0*pi/phi))) / &
-             (dx-dy)
-   dx=root_corr*dx; dy=root_corr*dy; phi=root_corr*phi
-   phi=max(abs(phi),1.0e-8)
+   dy=-0.359/4.*dw
+   root_corr = (dx*(1.0-exp(-pi/(2.0*phi))) + &
+                dy*(1.0-exp(-2.0*pi/phi))) / (dx+dy)
+   phi = max(abs(root_corr*phi),1.0e-8)
 
    phi_s=0.788*abs(hr)
    if (hr<0.0) then

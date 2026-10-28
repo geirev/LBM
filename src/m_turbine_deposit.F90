@@ -6,6 +6,7 @@ contains
 !--------------------------------------------------------------
 subroutine turbine_deposit(F_turb, points_global, Fvec_global, np)
    use mod_turbines, only : point_t
+   use m_readinfile, only : epsilon
    use mod_dimensions, only : nx, ny, nz, nyg
 #ifdef MPI
    use m_mpi_decomp_init, only : j_start, j_end, mpi_rank
@@ -21,12 +22,11 @@ subroutine turbine_deposit(F_turb, points_global, Fvec_global, np)
    integer :: ii1, ii2, jj1g, jj2g, kk1, kk2
    integer :: jj_local
    real    :: dx, dy, dz, weight, sumW
-   real    :: sigma, epsilon
+   real    :: sigma
    real    :: xg, yg, zg
    real    :: Fp(3)
    integer :: krad
 
-   epsilon = 2.0
    sigma   = epsilon / sqrt(2.0)
    krad    = min(5,int(ceiling(3.0*sigma)))
 

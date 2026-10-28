@@ -6,6 +6,7 @@ subroutine turbine_deposit_gpu(F_turb, xg, yg, zg, Fvec, np)
   use cudafor
 #endif
   use m_turbine_deposit_gpu_kernel
+  use m_readinfile, only : epsilon
 #ifdef MPI
   use m_mpi_decomp_init, only : j_start, j_end, mpi_rank
 #endif
@@ -25,7 +26,7 @@ subroutine turbine_deposit_gpu(F_turb, xg, yg, zg, Fvec, np)
 #endif
   integer istat
 
-  real :: epsilon, sigma, sigma2
+  real :: sigma, sigma2
   integer :: krad
 
 #ifndef _CUDA
@@ -35,10 +36,10 @@ subroutine turbine_deposit_gpu(F_turb, xg, yg, zg, Fvec, np)
   type(dim3) :: grid, block
   integer    :: jstart_in, jend_in
 
-  epsilon = 2.0
   sigma   = epsilon / sqrt(2.0)
   sigma2  = sigma*sigma
-  krad    = min(5,int(ceiling(3.0*sigma)))
+  !krad    = min(5,int(ceiling(3.0*sigma)))
+  krad = ceiling(3.0*sigma)
 
 #ifdef MPI
   jstart_in = j_start

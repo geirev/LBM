@@ -106,6 +106,7 @@ F90SOURCE = \
 	m_testing.F90\
 	m_testvar.F90\
 	m_theta_fluxbc_kernel.F90\
+	m_turbine_blade_diagnostics.F90\
 	m_turbine_compute_bladeforce.F90\
 	m_turbine_controller.F90\
 	m_turbine_deposit.F90\
@@ -119,10 +120,13 @@ F90SOURCE = \
 	m_turbine_interpolate_velocity.F90\
 	m_turbine_local_wind.F90\
 	m_turbine_local_wind_kernel.F90\
-	m_turbine_point_forces_gpu.F90\
-	m_turbine_point_forces_kernel.F90\
+	m_turbine_point_kinematics_gpu.F90\
+	m_turbine_point_kinematics_kernel.F90\
 	m_turbine_rotor_basis.F90\
 	m_turbines_bounding_box.F90\
+	m_turbine_smearing_correction.F90\
+	m_turbine_smearing_correction_gpu.F90\
+	m_turbine_smearing_forces.F90\
 	m_turbine_yaw_controller.F90\
 	m_vreman.F90\
 	m_vreman_kernel.F90\

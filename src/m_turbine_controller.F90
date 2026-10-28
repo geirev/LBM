@@ -1,5 +1,5 @@
 module m_turbine_controller
-   use mod_turbine_def, only : ratedrpm,ratedpower,pitch_min,pitch_max,pitchrate_max
+   use mod_turbine_def, only : ratedrpm,ratedpower,pitch_min,pitch_max,pitchrate_max,radius
 
    implicit none
 
@@ -7,12 +7,16 @@ module m_turbine_controller
 ! Controller state.
 !
 ! paero_last(n)        : most recent aerodynamic rotor power [W]
-! torque_aero_last(n)  : most recent aerodynamic rotor torque [N m]
+! torque_aero_last(n)  : preceding control-interval mean torque [N m]
+! torque_aero_sum(n)   : accumulated timestep torques in current interval
+! torque_sample_count(n): number of accumulated torque samples
 ! pitch_integral(n)    : integral state of normalized rotor-speed error [s]
 ! power_initialized(n) : true after first aerodynamic torque measurement
 !-----------------------------------------------------------------------
    real,    allocatable, save :: paero_last(:)
    real,    allocatable, save :: torque_aero_last(:)
+   real,    allocatable, save :: torque_aero_sum(:)
+   integer, allocatable, save :: torque_sample_count(:)
    real,    allocatable, save :: pitch_integral(:)
    logical, allocatable, save :: power_initialized(:)
 
@@ -65,9 +69,12 @@ contains
 !
 !    pitch -> pitch_min
 !
-! Rotor speed is therefore determined dynamically by the aerodynamic
-! torque from the ALM and the generator torque.  No estimate of incoming
-! wind speed is required for RPM control.
+! Rotor control mode (irotorcontrol from infile.in):
+!   0 : dynamic drivetrain (turbrpm is initial condition)
+!   1 : fixed turbrpm
+!   2 : target tipspeedratio using filtered local upstream wind
+!   3 : target tipspeedratio using prescribed inflow uini
+! Modes 1--3 bypass generator-torque and pitch PI updates.
 !
 ! ABOVE RATED (Region 3):
 !
@@ -94,7 +101,8 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
                             windfilter_initialized
 
    use m_readinfile, only : p2l,udir,localwind,dtcontrol,filter_time, &
-                            yawrate_max,yaw_deadband
+                            yawrate_max,yaw_deadband,tipspeedratio,turbrpm, &
+                            irotorcontrol,uini
 
    use m_turbine_local_wind
    use m_turbine_yaw_controller
@@ -123,7 +131,7 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
    real :: alpha
 
    real :: uavg,vavg,wavg
-   real :: speed,winddir,unormal
+   real :: speed,winddir,unormal,upstream_speed
 
    real :: omega
    real :: omega_min
@@ -137,6 +145,17 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 ! Initialize controller state.
 !-----------------------------------------------------------------------
    call turbine_controller_initialize(size(turbines_in))
+
+! Fixed-speed mode (irotorcontrol=1): impose prescribed RPM on EVERY timestep, not only
+! at controller intervals. This also prevents startup RPM transients.
+! Pitch is left unchanged in this mode. Yaw control remains active.
+   if (irotorcontrol == 1) then
+      if (turbrpm < 0.0) then
+         write(*,*) 'ERROR turbine_controller: turbrpm must be nonnegative'
+         error stop
+      endif
+      turbines_in(:)%omegand = (turbrpm*pi2/60.0)*p2l%time
+   endif
 
 
 !-----------------------------------------------------------------------
@@ -161,22 +180,23 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
    omega_min   = rpm_min*pi2/60.0
    omega_rated = ratedrpm*pi2/60.0
 
-   if (omega_rated <= 0.0) then
+   if (irotorcontrol == 0 .and. omega_rated <= 0.0) then
       write(*,*) 'ERROR turbine_controller: ratedrpm must be positive'
       error stop
    endif
 
-   if (ratedpower <= 0.0) then
+   if (irotorcontrol == 0 .and. ratedpower <= 0.0) then
       write(*,*) 'ERROR turbine_controller: ratedpower must be positive'
       error stop
    endif
 
-   if (rotor_inertia <= 0.0) then
+   if (irotorcontrol == 0 .and. rotor_inertia <= 0.0) then
       write(*,*) 'ERROR turbine_controller: rotor_inertia must be positive'
       error stop
    endif
 
-   kgen = ratedpower/omega_rated**3
+   kgen = 0.0
+   if (irotorcontrol == 0) kgen = ratedpower/omega_rated**3
 
 
 !=======================================================================
@@ -186,12 +206,11 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
 
 !-----------------------------------------------------------------------
-! Local upstream wind is required only for local yaw control.
-! RPM control no longer requires an estimate of incoming wind speed.
+! Always sample and filter upstream wind. Besides yaw and TSR control,
+! turbine_diagnostics_timeseries requires windfilter_initialized in ALL
+! rotor and yaw modes, including fixed RPM and prescribed yaw.
 !-----------------------------------------------------------------------
-      if (localwind == 1) then
-
-         call turbine_local_wind(turbines_in(n),u,v,w,rho, &
+      call turbine_local_wind(turbines_in(n),u,v,w,rho, &
                                  1.0,6, &
                                  uavg,vavg,wavg, &
                                  speed,winddir,unormal)
@@ -216,8 +235,6 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
          endif
 
-      endif
-
 
 !-----------------------------------------------------------------------
 ! Yaw controller.
@@ -236,6 +253,40 @@ subroutine turbine_controller(turbines_in,u,v,w,rho,itimestep)
 
       endif
 
+
+!-----------------------------------------------------------------------
+! In fixed-RPM mode, yaw has been updated above and rotor speed
+! was imposed before the controller-interval test. Do not run
+! generator/drivetrain dynamics or the pitch PI controller.
+!-----------------------------------------------------------------------
+      if (irotorcontrol == 1) cycle
+
+!-----------------------------------------------------------------------
+! Prescribed tip-speed ratio (irotorcontrol=2 or 3).
+!
+! lambda = omega*R/U, hence omega=lambda*U/R.
+! U is the magnitude of the filtered upstream velocity vector [m/s].
+! The rotor radius R is the total tip radius [m], including the hub.
+! Pitch is left unchanged, as in the fixed-RPM mode.
+!-----------------------------------------------------------------------
+      if (irotorcontrol == 2 .or. irotorcontrol == 3) then
+         if (radius <= 0.0) error stop &
+              'turbine_controller: rotor radius must be positive'
+         if (irotorcontrol == 2) then
+            if (.not.windfilter_initialized(n)) error stop &
+                 'turbine_controller: upstream wind filter not initialized'
+            upstream_speed = sqrt(uavg_f(n)**2+vavg_f(n)**2+wavg_f(n)**2) &
+                             * p2l%vel
+         else
+            ! uini is converted to lattice velocity in m_readinfile.
+            upstream_speed = abs(uini)*p2l%vel
+         endif
+         omega = tipspeedratio*upstream_speed/radius
+         turbines_in(n)%omegand = omega*p2l%time
+         cycle
+      endif
+
+! Mode 0: original dynamic drivetrain and pitch control.
 
 !-----------------------------------------------------------------------
 ! Current physical rotor angular velocity [rad/s].
@@ -501,8 +552,9 @@ end subroutine turbine_pitch_below_rated
 !
 !       Paero = Qphys * omega           [W]
 !
-! Both aerodynamic torque and power are stored for the next controller
-! update.  The torque is used directly in the drivetrain equation.
+! Aerodynamic torque is sampled every LBM timestep, and its interval
+! average is stored for the next controller update. Power remains
+! instantaneous (diagnostic state only).
 !=======================================================================
 subroutine turbine_controller_feedback(turbines_in,points_global, &
                                        Fvec_global,np,itimestep)
@@ -586,11 +638,12 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 
 
 !-----------------------------------------------------------------------
-! Only update aerodynamic feedback at controller intervals.
+! Integrate torque on EVERY LBM timestep. Publish an interval mean
+! only at the end of each control interval. The controller is called
+! BEFORE this feedback routine, so it consumes the preceding interval
+! mean at its NEXT scheduled update.
 !-----------------------------------------------------------------------
    ncontrol = max(1,nint(dtcontrol/p2l%time))
-
-   if (mod(itimestep,ncontrol) /= 0) return
 
 
 !-----------------------------------------------------------------------
@@ -661,8 +714,15 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 !-----------------------------------------------------------------------
       torque_phys = torque*torque_conv
 
-      torque_aero_last(n) = torque_phys
+      torque_aero_sum(n) = torque_aero_sum(n) + torque_phys
+      torque_sample_count(n) = torque_sample_count(n) + 1
 
+      if (mod(itimestep,ncontrol) == 0) then
+         torque_aero_last(n) = torque_aero_sum(n)/real(torque_sample_count(n))
+         torque_aero_sum(n) = 0.0
+         torque_sample_count(n) = 0
+         power_initialized(n) = .true.
+      endif
 
 !-----------------------------------------------------------------------
 ! Physical angular velocity [rad/s].
@@ -674,8 +734,6 @@ subroutine turbine_controller_feedback(turbines_in,points_global, &
 ! Aerodynamic mechanical power [W].
 !-----------------------------------------------------------------------
       paero_last(n) = torque_phys*omega
-
-      power_initialized(n) = .true.
 
    enddo
 
@@ -705,11 +763,15 @@ subroutine turbine_controller_initialize(nturb)
 
       if (allocated(paero_last) .and. &
           allocated(torque_aero_last) .and. &
+          allocated(torque_aero_sum) .and. &
+          allocated(torque_sample_count) .and. &
           allocated(pitch_integral) .and. &
           allocated(power_initialized)) then
 
          if (size(paero_last)         == nturb .and. &
              size(torque_aero_last)   == nturb .and. &
+             size(torque_aero_sum)    == nturb .and. &
+             size(torque_sample_count)== nturb .and. &
              size(pitch_integral)     == nturb .and. &
              size(power_initialized)  == nturb) return
 
@@ -723,16 +785,22 @@ subroutine turbine_controller_initialize(nturb)
 !-----------------------------------------------------------------------
    if (allocated(paero_last))         deallocate(paero_last)
    if (allocated(torque_aero_last))   deallocate(torque_aero_last)
+   if (allocated(torque_aero_sum))    deallocate(torque_aero_sum)
+   if (allocated(torque_sample_count)) deallocate(torque_sample_count)
    if (allocated(pitch_integral))     deallocate(pitch_integral)
    if (allocated(power_initialized))  deallocate(power_initialized)
 
    allocate(paero_last(nturb))
    allocate(torque_aero_last(nturb))
+   allocate(torque_aero_sum(nturb))
+   allocate(torque_sample_count(nturb))
    allocate(pitch_integral(nturb))
    allocate(power_initialized(nturb))
 
    paero_last         = 0.0
    torque_aero_last   = 0.0
+   torque_aero_sum    = 0.0
+   torque_sample_count = 0
    pitch_integral     = 0.0
    power_initialized  = .false.
 

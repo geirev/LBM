@@ -121,7 +121,10 @@ subroutine turbine_diagnostics_timeseries(turbines_in,points_global, &
 ! Only rank 0 writes because Fvec_global already contains the result
 ! of the MPI_Allreduce over all MPI tiles.
 !-----------------------------------------------------------------------
+
+#ifdef MPI
    if (mpi_rank /= 0) return
+#endif
 
 
 !-----------------------------------------------------------------------

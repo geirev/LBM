@@ -4,7 +4,7 @@ contains
 #ifdef _CUDA
 attributes(host,device) &
 #endif
-subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd, rtip)
+subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd, rtip, use_prandtl)
 
    use mod_turbines, only : point_t
    use mod_turbine_def, only : nblades
@@ -17,6 +17,7 @@ subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd
    real, intent(in)          :: dens
    real, intent(in)          :: rtip
    real, intent(in)          :: cl, cd
+   logical, intent(in)       :: use_prandtl
    real, intent(out)         :: Fvec(3)
 
    real :: e_axis(3), e1(3), e2(3)
@@ -55,16 +56,18 @@ subroutine turbine_compute_bladeforce(Fvec, point, u_ax, u_tan_rel, dens, cl, cd
    !
    ! f = B/2 * (R-r)/(r |sin(phi)|)
    !------------------------------------------------------------
-   r    = point%relm
+   ftip = 1.0
 
-   arg = 0.5*real(nblades) * max(rtip-r,0.0) / &
-         max(r*abs(sinphi),epsloss)
+   if (use_prandtl) then
+      r = point%relm
 
-   exp_arg = min(1.0,max(0.0,exp(-arg)))
+      arg = 0.5*real(nblades) * max(rtip-r,0.0) / &
+            max(r*abs(sinphi),epsloss)
 
-   ftip = (2.0/pi)*acos(exp_arg)
-
-   ftip = max(0.0,min(1.0,ftip))
+      exp_arg = min(1.0,max(0.0,exp(-arg)))
+      ftip = (2.0/pi)*acos(exp_arg)
+      ftip = max(0.0,min(1.0,ftip))
+   endif
 
    ! Aerodynamic forces
    L = 0.5 * dens * speed2 * cl * area * ftip

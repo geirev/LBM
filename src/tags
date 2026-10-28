@@ -192,6 +192,7 @@ m_testing	m_testing.F90	/^module
 m_testvar	m_testvar.F90	/^module
 m_theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 m_turbines_bounding_box	m_turbines_bounding_box.F90	/^module
+m_turbine_blade_diagnostics	m_turbine_blade_diagnostics.F90	/^module
 m_turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 m_turbine_controller	m_turbine_controller.F90	/^module
 m_turbine_deposit	m_turbine_deposit.F90	/^module
@@ -205,9 +206,12 @@ m_turbine_initialize	m_turbine_initialize.F90	/^module
 m_turbine_interpolate_velocity	m_turbine_interpolate_velocity.F90	/^module
 m_turbine_local_wind	m_turbine_local_wind.F90	/^module
 m_turbine_local_wind_kernel	m_turbine_local_wind_kernel.F90	/^module
-m_turbine_point_forces_gpu	m_turbine_point_forces_gpu.F90	/^module
-m_turbine_point_forces_kernel	m_turbine_point_forces_kernel.F90	/^module
+m_turbine_point_kinematics_gpu	m_turbine_point_kinematics_gpu.F90	/^module
+m_turbine_point_kinematics_kernel	m_turbine_point_kinematics_kernel.F90	/^module
 m_turbine_rotor_basis	m_turbine_rotor_basis.F90	/^module
+m_turbine_smearing_correction	m_turbine_smearing_correction.F90	/^module
+m_turbine_smearing_correction_gpu	m_turbine_smearing_correction_gpu.F90	/^module
+m_turbine_smearing_forces	m_turbine_smearing_forces.F90	/^module
 m_turbine_yaw_controller	m_turbine_yaw_controller.F90	/^module
 m_vreman	m_vreman.F90	/^module
 m_vreman_kernel	m_vreman_kernel.F90	/^module
@@ -245,6 +249,7 @@ testvar	m_testvar.F90	/^module
 theta_fluxbc_kernel	m_theta_fluxbc_kernel.F90	/^module
 turbines	mod_turbines.F90	/^module
 turbines_bounding_box	m_turbines_bounding_box.F90	/^module
+turbine_blade_diagnostics	m_turbine_blade_diagnostics.F90	/^module
 turbine_compute_bladeforce	m_turbine_compute_bladeforce.F90	/^module
 turbine_controller	m_turbine_controller.F90	/^module
 turbine_def	mod_turbine_def.F90	/^module
@@ -259,9 +264,12 @@ turbine_initialize	m_turbine_initialize.F90	/^module
 turbine_interpolate_velocity	m_turbine_interpolate_velocity.F90	/^module
 turbine_local_wind	m_turbine_local_wind.F90	/^module
 turbine_local_wind_kernel	m_turbine_local_wind_kernel.F90	/^module
-turbine_point_forces_gpu	m_turbine_point_forces_gpu.F90	/^module
-turbine_point_forces_kernel	m_turbine_point_forces_kernel.F90	/^module
+turbine_point_kinematics_gpu	m_turbine_point_kinematics_gpu.F90	/^module
+turbine_point_kinematics_kernel	m_turbine_point_kinematics_kernel.F90	/^module
 turbine_rotor_basis	m_turbine_rotor_basis.F90	/^module
+turbine_smearing_correction	m_turbine_smearing_correction.F90	/^module
+turbine_smearing_correction_gpu	m_turbine_smearing_correction_gpu.F90	/^module
+turbine_smearing_forces	m_turbine_smearing_forces.F90	/^module
 turbine_yaw_controller	m_turbine_yaw_controller.F90	/^module
 vreman	m_vreman.F90	/^module
 vreman_kernel	m_vreman_kernel.F90	/^module

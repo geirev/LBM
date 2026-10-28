@@ -1,0 +1,231 @@
+module m_turbine_smearing_forces
+   ! CPU iterative solver is available even in CUDA builds for verification.
+   use m_turbine_smearing_correction, only : turbine_smear_init, &
+        turbine_smear_correct_blade, turbine_smear_reset
+#ifdef _CUDA
+   use m_turbine_smearing_correction_gpu, only : smear_gpu_batch
+#endif
+   implicit none
+   logical, save :: smear_initialized=.false.
+   integer, parameter :: SMEAR_EXPLICIT=0, SMEAR_ITERATIVE_CPU=1
+   integer, save :: active_method=-1
+   public :: SMEAR_EXPLICIT, SMEAR_ITERATIVE_CPU
+
+contains
+subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itimestep, &
+                                    use_smearing,use_prandtl,smearing_method)
+   use mod_turbines, only : turbine_t,point_t,pi
+   use mod_turbine_def, only : nrchords,relm,chord,nblades,radiusnd,nrang
+   use m_readinfile, only : actuator_model,nazim,epsilon
+   use m_liftdrag, only : liftdrag_host
+   use m_turbine_compute_bladeforce, only : turbine_compute_bladeforce
+   use m_turbine_blade_diagnostics, only : turbine_blade_diagnostics
+   use m_turbine_rotor_basis, only : turbine_rotor_basis
+#ifdef MPI
+   use mpi, only : MPI_Comm_rank, MPI_COMM_WORLD
+#endif
+   implicit none
+
+   type(turbine_t), intent(in) :: turbines(:)
+   type(point_t), intent(in) :: points(:)
+   integer, intent(in) :: np,itimestep
+   real, intent(in) :: kin(3,np),dx,uconv,dt
+   logical, intent(in) :: use_smearing,use_prandtl
+   ! Optional verification switch:
+   !   0 (default) = explicit GPU in CUDA builds, iterative CPU otherwise
+   !   1           = original iterative CPU in any build
+   integer, intent(in), optional :: smearing_method
+   real, intent(out) :: Fvec(3,np)
+
+   integer :: it,ib,ic,p0,p,nbl,niter,b,nbatch,method
+#ifdef _CUDA
+   real :: ua_all(nrchords,size(turbines)*nblades),ut_all(nrchords,size(turbines)*nblades)
+   real :: tw_all(nrchords,size(turbines)*nblades),pit_all(size(turbines)*nblades)
+   integer :: foil_all(nrchords,size(turbines)*nblades)
+   real :: uac_all(nrchords,size(turbines)*nblades),utc_all(nrchords,size(turbines)*nblades)
+   integer :: nit_all(size(turbines)*nblades)
+   real :: res_all(size(turbines)*nblades)
+#endif
+   real :: eps_si,resid,phi,cl,cd
+   real :: ua(nrchords),ut(nrchords),uac(nrchords),utc(nrchords)
+   real :: cl_diag(nrchords)
+   real :: fn_diag(nrchords),ft_diag(nrchords)
+   real :: e_axis(3),e1(3),e2(3),e_tan(3)
+   integer :: myrank
+#ifdef MPI
+   integer :: ierr
+#endif
+   logical, save :: first_diagnostic=.true.
+   real :: r_si(nrchords),c_si(nrchords)
+   real :: twist_b(nrchords)
+   integer :: foil_b(nrchords)
+
+   myrank=0
+#ifdef MPI
+   call MPI_Comm_rank(MPI_COMM_WORLD,myrank,ierr)
+#endif
+
+   Fvec=0.0
+   niter=0;resid=0.0
+   eps_si=epsilon*dx
+   r_si=relm*dx
+   c_si=chord*dx
+
+   method=SMEAR_EXPLICIT
+   if (present(smearing_method)) method=smearing_method
+   if (method/=SMEAR_EXPLICIT .and. method/=SMEAR_ITERATIVE_CPU) &
+      error stop 'turbine_smearing_forces: invalid smearing_method (0 or 1)'
+
+   ! Switching methods mid-run would mix different wake-history states.
+   ! Require a fresh run/restart initialization instead.
+   if (use_smearing .and. actuator_model==0) then
+      if (active_method>=0 .and. method/=active_method) &
+         error stop 'turbine_smearing_forces: cannot switch smearing method mid-run'
+      active_method=method
+   endif
+
+   if (use_smearing .and. actuator_model==0 .and. &
+       (method==SMEAR_ITERATIVE_CPU .or. .not. cuda_smearing_available())) then
+      if (.not.smear_initialized) then
+         call turbine_smear_init(size(turbines),nblades,nrchords,r_si,eps_si)
+         smear_initialized=.true.
+      endif
+   endif
+
+#ifdef _CUDA
+   ! Default: explicit GPU scheme. Do not launch GPU smearing when verifying
+   ! against the original CPU iterative scheme.
+   if (use_smearing .and. actuator_model==0 .and. method==SMEAR_EXPLICIT) then
+      nbatch=size(turbines)*nblades
+      do it=1,size(turbines)
+         do ib=1,nblades
+            b=(it-1)*nblades+ib
+            p0=(b-1)*nrchords+1
+            do ic=1,nrchords
+               p=p0+ic-1
+               if (p>np) error stop 'GPU smearing: inconsistent point count'
+               if (points(p)%iturb/=it.or.points(p)%iblade/=ib.or.points(p)%ichord/=ic) &
+                    error stop 'GPU smearing: points must be ordered turbine/blade/section'
+               ua_all(ic,b)=kin(1,p)*uconv
+               ut_all(ic,b)=kin(2,p)*uconv
+               tw_all(ic,b)=points(p)%twist
+               foil_all(ic,b)=points(p)%foil
+            enddo
+            pit_all(b)=turbines(it)%pitchangle
+         enddo
+      enddo
+      call smear_gpu_batch(nrchords,nbatch,dt,eps_si,r_si,c_si,ua_all,ut_all, &
+                           tw_all,foil_all,pit_all,uac_all,utc_all,nit_all,res_all)
+   endif
+#endif
+
+   ! points are ordered turbine -> blade/azimuth -> chord.
+   do it=1,size(turbines)
+      if (actuator_model==0) then
+         nbl=nblades
+      else
+         nbl=nazim
+      endif
+
+      do ib=1,nbl
+         p0=0
+         do p=1,np
+            if (points(p)%iturb==it .and. points(p)%iblade==ib .and. &
+                points(p)%ichord==1) then
+               p0=p
+               exit
+            endif
+         enddo
+         if (p0==0) cycle
+
+         do ic=1,nrchords
+            p=p0+ic-1
+            ua(ic)=kin(1,p)*uconv
+            ut(ic)=kin(2,p)*uconv
+            twist_b(ic)=points(p)%twist
+            foil_b(ic)=points(p)%foil
+         enddo
+
+         if (actuator_model==0 .and. use_smearing) then
+#ifdef _CUDA
+            if (method==SMEAR_EXPLICIT) then
+               b=(it-1)*nblades+ib
+               uac=uac_all(:,b)
+               utc=utc_all(:,b)
+               niter=nit_all(b)
+               resid=res_all(b)
+            else
+               call turbine_smear_correct_blade(it,ib,dt,eps_si,r_si,c_si, &
+                    twist_b,turbines(it)%pitchangle,foil_b,ua,ut,uac,utc, &
+                    niter,resid)
+            endif
+#else
+            call turbine_smear_correct_blade(it,ib,dt,eps_si,r_si,c_si, &
+                 twist_b,turbines(it)%pitchangle,foil_b,ua,ut,uac,utc, &
+                 niter,resid)
+#endif
+         else
+            uac=ua
+            utc=ut
+         endif
+
+         do ic=1,nrchords
+            p=p0+ic-1
+            ! Convert corrected SI velocities back to LBM units before
+            ! using the existing force routine. Density remains LBM density.
+            phi=atan2(uac(ic),utc(ic))
+            if (foil_b(ic) < 1) then
+               write(*,*) 'ERROR foil index: it,ib,ic,p,foil = ', &
+                          it,ib,ic,p,foil_b(ic)
+               stop
+            endif
+            call liftdrag_host(cl,cd,phi*180.0/pi-points(p)%twist-points(p)%pitch, &
+                          points(p)%foil)
+            ! Use the common blade-force routine for all combinations of
+            ! smearing correction and Prandtl tip loss.
+            call turbine_compute_bladeforce(Fvec(:,p),points(p), &
+                 uac(ic)/uconv,utc(ic)/uconv,kin(3,p),cl,cd, &
+                 radiusnd,use_prandtl)
+
+            Fvec(:,p)=Fvec(:,p)*points(p)%force_scale
+            ! Use exactly the rotor basis and tangential direction from
+            ! turbine_compute_bladeforce. Project the FINAL force vector,
+            ! including Prandtl and force_scale, without recomputing loads.
+            call turbine_rotor_basis(points(p)%yaw,points(p)%tilt, &
+                 e_axis,e1,e2)
+            e_tan=-sin(points(p)%theta)*e1 + cos(points(p)%theta)*e2
+            cl_diag(ic)=cl
+            fn_diag(ic)=dot_product(Fvec(:,p),e_axis)
+            ft_diag(ic)=dot_product(Fvec(:,p),e_tan)
+         enddo
+         if (actuator_model==0 .and. myrank==0 .and. mod(itimestep,100)==0) then
+            call turbine_blade_diagnostics( &
+                 it,ib,itimestep,real(itimestep)*dt,nrchords, &
+                 r_si,c_si,twist_b,turbines(it)%pitchangle, &
+                 ua,ut,uac,utc,cl_diag,fn_diag,ft_diag, &
+                 first_diagnostic)
+         endif
+         if (use_smearing .and. itimestep==1 .and. it==1 .and. ib==1) then
+            if (method==SMEAR_ITERATIVE_CPU .or. .not.cuda_smearing_available()) then
+               write(*,'(a,f8.3,a,i5,a,es12.4)') &
+                    'NW iterative CPU: epsilon=',eps_si,' m, iterations=',niter, &
+                    ', residual=',resid
+            else
+               write(*,'(a,f8.3,a,i4)') &
+                    'NW explicit GPU: epsilon=',eps_si,' m, passes=',niter
+            endif
+         endif
+      enddo
+   enddo
+   if (myrank==0 .and. mod(itimestep,100)==0) first_diagnostic=.false.
+end subroutine turbine_smearing_forces
+
+logical function cuda_smearing_available()
+#ifdef _CUDA
+   cuda_smearing_available=.true.
+#else
+   cuda_smearing_available=.false.
+#endif
+end function cuda_smearing_available
+
+end module m_turbine_smearing_forces

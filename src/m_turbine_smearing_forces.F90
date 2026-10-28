@@ -198,13 +198,13 @@ subroutine turbine_smearing_forces(turbines,points,kin,Fvec,np,dx,uconv,dt,itime
             fn_diag(ic)=dot_product(Fvec(:,p),e_axis)
             ft_diag(ic)=dot_product(Fvec(:,p),e_tan)
          enddo
-         if (actuator_model==0 .and. myrank==0 .and. mod(itimestep,100)==0) then
-            call turbine_blade_diagnostics( &
-                 it,ib,itimestep,real(itimestep)*dt,nrchords, &
-                 r_si,c_si,twist_b,turbines(it)%pitchangle, &
-                 ua,ut,uac,utc,cl_diag,fn_diag,ft_diag, &
-                 first_diagnostic)
-         endif
+        !if (actuator_model==0 .and. myrank==0 .and. mod(itimestep,100)==0) then
+        !   call turbine_blade_diagnostics( &
+        !        it,ib,itimestep,real(itimestep)*dt,nrchords, &
+        !        r_si,c_si,twist_b,turbines(it)%pitchangle, &
+        !        ua,ut,uac,utc,cl_diag,fn_diag,ft_diag, &
+        !        first_diagnostic)
+        !endif
          if (use_smearing .and. itimestep==1 .and. it==1 .and. ib==1) then
             if (method==SMEAR_ITERATIVE_CPU .or. .not.cuda_smearing_available()) then
                write(*,'(a,f8.3,a,i5,a,es12.4)') &

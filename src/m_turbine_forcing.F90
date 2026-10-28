@@ -206,7 +206,7 @@ subroutine turbine_forcing(external_forcing, turbines_in, rho, u, v, w, itimeste
                                     Fvec_global,np,itimestep)
 
 ! Turbine aerodynamic diagnostics
-  if (mod(itimestep,10*ncontrol) == 0) then
+  if (mod(itimestep,100*ncontrol) == 0) then
       call turbine_diagnostics(turbines_in, points_global, Fvec_global, np)
   endif
 
